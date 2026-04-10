@@ -7,6 +7,10 @@
 
 __pycache__/
 *.py[cod]
+node_modules/
+.next/
+baseball-chatbot-ui/node_modules/
+baseball-chatbot-ui/.next/
 
 data/raw/
 data/processed/

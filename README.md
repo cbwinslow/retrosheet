@@ -138,6 +138,31 @@ Artifacts are written under ignored `data/models/` and model metadata is registe
 
 AI inference provider configuration is documented in [config/ai_providers.example.json](config/ai_providers.example.json). The intended providers are OpenRouter, Groq, and Codex/OpenAI-compatible agent orchestration.
 
+## Web Command Center
+
+The interactive interface lives in `baseball-chatbot-ui/`. It is a Next.js command center for asking the warehouse questions, running scenario simulations, inspecting active models/backtests, exporting tables to CSV, and launching safe local workflow commands.
+
+Run it locally:
+
+```bash
+cd baseball-chatbot-ui
+npm install
+npm run dev
+```
+
+The UI expects PostgreSQL to be available through the same `PG*` settings as the warehouse scripts. By default it connects to `localhost:5432/retrosheet`.
+
+Current cockpit views:
+
+- **Chat Analyst**: a rule-based warehouse assistant that routes natural-language prompts to curated SQL/API tools.
+- **Sim Lab**: historical half-inning scenario distributions from `features.half_inning_outcome_summary`, including filters such as season, inning, half-inning, team, and left-handed-only outcomes.
+- **Models & Backtests**: active model registry, target metrics, sweep candidates, and production leaderboards.
+- **Workbench**: a safe allow-listed command runner for status/model checks and documented script entry points.
+
+The spreadsheet approach is intentionally simple right now: query results render as tables with CSV export. If the workflow needs richer spreadsheet editing later, add a dedicated data-grid component such as Handsontable, AG Grid Community, or Glide Data Grid behind typed API routes. Do not expose arbitrary SQL writes from the browser without authentication and explicit guardrails.
+
+The terminal approach is also intentionally guarded. The browser should call allow-listed API actions first. A true embedded terminal can be added later with `node-pty`, `xterm.js`, WebSockets, authentication, and a restricted project-local shell, but the default web UI must not expose arbitrary shell execution.
+
 ## MLB Live Feed
 
 Store a source-preserved snapshot of MLB's live game feed:

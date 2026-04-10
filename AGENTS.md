@@ -78,3 +78,15 @@ Use `scripts/rebuild_warehouse.sh` as the canonical rebuild order for contributo
 Use `sql/060_advanced_feature_marts.sql` for higher-signal feature generation: career-prior player rates, coarse context fallbacks, batter-pitcher matchup history, park run environment, and rolling team form. Train stronger candidates with `--feature-set advanced` and explore grids with `scripts/sweep_hyperparameters.py`.
 
 Use `sql/070_temporal_and_production_marts.sql` for team rest/travel context and reporting marts. It currently provides `features.team_game_context`, `features.player_production_season`, `features.pitcher_production_season`, and temporal training views. Treat WAR-like outputs as experimental until replacement level, positional adjustments, and park/run-environment adjustments are explicitly modeled.
+
+## Interface Direction
+
+The web command center lives in `baseball-chatbot-ui/`. Keep generated frontend artifacts out of git: `node_modules/` and `.next/` must stay ignored.
+
+Use Next.js API routes as the interface boundary between the browser, PostgreSQL, and local Python scripts. API routes may query read-oriented warehouse views and may launch documented scripts through explicit allow-lists. Do not add a browser endpoint that executes arbitrary shell commands, arbitrary SQL writes, or unvalidated model paths.
+
+Prefer exportable tables and typed JSON payloads for early spreadsheet workflows. If a richer spreadsheet is needed, add a client-side grid over read-only API data first, then design explicit import/write-back flows separately.
+
+For chat/agent work, start with tool-routed answers over curated SQL and scripts. Provider-backed LLM tool calling can be layered in later through the configured OpenRouter, Groq, and Codex/OpenAI-compatible providers, but tool schemas, SQL guardrails, conversation logging, and auth should come before broad natural-language SQL access.
+
+The safe terminal/workbench pattern is: browser button -> named API action -> allow-listed local command -> captured stdout/stderr. A full embedded terminal requires authentication, `node-pty`, WebSocket session controls, command restrictions, and project-root isolation.
