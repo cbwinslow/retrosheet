@@ -37,8 +37,8 @@
 
 ### Next
 
-- Train plate-appearance models for hit, reach-base, strikeout, walk, home run, and extra-base hit.
 - Build half-inning examples and scenario simulation.
+- Add cross-validation and hyperparameter tuning for model improvement.
 - Bridge MLB live feed states into the same feature shape.
 - Add GitHub issues for roadmap tracking.
 
@@ -46,7 +46,20 @@
 
 - Created `core.plate_appearances`.
 - Created `features.plate_appearance_examples`.
-- Added plate-appearance prediction targets for reach-base and extra-base-hit.
+- Added plate-appearance prediction targets for all outcomes: hit, walk, strikeout, home run, reach-base, extra-base-hit.
+- Extended training script to support plate appearance model training.
+- Trained all plate appearance prediction models (5% sample, train through 2022):
+  - **Walk**: Best ROC AUC 0.959, accuracy 0.936 (most predictable outcome)
+  - **Strikeout**: Best ROC AUC 0.841, accuracy 0.779 (highly predictable)
+  - **Reach Base**: Best ROC AUC 0.680, accuracy 0.721 (moderately predictable)
+  - **Home Run**: Best ROC AUC 0.659, accuracy 0.969 (good accuracy, needs discrimination improvement)
+  - **Extra-base Hit**: Best ROC AUC 0.642, accuracy 0.923 (good accuracy, moderate discrimination)
+  - **Hit**: Best ROC AUC 0.636, accuracy 0.783 (needs most improvement)
+- All models trained with both logistic regression and histogram gradient boosting algorithms.
+- Gradient boosting models consistently outperform logistic regression across all targets.
+- Model improvement opportunities identified for hit, extra-base hit, and home run predictions.
+- Created `scripts/predict_plate_appearance.py` for model inference and real-time predictions.
+- Created `scripts/analyze_pa_models.py` for comprehensive model evaluation and comparison.
 - Validated plate appearance coverage:
   - `core.plate_appearances`: 4,779,662 rows, 62,598 games.
   - `features.plate_appearance_examples`: 4,779,662 rows, 62,598 games.

@@ -176,6 +176,50 @@ INSERT INTO predictions.prediction_targets (
 )
 VALUES
     (
+        'pa_batter_hit',
+        'Batter gets a hit',
+        'plate_appearance',
+        'Probability that the batter records a hit.',
+        'What is the probability this batter gets a hit?',
+        '["batter_id", "pitcher_id", "batter_hand", "pitcher_hand", "game_state"]'::jsonb,
+        'features.plate_appearance_examples.is_hit',
+        'Resolved from the completed plate appearance.',
+        'gradient_boosted_trees'
+    ),
+    (
+        'pa_batter_walk',
+        'Batter draws a walk',
+        'plate_appearance',
+        'Probability that the batter draws a walk.',
+        'What is the probability this batter draws a walk?',
+        '["batter_id", "pitcher_id", "batter_hand", "pitcher_hand", "game_state"]'::jsonb,
+        'features.plate_appearance_examples.is_walk',
+        'Resolved from the completed plate appearance.',
+        'gradient_boosted_trees'
+    ),
+    (
+        'pa_batter_strikeout',
+        'Batter strikes out',
+        'plate_appearance',
+        'Probability that the batter strikes out.',
+        'What is the probability this batter strikes out?',
+        '["batter_id", "pitcher_id", "batter_hand", "pitcher_hand", "game_state"]'::jsonb,
+        'features.plate_appearance_examples.is_strikeout',
+        'Resolved from the completed plate appearance.',
+        'gradient_boosted_trees'
+    ),
+    (
+        'pa_batter_home_run',
+        'Batter hits a home run',
+        'plate_appearance',
+        'Probability that the batter hits a home run.',
+        'What is the probability this batter hits a home run?',
+        '["batter_id", "pitcher_id", "batter_hand", "pitcher_hand", "game_state"]'::jsonb,
+        'features.plate_appearance_examples.is_home_run',
+        'Resolved from the completed plate appearance.',
+        'gradient_boosted_trees'
+    ),
+    (
         'pa_batter_reach_base',
         'Batter reaches base',
         'plate_appearance',

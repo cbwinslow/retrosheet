@@ -10,7 +10,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 import psycopg2
-from sqlalchemy import URL, create_engine
+from sqlalchemy import URL, create_engine, text
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.impute import SimpleImputer
@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / "data" / "models"
 
 
-NUMERIC_FEATURES = [
+GAME_NUMERIC_FEATURES = [
     "inning",
     "is_bottom_inning",
     "outs_before",
@@ -35,8 +35,27 @@ NUMERIC_FEATURES = [
     "away_score_before",
     "home_score_before",
 ]
-CATEGORICAL_FEATURES = ["batter_hand", "pitcher_hand"]
-TARGET = "final_home_win"
+GAME_CATEGORICAL_FEATURES = ["batter_hand", "pitcher_hand"]
+GAME_TARGET = "final_home_win"
+
+PA_NUMERIC_FEATURES = [
+    "inning",
+    "is_bottom_inning",
+    "outs_before",
+    "start_bases",
+    "balls",
+    "strikes",
+    "home_score_diff",
+]
+PA_CATEGORICAL_FEATURES = ["batter_hand", "pitcher_hand"]
+PA_TARGETS = {
+    "pa_batter_hit": "is_hit",
+    "pa_batter_walk": "is_walk",
+    "pa_batter_strikeout": "is_strikeout",
+    "pa_batter_home_run": "is_home_run",
+    "pa_batter_reach_base": "is_reach_base",
+    "pa_batter_extra_base_hit": "is_extra_base_hit",
+}
 
 
 def database_kwargs() -> dict[str, str]:
@@ -63,38 +82,74 @@ def database_url() -> str | URL:
     )
 
 
-def load_examples(engine, *, min_season: int, max_season: int, sample_rate: float) -> pd.DataFrame:
+def load_examples(
+    engine, *, target_id: str, min_season: int, max_season: int, sample_rate: float
+) -> pd.DataFrame:
     if not 0 < sample_rate <= 1:
         raise ValueError("--sample-rate must be between 0 and 1")
     sample_ppm = int(sample_rate * 1_000_000)
-    sql = """
-        SELECT
-            season,
-            inning,
-            is_bottom_inning::integer AS is_bottom_inning,
-            outs_before,
-            start_bases,
-            balls,
-            strikes,
-            home_score_diff,
-            away_score_before,
-            home_score_before,
-            COALESCE(batter_hand::text, 'U') AS batter_hand,
-            COALESCE(pitcher_hand::text, 'U') AS pitcher_hand,
-            final_home_win::integer AS final_home_win
-        FROM features.game_outcome_examples
-        WHERE season BETWEEN %(min_season)s AND %(max_season)s
-          AND final_home_win IS NOT NULL
-          AND mod(abs(hashtext(game_id || ':' || event_id::text)), 1000000) < %(sample_ppm)s
-    """
-    return pd.read_sql_query(
-        sql,
-        conn,
-        params={"min_season": min_season, "max_season": max_season, "sample_ppm": sample_ppm},
+
+    if target_id == "game_home_win":
+        sql = """
+            SELECT
+                season,
+                inning,
+                is_bottom_inning::integer AS is_bottom_inning,
+                outs_before,
+                start_bases,
+                balls,
+                strikes,
+                home_score_diff,
+                away_score_before,
+                home_score_before,
+                COALESCE(batter_hand::text, 'U') AS batter_hand,
+                COALESCE(pitcher_hand::text, 'U') AS pitcher_hand,
+                final_home_win::integer AS final_home_win
+            FROM features.game_outcome_examples
+            WHERE season BETWEEN :min_season AND :max_season
+              AND final_home_win IS NOT NULL
+              AND mod(abs(hashtext(game_id || ':' || event_id::text)), 1000000) < :sample_ppm
+        """
+        target_col = "final_home_win"
+    elif target_id in PA_TARGETS:
+        target_col_name = PA_TARGETS[target_id]
+        sql = f"""
+            SELECT
+                season,
+                inning,
+                is_bottom_inning::integer AS is_bottom_inning,
+                outs_before,
+                start_bases,
+                balls,
+                strikes,
+                home_score_diff,
+                COALESCE(batter_hand::text, 'U') AS batter_hand,
+                COALESCE(pitcher_hand::text, 'U') AS pitcher_hand,
+                {target_col_name}::integer AS target
+            FROM features.plate_appearance_examples
+            WHERE season BETWEEN :min_season AND :max_season
+              AND {target_col_name} IS NOT NULL
+              AND mod(abs(hashtext(game_id || ':' || plate_appearance_id::text)), 1000000) < :sample_ppm
+        """
+        target_col = "target"
+    else:
+        raise ValueError(f"Unknown target_id: {target_id}")
+
+    df = pd.read_sql_query(
+        text(sql),
+        engine,
+        params={
+            "min_season": min_season,
+            "max_season": max_season,
+            "sample_ppm": sample_ppm,
+        },
     )
+    return df.rename(columns={target_col: "target"})
 
 
-def preprocessor(*, scale_numeric: bool) -> ColumnTransformer:
+def preprocessor(
+    *, numeric_features: list[str], categorical_features: list[str], scale_numeric: bool
+) -> ColumnTransformer:
     numeric_steps = [("imputer", SimpleImputer(strategy="median"))]
     if scale_numeric:
         numeric_steps.append(("scaler", StandardScaler()))
@@ -107,32 +162,59 @@ def preprocessor(*, scale_numeric: bool) -> ColumnTransformer:
     )
     return ColumnTransformer(
         [
-            ("numeric", numeric, NUMERIC_FEATURES),
-            ("categorical", categorical, CATEGORICAL_FEATURES),
+            ("numeric", numeric, numeric_features),
+            ("categorical", categorical, categorical_features),
         ]
     )
 
 
-def build_models() -> dict[str, Pipeline]:
+def build_models(
+    *, numeric_features: list[str], categorical_features: list[str]
+) -> dict[str, Pipeline]:
     return {
         "logistic_regression": Pipeline(
             [
-                ("preprocess", preprocessor(scale_numeric=True)),
+                (
+                    "preprocess",
+                    preprocessor(
+                        numeric_features=numeric_features,
+                        categorical_features=categorical_features,
+                        scale_numeric=True,
+                    ),
+                ),
                 ("model", LogisticRegression(max_iter=1000)),
             ]
         ),
         "hist_gradient_boosting": Pipeline(
             [
-                ("preprocess", preprocessor(scale_numeric=False)),
-                ("model", HistGradientBoostingClassifier(max_iter=250, learning_rate=0.05, random_state=42)),
+                (
+                    "preprocess",
+                    preprocessor(
+                        numeric_features=numeric_features,
+                        categorical_features=categorical_features,
+                        scale_numeric=False,
+                    ),
+                ),
+                (
+                    "model",
+                    HistGradientBoostingClassifier(
+                        max_iter=250, learning_rate=0.05, random_state=42
+                    ),
+                ),
             ]
         ),
     }
 
 
-def metrics_for(model: Pipeline, frame: pd.DataFrame) -> dict[str, float]:
-    features = frame[NUMERIC_FEATURES + CATEGORICAL_FEATURES]
-    target = frame[TARGET]
+def metrics_for(
+    model: Pipeline,
+    frame: pd.DataFrame,
+    *,
+    numeric_features: list[str],
+    categorical_features: list[str],
+) -> dict[str, float]:
+    features = frame[numeric_features + categorical_features]
+    target = frame["target"]
     probabilities = model.predict_proba(features)[:, 1]
     predictions = probabilities >= 0.5
     return {
@@ -144,13 +226,29 @@ def metrics_for(model: Pipeline, frame: pd.DataFrame) -> dict[str, float]:
     }
 
 
-def register_model(conn, *, model_name: str, model_family: str, version: str, artifact_path: Path, metrics: dict) -> None:
-    feature_spec = {
-        "numeric_features": NUMERIC_FEATURES,
-        "categorical_features": CATEGORICAL_FEATURES,
-        "target": TARGET,
-    }
+def register_model(
+    conn,
+    *,
+    target_id: str,
+    model_name: str,
+    model_family: str,
+    version: str,
+    artifact_path: Path,
+    feature_spec: dict,
+    metrics: dict,
+    activate: bool,
+) -> None:
     with conn.cursor() as cur:
+        if activate:
+            cur.execute(
+                """
+                UPDATE models.model_registry
+                SET is_active = false
+                WHERE target_id = %(target_id)s
+                  AND model_name = %(model_name)s;
+                """,
+                {"target_id": target_id, "model_name": model_name},
+            )
         cur.execute(
             """
             INSERT INTO models.model_registry (
@@ -158,21 +256,24 @@ def register_model(conn, *, model_name: str, model_family: str, version: str, ar
                 feature_spec, metrics, is_active
             )
             VALUES (
-                'game_home_win', %(model_name)s, %(model_family)s, %(version)s, %(artifact_uri)s,
-                %(feature_spec)s::jsonb, %(metrics)s::jsonb, false
+                %(target_id)s, %(model_name)s, %(model_family)s, %(version)s, %(artifact_uri)s,
+                %(feature_spec)s::jsonb, %(metrics)s::jsonb, %(activate)s
             )
             ON CONFLICT (target_id, model_name, model_version) DO UPDATE
             SET artifact_uri = EXCLUDED.artifact_uri,
                 feature_spec = EXCLUDED.feature_spec,
-                metrics = EXCLUDED.metrics;
+                metrics = EXCLUDED.metrics,
+                is_active = EXCLUDED.is_active;
             """,
             {
+                "target_id": target_id,
                 "model_name": model_name,
                 "model_family": model_family,
                 "version": version,
                 "artifact_uri": str(artifact_path.relative_to(ROOT)),
                 "feature_spec": json.dumps(feature_spec),
                 "metrics": json.dumps(metrics),
+                "activate": activate,
             },
         )
     conn.commit()
@@ -183,42 +284,83 @@ def train(args: argparse.Namespace) -> None:
     conn = psycopg2.connect(**database_kwargs())
     engine = create_engine(database_url())
     try:
+        if args.target_id == "game_home_win":
+            numeric_features = GAME_NUMERIC_FEATURES
+            categorical_features = GAME_CATEGORICAL_FEATURES
+        elif args.target_id in PA_TARGETS:
+            numeric_features = PA_NUMERIC_FEATURES
+            categorical_features = PA_CATEGORICAL_FEATURES
+        else:
+            raise ValueError(f"Unknown target_id: {args.target_id}")
+
         frame = load_examples(
             engine,
+            target_id=args.target_id,
             min_season=args.min_season,
             max_season=args.max_season,
             sample_rate=args.sample_rate,
         )
         if frame.empty:
-            raise SystemExit("No training rows returned. Check features.game_outcome_examples and season filters.")
+            raise SystemExit(
+                f"No training rows returned for {args.target_id}. Check the feature table and season filters."
+            )
 
         train_frame = frame[frame["season"] <= args.train_through].copy()
         validation_frame = frame[frame["season"] > args.train_through].copy()
         if train_frame.empty or validation_frame.empty:
-            raise SystemExit("Need both training and validation rows. Adjust --train-through or season range.")
+            raise SystemExit(
+                "Need both training and validation rows. Adjust --train-through or season range."
+            )
 
         version = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        for model_name, model in build_models().items():
-            model.fit(train_frame[NUMERIC_FEATURES + CATEGORICAL_FEATURES], train_frame[TARGET])
+        feature_spec = {
+            "numeric_features": numeric_features,
+            "categorical_features": categorical_features,
+            "target": "target",
+        }
+        for model_name, model in build_models(
+            numeric_features=numeric_features, categorical_features=categorical_features
+        ).items():
+            model.fit(
+                train_frame[numeric_features + categorical_features],
+                train_frame["target"],
+            )
             metrics = {
-                "train": metrics_for(model, train_frame),
-                "validation": metrics_for(model, validation_frame),
+                "train": metrics_for(
+                    model,
+                    train_frame,
+                    numeric_features=numeric_features,
+                    categorical_features=categorical_features,
+                ),
+                "validation": metrics_for(
+                    model,
+                    validation_frame,
+                    numeric_features=numeric_features,
+                    categorical_features=categorical_features,
+                ),
                 "sample_rate": args.sample_rate,
                 "min_season": args.min_season,
                 "max_season": args.max_season,
                 "train_through": args.train_through,
             }
-            artifact_path = MODEL_DIR / f"game_home_win_{model_name}_{version}.joblib"
+            artifact_path = (
+                MODEL_DIR / f"{args.target_id}_{model_name}_{version}.joblib"
+            )
             joblib.dump(model, artifact_path)
             register_model(
                 conn,
+                target_id=args.target_id,
                 model_name=model_name,
                 model_family=model_name,
                 version=version,
                 artifact_path=artifact_path,
+                feature_spec=feature_spec,
                 metrics=metrics,
+                activate=not args.no_activate,
             )
-            print(f"trained {model_name}: {json.dumps(metrics['validation'], sort_keys=True)}")
+            print(
+                f"trained {model_name}: {json.dumps(metrics['validation'], sort_keys=True)}"
+            )
             print(f"artifact: {artifact_path}")
     finally:
         engine.dispose()
@@ -226,11 +368,24 @@ def train(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Train warehouse-backed Retrosheet prediction models.")
+    parser = argparse.ArgumentParser(
+        description="Train warehouse-backed Retrosheet prediction models."
+    )
+    parser.add_argument("--target-id", required=True, help="Target to train model for")
     parser.add_argument("--min-season", type=int, default=2000)
     parser.add_argument("--max-season", type=int, default=2025)
     parser.add_argument("--train-through", type=int, default=2022)
-    parser.add_argument("--sample-rate", type=float, default=0.10, help="Deterministic row sample from 0.0 to 1.0.")
+    parser.add_argument(
+        "--sample-rate",
+        type=float,
+        default=0.10,
+        help="Deterministic row sample from 0.0 to 1.0.",
+    )
+    parser.add_argument(
+        "--no-activate",
+        action="store_true",
+        help="Register model metrics without marking the new version active.",
+    )
     args = parser.parse_args()
     train(args)
 
