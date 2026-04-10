@@ -18,9 +18,9 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
-from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional
 
@@ -32,11 +32,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def database_kwargs() -> dict[str, str]:
     return {
-        "host": "localhost",
-        "port": "5432",
-        "dbname": "retrosheet",
-        "user": "postgres",
-        "password": "",
+        "host": os.environ.get("PGHOST", "localhost"),
+        "port": os.environ.get("PGPORT", "5432"),
+        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
+        "user": os.environ.get("PGUSER", "postgres"),
+        "password": os.environ.get("PGPASSWORD", ""),
     }
 
 
@@ -74,7 +74,7 @@ def get_recently_ingested_games(hours: int = 24) -> List[int]:
                 """
                 SELECT DISTINCT game_pk
                 FROM raw_mlb.live_feed_snapshots
-                WHERE fetched_at > now() - interval '%s hours'
+                WHERE fetched_at > now() - (%s * interval '1 hour')
                 """,
                 (hours,),
             )

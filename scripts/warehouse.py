@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import os
 import shutil
@@ -488,14 +489,28 @@ def fetch_live_game(args: argparse.Namespace) -> None:
     endpoint = MLB_LIVE_ENDPOINT.format(game_pk=args.game_pk)
     print(f"fetching {endpoint}")
     with urllib.request.urlopen(endpoint, timeout=30) as response:
+        http_status = response.status
         payload = json.loads(response.read().decode("utf-8"))
     payload_json = json.dumps(payload, separators=(",", ":"))
+    game_data = payload.get("gameData", {})
+    request_params = {"game_pk": int(args.game_pk)}
+    payload_checksum = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+    game_date = (game_data.get("datetime", {}).get("originalDate") or "")[:10] or None
+    season = game_data.get("game", {}).get("season")
     with tempfile.NamedTemporaryFile("w", suffix=".sql", delete=False) as tmp:
         tmp_path = Path(tmp.name)
-        tmp.write("INSERT INTO raw_mlb.live_feed_snapshots (game_pk, endpoint, payload) VALUES (\n")
+        tmp.write(
+            "INSERT INTO raw_mlb.live_feed_snapshots "
+            "(game_pk, endpoint, payload, request_params, http_status, payload_checksum, game_date, season) VALUES (\n"
+        )
         tmp.write(f"  {int(args.game_pk)},\n")
         tmp.write(f"  {sql_literal(endpoint)},\n")
-        tmp.write(f"  {sql_literal(payload_json)}::jsonb\n")
+        tmp.write(f"  {sql_literal(payload_json)}::jsonb,\n")
+        tmp.write(f"  {sql_literal(json.dumps(request_params, separators=(',', ':')))}::jsonb,\n")
+        tmp.write(f"  {http_status},\n")
+        tmp.write(f"  {sql_literal(payload_checksum)},\n")
+        tmp.write("  " + ("NULL" if not game_date else sql_literal(game_date)) + ",\n")
+        tmp.write("  " + ("NULL" if not season else str(int(season))) + "\n")
         tmp.write(");\n")
     try:
         run_psql_file(tmp_path)

@@ -1,27 +1,20 @@
 #!/usr/bin/env python3
 """
-Transform MLB live feed data into core schema for live prediction.
+Transform source-preserved MLB live feed snapshots into canonical live tables.
 
-This script takes MLB live game feed snapshots and transforms them into
-the same core.events and core.games schema used for historical data,
-enabling live prediction with trained models.
+This keeps raw JSON in `raw_mlb`, maps IDs through `bridge`, and upserts a
+typed live layer in `core.live_games` and `core.live_events`.
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import os
-from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
+from typing import Any
 
 import psycopg2
-import pandas as pd
-from sqlalchemy import URL, create_engine
-
-
-ROOT = Path(__file__).resolve().parents[1]
+from psycopg2.extras import Json, execute_values
 
 
 def database_kwargs() -> dict[str, str]:
@@ -34,314 +27,512 @@ def database_kwargs() -> dict[str, str]:
     }
 
 
-def database_url() -> str | URL:
-    if os.environ.get("DATABASE_URL"):
-        return os.environ["DATABASE_URL"]
-    kwargs = database_kwargs()
-    return URL.create(
-        "postgresql+psycopg2",
-        username=kwargs["user"],
-        password=kwargs["password"] or None,
-        host=kwargs["host"],
-        port=int(kwargs["port"]),
-        database=kwargs["dbname"],
+@dataclass
+class Snapshot:
+    snapshot_id: int
+    game_pk: int
+    fetched_at: Any
+    endpoint: str
+    payload: dict[str, Any]
+
+
+def table_columns(conn, schema: str, table: str) -> set[str]:
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = %s AND table_name = %s
+            """,
+            (schema, table),
+        )
+        return {row[0] for row in cur.fetchall()}
+
+
+def fetch_latest_snapshot(conn, game_pk: int) -> Snapshot:
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT snapshot_id, game_pk, fetched_at, endpoint, payload
+            FROM raw_mlb.live_feed_snapshots
+            WHERE game_pk = %s
+            ORDER BY fetched_at DESC, snapshot_id DESC
+            LIMIT 1
+            """,
+            (game_pk,),
+        )
+        row = cur.fetchone()
+    if not row:
+        raise ValueError(f"No live feed snapshot found for game_pk {game_pk}")
+    return Snapshot(
+        snapshot_id=row[0],
+        game_pk=row[1],
+        fetched_at=row[2],
+        endpoint=row[3],
+        payload=row[4],
     )
 
 
-def get_live_feed(game_pk: int) -> Dict[str, Any]:
-    """Get the most recent live feed snapshot for a game."""
-    conn = psycopg2.connect(**database_kwargs())
-    try:
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT payload
-                FROM raw_mlb.live_feed_snapshots
-                WHERE game_pk = %s
-                ORDER BY fetched_at DESC
-                LIMIT 1
-                """,
-                (game_pk,),
-            )
-            row = cur.fetchone()
-            if not row:
-                raise ValueError(f"No live feed data found for game_pk {game_pk}")
-            return row[0]
-    finally:
-        conn.close()
+def query_optional_text(conn, sql: str, value: int | None, fallback: str) -> str:
+    if value is None:
+        return fallback
+    with conn.cursor() as cur:
+        cur.execute(sql, (value,))
+        row = cur.fetchone()
+    return row[0] if row and row[0] else fallback
 
 
-def lookup_retrosheet_team_id(mlb_team_id: int, conn) -> str:
-    """Look up Retrosheet team ID from MLB team ID."""
+def lookup_retrosheet_team_id(conn, mlb_team_id: int | None) -> str:
+    return query_optional_text(
+        conn,
+        "SELECT retrosheet_team_id FROM bridge.team_xref WHERE mlb_team_id = %s",
+        mlb_team_id,
+        f"MLB{mlb_team_id}" if mlb_team_id is not None else "UNK",
+    )
+
+
+def lookup_retrosheet_player_id(conn, mlb_player_id: int | None) -> str:
+    columns = table_columns(conn, "bridge", "player_xref")
+    retrosheet_column = (
+        "retrosheet_player_id" if "retrosheet_player_id" in columns else "retrosheet_id"
+    )
+    mlb_column = "mlb_player_id" if "mlb_player_id" in columns else "mlb_id"
+    return query_optional_text(
+        conn,
+        f"SELECT {retrosheet_column} FROM bridge.player_xref WHERE {mlb_column} = %s",
+        mlb_player_id,
+        f"MLB{mlb_player_id}" if mlb_player_id is not None else "UNK",
+    )
+
+
+def lookup_retrosheet_park_id(conn, mlb_venue_id: int | None) -> str:
+    return query_optional_text(
+        conn,
+        "SELECT retrosheet_park_id FROM bridge.park_xref WHERE mlb_venue_id = %s",
+        mlb_venue_id,
+        f"MLB{mlb_venue_id}" if mlb_venue_id is not None else "UNK",
+    )
+
+
+def lookup_game_id(
+    conn,
+    *,
+    game_pk: int,
+    home_team_id: str,
+    away_team_id: str,
+    game_date: str | None,
+) -> str:
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT retrosheet_team_id FROM bridge.team_xref WHERE mlb_team_id = %s",
-            (mlb_team_id,),
+            """
+            SELECT retrosheet_game_id
+            FROM bridge.game_xref
+            WHERE mlb_game_pk = %s
+            """,
+            (game_pk,),
         )
         row = cur.fetchone()
-        return row[0] if row else f"MLB{mlb_team_id}"
+    if row and row[0]:
+        return row[0]
+
+    if game_date and home_team_id != "UNK" and away_team_id != "UNK":
+        compact_date = game_date.replace("-", "")
+        return f"{home_team_id}{compact_date}0"
+    return f"MLB{game_pk}"
 
 
-def lookup_retrosheet_player_id(mlb_player_id: int, conn) -> str:
-    """Look up Retrosheet player ID from MLB player ID."""
+def bases_mask_from_runners(runners: list[dict[str, Any]], key: str) -> int:
+    mask = 0
+    for runner in runners:
+        base = runner.get("movement", {}).get(key)
+        if base == "1B":
+            mask |= 1
+        elif base == "2B":
+            mask |= 2
+        elif base == "3B":
+            mask |= 4
+    return mask
+
+
+def parse_runs_on_play(runners: list[dict[str, Any]]) -> int:
+    return sum(
+        1
+        for runner in runners
+        if runner.get("details", {}).get("isScoringEvent")
+        or runner.get("movement", {}).get("isOut") is False
+        and runner.get("movement", {}).get("end") == "score"
+    )
+
+
+def map_event_code(play: dict[str, Any]) -> tuple[int, int]:
+    result = play.get("result", {})
+    event_type = (result.get("eventType") or "").lower()
+    details_event = (result.get("event") or "").lower()
+    trajectory = (
+        play.get("playEvents", [])[-1].get("hitData", {}).get("trajectory")
+        if play.get("playEvents")
+        else None
+    )
+    trajectory = (trajectory or "").lower()
+
+    mapping = {
+        "single": (20, 1),
+        "double": (21, 2),
+        "triple": (22, 3),
+        "home_run": (23, 4),
+        "walk": (14, 0),
+        "intent_walk": (15, 0),
+        "hit_by_pitch": (16, 0),
+        "strikeout": (3, 0),
+        "field_error": (18, 0),
+        "error": (18, 0),
+        "fielders_choice": (19, 0),
+        "catcher_interf": (17, 0),
+        "sac_bunt": (2, 0),
+        "sac_fly": (2, 0),
+        "force_out": (2, 0),
+        "field_out": (2, 0),
+        "grounded_into_double_play": (2, 0),
+        "double_play": (2, 0),
+        "triple_play": (2, 0),
+    }
+    if event_type in mapping:
+        return mapping[event_type]
+
+    if "walk" in details_event:
+        return (14, 0)
+    if "strikeout" in details_event:
+        return (3, 0)
+    if "single" in details_event:
+        return (20, 1)
+    if "double" in details_event:
+        return (21, 2)
+    if "triple" in details_event:
+        return (22, 3)
+    if "home run" in details_event:
+        return (23, 4)
+    if trajectory in {"ground_ball", "fly_ball", "line_drive", "popup"}:
+        return (2, 0)
+    return (0, 0)
+
+
+def hands_from_play(play: dict[str, Any]) -> tuple[str, str]:
+    matchup = play.get("matchup", {})
+    batter_hand = matchup.get("batSide", {}).get("code") or "U"
+    pitcher_hand = matchup.get("pitchHand", {}).get("code") or "U"
+    return batter_hand, pitcher_hand
+
+
+def transform_game(conn, snapshot: Snapshot) -> dict[str, Any]:
+    payload = snapshot.payload
+    game_data = payload.get("gameData", {})
+    live_data = payload.get("liveData", {})
+    teams = game_data.get("teams", {})
+    home_team = teams.get("home", {})
+    away_team = teams.get("away", {})
+    venue = game_data.get("venue", {})
+    linescore = live_data.get("linescore", {})
+    status = game_data.get("status", {})
+
+    home_team_id = lookup_retrosheet_team_id(conn, home_team.get("id"))
+    away_team_id = lookup_retrosheet_team_id(conn, away_team.get("id"))
+    park_id = lookup_retrosheet_park_id(conn, venue.get("id"))
+    game_date = (game_data.get("datetime", {}).get("originalDate") or "")[:10] or None
+    game_id = lookup_game_id(
+        conn,
+        game_pk=snapshot.game_pk,
+        home_team_id=home_team_id,
+        away_team_id=away_team_id,
+        game_date=game_date,
+    )
+
+    return {
+        "game_id": game_id,
+        "mlb_game_pk": snapshot.game_pk,
+        "season": int(game_data.get("game", {}).get("season") or 0) or None,
+        "game_date": game_date,
+        "home_team_id": home_team_id,
+        "away_team_id": away_team_id,
+        "home_team_name": home_team.get("name"),
+        "away_team_name": away_team.get("name"),
+        "park_id": park_id,
+        "venue_name": venue.get("name"),
+        "home_score": linescore.get("teams", {}).get("home", {}).get("runs", 0),
+        "away_score": linescore.get("teams", {}).get("away", {}).get("runs", 0),
+        "is_complete": status.get("abstractGameState") == "Final",
+        "status_code": status.get("statusCode"),
+        "detailed_state": status.get("detailedState"),
+        "source_type": "mlb_live",
+        "snapshot_id": snapshot.snapshot_id,
+        "snapshot_fetched_at": snapshot.fetched_at,
+        "raw_payload": payload,
+    }
+
+
+def transform_events(conn, snapshot: Snapshot, game_row: dict[str, Any]) -> list[dict[str, Any]]:
+    payload = snapshot.payload
+    plays = payload.get("liveData", {}).get("plays", {}).get("allPlays", [])
+    season = game_row["season"]
+    game_id = game_row["game_id"]
+
+    rows: list[dict[str, Any]] = []
+    for play in plays:
+        about = play.get("about", {})
+        result = play.get("result", {})
+        matchup = play.get("matchup", {})
+        runners = play.get("runners", [])
+        batter = matchup.get("batter", {})
+        pitcher = matchup.get("pitcher", {})
+        batter_hand, pitcher_hand = hands_from_play(play)
+        event_code, hit_value = map_event_code(play)
+        event_type = (result.get("eventType") or "").lower()
+        event_text = result.get("description", "")
+        trajectory = (
+            play.get("playEvents", [])[-1].get("hitData", {}).get("trajectory")
+            if play.get("playEvents")
+            else None
+        )
+        is_plate_appearance = bool(about.get("isComplete", True))
+        is_at_bat = event_code not in (14, 15, 16, 17) and is_plate_appearance
+        rows.append(
+            {
+                "game_id": game_id,
+                "event_id": int(about.get("atBatIndex", 0)) + 1,
+                "season": season,
+                "inning": about.get("inning"),
+                "is_bottom_inning": not about.get("isTopInning", True),
+                "event_sequence": int(about.get("atBatIndex", 0)) + 1,
+                "plate_appearance_index": about.get("atBatIndex"),
+                "batter_id": lookup_retrosheet_player_id(conn, batter.get("id")),
+                "pitcher_id": lookup_retrosheet_player_id(conn, pitcher.get("id")),
+                "batter_hand": batter_hand,
+                "pitcher_hand": pitcher_hand,
+                "outs_before": about.get("halfInningOuts", 0),
+                "balls": play.get("count", {}).get("balls", 0),
+                "strikes": play.get("count", {}).get("strikes", 0),
+                "start_bases": bases_mask_from_runners(runners, "originBase"),
+                "event_code": event_code,
+                "event_text": event_text,
+                "mlb_event_type": event_type or None,
+                "event_type_description": result.get("event"),
+                "trajectory": trajectory,
+                "is_at_bat": is_at_bat,
+                "is_plate_appearance": is_plate_appearance,
+                "hit_value": hit_value,
+                "is_hit": hit_value > 0,
+                "is_walk": event_code in (14, 15),
+                "is_strikeout": event_code == 3,
+                "is_home_run": event_code == 23,
+                "runs_on_play": parse_runs_on_play(runners),
+                "rbi": result.get("rbi", 0),
+                "home_score_after": result.get("homeScore"),
+                "away_score_after": result.get("awayScore"),
+                "source_type": "mlb_live",
+                "mlb_game_pk": snapshot.game_pk,
+                "snapshot_id": snapshot.snapshot_id,
+                "raw_play": play,
+            }
+        )
+    return rows
+
+
+def upsert_live_game(conn, game_row: dict[str, Any]) -> None:
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT retrosheet_id FROM bridge.player_xref WHERE mlb_id = %s",
-            (mlb_player_id,),
+            """
+            INSERT INTO core.live_games (
+                game_id, mlb_game_pk, season, game_date, home_team_id, away_team_id,
+                home_team_name, away_team_name, park_id, venue_name, home_score, away_score,
+                is_complete, status_code, detailed_state, source_type, snapshot_id,
+                snapshot_fetched_at, raw_payload, updated_at
+            ) VALUES (
+                %(game_id)s, %(mlb_game_pk)s, %(season)s, %(game_date)s, %(home_team_id)s, %(away_team_id)s,
+                %(home_team_name)s, %(away_team_name)s, %(park_id)s, %(venue_name)s, %(home_score)s, %(away_score)s,
+                %(is_complete)s, %(status_code)s, %(detailed_state)s, %(source_type)s, %(snapshot_id)s,
+                %(snapshot_fetched_at)s, %(raw_payload)s::jsonb, now()
+            )
+            ON CONFLICT (game_id) DO UPDATE
+            SET mlb_game_pk = EXCLUDED.mlb_game_pk,
+                season = EXCLUDED.season,
+                game_date = EXCLUDED.game_date,
+                home_team_id = EXCLUDED.home_team_id,
+                away_team_id = EXCLUDED.away_team_id,
+                home_team_name = EXCLUDED.home_team_name,
+                away_team_name = EXCLUDED.away_team_name,
+                park_id = EXCLUDED.park_id,
+                venue_name = EXCLUDED.venue_name,
+                home_score = EXCLUDED.home_score,
+                away_score = EXCLUDED.away_score,
+                is_complete = EXCLUDED.is_complete,
+                status_code = EXCLUDED.status_code,
+                detailed_state = EXCLUDED.detailed_state,
+                source_type = EXCLUDED.source_type,
+                snapshot_id = EXCLUDED.snapshot_id,
+                snapshot_fetched_at = EXCLUDED.snapshot_fetched_at,
+                raw_payload = EXCLUDED.raw_payload,
+                updated_at = now()
+            """,
+            {
+                **game_row,
+                "raw_payload": Json(game_row["raw_payload"]),
+            },
         )
-        row = cur.fetchone()
-        return row[0] if row else f"MLB{mlb_player_id}"
 
 
-def transform_live_game(feed: Dict[str, Any]) -> Dict[str, Any]:
-    """Transform MLB live feed into core.games format."""
+def upsert_live_events(conn, event_rows: list[dict[str, Any]]) -> None:
+    if not event_rows:
+        return
+    columns = [
+        "game_id",
+        "event_id",
+        "season",
+        "inning",
+        "is_bottom_inning",
+        "event_sequence",
+        "batter_id",
+        "pitcher_id",
+        "batter_hand",
+        "pitcher_hand",
+        "outs_before",
+        "balls",
+        "strikes",
+        "start_bases",
+        "event_code",
+        "event_text",
+        "is_at_bat",
+        "is_plate_appearance",
+        "hit_value",
+        "is_hit",
+        "is_walk",
+        "is_strikeout",
+        "is_home_run",
+        "runs_on_play",
+        "rbi",
+        "source_type",
+        "raw_play",
+        "mlb_game_pk",
+        "snapshot_id",
+        "plate_appearance_index",
+        "mlb_event_type",
+        "event_type_description",
+        "trajectory",
+        "home_score_after",
+        "away_score_after",
+    ]
+    values = [
+        tuple(Json(row[column]) if column == "raw_play" else row[column] for column in columns)
+        for row in event_rows
+    ]
+    with conn.cursor() as cur:
+        execute_values(
+            cur,
+            f"""
+            INSERT INTO core.live_events (
+                {", ".join(columns)}
+            ) VALUES %s
+            ON CONFLICT (game_id, event_id) DO UPDATE
+            SET season = EXCLUDED.season,
+                inning = EXCLUDED.inning,
+                is_bottom_inning = EXCLUDED.is_bottom_inning,
+                event_sequence = EXCLUDED.event_sequence,
+                batter_id = EXCLUDED.batter_id,
+                pitcher_id = EXCLUDED.pitcher_id,
+                batter_hand = EXCLUDED.batter_hand,
+                pitcher_hand = EXCLUDED.pitcher_hand,
+                outs_before = EXCLUDED.outs_before,
+                balls = EXCLUDED.balls,
+                strikes = EXCLUDED.strikes,
+                start_bases = EXCLUDED.start_bases,
+                event_code = EXCLUDED.event_code,
+                event_text = EXCLUDED.event_text,
+                is_at_bat = EXCLUDED.is_at_bat,
+                is_plate_appearance = EXCLUDED.is_plate_appearance,
+                hit_value = EXCLUDED.hit_value,
+                is_hit = EXCLUDED.is_hit,
+                is_walk = EXCLUDED.is_walk,
+                is_strikeout = EXCLUDED.is_strikeout,
+                is_home_run = EXCLUDED.is_home_run,
+                runs_on_play = EXCLUDED.runs_on_play,
+                rbi = EXCLUDED.rbi,
+                source_type = EXCLUDED.source_type,
+                raw_play = EXCLUDED.raw_play,
+                mlb_game_pk = EXCLUDED.mlb_game_pk,
+                snapshot_id = EXCLUDED.snapshot_id,
+                plate_appearance_index = EXCLUDED.plate_appearance_index,
+                mlb_event_type = EXCLUDED.mlb_event_type,
+                event_type_description = EXCLUDED.event_type_description,
+                trajectory = EXCLUDED.trajectory,
+                home_score_after = EXCLUDED.home_score_after,
+                away_score_after = EXCLUDED.away_score_after,
+                updated_at = now()
+            """,
+            values,
+        )
+
+
+def delete_stale_live_rows(conn, *, mlb_game_pk: int, canonical_game_id: str) -> None:
+    legacy_game_id = f"MLB{mlb_game_pk}"
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            DELETE FROM core.live_events
+            WHERE (
+                    mlb_game_pk = %s
+                    OR game_id = %s
+                  )
+              AND game_id <> %s
+            """,
+            (mlb_game_pk, legacy_game_id, canonical_game_id),
+        )
+        cur.execute(
+            """
+            DELETE FROM core.live_games
+            WHERE (
+                    mlb_game_pk = %s
+                    OR game_id = %s
+                  )
+              AND game_id <> %s
+            """,
+            (mlb_game_pk, legacy_game_id, canonical_game_id),
+        )
+
+
+def transform_live_game(game_pk: int) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     conn = psycopg2.connect(**database_kwargs())
     try:
-        game_data = feed.get("gameData", {})
-        live_data = feed.get("liveData", {})
-
-        # Extract basic game info
-        game_pk = game_data.get("game", {}).get("pk")
-        season = game_data.get("game", {}).get("season")
-        game_date = game_data.get("datetime", {}).get("dateTime")
-
-        # Team info
-        teams = game_data.get("teams", {})
-        home_team = teams.get("home", {})
-        away_team = teams.get("away", {})
-
-        # Look up Retrosheet team IDs from bridge tables
-        home_team_id = lookup_retrosheet_team_id(home_team.get("id"), conn)
-        away_team_id = lookup_retrosheet_team_id(away_team.get("id"), conn)
-
-        # Score info
-        linescore = live_data.get("linescore", {})
-        home_score = linescore.get("teams", {}).get("home", {}).get("runs", 0)
-        away_score = linescore.get("teams", {}).get("away", {}).get("runs", 0)
-
-        # Game status
-        status = live_data.get("gameData", {}).get("status", {})
-        is_complete = status.get("abstractGameState") == "Final"
-
-        return {
-            "game_id": f"MLB{game_pk}",
-            "season": season,
-            "game_date": game_date.split("T")[0] if game_date else None,
-            "home_team_id": home_team_id,
-            "away_team_id": away_team_id,
-            "home_team_name": home_team.get("name"),
-            "away_team_name": away_team.get("name"),
-            "park_id": f"MLB{game_data.get('venue', {}).get('id', 'UNK')}",
-            "home_score": home_score,
-            "away_score": away_score,
-            "is_complete": is_complete,
-            "source_type": "mlb_live",
-            "raw_payload": feed,
-        }
+        snapshot = fetch_latest_snapshot(conn, game_pk)
+        game_row = transform_game(conn, snapshot)
+        event_rows = transform_events(conn, snapshot, game_row)
+        delete_stale_live_rows(
+            conn,
+            mlb_game_pk=snapshot.game_pk,
+            canonical_game_id=game_row["game_id"],
+        )
+        upsert_live_game(conn, game_row)
+        upsert_live_events(conn, event_rows)
+        conn.commit()
+        return game_row, event_rows
     finally:
         conn.close()
 
 
-def transform_live_events(feed: Dict[str, Any], game_id: str) -> List[Dict[str, Any]]:
-    """Transform MLB live feed plays into core.events format."""
-    conn = psycopg2.connect(**database_kwargs())
-    try:
-        live_data = feed.get("liveData", {})
-        plays = live_data.get("plays", {}).get("allPlays", [])
-
-        events = []
-        for play_idx, play in enumerate(plays):
-            # Each play can have multiple events (pitches, etc.)
-            # For simplicity, we'll create one event per play result
-
-            result = play.get("result", {})
-            about = play.get("about", {})
-
-            inning = about.get("inning")
-            is_top = about.get("isTopInning", True)
-            event_idx = about.get("atBatIndex", play_idx)
-
-            # Batter info - look up Retrosheet IDs
-            batter = play.get("matchup", {}).get("batter", {})
-            pitcher = play.get("matchup", {}).get("pitcher", {})
-
-            batter_id = (
-                lookup_retrosheet_player_id(batter.get("id"), conn)
-                if batter.get("id")
-                else "UNK"
-            )
-            pitcher_id = (
-                lookup_retrosheet_player_id(pitcher.get("id"), conn)
-                if pitcher.get("id")
-                else "UNK"
-            )
-
-            # Count info
-            count = play.get("count", {})
-            balls = count.get("balls", 0)
-            strikes = count.get("strikes", 0)
-
-            # Base state
-            runners = play.get("runners", [])
-            bases = 0
-            for runner in runners:
-                if (
-                    runner.get("movement", {}).get("end")
-                    and runner.get("movement", {}).get("end") != "OUT"
-                ):
-                    base = runner.get("movement", {}).get("end")
-                    if base == "1B":
-                        bases |= 1
-                    elif base == "2B":
-                        bases |= 2
-                    elif base == "3B":
-                        bases |= 4
-
-            # Outs
-            outs = about.get("halfInningOuts", 0)
-
-            # Event details
-            event_type = result.get("type", "unknown")
-            event_desc = result.get("description", "")
-            rbi = result.get("rbi", 0)
-            runs_on_play = len(
-                [
-                    r
-                    for r in runners
-                    if r.get("movement", {}).get("run", {}).get("isScoringEvent")
-                ]
-            )
-
-            # Determine event code (simplified mapping)
-            if "single" in event_desc.lower():
-                event_code = 20  # Single
-                hit_value = 1
-            elif "double" in event_desc.lower():
-                event_code = 21  # Double
-                hit_value = 2
-            elif "triple" in event_desc.lower():
-                event_code = 22  # Triple
-                hit_value = 3
-            elif "home run" in event_desc.lower():
-                event_code = 23  # Home run
-                hit_value = 4
-            elif "strikeout" in event_desc.lower():
-                event_code = 3  # Strikeout
-                hit_value = 0
-            elif "walk" in event_desc.lower():
-                event_code = 14  # Walk
-                hit_value = 0
-            else:
-                event_code = 0  # Unknown/other
-                hit_value = 0
-
-            # Plate appearance flags
-            is_at_bat = event_type in ["atBat", "action"]
-            is_hit = hit_value > 0
-            is_walk = event_code == 14
-            is_strikeout = event_code == 3
-            is_home_run = hit_value == 4
-
-            events.append(
-                {
-                    "game_id": game_id,
-                    "event_id": event_idx + 1,
-                    "season": feed.get("gameData", {}).get("game", {}).get("season"),
-                    "inning": inning,
-                    "is_bottom_inning": not is_top,
-                    "event_sequence": event_idx + 1,
-                    "batter_id": batter_id,
-                    "pitcher_id": pitcher_id,
-                    "batter_hand": batter.get("batSide", {}).get("code", "U"),
-                    "pitcher_hand": pitcher.get("pitchHand", {}).get("code", "U"),
-                    "outs_before": outs,
-                    "balls": balls,
-                    "strikes": strikes,
-                    "start_bases": bases,
-                    "event_code": event_code,
-                    "event_text": event_desc,
-                    "is_at_bat": is_at_bat,
-                    "is_plate_appearance": is_at_bat,
-                    "hit_value": hit_value,
-                    "is_hit": is_hit,
-                    "is_walk": is_walk,
-                    "is_strikeout": is_strikeout,
-                    "is_home_run": is_home_run,
-                    "runs_on_play": runs_on_play,
-                    "rbi": rbi,
-                    "source_type": "mlb_live",
-                    "raw_play": play,
-                }
-            )
-
-        return events
-    finally:
-        conn.close()
-
-
-def store_live_game_data(
-    game_data: Dict[str, Any], events: List[Dict[str, Any]]
-) -> None:
-    """Store transformed live game data in core tables."""
-    engine = create_engine(database_url())
-    try:
-        # Store game data (exclude raw_payload for now)
-        game_data_copy = game_data.copy()
-        game_data_copy.pop("raw_payload", None)
-        game_df = pd.DataFrame([game_data_copy])
-        game_df.to_sql(
-            "live_games", engine, schema="core", if_exists="replace", index=False
-        )
-
-        # Store event data
-        if events:
-            # Remove raw_play from events to avoid JSON serialization issues
-            clean_events = []
-            for event in events:
-                event_copy = event.copy()
-                event_copy.pop("raw_play", None)
-                clean_events.append(event_copy)
-
-            events_df = pd.DataFrame(clean_events)
-            events_df.to_sql(
-                "live_events", engine, schema="core", if_exists="replace", index=False
-            )
-
-        print(f"Stored {len(events)} live events for game {game_data['game_id']}")
-
-    finally:
-        engine.dispose()
-
-
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Transform MLB live feed into core schema"
+        description="Transform a stored MLB live-feed snapshot into canonical live tables."
     )
-    parser.add_argument(
-        "--game-pk", type=int, required=True, help="MLB game primary key"
-    )
-
+    parser.add_argument("--game-pk", type=int, required=True)
     args = parser.parse_args()
 
     try:
-        # Get live feed data
-        feed = get_live_feed(args.game_pk)
-        print(f"Processing live feed for game {args.game_pk}")
+        game_row, event_rows = transform_live_game(args.game_pk)
+    except Exception as exc:
+        print(f"Error: {exc}")
+        raise SystemExit(1) from exc
 
-        # Transform data
-        game_data = transform_live_game(feed)
-        events = transform_live_events(feed, game_data["game_id"])
-
-        # Store in database
-        store_live_game_data(game_data, events)
-
-        print(
-            f"Successfully transformed {len(events)} events for live game {game_data['game_id']}"
-        )
-
-    except Exception as e:
-        print(f"Error: {e}")
-        exit(1)
+    print(
+        f"Transformed snapshot for game_pk {args.game_pk} into {game_row['game_id']} "
+        f"with {len(event_rows)} live events."
+    )
 
 
 if __name__ == "__main__":

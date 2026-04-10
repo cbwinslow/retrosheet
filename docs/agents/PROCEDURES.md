@@ -26,8 +26,68 @@ Expected order:
 10. Build feature marts.
 11. Build interface persistence.
 12. Build multiclass PA outcome examples.
+13. Build pitch-sequence normalization examples.
 
 When adding a required SQL migration, add it to `scripts/rebuild_warehouse.sh` and document it in `README.md`.
+
+## Live Data Ingestion
+
+Purpose: ingest real-time MLB game data alongside historical Retrosheet data.
+
+### One-Time Setup (Bridge Tables)
+
+Command:
+
+```bash
+python3 scripts/populate_bridge_tables.py
+```
+
+Expected order:
+
+1. Download Chadwick Bureau Register CSV files.
+2. Parse player and team ID mappings.
+3. Populate `bridge.player_xref` with MLB ↔ Retrosheet ID mappings.
+4. Populate `bridge.team_xref` with team ID mappings.
+5. Create indexes for fast lookups.
+
+### Ongoing Live Data Ingestion
+
+Command:
+
+```bash
+python3 scripts/fetch_mlb_schedule.py --yesterday
+python3 scripts/ingest_live_games.py --schedule
+```
+
+Expected order:
+
+1. Query MLB Stats API for recent game schedules.
+2. Identify active/completed games for ingestion.
+3. For each game:
+   - Fetch live game feed JSON from MLB API.
+   - Store source-preserved JSON plus request/status/checksum provenance in `raw_mlb.live_feed_snapshots`.
+   - Transform the latest stored snapshot to canonical live schema using bridge table lookups.
+   - Upsert into `core.live_games` and `core.live_events`.
+4. Refresh `analysis.combined_plate_appearances` when live rows change and downstream combined PA analysis depends on current live state.
+
+### Analysis with Combined Data
+
+Use `analysis.*` views for unified queries across historical and live data:
+
+```sql
+-- Check data source statistics
+SELECT * FROM analysis.get_data_source_stats();
+
+-- Query combined games
+SELECT * FROM analysis.combined_games
+WHERE game_date >= CURRENT_DATE - INTERVAL '7 days';
+
+-- Query combined events
+SELECT ce.*
+FROM analysis.combined_events ce
+JOIN analysis.combined_games cg USING (game_id)
+WHERE ce.source_type = 'mlb_live';
+```
 
 ## Add A New Prediction Target
 
@@ -122,6 +182,24 @@ python3 scripts/predict_pa_outcome_distribution.py --game-id ANA202506060 --plat
 
 The scorer returns class probabilities plus derived aggregates such as hit, extra-base hit, traditional on-base, reach-base-any, ball-in-play, and expected total bases. API consumers can request the same path through `/api/predict` with `target_id: "pa_outcome_distribution"`.
 
+## Normalize Pitch Sequences
+
+Purpose: preserve Retrosheet `pitch_seq_tx` at one-row-per-symbol granularity without inventing a separate raw parsing pipeline.
+
+Command:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -v ON_ERROR_STOP=1 -f sql/077_pitch_sequence_model.sql
+```
+
+Outputs:
+
+- `features.pitch_sequence_symbol_reference`
+- `features.pitch_sequence_examples`
+- `features.pitch_sequence_validation_summary`
+
+Use this layer before attempting same-PA temporal features or any direct next-pitch model. It preserves official Retrosheet pitch-sequence symbols, coarse symbol groupings, and terminal-pitch flags while staying anchored to `features.plate_appearance_outcome_examples`.
+
 ## Build Scenario Simulations
 
 Current baseline:
@@ -146,14 +224,16 @@ Purpose: transform live MLB data into the same canonical shapes as Retrosheet hi
 
 Procedure:
 
-1. Store raw payload in `raw_mlb.live_feed_snapshots`.
+1. Store raw payload in `raw_mlb.live_feed_snapshots` with fetch provenance.
 2. Map MLB IDs to Retrosheet IDs through `bridge`.
-3. Transform live game/play state into `core.live_games` and `core.live_events`.
-4. Build live feature rows with the same columns used by historical training.
-5. Score with active registered models.
-6. Store predictions with model ID, timestamp, and input features.
+3. Transform live game/play state into `core.live_games` and `core.live_events` by upsert, not destructive table replacement.
+4. Preserve `raw_payload` and `raw_play` in the canonical live layer for replay/debugging.
+5. Build live feature rows with the same columns used by historical training.
+6. Score with active registered models.
+7. Store predictions with model ID, timestamp, and input features.
 
 Do not score raw MLB JSON directly in production paths.
+Do not merge raw MLB rows into historical raw layers. Historical/live combination belongs in `analysis.*` views/materialized views and later feature-parity views.
 
 ## Update Web Command Center
 

@@ -57,6 +57,7 @@ psql -h localhost -p 5432 -d retrosheet -f sql/060_advanced_feature_marts.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/070_temporal_and_production_marts.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/075_interface_workflows.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/076_plate_appearance_outcome_model.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/077_pitch_sequence_model.sql
 ```
 
 `load_reference_metadata.py` loads Retrosheet `biofile.csv`, `teams.csv`, and `ballparks.csv`, backfills player handedness, and refreshes the materialized feature views.
@@ -70,6 +71,8 @@ psql -h localhost -p 5432 -d retrosheet -f sql/076_plate_appearance_outcome_mode
 `sql/070_temporal_and_production_marts.sql` adds team rest/travel context, player season production, pitcher season production, and temporal example views for future model training.
 
 `sql/076_plate_appearance_outcome_model.sql` adds a granular multiclass plate-appearance outcome feature layer and registers the `pa_outcome_distribution` prediction target. See [docs/AT_BAT_OUTCOME_MODEL_REVIEW.md](docs/AT_BAT_OUTCOME_MODEL_REVIEW.md) for how this maps the at-bat outcome design spec onto the current warehouse.
+
+`sql/077_pitch_sequence_model.sql` normalizes `pitch_seq_tx` into one row per Retrosheet pitch-sequence symbol, preserves official symbol semantics, and exposes reusable pitch-sequence features for future same-PA and pitch-level modeling.
 
 ## Retrosheet Play-By-Play
 
@@ -102,11 +105,81 @@ See [docs/WAREHOUSE_PLAN.md](docs/WAREHOUSE_PLAN.md) for the staged normalizatio
 
 See [docs/PREDICTION_ENGINE_PLAN.md](docs/PREDICTION_ENGINE_PLAN.md) for the reusable ML, agent, live-data, and market-intelligence architecture.
 
+See [docs/RESEARCH_METHODOLOGY.md](docs/RESEARCH_METHODOLOGY.md) for the formal CRISP-DM methodology, notation, objective functions, and evaluation logic.
+
 See [docs/CORE_SCHEMA.md](docs/CORE_SCHEMA.md) for the typed database layer, constraints, indexes, and feature seed.
 
 See [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md) for a running build log of major warehouse, modeling, and planning steps.
 
 See [docs/agents/README.md](docs/agents/README.md) for the project inventory, modeling objectives, canonical procedures, and agent operating map.
+
+## Live MLB Data Ingestion
+
+The warehouse supports real-time MLB game data ingestion alongside historical Retrosheet data. The intended live shape is:
+
+- `raw_mlb`: source-preserved MLB API payloads plus fetch provenance
+- `bridge`: MLB ↔ Retrosheet ID reconciliation
+- `core.live_games` / `core.live_events`: canonical live state
+- `analysis.*`: historical + live union layer for combined querying
+
+Raw MLB data stays separate from Retrosheet raw data. Cross-source analysis happens in `analysis` views/materialized views, not by merging raw layers together.
+
+### One-Time Setup
+
+Populate bridge tables for ID mapping between MLB and Retrosheet systems:
+
+```bash
+python3 scripts/populate_bridge_tables.py
+```
+
+This downloads the Chadwick Bureau Register and populates player mappings. Team and park mappings stay in `bridge` as separate tables.
+
+### Ongoing Live Data Ingestion
+
+Discover and ingest recent MLB games:
+
+```bash
+# Discover active games
+python3 scripts/fetch_mlb_schedule.py --yesterday
+
+# Ingest all discovered games
+python3 scripts/ingest_live_games.py --schedule
+
+# Or ingest a specific game
+python3 scripts/ingest_live_games.py --game-pk 823884
+```
+
+For a single game, the explicit sequence is:
+
+```bash
+python3 scripts/warehouse.py fetch-live-game --game-pk 823884
+python3 scripts/transform_live_game.py --game-pk 823884
+psql -h localhost -p 5432 -d retrosheet -c "REFRESH MATERIALIZED VIEW analysis.combined_plate_appearances;"
+```
+
+New raw snapshots store request params, HTTP status, checksum, game date, and season in addition to the full JSON payload.
+
+### Combined Data Analysis
+
+Query across historical and live data using analysis views:
+
+```sql
+-- Check data source statistics
+SELECT * FROM analysis.get_data_source_stats();
+
+-- Query combined games from both sources
+SELECT * FROM analysis.combined_games
+WHERE game_date >= CURRENT_DATE - INTERVAL '7 days';
+
+-- Query combined events
+SELECT ce.*
+FROM analysis.combined_events ce
+JOIN analysis.combined_games cg USING (game_id)
+WHERE ce.source_type = 'mlb_live'
+  AND cg.game_date >= CURRENT_DATE;
+```
+
+See [docs/LIVE_DATA_ARCHITECTURE.md](docs/LIVE_DATA_ARCHITECTURE.md) for complete architecture diagrams and procedures.
 
 ## Modeling
 
@@ -249,7 +322,7 @@ The live feed endpoint used is:
 https://statsapi.mlb.com/api/v1.1/game/{gamePk}/feed/live
 ```
 
-Live games are stored in `core.live_games` and `core.live_events` with the same schema as historical data, enabling real-time predictions with trained models.
+Live games are stored in `core.live_games` and `core.live_events` as the canonical live layer. Those tables preserve `raw_payload` / `raw_play` for replay and debugging. Historical model training is currently more mature than live feature parity; use the live layer as the bridge into later model-scoring work.
 
 ## Notes
 

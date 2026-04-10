@@ -85,8 +85,8 @@ Why it matters:
 
 Why not first:
 
-- `pitch_seq_tx` is present, but not normalized into one pitch per row.
-- Pitch-level parsing and state transitions need careful validation.
+- `features.pitch_sequence_examples` now normalizes `pitch_seq_tx` into one row per Retrosheet sequence symbol, but not every intermediate count transition has been validated yet.
+- Same-PA temporal state reconstruction and pitch-level transition logic still need careful validation.
 - Direct PA outcome modeling is simpler and useful sooner.
 
 ## Moneyball-Style Modeling Goals
