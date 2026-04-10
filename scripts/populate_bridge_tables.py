@@ -10,7 +10,7 @@ player ID systems.
 from __future__ import annotations
 
 import csv
-import gzip
+import json
 import os
 import tempfile
 import urllib.request
@@ -25,11 +25,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def database_kwargs() -> dict[str, str]:
     return {
-        "host": "localhost",
-        "port": "5432",
-        "dbname": "retrosheet",
-        "user": "postgres",
-        "password": "",
+        "host": os.environ.get("PGHOST", "localhost"),
+        "port": os.environ.get("PGPORT", "5432"),
+        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
+        "user": os.environ.get("PGUSER", "postgres"),
+        "password": os.environ.get("PGPASSWORD", ""),
     }
 
 
@@ -72,43 +72,95 @@ def parse_chadwick_csv(file_paths: List[Path]) -> List[Dict[str, str]]:
 def insert_player_mappings(conn, records: List[Dict[str, str]]) -> None:
     """Insert player ID mappings into bridge.player_xref table."""
     with conn.cursor() as cur:
-        # Clear existing data
-        cur.execute("TRUNCATE TABLE bridge.player_xref RESTART IDENTITY")
+        cur.execute(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'bridge' AND table_name = 'player_xref'
+            """
+        )
+        columns = {row[0] for row in cur.fetchall()}
 
+    canonical_schema = "retrosheet_player_id" in columns
+
+    with conn.cursor() as cur:
         inserted = 0
         for record in records:
             # Only insert records that have at least MLBAM or Retrosheet IDs
             mlb_id = record.get("key_mlbam")
             retro_id = record.get("key_retro")
 
-            if not mlb_id and not retro_id:
+            if not retro_id:
                 continue
 
             # Prepare data
             data = {
-                "retrosheet_id": retro_id or None,
-                "mlb_id": int(mlb_id) if mlb_id else None,
-                "baseball_reference_id": record.get("key_bbref") or None,
-                "name_first": record.get("name_first") or None,
-                "name_last": record.get("name_last") or None,
+                "retrosheet_player_id": retro_id or None,
+                "mlb_player_id": int(mlb_id) if mlb_id else None,
+                "chadwick_register_id": record.get("key_uuid") or None,
+                "first_name": record.get("name_first") or None,
+                "last_name": record.get("name_last") or None,
+                "bats": (record.get("bats") or "U")[:1].upper(),
+                "throws": (record.get("throws") or "U")[:1].upper(),
             }
 
             # Insert record
-            cur.execute(
-                """
-                INSERT INTO bridge.player_xref (
-                    retrosheet_id, mlb_id, baseball_reference_id,
-                    name_first, name_last
-                ) VALUES (%s, %s, %s, %s, %s)
-            """,
-                (
-                    data["retrosheet_id"],
-                    data["mlb_id"],
-                    data["baseball_reference_id"],
-                    data["name_first"],
-                    data["name_last"],
-                ),
-            )
+            if canonical_schema:
+                cur.execute(
+                    """
+                    INSERT INTO bridge.player_xref (
+                        retrosheet_player_id, mlb_player_id, chadwick_register_id,
+                        first_name, last_name, bats, throws
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (retrosheet_player_id) DO UPDATE
+                    SET mlb_player_id = EXCLUDED.mlb_player_id,
+                        chadwick_register_id = EXCLUDED.chadwick_register_id,
+                        first_name = EXCLUDED.first_name,
+                        last_name = EXCLUDED.last_name,
+                        bats = EXCLUDED.bats,
+                        throws = EXCLUDED.throws,
+                        updated_at = now()
+                """,
+                    (
+                        data["retrosheet_player_id"],
+                        data["mlb_player_id"],
+                        data["chadwick_register_id"],
+                        data["first_name"],
+                        data["last_name"],
+                        data["bats"],
+                        data["throws"],
+                    ),
+                )
+            else:
+                cur.execute(
+                    """
+                    INSERT INTO bridge.player_xref (
+                        retrosheet_id, mlb_id, baseball_reference_id,
+                        name_first, name_last, source_notes, updated_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s::jsonb, now())
+                    ON CONFLICT (retrosheet_id) DO UPDATE
+                    SET mlb_id = EXCLUDED.mlb_id,
+                        baseball_reference_id = EXCLUDED.baseball_reference_id,
+                        name_first = EXCLUDED.name_first,
+                        name_last = EXCLUDED.name_last,
+                        source_notes = EXCLUDED.source_notes,
+                        updated_at = now()
+                """,
+                    (
+                        data["retrosheet_player_id"],
+                        data["mlb_player_id"],
+                        record.get("key_bbref") or None,
+                        data["first_name"],
+                        data["last_name"],
+                        json.dumps(
+                            {
+                                "chadwick_register_id": data["chadwick_register_id"],
+                                "bats": data["bats"],
+                                "throws": data["throws"],
+                            }
+                        ),
+                    ),
+                )
 
             inserted += 1
             if inserted % 10000 == 0:

@@ -1,6 +1,130 @@
 # Project Log
 
-## 2026-04-10
+## 2026-04-10 (Pitch Sequence Normalization)
+
+### Built
+
+- Added `sql/077_pitch_sequence_model.sql` as the first formal pitch-sequence normalization layer.
+- Created `features.pitch_sequence_symbol_reference` with official Retrosheet pitch-sequence symbols and coarse semantics.
+- Created `features.pitch_sequence_examples` with one row per `pitch_seq_tx` symbol, anchored to `features.plate_appearance_outcome_examples`.
+- Added `features.pitch_sequence_validation_summary` for coverage and parsing sanity checks.
+- Updated the canonical rebuild order in `scripts/rebuild_warehouse.sh`.
+- Updated `README.md` and `docs/agents/PROCEDURES.md` to make the new layer reproducible and discoverable.
+
+### Modeling Decisions
+
+- This layer intentionally stops at normalized sequence symbols and coarse symbol groups.
+- It does not yet claim to reconstruct every intermediate count transition. That should come after validation against official Retrosheet semantics and the current warehouse state.
+- The purpose of this step is to avoid inventing a parallel pitch parser later and to give same-PA temporal feature work a canonical source.
+
+### Validation
+
+- Successfully applied `sql/077_pitch_sequence_model.sql` to the local `retrosheet` database.
+- `features.pitch_sequence_examples`: 20,121,849 sequence-symbol rows across 4,779,662 plate appearances.
+- Unknown-symbol rows: 0.
+- Top symbol groups:
+  - `ball`: 6,592,285
+  - `in_play`: 3,394,108
+  - `foul`: 3,122,551
+  - `called_strike`: 3,089,666
+  - `swinging_strike`: 1,763,610
+  - `marker`: 1,213,190
+- Confirmed `pitch_seq_tx` coverage for loaded modern seasons remains complete in `features.plate_appearance_outcome_examples`:
+  - 2025: 186,640 / 186,640
+  - 2024: 185,783 / 185,783
+  - 2023: 187,265 / 187,265
+  - 2022: 185,121 / 185,121
+- Sampled live warehouse values show the expected Retrosheet symbol mix, including examples such as `BCBBCB`, `CCBX`, `SFBX`, `..CFFBS`, and `CBSBBFX`.
+
+### Next
+
+1. Apply `sql/077_pitch_sequence_model.sql` and validate symbol counts plus unknown-symbol frequency.
+2. Add inferred within-PA temporal state columns only after the symbol layer is verified.
+3. Build same-PA temporal features on top of `features.pitch_sequence_examples`.
+
+## 2026-04-10 (Research Methodology And Feature Audit)
+
+### Built
+
+- Added `docs/RESEARCH_METHODOLOGY.md` as the formal CRISP-DM methods document for the project.
+- Defined the project in research-program terms rather than only implementation terms:
+  - business objective and decision problem
+  - canonical data layers and source-system separation
+  - mathematical state representation for plate appearances
+  - multiclass PA outcome notation and objective functions
+  - derived baseball probability functionals
+  - run expectancy and win-probability notation
+  - time-aware evaluation, calibration, and deployment rules
+- Added `docs/FEATURE_AUDIT.md` to classify fields and features into:
+  - understood and already used
+  - understood but not yet fully operationalized
+  - preserved raw but not yet reliable enough for direct modeling
+
+### Methodological Decisions
+
+- The warehouse should be treated as a reproducible research system following CRISP-DM:
+  - Business Understanding
+  - Data Understanding
+  - Data Preparation
+  - Modeling
+  - Evaluation
+  - Deployment
+- The first coherent direct probabilistic target remains the multiclass plate-appearance outcome distribution.
+- Historical/live source merging should continue to happen only after source-preserved raw landing and canonical normalization.
+- Hyperparameter search is not the current bottleneck. Expected return is still higher from feature work and calibration work.
+
+### Validation
+
+- Confirmed that the formal methodology is consistent with the current implemented stack:
+  - historical path: `raw_retrosheet -> core -> features`
+  - live path: `raw_mlb -> bridge -> core.live_* -> analysis`
+  - multiclass target: `predictions.prediction_targets.target_id = 'pa_outcome_distribution'`
+- Confirmed modern-season `pitch_seq_tx` coverage remains effectively complete in the current warehouse and is therefore viable for the next feature-engineering phase.
+
+### Next
+
+1. Normalize `pitch_seq_tx` into one pitch per row.
+2. Add same-game temporal features for PA models.
+3. Build live feature parity for `pa_outcome_distribution`.
+4. Add calibration and backtest diagnostics for multiclass PA outcomes.
+5. Expand hyperparameter search only after the feature/calibration layer is stronger.
+
+## 2026-04-10 (Live Data Integration)
+
+### Built
+
+- **MLB Live Data Ingestion Pipeline**: Complete end-to-end system for ingesting real-time MLB game data alongside historical Retrosheet data
+- **Database Objects**:
+  - `analysis.combined_games` - Union view of historical + live games
+  - `analysis.combined_events` - Union view of historical + live events
+  - `analysis.combined_plate_appearances` - Materialized view combining PA data
+  - `analysis.get_data_source_stats()` - Function for data source statistics
+  - `analysis.get_recent_games()` - Function for recent games across sources
+  - `analysis.refresh_combined_data()` - Function to refresh materialized views
+- **Scripts**:
+  - `scripts/fetch_mlb_schedule.py` - Discovers active MLB games
+  - `scripts/populate_bridge_tables.py` - Downloads Chadwick Register for ID mapping
+  - `scripts/ingest_live_games.py` - Orchestrates batch live data ingestion
+  - `scripts/transform_live_game.py` - Transforms MLB API to core schema (enhanced with ID mapping)
+- **Bridge Tables**: Populated `bridge.player_xref` with 127,341 MLB ↔ Retrosheet ID mappings
+- **Architecture**: Maintained clean separation between `core.*` (historical) and `core.live_*` (live) data
+- **Documentation**: Created comprehensive architecture diagrams and procedure documentation
+
+### Validation Counts
+
+- **Bridge Table Population**: 127,341 player ID mappings loaded
+- **Live Game Ingestion**: Successfully ingested 1 MLB game with 79 events
+- **Combined Data**: 62,599 total games, 4,933,766 total events across historical + live sources
+- **Data Sources**: Historical (62,598 games), Live (1 game), Combined analysis views working
+
+### Architecture Decisions
+
+- **Separation Maintained**: Historical Retrosheet data in `core.games/events`, live MLB data in `core.live_games/events`
+- **ID Mapping**: Live data uses Retrosheet IDs via bridge tables, falls back to MLB prefixed IDs when mapping unavailable
+- **Analysis Layer**: New `analysis` schema provides unified querying without mixing storage
+- **No Table Renames**: Existing architecture already supported clean separation
+
+## 2026-04-10 (Original)
 
 ### Built
 
@@ -225,3 +349,58 @@
 - Extended `/api/predict` so callers can request `target_id: "pa_outcome_distribution"` and receive class probabilities plus derived aggregates.
 - Validated historical scoring on `ANA202506060` plate appearance `30` using model version `20260410T172129Z`; probabilities summed to 0.9999999999999999 and returned actual outcome `walk`.
 - Ran `npm run build` in `baseball-chatbot-ui/`; the Next.js production build completed successfully.
+
+### Live MLB Pipeline Repair
+
+- Reviewed the live pipeline against the warehouse design goal: keep source-preserved MLB payloads in `raw_mlb`, keep ID reconciliation in `bridge`, upsert canonical live state into `core.live_*`, and use `analysis.*` views/materialized views as the combined analysis layer.
+- Extended `sql/090_mlb_live_data.sql` with additive provenance columns for future MLB fetches:
+  - `request_params`
+  - `http_status`
+  - `error_text`
+  - `payload_checksum`
+  - `game_date`
+  - `season`
+- Extended `sql/110_live_core_tables.sql` with additive live-state/provenance columns and compatibility indexes so existing warehouses can be upgraded in place:
+  - `core.live_games`: `raw_payload`, `created_at`, `updated_at`, `mlb_game_pk`, `snapshot_id`, `snapshot_fetched_at`, `status_code`, `detailed_state`, `venue_name`
+  - `core.live_events`: `raw_play`, `created_at`, `updated_at`, `mlb_game_pk`, `snapshot_id`, `plate_appearance_index`, `mlb_event_type`, `event_type_description`, `trajectory`, `home_score_after`, `away_score_after`
+- Reworked `scripts/transform_live_game.py` to:
+  - read the latest stored snapshot with provenance
+  - tolerate the current legacy `bridge.player_xref` column names in the active database
+  - preserve `raw_payload` and `raw_play`
+  - extract batter/pitcher handedness from `matchup.batSide` and `matchup.pitchHand`
+  - map event codes from structured MLB `eventType`/trajectory instead of free-text only
+  - upsert `core.live_games` and `core.live_events` instead of replacing whole tables
+  - clean up stale legacy live rows for the same game when a canonical bridged game id is available
+- Updated `scripts/warehouse.py fetch-live-game` so new raw MLB snapshots store request params, HTTP status, checksum, game date, and season.
+- Updated `scripts/ingest_live_games.py` to use environment-driven Postgres settings and a correct recency filter expression.
+- Updated `scripts/populate_bridge_tables.py` to tolerate both the canonical bridge schema in SQL and the currently active legacy bridge schema in the database.
+- Validation:
+  - Fetched fresh snapshots for MLB game `823884`; newest raw rows now include `http_status = 200`, `game_date = 2026-04-09`, `season = 2026`, checksum, and request params.
+  - Re-transformed stored snapshot `823884` successfully into canonical game `MLB146202604090` with 79 live events.
+  - `core.live_games` for `823884` now shows `is_complete = true`, `status_code = 'F'`, `detailed_state = 'Final'`, and preserved `raw_payload`.
+  - All 79 live events for `823884` now preserve `raw_play`.
+  - All 79 live events for `823884` now have known batter/pitcher handedness instead of `U`.
+  - `analysis.combined_games` now reports 1 live game row and `analysis.combined_events` 79 live event rows for the repaired sample after refresh/cleanup.
+  - Refreshed `analysis.combined_plate_appearances`; it now reports 79 live rows.
+- Decision: the warehouse design is still correct. Raw MLB should stay separate in `raw_mlb`, and the historical/live merge should happen in `analysis` views/materialized views and later feature-parity views, not by collapsing the raw layers together.
+- Documentation sync:
+  - Updated `AGENTS.md`, `README.md`, `docs/agents/README.md`, `docs/agents/FILE_INVENTORY.md`, `docs/agents/PROCEDURES.md`, and `docs/LIVE_DATA_ARCHITECTURE.md` so the written live-ingestion procedure now matches the repaired source-preserved/raw-separate design and the canonical upsert-based transform path.
+
+### Feature Audit
+
+- Reviewed the current field reference set:
+  - `docs/retrosheet_key.md`
+  - `docs/ab_outcome.md`
+  - `docs/AT_BAT_OUTCOME_MODEL_REVIEW.md`
+  - `docs/CORE_SCHEMA.md`
+  - `config/chadwick_event_columns.txt`
+- Added `docs/FEATURE_AUDIT.md` to classify current data/feature status into:
+  - fields we understand and actively use
+  - fields we understand but have not fully operationalized
+  - fields preserved raw but not yet reliable enough for modeling
+- Decision: feature generation is not “done.” Current historical PA/game models are good enough for baseline modeling and moderate tuning, but the highest-return work before deeper hyperparameter sweeps is still:
+  - pitch-level normalization from `pitch_seq_tx`
+  - same-game temporal PA features
+  - live feature parity for `pa_outcome_distribution`
+  - better contact/batted-ball derived features
+  - explicit rare-class policy for multiclass outcome modeling

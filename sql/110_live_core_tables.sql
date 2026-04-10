@@ -1,7 +1,7 @@
 -- Live game and event tables for real-time MLB data
 -- These mirror the structure of core.games and core.events but for live data
 
-CREATE TABLE core.live_games (
+CREATE TABLE IF NOT EXISTS core.live_games (
     game_id TEXT PRIMARY KEY,
     season INTEGER,
     game_date DATE,
@@ -19,7 +19,18 @@ CREATE TABLE core.live_games (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
-CREATE TABLE core.live_events (
+ALTER TABLE core.live_games
+    ADD COLUMN IF NOT EXISTS raw_payload JSONB,
+    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS mlb_game_pk INTEGER,
+    ADD COLUMN IF NOT EXISTS snapshot_id INTEGER,
+    ADD COLUMN IF NOT EXISTS snapshot_fetched_at TIMESTAMP WITH TIME ZONE,
+    ADD COLUMN IF NOT EXISTS status_code TEXT,
+    ADD COLUMN IF NOT EXISTS detailed_state TEXT,
+    ADD COLUMN IF NOT EXISTS venue_name TEXT;
+
+CREATE TABLE IF NOT EXISTS core.live_events (
     game_id TEXT REFERENCES core.live_games(game_id),
     event_id INTEGER,
     season INTEGER,
@@ -51,9 +62,28 @@ CREATE TABLE core.live_events (
     PRIMARY KEY (game_id, event_id)
 );
 
-CREATE INDEX live_events_game_inning_idx ON core.live_events (game_id, inning, is_bottom_inning);
-CREATE INDEX live_events_batter_idx ON core.live_events (batter_id);
-CREATE INDEX live_events_pitcher_idx ON core.live_events (pitcher_id);
+ALTER TABLE core.live_events
+    ADD COLUMN IF NOT EXISTS raw_play JSONB,
+    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS mlb_game_pk INTEGER,
+    ADD COLUMN IF NOT EXISTS snapshot_id INTEGER,
+    ADD COLUMN IF NOT EXISTS plate_appearance_index INTEGER,
+    ADD COLUMN IF NOT EXISTS mlb_event_type TEXT,
+    ADD COLUMN IF NOT EXISTS event_type_description TEXT,
+    ADD COLUMN IF NOT EXISTS trajectory TEXT,
+    ADD COLUMN IF NOT EXISTS home_score_after INTEGER,
+    ADD COLUMN IF NOT EXISTS away_score_after INTEGER,
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT now();
+
+CREATE INDEX IF NOT EXISTS live_games_mlb_game_pk_idx ON core.live_games (mlb_game_pk);
+CREATE INDEX IF NOT EXISTS live_games_snapshot_idx ON core.live_games (snapshot_id);
+CREATE UNIQUE INDEX IF NOT EXISTS live_games_game_id_uidx ON core.live_games (game_id);
+CREATE INDEX IF NOT EXISTS live_events_game_inning_idx ON core.live_events (game_id, inning, is_bottom_inning);
+CREATE INDEX IF NOT EXISTS live_events_batter_idx ON core.live_events (batter_id);
+CREATE INDEX IF NOT EXISTS live_events_pitcher_idx ON core.live_events (pitcher_id);
+CREATE INDEX IF NOT EXISTS live_events_mlb_game_pk_idx ON core.live_events (mlb_game_pk);
+CREATE INDEX IF NOT EXISTS live_events_snapshot_idx ON core.live_events (snapshot_id);
+CREATE UNIQUE INDEX IF NOT EXISTS live_events_game_event_uidx ON core.live_events (game_id, event_id);
 
 COMMENT ON TABLE core.live_games IS 'Live MLB game data transformed into core schema';
 COMMENT ON TABLE core.live_events IS 'Live MLB play-by-play data transformed into core schema';

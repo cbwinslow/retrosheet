@@ -65,8 +65,8 @@ The system supports real-time MLB game data ingestion alongside historical Retro
 ### Data Separation Architecture
 
 - **Historical Data**: `core.games`, `core.events`, `core.plate_appearances` (Retrosheet/Chadwick sourced)
-- **Live Data**: `core.live_games`, `core.live_events` (MLB Stats API sourced)
-- **Analysis Layer**: `analysis.*` views combine both sources for unified querying
+- **Live Data**: `raw_mlb.live_feed_snapshots` -> `core.live_games`, `core.live_events` (MLB Stats API sourced)
+- **Analysis Layer**: `analysis.*` views/materialized views combine both sources for unified querying
 - **Bridge Tables**: `bridge.player_xref`, `bridge.team_xref` map IDs between systems
 
 ### Live Data Ingestion Workflow
@@ -77,12 +77,14 @@ The system supports real-time MLB game data ingestion alongside historical Retro
 
 2. **Game Ingestion**: `python3 scripts/warehouse.py fetch-live-game --game-pk <GAME_PK>`
    - Downloads live game feed from MLB Stats API
-   - Stores raw JSON in `raw_mlb.live_feed_snapshots`
+   - Stores source-preserved JSON in `raw_mlb.live_feed_snapshots`
+   - Persists request params, HTTP status, checksum, game date, and season on new fetches
 
 3. **Data Transformation**: `python3 scripts/transform_live_game.py --game-pk <GAME_PK>`
-   - Transforms MLB API JSON to core schema
+   - Transforms the latest stored MLB API snapshot to canonical live schema
    - Applies ID mapping via bridge tables
-   - Populates `core.live_games` and `core.live_events`
+   - Upserts `core.live_games` and `core.live_events`
+   - Preserves `raw_payload` and `raw_play` in the live canonical layer
 
 4. **Batch Processing**: `python3 scripts/ingest_live_games.py --schedule`
    - Orchestrates discovery and ingestion for multiple games
@@ -106,17 +108,28 @@ Use `analysis.*` views for unified access to both historical and live data:
 ### Live Data Maintenance
 
 - Live data tables are additive - no historical data is modified
+- Raw MLB payloads remain separate in `raw_mlb`; do not merge raw live rows into `raw_retrosheet`
 - Bridge tables enable ID mapping without data duplication
-- Analysis views provide transparent access to combined datasets
+- Analysis views/materialized views provide transparent access to combined datasets
 - Separate ingestion scripts prevent accidental mixing of data sources
 
 ## Recommended Workflow
+
+### Full Warehouse Rebuild (Historical + Live Setup)
 
 1. `python3 scripts/warehouse.py check-deps`
 2. `python3 scripts/warehouse.py fetch-retrosheet`
 3. `python3 scripts/warehouse.py init-db`
 4. `python3 scripts/warehouse.py extract-chadwick --years 2000-2025 --outputs all`
 5. `python3 scripts/warehouse.py load-chadwick --years 2000-2025 --outputs all`
+6. `python3 scripts/populate_bridge_tables.py` (populate ID mappings)
+7. `psql -f sql/130_analysis_views.sql` (create combined analysis views)
+
+### Live Data Ingestion (Ongoing)
+
+1. `python3 scripts/fetch_mlb_schedule.py --yesterday` (discover games)
+2. `python3 scripts/ingest_live_games.py --schedule` (ingest live games)
+3. `SELECT * FROM analysis.get_data_source_stats();` (check ingestion status)
 
 For fast iteration, pass a smaller year range or selected outputs.
 

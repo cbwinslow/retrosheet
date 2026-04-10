@@ -9,7 +9,7 @@ The document is useful as a specification, but it is broader than what we should
 1. Keep the existing binary plate-appearance models.
 2. Add a granular multiclass plate-appearance outcome layer.
 3. Train a calibrated direct PA outcome model first.
-4. Add pitch-level recursive simulation later, after pitch-sequence parsing and validation.
+4. Add pitch-level recursive simulation later, after the normalized pitch-sequence layer is validated and extended into same-PA temporal state features.
 
 This reuses the current `core`, `features`, `models`, and `predictions` infrastructure instead of creating a separate modeling stack.
 
@@ -19,7 +19,7 @@ This reuses the current `core`, `features`, `models`, and `predictions` infrastr
 - Every `core.plate_appearances` row joins back to `raw_retrosheet.chadwick_events` by `game_id` and `event_id`.
 - PA-level count coverage is 100% for 2000-2025.
 - Raw Chadwick has `pitch_seq_tx`, `battedball_cd`, `battedball_loc_tx`, `sh_fl`, and `sf_fl`.
-- `pitch_seq_tx` is present for every PA in the loaded 2000-2025 seasons, but we have not yet parsed it into pitch-level rows.
+- `pitch_seq_tx` is present for every PA in the loaded 2000-2025 seasons, and `sql/077_pitch_sequence_model.sql` now normalizes it into one row per Retrosheet sequence symbol.
 - Batted-ball type is available for 3,372,283 PA rows.
 - Generic outs with event code `2` split cleanly into ground, fly, line, and pop outs through `battedball_cd`.
 
@@ -102,7 +102,7 @@ Existing useful infrastructure:
 4. Use time-aware splits: train through 2022, validate 2023-2025.
 5. Optimize log loss and calibration first; classification accuracy is secondary.
 6. Add calibration tables/reports before using model probabilities in simulations.
-7. Only after the direct PA distribution model works, parse `pitch_seq_tx` into a pitch-level table and evaluate recursive pitch simulation.
+7. Only after the direct PA distribution model works and the normalized pitch-sequence layer is validated, evaluate recursive pitch simulation.
 
 ## Leakage Notes
 
@@ -116,6 +116,6 @@ The current feature marts are mostly safe because prior-season and career-prior 
 ## Known Limitations
 
 - Retrosheet does not include Statcast pitch velocity, spin, movement, defensive positioning, or catcher framing.
-- `pitch_seq_tx` is present in loaded seasons, but it is not yet normalized into one row per pitch.
+- `pitch_seq_tx` is present in loaded seasons and is now normalized into one row per Retrosheet sequence symbol, but full pitch-state reconstruction is still incomplete.
 - Switch-hitter handling currently relies on Chadwick-resolved `batter_hand`; that is good for observed historical PAs, but live inference needs a deterministic handedness resolver.
 - Rare classes such as interference and triples may need grouping or hierarchical smoothing for stable calibrated probabilities.

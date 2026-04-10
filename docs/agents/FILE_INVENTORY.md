@@ -12,6 +12,9 @@ This inventory tells agents what each important file does and which workflows ow
 | `docs/WAREHOUSE_PLAN.md` | Warehouse normalization plan. | Warehouse |
 | `docs/CORE_SCHEMA.md` | Typed core schema details. | Warehouse, data-quality |
 | `docs/PREDICTION_ENGINE_PLAN.md` | High-level prediction architecture. | Modeling, agents, live, markets |
+| `docs/LIVE_DATA_ARCHITECTURE.md` | Complete live data ingestion architecture and procedures. | Live bridge, analysis |
+| `docs/RESEARCH_METHODOLOGY.md` | Formal CRISP-DM methodology, notation, objective functions, and modeling assumptions. | Research framing, modeling, evaluation |
+| `docs/FEATURE_AUDIT.md` | Field/feature status audit: what is understood, what is operationalized, and what should be built before deeper tuning. | Modeling, feature engineering |
 | `docs/AT_BAT_OUTCOME_MODEL_REVIEW.md` | Maps the at-bat outcome spec to actual warehouse assets and next steps. | Multiclass PA modeling |
 | `docs/ab_outcome.md` | User-provided spec for at-bat/pitch outcome modeling. Treat as requirements guidance, not direct implementation. | Multiclass PA and pitch-model roadmap |
 | `docs/retrosheet_key.md` | Retrosheet documentation index and external reference map. | Retrosheet parsing/reference |
@@ -39,6 +42,7 @@ This inventory tells agents what each important file does and which workflows ow
 | `sql/070_temporal_and_production_marts.sql` | Team rest/travel, player production, pitcher production, temporal examples. | Reporting and time context. |
 | `sql/075_interface_workflows.sql` | Persists Sim Lab runs and extends chat logs for interface workflow auditability. | Web command center. |
 | `sql/076_plate_appearance_outcome_model.sql` | Creates granular multiclass PA outcome examples and target `pa_outcome_distribution`. | Multiclass PA modeling. |
+| `sql/077_pitch_sequence_model.sql` | Normalizes `pitch_seq_tx` into one row per Retrosheet sequence symbol with official symbol semantics and coarse pitch/result groupings. | Pitch-sequence normalization, future pitch-level modeling. |
 
 ## Live And Inference SQL
 
@@ -47,23 +51,27 @@ These files may be present as active development work. Treat them as live-bridge
 | File | Purpose | Status Guidance |
 |---|---|---|
 | `sql/080_half_inning_examples.sql` | Half-inning training examples beyond summary distribution. | Scenario modeling; verify before relying on it. |
-| `sql/090_mlb_live_data.sql` | Raw MLB live snapshot tables and live feature scaffolding. | Live bridge. |
+| `sql/090_mlb_live_data.sql` | Raw MLB live snapshot tables with source-preserved payloads and fetch provenance. | Live bridge. |
 | `sql/092_live_odds_views.sql` | Live odds/market-adjacent views. | Market/live candidate. |
 | `sql/100_bridge_tables.sql` | Player/team/park/game crosswalks. | Live bridge and metadata reconciliation. |
-| `sql/110_live_core_tables.sql` | `core.live_games` and `core.live_events`. | Live bridge. |
+| `sql/110_live_core_tables.sql` | `core.live_games` and `core.live_events` canonical live tables with snapshot/raw-play provenance. | Live bridge. |
 | `sql/120_inference_optimization.sql` | Precomputed inference feature layer. | Performance candidate. |
 | `sql/121_inference_functions.sql` | Fast DB functions and simulation state tables. | Performance/simulation candidate. |
+| `sql/130_analysis_views.sql` | Combined analysis views for historical + live data queries. | Live bridge and analysis. |
 
 ## Warehouse Scripts
 
 | File | Purpose | Use When |
 |---|---|---|
-| `scripts/warehouse.py` | Main CLI for dependency checks, Retrosheet fetch, Chadwick extract/load, and live feed fetch. | Ingestion and raw landing. |
+| `scripts/warehouse.py` | Main CLI for dependency checks, Retrosheet fetch, Chadwick extract/load, and live feed fetch with raw snapshot provenance. | Ingestion and raw landing. |
 | `scripts/rebuild_warehouse.sh` | Canonical full rebuild order. | Reproducibility. Update when adding required SQL. |
 | `scripts/install_chadwick.sh` | Chadwick installation helper. | Environment setup. |
 | `scripts/load_reference_metadata.py` | Loads Retrosheet bio/team/park metadata. | After `020`. |
 | `scripts/load_auxiliary_retrosheet.py` | Loads broader Retrosheet auxiliary files. | After reference metadata. |
-| `scripts/transform_live_game.py` | Transforms MLB live feed into core live shape where available. | Live bridge work. |
+| `scripts/fetch_mlb_schedule.py` | Discovers active MLB games for live ingestion. | Live bridge work. |
+| `scripts/populate_bridge_tables.py` | Downloads Chadwick Register and populates ID mapping tables. Tolerates current bridge-schema variations in the active database. | Live bridge setup. |
+| `scripts/ingest_live_games.py` | Orchestrates batch live game ingestion using environment-driven Postgres settings. | Live bridge work. |
+| `scripts/transform_live_game.py` | Transforms stored MLB live snapshots into canonical `core.live_games` / `core.live_events` with upserts and raw JSON preservation. | Live bridge work. |
 
 ## Modeling Scripts
 
@@ -71,6 +79,7 @@ These files may be present as active development work. Treat them as live-bridge
 |---|---|---|
 | `scripts/train_models.py` | General binary model trainer for game, PA, and some half-inning targets. | `game_home_win`, `pa_batter_*`, `half_inning_*`; writes `data/models/`, registers `models.model_registry`. |
 | `scripts/train_pa_outcome_distribution.py` | Dedicated multiclass PA outcome distribution trainer. | `pa_outcome_distribution`; writes `data/models/`, registers `models.model_registry`. |
+| `scripts/predict_pa_outcome_distribution.py` | Scores a historical PA with the registered multiclass outcome model and returns class + derived probabilities. | Historical multiclass inference path. |
 | `scripts/sweep_hyperparameters.py` | Deterministic candidate grid/sweep training. | Candidate model registry rows. |
 | `scripts/promote_best_models.py` | Promotes best registered model versions based on thresholds. | Updates `models.model_registry.is_active`. |
 | `scripts/auto_promote_models.py` | Candidate automation for model promotion. | Verify policy before using. |
