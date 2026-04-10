@@ -14,6 +14,8 @@ The raw Chadwick tables intentionally preserve source data as text. The `core` s
 - `features.game_outcome_examples`: materialized training examples for baseline win-probability models.
 - `features.plate_appearance_examples`: materialized training examples for hit, walk, strikeout, reach-base, home-run, and extra-base-hit models.
 - `raw_retrosheet.biofile`, `raw_retrosheet.teams_reference`, and `raw_retrosheet.ballparks_reference`: source-preserved Retrosheet reference metadata loaded from the cloned Retrosheet repository.
+- `raw_retrosheet.biofile_legacy`, `raw_retrosheet.coaches`, `raw_retrosheet.ejections`, `raw_retrosheet.relatives`, `raw_retrosheet.season_rosters`, `raw_retrosheet.season_teams`, `raw_retrosheet.season_schedules`, `raw_retrosheet.season_umpires`, and `raw_retrosheet.special_gamelog_lines`: source-preserved Retrosheet auxiliary metadata.
+- `core.roster_entries`, `core.allstar_roster_entries`, `core.allstar_games`, `core.scheduled_games`, `core.umpires`, `core.coach_assignments`, `core.ejections`, and `core.player_relatives`: typed views over auxiliary Retrosheet metadata for modeling, validation, and future MLB ID bridging.
 
 ## Constraints And Indexes
 
@@ -35,6 +37,7 @@ After raw Chadwick tables are loaded, apply:
 psql -h localhost -p 5432 -d retrosheet -f sql/010_core_games_events.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/020_plate_appearances.sql
 python3 scripts/load_reference_metadata.py
+python3 scripts/load_auxiliary_retrosheet.py
 ```
 
 Then refresh the materialized feature table after future core changes:
