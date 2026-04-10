@@ -85,7 +85,19 @@ python3 -m pip install -r requirements.txt
 Train initial game-win models from the typed feature layer:
 
 ```bash
-python3 scripts/train_models.py --sample-rate 0.10 --train-through 2022
+python3 scripts/train_models.py --target-id game_home_win --sample-rate 0.10 --train-through 2022
+```
+
+Train a plate-appearance model:
+
+```bash
+python3 scripts/train_models.py --target-id pa_batter_hit --sample-rate 0.05 --train-through 2022
+```
+
+Compare trained plate-appearance models:
+
+```bash
+python3 scripts/analyze_pa_models.py
 ```
 
 Artifacts are written under `data/models/` and model metadata is registered in `models.model_registry`.
