@@ -25,5 +25,6 @@ python3 scripts/load_auxiliary_retrosheet.py
 
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/050_feature_marts.sql
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/060_advanced_feature_marts.sql
+psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/070_temporal_and_production_marts.sql
 
 echo "Warehouse rebuild complete."

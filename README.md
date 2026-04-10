@@ -47,6 +47,7 @@ python3 scripts/load_reference_metadata.py
 python3 scripts/load_auxiliary_retrosheet.py
 psql -h localhost -p 5432 -d retrosheet -f sql/050_feature_marts.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/060_advanced_feature_marts.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/070_temporal_and_production_marts.sql
 ```
 
 `load_reference_metadata.py` loads Retrosheet `biofile.csv`, `teams.csv`, and `ballparks.csv`, backfills player handedness, and refreshes the materialized feature views.
@@ -56,6 +57,8 @@ psql -h localhost -p 5432 -d retrosheet -f sql/060_advanced_feature_marts.sql
 `sql/050_feature_marts.sql` builds indexed materialized views for prior-season batter, pitcher, team, context, and half-inning scenario features. These are the first fast feature marts for ML training and live inference joins.
 
 `sql/060_advanced_feature_marts.sql` adds career-prior batter/pitcher features, coarse context fallbacks, batter-pitcher matchup history, park run environment, team rolling-30 form, and advanced example views.
+
+`sql/070_temporal_and_production_marts.sql` adds team rest/travel context, player season production, pitcher season production, and temporal example views for future model training.
 
 ## Retrosheet Play-By-Play
 

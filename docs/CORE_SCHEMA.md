@@ -19,6 +19,8 @@ The raw Chadwick tables intentionally preserve source data as text. The `core` s
 - `features.batter_prior_season_pa_summary`, `features.pitcher_prior_season_pa_summary`, `features.team_prior_season_summary`, `features.pa_context_prior_season_rates`, and `features.half_inning_outcome_summary`: indexed materialized feature marts for model joins, scenario queries, and live inference baselines.
 - `features.pa_context_coarse_prior_season_rates`, `features.batter_career_prior_pa_summary`, `features.pitcher_career_prior_pa_summary`, `features.batter_pitcher_prior_matchup_summary`, `features.park_prior_season_run_environment`, and `features.team_rolling_30_game_summary`: advanced leakage-safe feature marts for stronger models.
 - `features.plate_appearance_advanced_examples` and `features.game_outcome_advanced_examples`: advanced training views that join base examples to career, matchup, context, park, and rolling-team features.
+- `features.team_game_context`, `features.player_production_season`, and `features.pitcher_production_season`: temporal team context and production reporting marts.
+- `features.plate_appearance_temporal_examples` and `features.game_outcome_temporal_examples`: temporal training views that add rest/travel/doubleheader context to advanced examples.
 
 ## Constraints And Indexes
 
@@ -43,6 +45,7 @@ python3 scripts/load_reference_metadata.py
 python3 scripts/load_auxiliary_retrosheet.py
 psql -h localhost -p 5432 -d retrosheet -f sql/050_feature_marts.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/060_advanced_feature_marts.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/070_temporal_and_production_marts.sql
 ```
 
 Then refresh the materialized feature table after future core changes:
