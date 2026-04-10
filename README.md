@@ -99,6 +99,8 @@ See [docs/CORE_SCHEMA.md](docs/CORE_SCHEMA.md) for the typed database layer, con
 
 See [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md) for a running build log of major warehouse, modeling, and planning steps.
 
+See [docs/agents/README.md](docs/agents/README.md) for the project inventory, modeling objectives, canonical procedures, and agent operating map.
+
 ## Modeling
 
 Install Python modeling dependencies:

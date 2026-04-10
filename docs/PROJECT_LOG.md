@@ -159,3 +159,8 @@
 - Added `sql/076_plate_appearance_outcome_model.sql` with `features.plate_appearance_outcome_examples`, validation summary, and the `pa_outcome_distribution` prediction target for future multiclass PA modeling.
 - Added `scripts/train_pa_outcome_distribution.py`, a reusable multiclass PA outcome trainer that writes ignored model artifacts and registers inactive/active versions in `models.model_registry`.
 - Smoke-trained `pa_outcome_distribution` on a 0.2% basic sample with inactive registration: histogram gradient boosting validation log loss 2.051 and top-3 accuracy 0.690; multinomial logistic regression validation log loss 2.389 and top-3 accuracy 0.398.
+- Added `docs/agents/` as the durable project map for AI agents and humans:
+  - `PROJECT_OBJECTIVES.md` defines prediction-engine objectives and modeling goals.
+  - `FILE_INVENTORY.md` maps docs, SQL, scripts, feature marts, interface routes, and generated artifacts to their purposes.
+  - `PROCEDURES.md` documents canonical warehouse, modeling, simulation, live bridge, interface, and issue workflows.
+  - `MODELING_WORKFLOWS.md` inventories targets/models and defines evaluation, leakage, and promotion rules.
