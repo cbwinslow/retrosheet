@@ -12,10 +12,12 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 
 ## Non-Negotiables
 
+- Before creating new SQL, scripts, models, routes, or docs, check `docs/agents/FILE_INVENTORY.md` and `docs/agents/PROCEDURES.md` to see whether an existing workflow already owns the job.
 - Keep source-preserved raw data. Do not overwrite or discard raw Retrosheet, Chadwick, or MLB API payloads.
 - Prefer additive migrations and views over destructive schema changes.
 - Keep `README.md` current when commands, setup, or workflow changes.
 - Keep this `AGENTS.md` current when project conventions change.
+- Keep `docs/agents/` current when file purposes, modeling goals, or canonical procedures change.
 - Keep `docs/PROJECT_LOG.md` current with significant completed work, validation counts, and next-step decisions.
 - Use Chadwick-generated headers and documented field names instead of hand-invented column mappings.
 - Put database typing, constraints, foreign keys, indexes, and reusable ML features in `core`, `features`, `models`, and `predictions`, not in raw landing tables.
@@ -31,6 +33,17 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 - `core`: canonical baseball entities and game-state views shared by historical and live sources.
 - `features`: ML-ready training and inference tables.
 - `predictions`: model outputs, backtests, and live prediction snapshots.
+
+## Required Agent References
+
+Use these docs as the project map:
+
+- `docs/agents/PROJECT_OBJECTIVES.md`: prediction-engine objectives, modeling goals, and non-goals.
+- `docs/agents/FILE_INVENTORY.md`: inventory of SQL, scripts, docs, interface routes, generated artifacts, and ownership.
+- `docs/agents/PROCEDURES.md`: canonical workflows for warehouse rebuilds, target creation, feature marts, model training, simulation, live bridge work, interface changes, and GitHub issues.
+- `docs/agents/MODELING_WORKFLOWS.md`: target/model inventory, evaluation priorities, Moneyball-style modeling goals, leakage checklist, and promotion rules.
+
+If a file is not listed there and you make it important, update the inventory in the same change.
 
 ## Chadwick Procedure
 
