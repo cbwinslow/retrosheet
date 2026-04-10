@@ -151,3 +151,7 @@
   - `/api/analytics` returned active model metrics and 2025 production leaders.
   - `/api/chat` returned active model data for "show active models".
   - `/api/simulate` for 2025 top-first left-handed-only historical states returned 10,538 half-innings, 0.499 expected runs, 28.1% run probability, and 8.1% probability that all left-handed batters in the inning got a hit.
+- Added interface persistence with `sql/075_interface_workflows.sql`:
+  - `predictions.simulation_runs` records Sim Lab filters, summaries, run distributions, and sample sizes.
+  - `predictions.recent_simulation_runs` provides a dashboard-friendly read view.
+  - `chat.query_logs` now records tools used and result row counts from web chat requests.
