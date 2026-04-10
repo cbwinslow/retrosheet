@@ -94,3 +94,10 @@
   - `core.allstar_games`: 25 rows.
   - `core.scheduled_games`, `core.umpires`, `core.coach_assignments`, `core.ejections`, and `core.player_relatives`.
 - Expanded `core.players` from Retrosheet roster metadata to 24,588 players with 24,070 first names, 21,511 batting-hand values, and 22,145 throwing-hand values.
+- Added first indexed feature marts with `sql/050_feature_marts.sql`:
+  - `features.batter_prior_season_pa_summary`: 23,534 rows.
+  - `features.pitcher_prior_season_pa_summary`: 18,574 rows.
+  - `features.team_prior_season_summary`: 830 rows.
+  - `features.pa_context_prior_season_rates`: 612,126 rows.
+  - `features.half_inning_outcome_summary`: 1,118,579 rows.
+- Kept prior-season marts keyed by `feature_season = season + 1` so model training can join historical performance without same-season leakage.

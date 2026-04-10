@@ -39,11 +39,14 @@ psql -h localhost -p 5432 -d retrosheet -f sql/010_core_games_events.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/020_plate_appearances.sql
 python3 scripts/load_reference_metadata.py
 python3 scripts/load_auxiliary_retrosheet.py
+psql -h localhost -p 5432 -d retrosheet -f sql/050_feature_marts.sql
 ```
 
 `load_reference_metadata.py` loads Retrosheet `biofile.csv`, `teams.csv`, and `ballparks.csv`, backfills player handedness, and refreshes the materialized feature views.
 
 `load_auxiliary_retrosheet.py` loads the broader Retrosheet-provided auxiliary files: `biofile0.csv`, coaches, ejections, relatives, season rosters, season team files, schedules, umpires, and special gamelog lines. It also exposes normalized `core` views for roster entries, All-Star rosters/games, schedules, umpires, coaches, ejections, and player relatives.
+
+`sql/050_feature_marts.sql` builds indexed materialized views for prior-season batter, pitcher, team, context, and half-inning scenario features. These are the first fast feature marts for ML training and live inference joins.
 
 ## Retrosheet Play-By-Play
 
