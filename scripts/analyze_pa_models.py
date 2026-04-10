@@ -57,6 +57,7 @@ def get_model_performance() -> pd.DataFrame:
                 (metrics->'validation'->'rows')::integer as validation_rows
             FROM models.model_registry
             WHERE target_id LIKE 'pa_%'
+              AND is_active = true
             ORDER BY target_id, roc_auc DESC
         """
         return pd.read_sql_query(text(sql), engine)

@@ -63,3 +63,5 @@ For the broader reusable probability engine, follow `docs/PREDICTION_ENGINE_PLAN
 Use `scripts/train_models.py` for first-pass model training. Store model artifacts under `data/models/`, register metrics in `models.model_registry`, and keep AI inference providers configured through environment variables rather than hard-coded secrets.
 
 When creating GitHub issues, include concrete links to relevant docs, scripts, migrations, and tables. Issues should be written as durable project records, not vague reminders.
+
+Load Retrosheet reference metadata with `scripts/load_reference_metadata.py` after rebuilding `core.games`, `core.events`, and `core.plate_appearances`; it backfills player handedness and refreshes feature materialized views.

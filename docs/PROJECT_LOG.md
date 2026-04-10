@@ -63,3 +63,17 @@
 - Validated plate appearance coverage:
   - `core.plate_appearances`: 4,779,662 rows, 62,598 games.
   - `features.plate_appearance_examples`: 4,779,662 rows, 62,598 games.
+- Loaded Retrosheet reference metadata:
+  - `raw_retrosheet.biofile`: 26,961 rows.
+  - `raw_retrosheet.teams_reference`: 292 rows.
+  - `raw_retrosheet.ballparks_reference`: 656 rows.
+- Backfilled core metadata:
+  - `core.players`: 7,165 players, 7,165 populated bats values, 7,164 populated throws values.
+  - `features.plate_appearance_examples`: 4,779,662 rows with populated batter handedness and pitcher handedness.
+- Retrained all active plate-appearance models after handedness enrichment (5% sample, train through 2022):
+  - **Walk**: Best ROC AUC 0.959, log loss 0.121.
+  - **Strikeout**: Best ROC AUC 0.840, log loss 0.353.
+  - **Reach Base**: Best ROC AUC 0.678, log loss 0.565.
+  - **Home Run**: Best ROC AUC 0.657, log loss 0.133.
+  - **Extra-base Hit**: Best ROC AUC 0.643, log loss 0.262.
+  - **Hit**: Best ROC AUC 0.637, log loss 0.501.

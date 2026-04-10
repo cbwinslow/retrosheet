@@ -27,6 +27,18 @@ AS $$
     END
 $$;
 
+CREATE OR REPLACE FUNCTION core.safe_date_mmddyyyy(value text)
+RETURNS date
+LANGUAGE sql
+IMMUTABLE
+RETURNS NULL ON NULL INPUT
+AS $$
+    SELECT CASE
+        WHEN btrim(value) ~ '^[0-9]{2}/[0-9]{2}/[0-9]{4}$'
+        THEN to_date(btrim(value), 'MM/DD/YYYY')
+    END
+$$;
+
 CREATE TABLE IF NOT EXISTS core.teams (
     retrosheet_team_id text PRIMARY KEY,
     first_season integer,
