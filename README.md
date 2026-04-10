@@ -49,6 +49,7 @@ psql -h localhost -p 5432 -d retrosheet -f sql/050_feature_marts.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/060_advanced_feature_marts.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/070_temporal_and_production_marts.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/075_interface_workflows.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/076_plate_appearance_outcome_model.sql
 ```
 
 `load_reference_metadata.py` loads Retrosheet `biofile.csv`, `teams.csv`, and `ballparks.csv`, backfills player handedness, and refreshes the materialized feature views.
@@ -60,6 +61,8 @@ psql -h localhost -p 5432 -d retrosheet -f sql/075_interface_workflows.sql
 `sql/060_advanced_feature_marts.sql` adds career-prior batter/pitcher features, coarse context fallbacks, batter-pitcher matchup history, park run environment, team rolling-30 form, and advanced example views.
 
 `sql/070_temporal_and_production_marts.sql` adds team rest/travel context, player season production, pitcher season production, and temporal example views for future model training.
+
+`sql/076_plate_appearance_outcome_model.sql` adds a granular multiclass plate-appearance outcome feature layer and registers the `pa_outcome_distribution` prediction target. See [docs/AT_BAT_OUTCOME_MODEL_REVIEW.md](docs/AT_BAT_OUTCOME_MODEL_REVIEW.md) for how this maps the at-bat outcome design spec onto the current warehouse.
 
 ## Retrosheet Play-By-Play
 
@@ -116,6 +119,12 @@ Train a plate-appearance model:
 python3 scripts/train_models.py --target-id pa_batter_hit --sample-rate 0.05 --train-through 2022 --feature-set advanced
 ```
 
+Train the granular multiclass plate-appearance outcome distribution model:
+
+```bash
+python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022
+```
+
 Run a reproducible hyperparameter sweep without committing model binaries:
 
 ```bash
@@ -168,6 +177,7 @@ Apply the interface persistence schema before running the cockpit against a fres
 
 ```bash
 psql -h localhost -p 5432 -d retrosheet -f sql/075_interface_workflows.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/076_plate_appearance_outcome_model.sql
 ```
 
 ## MLB Live Feed

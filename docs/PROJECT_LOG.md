@@ -155,3 +155,7 @@
   - `predictions.simulation_runs` records Sim Lab filters, summaries, run distributions, and sample sizes.
   - `predictions.recent_simulation_runs` provides a dashboard-friendly read view.
   - `chat.query_logs` now records tools used and result row counts from web chat requests.
+- Reviewed `docs/ab_outcome.md` against the current warehouse and added `docs/AT_BAT_OUTCOME_MODEL_REVIEW.md`.
+- Added `sql/076_plate_appearance_outcome_model.sql` with `features.plate_appearance_outcome_examples`, validation summary, and the `pa_outcome_distribution` prediction target for future multiclass PA modeling.
+- Added `scripts/train_pa_outcome_distribution.py`, a reusable multiclass PA outcome trainer that writes ignored model artifacts and registers inactive/active versions in `models.model_registry`.
+- Smoke-trained `pa_outcome_distribution` on a 0.2% basic sample with inactive registration: histogram gradient boosting validation log loss 2.051 and top-3 accuracy 0.690; multinomial logistic regression validation log loss 2.389 and top-3 accuracy 0.398.
