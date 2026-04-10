@@ -130,3 +130,24 @@
   - `features.game_outcome_temporal_examples`: 186,562 rows for 2025.
   - `features.plate_appearance_temporal_examples`: 186,640 rows for 2025.
 - Spot-checked 2025 player production leaders, pitcher production leaders, and team rest/doubleheader counts.
+- Built the first Next.js web command center in `baseball-chatbot-ui/`:
+  - Chat Analyst view with rule-based warehouse/tool routing.
+  - Sim Lab view backed by `features.half_inning_outcome_summary`.
+  - Models & Backtests view backed by `models.model_registry`, sweep metadata, and production marts.
+  - Workbench view with allow-listed local workflow commands rather than arbitrary shell execution.
+  - Spreadsheet-style result tables with CSV export.
+- Added web API routes:
+  - `/api/status`
+  - `/api/analytics`
+  - `/api/backtests`
+  - `/api/chat`
+  - `/api/simulate`
+  - `/api/terminal`
+  - `/api/predict`
+  - `/api/live-odds`
+- Validated the web command center:
+  - `npm run build` completed successfully in `baseball-chatbot-ui/`.
+  - `/api/status` returned warehouse/model summary JSON.
+  - `/api/analytics` returned active model metrics and 2025 production leaders.
+  - `/api/chat` returned active model data for "show active models".
+  - `/api/simulate` for 2025 top-first left-handed-only historical states returned 10,538 half-innings, 0.499 expected runs, 28.1% run probability, and 8.1% probability that all left-handed batters in the inning got a hit.
