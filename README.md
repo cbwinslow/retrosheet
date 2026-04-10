@@ -32,6 +32,12 @@ Then initialize schemas:
 python3 scripts/warehouse.py init-db
 ```
 
+Full reproducible rebuild order:
+
+```bash
+YEARS=2000-2025 PGDATABASE=retrosheet scripts/rebuild_warehouse.sh
+```
+
 Apply the typed core/modeling migration after loading Chadwick data:
 
 ```bash
@@ -40,6 +46,7 @@ psql -h localhost -p 5432 -d retrosheet -f sql/020_plate_appearances.sql
 python3 scripts/load_reference_metadata.py
 python3 scripts/load_auxiliary_retrosheet.py
 psql -h localhost -p 5432 -d retrosheet -f sql/050_feature_marts.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/060_advanced_feature_marts.sql
 ```
 
 `load_reference_metadata.py` loads Retrosheet `biofile.csv`, `teams.csv`, and `ballparks.csv`, backfills player handedness, and refreshes the materialized feature views.
@@ -47,6 +54,8 @@ psql -h localhost -p 5432 -d retrosheet -f sql/050_feature_marts.sql
 `load_auxiliary_retrosheet.py` loads the broader Retrosheet-provided auxiliary files: `biofile0.csv`, coaches, ejections, relatives, season rosters, season team files, schedules, umpires, and special gamelog lines. It also exposes normalized `core` views for roster entries, All-Star rosters/games, schedules, umpires, coaches, ejections, and player relatives.
 
 `sql/050_feature_marts.sql` builds indexed materialized views for prior-season batter, pitcher, team, context, and half-inning scenario features. These are the first fast feature marts for ML training and live inference joins.
+
+`sql/060_advanced_feature_marts.sql` adds career-prior batter/pitcher features, coarse context fallbacks, batter-pitcher matchup history, park run environment, team rolling-30 form, and advanced example views.
 
 ## Retrosheet Play-By-Play
 
@@ -100,7 +109,13 @@ python3 scripts/train_models.py --target-id game_home_win --sample-rate 0.10 --t
 Train a plate-appearance model:
 
 ```bash
-python3 scripts/train_models.py --target-id pa_batter_hit --sample-rate 0.05 --train-through 2022 --feature-set enriched
+python3 scripts/train_models.py --target-id pa_batter_hit --sample-rate 0.05 --train-through 2022 --feature-set advanced
+```
+
+Run a reproducible hyperparameter sweep without committing model binaries:
+
+```bash
+python3 scripts/sweep_hyperparameters.py --target-id pa_batter_hit --feature-set advanced --sample-rate 0.05 --max-candidates 12
 ```
 
 Compare trained plate-appearance models:
@@ -116,7 +131,7 @@ python3 scripts/promote_best_models.py --target-prefix 'pa_%' --min-validation-r
 python3 scripts/promote_best_models.py --target-id game_home_win --min-validation-rows 10000
 ```
 
-Artifacts are written under `data/models/` and model metadata is registered in `models.model_registry`.
+Artifacts are written under ignored `data/models/` and model metadata is registered in `models.model_registry`. We intentionally do not use Git LFS; models should be regenerated from the scripts and database, or later stored in regular object storage if needed.
 
 AI inference provider configuration is documented in [config/ai_providers.example.json](config/ai_providers.example.json). The intended providers are OpenRouter, Groq, and Codex/OpenAI-compatible agent orchestration.
 

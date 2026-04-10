@@ -113,3 +113,13 @@
   - `pa_batter_hit`: 0.643 gradient boosting, 0.634 logistic regression.
 - Verified enriched plate-appearance inference on `ANA202506060` plate appearance `30`.
 - Noted future feature work: add coarser context-rate fallbacks because exact inning/base/count/hand context joins can be sparse.
+- Added canonical rebuild script `scripts/rebuild_warehouse.sh` so contributors can recreate the warehouse in order without Git LFS or checked-in model binaries.
+- Added advanced feature marts with `sql/060_advanced_feature_marts.sql`:
+  - `features.pa_context_coarse_prior_season_rates`: 3,744 rows.
+  - `features.batter_career_prior_pa_summary`: 81,018 rows.
+  - `features.pitcher_career_prior_pa_summary`: 56,553 rows.
+  - `features.batter_pitcher_prior_matchup_summary`: 1,155,128 rows.
+  - `features.park_prior_season_run_environment`: 818 rows.
+  - `features.team_rolling_30_game_summary`: 125,196 rows.
+- Added advanced example views for plate-appearance and game-win training.
+- Added `scripts/sweep_hyperparameters.py` for reproducible model grid searches. A smoke sweep for `pa_batter_hit` with `--feature-set advanced --sample-rate 0.005 --max-candidates 3` completed and registered candidates.
