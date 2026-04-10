@@ -17,6 +17,8 @@ The raw Chadwick tables intentionally preserve source data as text. The `core` s
 - `raw_retrosheet.biofile_legacy`, `raw_retrosheet.coaches`, `raw_retrosheet.ejections`, `raw_retrosheet.relatives`, `raw_retrosheet.season_rosters`, `raw_retrosheet.season_teams`, `raw_retrosheet.season_schedules`, `raw_retrosheet.season_umpires`, and `raw_retrosheet.special_gamelog_lines`: source-preserved Retrosheet auxiliary metadata.
 - `core.roster_entries`, `core.allstar_roster_entries`, `core.allstar_games`, `core.scheduled_games`, `core.umpires`, `core.coach_assignments`, `core.ejections`, and `core.player_relatives`: typed views over auxiliary Retrosheet metadata for modeling, validation, and future MLB ID bridging.
 - `features.batter_prior_season_pa_summary`, `features.pitcher_prior_season_pa_summary`, `features.team_prior_season_summary`, `features.pa_context_prior_season_rates`, and `features.half_inning_outcome_summary`: indexed materialized feature marts for model joins, scenario queries, and live inference baselines.
+- `features.pa_context_coarse_prior_season_rates`, `features.batter_career_prior_pa_summary`, `features.pitcher_career_prior_pa_summary`, `features.batter_pitcher_prior_matchup_summary`, `features.park_prior_season_run_environment`, and `features.team_rolling_30_game_summary`: advanced leakage-safe feature marts for stronger models.
+- `features.plate_appearance_advanced_examples` and `features.game_outcome_advanced_examples`: advanced training views that join base examples to career, matchup, context, park, and rolling-team features.
 
 ## Constraints And Indexes
 
@@ -40,6 +42,7 @@ psql -h localhost -p 5432 -d retrosheet -f sql/020_plate_appearances.sql
 python3 scripts/load_reference_metadata.py
 python3 scripts/load_auxiliary_retrosheet.py
 psql -h localhost -p 5432 -d retrosheet -f sql/050_feature_marts.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/060_advanced_feature_marts.sql
 ```
 
 Then refresh the materialized feature table after future core changes:
@@ -53,4 +56,10 @@ After feature marts are rebuilt, train enriched models with:
 ```bash
 python3 scripts/train_models.py --target-id pa_batter_hit --sample-rate 0.05 --train-through 2022 --feature-set enriched
 python3 scripts/promote_best_models.py --target-prefix 'pa_%' --min-validation-rows 10000
+```
+
+For larger searches, use:
+
+```bash
+python3 scripts/sweep_hyperparameters.py --target-id pa_batter_hit --feature-set advanced --sample-rate 0.05 --max-candidates 12
 ```
