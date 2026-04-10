@@ -123,3 +123,10 @@
   - `features.team_rolling_30_game_summary`: 125,196 rows.
 - Added advanced example views for plate-appearance and game-win training.
 - Added `scripts/sweep_hyperparameters.py` for reproducible model grid searches. A smoke sweep for `pa_batter_hit` with `--feature-set advanced --sample-rate 0.005 --max-candidates 3` completed and registered candidates.
+- Added temporal and production marts with `sql/070_temporal_and_production_marts.sql`:
+  - `features.team_game_context`: 125,196 rows.
+  - `features.player_production_season`: 23,534 rows.
+  - `features.pitcher_production_season`: 18,574 rows.
+  - `features.game_outcome_temporal_examples`: 186,562 rows for 2025.
+  - `features.plate_appearance_temporal_examples`: 186,640 rows for 2025.
+- Spot-checked 2025 player production leaders, pitcher production leaders, and team rest/doubleheader counts.

@@ -76,3 +76,5 @@ Train candidate models with `scripts/train_models.py --feature-set enriched` onc
 Use `scripts/rebuild_warehouse.sh` as the canonical rebuild order for contributors. It runs ingestion, core migrations, reference/auxiliary loaders, and feature marts in sequence.
 
 Use `sql/060_advanced_feature_marts.sql` for higher-signal feature generation: career-prior player rates, coarse context fallbacks, batter-pitcher matchup history, park run environment, and rolling team form. Train stronger candidates with `--feature-set advanced` and explore grids with `scripts/sweep_hyperparameters.py`.
+
+Use `sql/070_temporal_and_production_marts.sql` for team rest/travel context and reporting marts. It currently provides `features.team_game_context`, `features.player_production_season`, `features.pitcher_production_season`, and temporal training views. Treat WAR-like outputs as experimental until replacement level, positional adjustments, and park/run-environment adjustments are explicitly modeled.
