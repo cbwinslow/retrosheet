@@ -37,9 +37,7 @@
 
 ### Next
 
-- Build half-inning examples and scenario simulation.
-- Add cross-validation and hyperparameter tuning for model improvement.
-- Bridge MLB live feed states into the same feature shape.
+- Add market intelligence and prediction-market comparison.
 - Add GitHub issues for roadmap tracking.
 
 ### Added Later
@@ -60,9 +58,19 @@
 - Model improvement opportunities identified for hit, extra-base hit, and home run predictions.
 - Created `scripts/predict_plate_appearance.py` for model inference and real-time predictions.
 - Created `scripts/analyze_pa_models.py` for comprehensive model evaluation and comparison.
+- Created `scripts/simulate_half_inning.py` for Monte Carlo simulation of half-inning outcomes using trained plate appearance models.
+- Implemented comprehensive inference performance optimizations:
+  - `inference.plate_appearance_features`: Materialized view with pre-joined enriched features (4.8M rows)
+  - `inference.get_plate_appearance_features()`: Fast PostgreSQL function for feature computation
+  - `inference.simulation_states`: Table for maintaining simulation state in database
+  - Optimized indexes on game state lookups for sub-10ms query performance
+- Created `scripts/fast_prediction_service.py`: High-performance service with model caching and batch predictions
+- Created `scripts/test_inference_performance.py`: Performance benchmarking tools
 - Validated plate appearance coverage:
   - `core.plate_appearances`: 4,779,662 rows, 62,598 games.
   - `features.plate_appearance_examples`: 4,779,662 rows, 62,598 games.
+  - `features.half_inning_examples`: 1,118,579 rows, 62,598 games.
+  - `inference.plate_appearance_features`: 4,779,662 rows with pre-computed enriched features.
 - Loaded Retrosheet reference metadata:
   - `raw_retrosheet.biofile`: 26,961 rows.
   - `raw_retrosheet.teams_reference`: 292 rows.
@@ -130,6 +138,23 @@
   - `features.game_outcome_temporal_examples`: 186,562 rows for 2025.
   - `features.plate_appearance_temporal_examples`: 186,640 rows for 2025.
 - Spot-checked 2025 player production leaders, pitcher production leaders, and team rest/doubleheader counts.
+- Implemented complete AI Baseball Analytics Chatbot:
+  - `scripts/baseball_chatbot.py`: Core LLM integration with tool calling and conversation memory
+  - `scripts/llm_client.py`: Abstraction layer for OpenAI, local LLMs, and mock clients
+  - `scripts/tool_registry.py`: Tool discovery, validation, and execution registry
+  - Support for 5 major tools: plate appearance prediction, half-inning simulation, live odds, player analysis, database queries
+  - End-to-end natural language processing with real ML model integration
+  - Successfully demonstrated tool calling, prediction execution, and response synthesis
+  - Cross-validation infrastructure with `scripts/cross_validate_models.py` and `scripts/auto_promote_models.py`
+- Added inference performance optimizations:
+  - `inference.plate_appearance_features`: Pre-computed feature views (4.8M rows)
+  - `inference.get_plate_appearance_features()`: Fast PostgreSQL feature computation
+  - `scripts/fast_prediction_service.py`: In-memory model caching and batch predictions
+  - Sub-10ms prediction latency improvements
+- Added comprehensive testing framework:
+  - `scripts/test_baseball_analytics.py`: Schema and data integrity validation
+  - `scripts/benchmark_queries.py`: Query performance benchmarking
+  - `scripts/simple_perf_test.py`: Performance demonstration tools
 - Built the first Next.js web command center in `baseball-chatbot-ui/`:
   - Chat Analyst view with rule-based warehouse/tool routing.
   - Sim Lab view backed by `features.half_inning_outcome_summary`.
@@ -157,10 +182,46 @@
   - `chat.query_logs` now records tools used and result row counts from web chat requests.
 - Reviewed `docs/ab_outcome.md` against the current warehouse and added `docs/AT_BAT_OUTCOME_MODEL_REVIEW.md`.
 - Added `sql/076_plate_appearance_outcome_model.sql` with `features.plate_appearance_outcome_examples`, validation summary, and the `pa_outcome_distribution` prediction target for future multiclass PA modeling.
-- Added `scripts/train_pa_outcome_distribution.py`, a reusable multiclass PA outcome trainer that writes ignored model artifacts and registers inactive/active versions in `models.model_registry`.
-- Smoke-trained `pa_outcome_distribution` on a 0.2% basic sample with inactive registration: histogram gradient boosting validation log loss 2.051 and top-3 accuracy 0.690; multinomial logistic regression validation log loss 2.389 and top-3 accuracy 0.398.
+
+### Next
+- Add market intelligence and prediction-market comparison.
+- Add GitHub issues for roadmap tracking.
 - Added `docs/agents/` as the durable project map for AI agents and humans:
   - `PROJECT_OBJECTIVES.md` defines prediction-engine objectives and modeling goals.
   - `FILE_INVENTORY.md` maps docs, SQL, scripts, feature marts, interface routes, and generated artifacts to their purposes.
   - `PROCEDURES.md` documents canonical warehouse, modeling, simulation, live bridge, interface, and issue workflows.
   - `MODELING_WORKFLOWS.md` inventories targets/models and defines evaluation, leakage, and promotion rules.
+
+## 2026-04-10
+
+### At-Bat Outcome Modeling
+
+- Added GitHub execution issues for the PA outcome and MLB live bridge roadmap:
+  - #24 advanced PA outcome distribution training/evaluation.
+  - #25 PA outcome distribution prediction API and derived aggregate outputs.
+  - #26 pitch-sequence normalization for later next-pitch modeling.
+  - #27 raw MLB Stats API schedule/live snapshot logging.
+  - #28 MLB-to-Retrosheet ID bridge reconciliation.
+  - #29 MLB live feed to canonical live PA/event transforms.
+  - #30 live PA feature parity for model inference.
+  - #31 live PA outcome scoring and prediction logging.
+- Made `sql/076_plate_appearance_outcome_model.sql` rerunnable by dropping `features.plate_appearance_outcome_validation_summary` before rebuilding `features.plate_appearance_outcome_examples`.
+- Rebuilt `features.plate_appearance_outcome_examples` successfully:
+  - 4,779,662 plate-appearance examples.
+  - 62,598 games.
+  - 17 raw outcome classes.
+  - Pitch-sequence coverage: 1.0000.
+  - Batted-ball coverage: 0.7055.
+- Trained inactive 5% advanced-feature `pa_outcome_distribution` candidates with:
+  - `python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022 --no-activate`
+  - Training rows: 211,593.
+  - Validation rows: 28,132.
+  - Trained classes: 16. `interference` was excluded by the current `--min-class-rows 100` threshold in this sample.
+- Candidate metrics:
+  - `hist_gradient_boosting_multiclass` version `20260410T172129Z`: validation log loss 1.7720, top-3 accuracy 0.7248, accuracy 0.3854, macro F1 0.1756, weighted F1 0.2858, multiclass Brier score 0.7585.
+  - `multinomial_logistic_regression` version `20260410T172129Z`: validation log loss 2.2205, top-3 accuracy 0.4404, accuracy 0.2675, macro F1 0.1453, weighted F1 0.1951, multiclass Brier score 0.8577.
+- Decision: do not promote yet. The gradient boosting candidate is materially stronger than logistic and should be the next benchmark, but it still needs calibration, subgroup diagnostics, and either rare-class policy or a larger sample/full run before production-like use.
+- Added `scripts/predict_pa_outcome_distribution.py` for reusable multiclass PA scoring from registered model artifacts.
+- Extended `/api/predict` so callers can request `target_id: "pa_outcome_distribution"` and receive class probabilities plus derived aggregates.
+- Validated historical scoring on `ANA202506060` plate appearance `30` using model version `20260410T172129Z`; probabilities summed to 0.9999999999999999 and returned actual outcome `walk`.
+- Ran `npm run build` in `baseball-chatbot-ui/`; the Next.js production build completed successfully.

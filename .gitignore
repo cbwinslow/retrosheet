@@ -1,4 +1,18 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+venv/
 .env
+.ipynb_checkpoints
+.vscode/
+node_modules/
+Dist/
+build/
+*.log
+data/models/
+.DS_Store
+.env.env
 .env.*
 !.env.example
 

@@ -92,7 +92,7 @@ Use `scripts/train_pa_outcome_distribution.py`.
 Example:
 
 ```bash
-python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022
+python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022 --no-activate
 ```
 
 Target:
@@ -113,6 +113,14 @@ Evaluation priority:
 5. Macro/weighted F1 as secondary diagnostics.
 
 Do not promote this model until calibration reporting exists.
+
+Scoring:
+
+```bash
+python3 scripts/predict_pa_outcome_distribution.py --game-id ANA202506060 --plate-appearance-id 30
+```
+
+The scorer returns class probabilities plus derived aggregates such as hit, extra-base hit, traditional on-base, reach-base-any, ball-in-play, and expected total bases. API consumers can request the same path through `/api/predict` with `target_id: "pa_outcome_distribution"`.
 
 ## Build Scenario Simulations
 

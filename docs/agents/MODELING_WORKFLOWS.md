@@ -11,7 +11,7 @@
 | `pa_batter_home_run` | Binary PA | `scripts/train_models.py` | Same PA feature sources | Rare-event target; calibration matters. |
 | `pa_batter_reach_base` | Binary PA | `scripts/train_models.py` | Same PA feature sources | Useful aggregate target. |
 | `pa_batter_extra_base_hit` | Binary PA | `scripts/train_models.py` | Same PA feature sources | Rare-ish aggregate target. |
-| `pa_outcome_distribution` | Multiclass PA | `scripts/train_pa_outcome_distribution.py` | `features.plate_appearance_outcome_examples`, advanced PA view | Foundation added; needs real training/calibration before promotion. |
+| `pa_outcome_distribution` | Multiclass PA | `scripts/train_pa_outcome_distribution.py` | `features.plate_appearance_outcome_examples`, advanced PA view | Inactive 5% advanced candidate exists; needs calibration/subgroup diagnostics before promotion. |
 | `half_inning_any_run` | Scenario | `scripts/train_models.py` where `features.half_inning_examples` exists | Half-inning examples | Candidate target. |
 | `half_inning_lhb_any_hit` | Scenario | `scripts/train_models.py` where `features.half_inning_examples` exists | Half-inning examples | Candidate target; target definition must be precise. |
 
@@ -21,7 +21,7 @@
 2. Train binary target candidates with `scripts/train_models.py`.
 3. Register artifacts in `models.model_registry`.
 4. Promote using `scripts/promote_best_models.py`.
-5. Score known historical PAs with `scripts/predict_plate_appearance.py`.
+5. Score known historical PAs with `scripts/predict_plate_appearance.py` and `scripts/predict_pa_outcome_distribution.py`.
 6. Expose model registry and scenario baselines in the web command center.
 
 ## Near-Term Modeling Roadmap
@@ -43,10 +43,11 @@ python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample
 
 Do before promotion:
 
-- Larger advanced-feature training run.
+- Larger advanced-feature training run beyond the current 5% inactive benchmark.
 - Calibration curves per class.
 - Log-loss comparison against empirical baselines.
 - Subgroup metrics by count, base/out state, handedness matchup, and season.
+- Rare-class policy for outcomes like interference, or a larger/full sample that keeps all classes.
 - Model card.
 
 ### Priority 2: Calibration And Backtest Reports
