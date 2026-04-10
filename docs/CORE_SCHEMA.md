@@ -13,6 +13,7 @@ The raw Chadwick tables intentionally preserve source data as text. The `core` s
 - `core.game_states`: model-friendly view joining events to games and final game outcomes.
 - `features.game_outcome_examples`: materialized training examples for baseline win-probability models.
 - `features.plate_appearance_examples`: materialized training examples for hit, walk, strikeout, reach-base, home-run, and extra-base-hit models.
+- `raw_retrosheet.biofile`, `raw_retrosheet.teams_reference`, and `raw_retrosheet.ballparks_reference`: source-preserved Retrosheet reference metadata loaded from the cloned Retrosheet repository.
 
 ## Constraints And Indexes
 
@@ -33,6 +34,7 @@ After raw Chadwick tables are loaded, apply:
 ```bash
 psql -h localhost -p 5432 -d retrosheet -f sql/010_core_games_events.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/020_plate_appearances.sql
+python3 scripts/load_reference_metadata.py
 ```
 
 Then refresh the materialized feature table after future core changes:
