@@ -47,3 +47,10 @@ Then refresh the materialized feature table after future core changes:
 ```sql
 REFRESH MATERIALIZED VIEW CONCURRENTLY features.game_outcome_examples;
 ```
+
+After feature marts are rebuilt, train enriched models with:
+
+```bash
+python3 scripts/train_models.py --target-id pa_batter_hit --sample-rate 0.05 --train-through 2022 --feature-set enriched
+python3 scripts/promote_best_models.py --target-prefix 'pa_%' --min-validation-rows 10000
+```
