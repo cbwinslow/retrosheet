@@ -1,0 +1,460 @@
+// Prisma schema for Retrosheet Warehouse Database
+// This serves as a backup/documentation of the PostgreSQL schema
+// Generated from the live database schema for reference
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// CORE SCHEMA - Historical Retrosheet Data
+// =============================================================================
+
+model Teams {
+  retrosheet_team_id String  @id
+  first_season       Int?
+  last_season        Int?
+  created_at         DateTime @default(now()) @db.Timestamptz
+  updated_at         DateTime @default(now()) @db.Timestamptz
+
+  // Relations
+  home_games         Games[] @relation("home_team")
+  away_games         Games[] @relation("away_team")
+
+  @@map("core.teams")
+}
+
+model Parks {
+  retrosheet_park_id String  @id
+  name               String?
+  aka                String?
+  city               String?
+  state              String?
+  start_date         String?
+  end_date           String?
+  league             String?
+  notes              String?
+  created_at         DateTime @default(now()) @db.Timestamptz
+  updated_at         DateTime @default(now()) @db.Timestamptz
+
+  // Relations
+  games              Games[]
+
+  @@map("core.parks")
+}
+
+model Players {
+  retrosheet_player_id String  @id
+  last_name            String?
+  first_name           String?
+  player_debut         String?
+  mgr_debut            String?
+  coach_debut          String?
+  ump_debut            String?
+  created_at           DateTime @default(now()) @db.Timestamptz
+  updated_at           DateTime @default(now()) @db.Timestamptz
+
+  // Relations
+  batter_events       Events[] @relation("batter")
+  pitcher_events      Events[] @relation("pitcher")
+  win_pitcher_games   Games[]  @relation("win_pitcher")
+  loss_pitcher_games  Games[]  @relation("loss_pitcher")
+  save_pitcher_games  Games[]  @relation("save_pitcher")
+
+  @@map("core.players")
+}
+
+model Games {
+  game_id                String    @id
+  season                 String
+  source_type            String
+  game_date              String
+  game_number            Int?
+  day_of_week            String?
+  start_time             String?
+  doubleheader_flag      String?
+  day_night              String?
+  attendance             Int?
+  temperature_f          Int?
+  wind_direction         String?
+  wind_speed_mph         Int?
+  field_condition        String?
+  precipitation          String?
+  sky_condition          String?
+  duration_minutes       Int?
+  innings                Int?
+  away_score             Int
+  home_score             Int
+  away_hits              Int?
+  home_hits              Int?
+  away_errors            Int?
+  home_errors            Int?
+  away_lob               Int?
+  home_lob               Int?
+  winning_team_id        String?
+  home_win               Boolean?
+  win_pitcher_id         String?
+  loss_pitcher_id        String?
+  save_pitcher_id        String?
+  raw_loaded_at          DateTime? @db.Timestamptz
+  created_at             DateTime  @default(now()) @db.Timestamptz
+  updated_at             DateTime  @default(now()) @db.Timestamptz
+
+  // Relations
+  home_team              Teams     @relation("home_team", fields: [home_team_id], references: [retrosheet_team_id])
+  away_team              Teams     @relation("away_team", fields: [away_team_id], references: [retrosheet_team_id])
+  park                   Parks?    @relation(fields: [park_id], references: [retrosheet_park_id])
+  win_pitcher            Players?  @relation("win_pitcher", fields: [win_pitcher_id], references: [retrosheet_player_id])
+  loss_pitcher           Players?  @relation("loss_pitcher", fields: [loss_pitcher_id], references: [retrosheet_player_id])
+  save_pitcher           Players?  @relation("save_pitcher", fields: [save_pitcher_id], references: [retrosheet_player_id])
+  events                 Events[]
+
+  // Indexes
+  @@index([season])
+  @@index([game_date])
+  @@index([season, game_date])
+  @@index([home_team_id])
+  @@index([away_team_id])
+  @@index([park_id])
+  @@index([source_type])
+
+  // Check constraints
+  @@map("core.games")
+}
+
+model Events {
+  game_id             String
+  event_id            Int
+  season              String
+  source_type         String
+  event_sequence      Int
+  inning              Int
+  is_bottom_inning    Boolean
+  outs_before         Int
+  balls               Int
+  strikes             Int
+  away_score_before   Int
+  home_score_before   Int
+  batting_team_id     String?
+  fielding_team_id    String?
+  batter_id           String
+  batter_hand         String
+  pitcher_id          String
+  pitcher_hand        String
+  event_code          String
+  event_text          String
+  is_plate_appearance Boolean
+  is_at_bat           Boolean
+  hit_value           Int
+  is_hit              Boolean
+  is_walk             Boolean
+  is_strikeout        Boolean
+  is_home_run         Boolean
+  outs_on_play        Int
+  runs_on_play        Int
+  rbi                 Int
+  start_bases         Int
+  end_bases           Int
+  away_score_after    Int
+  home_score_after    Int
+  game_pa_count       Int
+  half_inning_pa_count Int
+  is_new_plate_appearance Boolean
+  is_inning_start     Boolean
+  is_inning_end       Boolean
+  is_game_end         Boolean
+  raw_loaded_at       DateTime? @db.Timestamptz
+  created_at          DateTime @default(now()) @db.Timestamptz
+
+  // Relations
+  game                Games   @relation(fields: [game_id], references: [game_id], onDelete: Cascade)
+  batter              Players @relation("batter", fields: [batter_id], references: [retrosheet_player_id])
+  pitcher             Players @relation("pitcher", fields: [pitcher_id], references: [retrosheet_player_id])
+
+  // Composite primary key
+  @@id([game_id, event_id])
+
+  // Indexes
+  @@index([game_id])
+  @@index([season])
+  @@index([batter_id])
+  @@index([pitcher_id])
+  @@index([game_id, event_id])
+  @@index([season, batter_id])
+  @@index([season, pitcher_id])
+
+  // Check constraints
+  @@map("core.events")
+}
+
+model PlateAppearances {
+  game_id                String
+  plate_appearance_id    String
+  game_pa_number         Int
+  half_inning_pa_number  Int
+  season                 String
+  game_date              String
+  source_type            String
+  event_sequence         Int
+  inning                 Int
+  is_bottom_inning       Boolean
+  batter_id              String
+  pitcher_id             String
+  batter_hand            String
+  pitcher_hand           String
+  outs_before            Int
+  balls                  Int
+  strikes                Int
+  event_code             String
+  event_text             String
+  is_at_bat              Boolean
+  hit_value              Int
+  is_hit                 Boolean
+  is_walk                Boolean
+  is_strikeout           Boolean
+  is_home_run            Boolean
+  runs_on_play           Int
+  rbi                    Int
+  created_at             DateTime @default(now()) @db.Timestamptz
+
+  // Composite primary key
+  @@id([game_id, plate_appearance_id])
+
+  // Indexes
+  @@index([game_id])
+  @@index([season])
+  @@index([batter_id])
+  @@index([pitcher_id])
+  @@index([season, batter_id])
+  @@index([season, pitcher_id])
+
+  @@map("core.plate_appearances")
+}
+
+// =============================================================================
+// LIVE MLB DATA SCHEMA
+// =============================================================================
+
+model LiveGames {
+  game_id             String    @id
+  season              String
+  game_date           String
+  home_team_id        String
+  away_team_id        String
+  home_team_name      String
+  away_team_name      String
+  park_id             String
+  home_score          Int
+  away_score          Int
+  is_complete         Boolean
+  source_type         String
+  mlb_game_pk         Int?
+  snapshot_id         Int?
+  snapshot_fetched_at DateTime? @db.Timestamptz
+  status_code         String?
+  detailed_state      String?
+  venue_name          String?
+  raw_payload         Json?     @db.JsonB
+  created_at          DateTime  @default(now()) @db.Timestamptz
+  updated_at          DateTime  @default(now()) @db.Timestamptz
+
+  // Relations
+  live_events         LiveEvents[]
+
+  // Indexes
+  @@index([mlb_game_pk])
+  @@index([snapshot_id])
+  @@index([game_date])
+  @@index([season])
+
+  // Check constraints
+  @@map("core.live_games")
+}
+
+model LiveEvents {
+  game_id                String
+  event_id               Int
+  season                 String
+  inning                 Int
+  is_bottom_inning       Boolean
+  event_sequence         Int
+  batter_id              String
+  pitcher_id             String
+  batter_hand            String
+  pitcher_hand           String
+  outs_before            Int
+  balls                  Int
+  strikes                Int
+  start_bases            Int
+  event_code             String
+  event_text             String
+  is_at_bat              Boolean
+  is_plate_appearance    Boolean
+  hit_value              Int
+  is_hit                 Boolean
+  is_walk                Boolean
+  is_strikeout           Boolean
+  is_home_run            Boolean
+  runs_on_play           Int
+  rbi                    Int
+  source_type            String
+  created_at             DateTime @default(now()) @db.Timestamptz
+  updated_at             DateTime @default(now()) @db.Timestamptz
+
+  // Relations
+  live_game             LiveGames @relation(fields: [game_id], references: [game_id], onDelete: Cascade)
+
+  // Composite primary key
+  @@id([game_id, event_id])
+
+  // Indexes
+  @@index([game_id])
+  @@index([season])
+  @@index([batter_id])
+  @@index([pitcher_id])
+  @@index([game_id, event_id])
+
+  @@map("core.live_events")
+}
+
+// =============================================================================
+// BRIDGE TABLES - ID Mappings
+// =============================================================================
+
+model PlayerXref {
+  player_xref_id        BigInt   @id @default(autoincrement())
+  retrosheet_id         String?  @unique
+  mlb_id                BigInt?  @unique
+  baseball_reference_id String?
+  name_first            String?
+  name_last             String?
+  source_notes          Json     @default("{}") @db.JsonB
+  updated_at            DateTime @default(now()) @db.Timestamptz
+
+  @@map("bridge.player_xref")
+}
+
+model TeamXref {
+  team_xref_id      BigInt   @id @default(autoincrement())
+  retrosheet_team_id String?  @unique
+  mlb_team_id       BigInt?  @unique
+  name              String?
+  source_notes      Json     @default("{}") @db.JsonB
+  updated_at        DateTime @default(now()) @db.Timestamptz
+
+  @@map("bridge.team_xref")
+}
+
+// =============================================================================
+// ANALYSIS VIEWS (Materialized for Performance)
+// =============================================================================
+
+model CombinedGames {
+  game_id             String
+  season              String
+  source_type         String
+  game_date           String
+  game_number         Int?
+  day_of_week         String?
+  start_time          String?
+  doubleheader_flag   String?
+  day_night           String?
+  away_team_id        String
+  home_team_id        String
+  park_id             String?
+  attendance          Int?
+  temperature_f       Int?
+  wind_direction      String?
+  wind_speed_mph      Int?
+  field_condition     String?
+  precipitation       String?
+  sky_condition       String?
+  duration_minutes    Int?
+  innings             Int?
+  away_score          Int
+  home_score          Int
+  away_hits           Int?
+  home_hits           Int?
+  away_errors         Int?
+  home_errors         Int?
+  away_lob            Int?
+  home_lob            Int?
+  winning_team_id     String?
+  home_win            Boolean?
+  win_pitcher_id      String?
+  loss_pitcher_id     String?
+  save_pitcher_id     String?
+  raw_loaded_at       DateTime? @db.Timestamptz
+  created_at          DateTime @db.Timestamptz
+  updated_at          DateTime @db.Timestamptz
+
+  @@ignore
+}
+
+model CombinedEvents {
+  game_id             String
+  event_id            Int
+  season              String
+  inning              Int
+  is_bottom_inning    Boolean
+  event_sequence      Int
+  batter_id           String
+  pitcher_id          String
+  batter_hand         String
+  pitcher_hand        String
+  outs_before         Int
+  balls               Int
+  strikes             Int
+  start_bases         Int
+  event_code          String
+  event_text          String
+  is_at_bat           Boolean
+  is_plate_appearance Boolean
+  hit_value           Int
+  is_hit              Boolean
+  is_walk             Boolean
+  is_strikeout        Boolean
+  is_home_run         Boolean
+  runs_on_play        Int
+  rbi                 Int
+  source_type         String
+  created_at          DateTime @db.Timestamptz
+  updated_at          DateTime @db.Timestamptz
+
+  @@ignore
+}
+
+model CombinedPlateAppearances {
+  game_id             String
+  season              String
+  inning              Int
+  is_bottom_inning    Boolean
+  batter_id           String
+  pitcher_id          String
+  batter_hand         String
+  pitcher_hand        String
+  outs_before         Int
+  balls               Int
+  strikes             Int
+  start_bases         Int
+  event_code          String
+  event_text          String
+  is_at_bat           Boolean
+  hit_value           Int
+  is_hit              Boolean
+  is_walk             Boolean
+  is_strikeout        Boolean
+  is_home_run         Boolean
+  runs_on_play        Int
+  rbi                 Int
+  source_type         String
+  created_at          DateTime @db.Timestamptz
+  updated_at          DateTime @db.Timestamptz
+
+  @@ignore
+}
