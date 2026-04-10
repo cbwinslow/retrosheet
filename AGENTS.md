@@ -65,3 +65,5 @@ Use `scripts/train_models.py` for first-pass model training. Store model artifac
 When creating GitHub issues, include concrete links to relevant docs, scripts, migrations, and tables. Issues should be written as durable project records, not vague reminders.
 
 Load Retrosheet reference metadata with `scripts/load_reference_metadata.py` after rebuilding `core.games`, `core.events`, and `core.plate_appearances`; it backfills player handedness and refreshes feature materialized views.
+
+Load broader Retrosheet auxiliary metadata with `scripts/load_auxiliary_retrosheet.py` after the reference metadata step. It preserves source rows in `raw_retrosheet` and exposes normalized `core` views for rosters, All-Star rosters/games, schedules, umpires, coaches, ejections, and player relatives. Keep raw auxiliary tables source-preserved; add typed joins/views in `core` instead of reshaping the raw layer destructively.

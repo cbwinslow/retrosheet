@@ -77,3 +77,20 @@
   - **Home Run**: Best ROC AUC 0.657, log loss 0.133.
   - **Extra-base Hit**: Best ROC AUC 0.643, log loss 0.262.
   - **Hit**: Best ROC AUC 0.637, log loss 0.501.
+- Added broader Retrosheet auxiliary metadata ingestion with `scripts/load_auxiliary_retrosheet.py` and `sql/040_auxiliary_retrosheet.sql`.
+- Loaded source-preserved auxiliary tables:
+  - `raw_retrosheet.biofile_legacy`: 26,961 rows.
+  - `raw_retrosheet.coaches`: 12,501 rows.
+  - `raw_retrosheet.ejections`: 19,730 rows.
+  - `raw_retrosheet.relatives`: 1,320 rows.
+  - `raw_retrosheet.season_rosters`: 138,020 rows.
+  - `raw_retrosheet.season_teams`: 3,986 rows.
+  - `raw_retrosheet.season_schedules`: 233,953 rows.
+  - `raw_retrosheet.season_umpires`: 9,700 rows.
+  - `raw_retrosheet.special_gamelog_lines`: 1,973 rows.
+- Added normalized auxiliary views:
+  - `core.roster_entries`: 138,020 rows.
+  - `core.allstar_roster_entries`: 6,528 rows.
+  - `core.allstar_games`: 25 rows.
+  - `core.scheduled_games`, `core.umpires`, `core.coach_assignments`, `core.ejections`, and `core.player_relatives`.
+- Expanded `core.players` from Retrosheet roster metadata to 24,588 players with 24,070 first names, 21,511 batting-hand values, and 22,145 throwing-hand values.

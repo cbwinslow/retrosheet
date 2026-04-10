@@ -38,9 +38,12 @@ Apply the typed core/modeling migration after loading Chadwick data:
 psql -h localhost -p 5432 -d retrosheet -f sql/010_core_games_events.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/020_plate_appearances.sql
 python3 scripts/load_reference_metadata.py
+python3 scripts/load_auxiliary_retrosheet.py
 ```
 
 `load_reference_metadata.py` loads Retrosheet `biofile.csv`, `teams.csv`, and `ballparks.csv`, backfills player handedness, and refreshes the materialized feature views.
+
+`load_auxiliary_retrosheet.py` loads the broader Retrosheet-provided auxiliary files: `biofile0.csv`, coaches, ejections, relatives, season rosters, season team files, schedules, umpires, and special gamelog lines. It also exposes normalized `core` views for roster entries, All-Star rosters/games, schedules, umpires, coaches, ejections, and player relatives.
 
 ## Retrosheet Play-By-Play
 
