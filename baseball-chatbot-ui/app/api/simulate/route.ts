@@ -1,4 +1,4 @@
-import { apiError, queryJson, queryOne } from '../_lib/warehouse'
+import { apiError, executeOne, jsonLiteral, queryJson, queryOne, sqlLiteral } from '../_lib/warehouse'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,10 +9,6 @@ type SimulationRequest = {
   batting_team_id?: string
   fielding_team_id?: string
   left_handed_only?: boolean
-}
-
-function sqlLiteral(value: string) {
-  return `'${value.replace(/'/g, "''")}'`
 }
 
 export async function POST(request: Request) {
@@ -79,9 +75,36 @@ export async function POST(request: Request) {
       `),
     ])
 
+    const simulationRun = await executeOne(`
+      WITH inserted AS (
+        INSERT INTO predictions.simulation_runs (
+          run_name,
+          run_mode,
+          filters,
+          summary,
+          run_distribution,
+          sample_size,
+          notes
+        )
+        VALUES (
+          ${sqlLiteral(`Historical ${body.season || 2025} inning ${body.inning || 'all'} scenario`)},
+          'historical_backtest_distribution',
+          ${jsonLiteral(body)},
+          ${jsonLiteral(summary)},
+          ${jsonLiteral(runDistribution)},
+          ${(summary?.historical_half_innings as number | undefined) ?? 'NULL'},
+          'Saved from the Next.js Sim Lab.'
+        )
+        RETURNING simulation_run_id, requested_at, run_name
+      )
+      SELECT COALESCE(jsonb_agg(row_to_json(inserted)), '[]'::jsonb)::text
+      FROM inserted
+    `)
+
     return Response.json({
       filters: body,
       mode: 'historical_backtest_distribution',
+      simulation_run: simulationRun,
       summary,
       run_distribution: runDistribution,
       recent_examples: recentExamples,

@@ -26,17 +26,35 @@ function psqlArgs(sql: string): string[] {
 
 export async function queryJson<T = unknown>(sql: string): Promise<T> {
   const wrapped = `SELECT COALESCE(jsonb_agg(row_to_json(result)), '[]'::jsonb)::text FROM (${sql}) result;`
-  const { stdout } = await execFileAsync('psql', psqlArgs(wrapped), {
+  return executeJson<T>(wrapped, '[]')
+}
+
+export async function executeJson<T = unknown>(sql: string, fallback = '[]'): Promise<T> {
+  const { stdout } = await execFileAsync('psql', psqlArgs(sql), {
     cwd: repoRoot,
     maxBuffer: 20 * 1024 * 1024,
   })
-  const text = stdout.trim() || '[]'
+  const text = stdout.trim() || fallback
   return JSON.parse(text) as T
+}
+
+export async function executeOne<T = Record<string, unknown>>(sql: string): Promise<T | null> {
+  const rows = await executeJson<T[]>(sql)
+  return rows[0] ?? null
 }
 
 export async function queryOne<T = Record<string, unknown>>(sql: string): Promise<T | null> {
   const rows = await queryJson<T[]>(sql)
   return rows[0] ?? null
+}
+
+export function sqlLiteral(value: unknown): string {
+  if (value === null || value === undefined) return 'NULL'
+  return `'${String(value).replace(/'/g, "''")}'`
+}
+
+export function jsonLiteral(value: unknown): string {
+  return `${sqlLiteral(JSON.stringify(value ?? null))}::jsonb`
 }
 
 export async function runPythonScript(script: string, args: string[]): Promise<string> {

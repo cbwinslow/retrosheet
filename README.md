@@ -48,6 +48,7 @@ python3 scripts/load_auxiliary_retrosheet.py
 psql -h localhost -p 5432 -d retrosheet -f sql/050_feature_marts.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/060_advanced_feature_marts.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/070_temporal_and_production_marts.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/075_interface_workflows.sql
 ```
 
 `load_reference_metadata.py` loads Retrosheet `biofile.csv`, `teams.csv`, and `ballparks.csv`, backfills player handedness, and refreshes the materialized feature views.
@@ -162,6 +163,12 @@ Current cockpit views:
 The spreadsheet approach is intentionally simple right now: query results render as tables with CSV export. If the workflow needs richer spreadsheet editing later, add a dedicated data-grid component such as Handsontable, AG Grid Community, or Glide Data Grid behind typed API routes. Do not expose arbitrary SQL writes from the browser without authentication and explicit guardrails.
 
 The terminal approach is also intentionally guarded. The browser should call allow-listed API actions first. A true embedded terminal can be added later with `node-pty`, `xterm.js`, WebSockets, authentication, and a restricted project-local shell, but the default web UI must not expose arbitrary shell execution.
+
+Apply the interface persistence schema before running the cockpit against a fresh warehouse:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/075_interface_workflows.sql
+```
 
 ## MLB Live Feed
 

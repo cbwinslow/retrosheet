@@ -49,6 +49,7 @@ type BacktestPayload = {
 
 type SimulationPayload = {
   mode: string
+  simulation_run?: Row | null
   summary: Row | null
   run_distribution: Row[]
   recent_examples: Row[]
@@ -346,7 +347,18 @@ function SimulationPanel() {
   const [half, setHalf] = useState<'top' | 'bottom'>('top')
   const [leftOnly, setLeftOnly] = useState(false)
   const [result, setResult] = useState<SimulationPayload | null>(null)
+  const [savedRuns, setSavedRuns] = useState<Row[]>([])
   const [loading, setLoading] = useState(false)
+
+  async function loadSavedRuns() {
+    const response = await fetch('/api/simulation-runs')
+    const payload = await response.json()
+    setSavedRuns(payload.runs || [])
+  }
+
+  useEffect(() => {
+    loadSavedRuns().catch(() => setSavedRuns([]))
+  }, [])
 
   async function run() {
     setLoading(true)
@@ -361,6 +373,7 @@ function SimulationPanel() {
       }),
     })
     setResult(await response.json())
+    await loadSavedRuns()
     setLoading(false)
   }
 
@@ -369,7 +382,7 @@ function SimulationPanel() {
       <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
         <h2 className="font-display text-2xl font-bold">Simulation Workflow</h2>
         <p className="mt-2 text-sm text-chalk/55">
-          This first workflow is a historical scenario backtest distribution. Monte Carlo model simulation can build on this baseline.
+          This first workflow is a historical scenario backtest distribution. Each run is saved so we can compare scenarios and reproduce model-room decisions.
         </p>
         <div className="mt-6 space-y-4">
           <label className="block text-sm text-chalk/65">
@@ -422,6 +435,7 @@ function SimulationPanel() {
           </div>
         )}
         {result?.recent_examples && <DataTable rows={result.recent_examples} title="Recent Matching Half-Innings" />}
+        {savedRuns.length > 0 && <DataTable rows={savedRuns} title="Saved Simulation Runs" />}
       </div>
     </section>
   )

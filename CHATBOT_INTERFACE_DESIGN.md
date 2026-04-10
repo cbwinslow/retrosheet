@@ -20,6 +20,7 @@ API route boundary:
 - `/api/backtests`: registry overview, leaderboard, and sweep candidates.
 - `/api/chat`: local tool-routed assistant response.
 - `/api/simulate`: historical scenario simulation from feature marts.
+- `/api/simulation-runs`: recent saved simulation runs for reproducible model-room workflows.
 - `/api/terminal`: allow-listed workflow commands.
 - `/api/predict`: plate-appearance prediction script bridge.
 - `/api/live-odds`: placeholder dashboard feed until true live odds/markets are integrated.
@@ -51,7 +52,7 @@ A true embedded terminal is possible later with `node-pty`, `xterm.js`, and WebS
 ## Next Interface Milestones
 
 - Add provider-backed LLM tool calling through OpenRouter, Groq, and Codex/OpenAI-compatible providers.
-- Persist chat sessions and tool calls in the database for reproducibility.
+- Expand persisted chat sessions beyond first-pass `chat.query_logs` records.
 - Add saved simulation runs and named backtest reports.
 - Add calibration plots, rolling-origin backtests, and model comparison cards.
 - Add a live-game bridge panel once MLB Stats API ingestion is wired into the same core event shape.
