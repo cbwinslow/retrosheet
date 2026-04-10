@@ -48,6 +48,69 @@ PA_NUMERIC_FEATURES = [
     "home_score_diff",
 ]
 PA_CATEGORICAL_FEATURES = ["batter_hand", "pitcher_hand"]
+PA_ENRICHED_NUMERIC_FEATURES = PA_NUMERIC_FEATURES + [
+    "batter_prior_pa",
+    "batter_prior_hit_rate",
+    "batter_prior_walk_rate",
+    "batter_prior_strikeout_rate",
+    "batter_prior_home_run_rate",
+    "batter_prior_reach_base_rate",
+    "batter_prior_extra_base_hit_rate",
+    "pitcher_prior_batters_faced",
+    "pitcher_prior_hit_allowed_rate",
+    "pitcher_prior_walk_allowed_rate",
+    "pitcher_prior_strikeout_rate",
+    "pitcher_prior_home_run_allowed_rate",
+    "pitcher_prior_reach_base_allowed_rate",
+    "pitcher_prior_extra_base_hit_allowed_rate",
+    "batting_team_prior_win_rate",
+    "batting_team_prior_runs_scored_per_game",
+    "batting_team_prior_runs_allowed_per_game",
+    "fielding_team_prior_win_rate",
+    "fielding_team_prior_runs_scored_per_game",
+    "fielding_team_prior_runs_allowed_per_game",
+    "context_prior_pa",
+    "context_prior_hit_rate",
+    "context_prior_walk_rate",
+    "context_prior_strikeout_rate",
+    "context_prior_home_run_rate",
+    "context_prior_reach_base_rate",
+    "context_prior_extra_base_hit_rate",
+    "context_prior_batting_team_win_rate",
+]
+PA_ENRICHED_CATEGORICAL_FEATURES = PA_CATEGORICAL_FEATURES
+
+GAME_ENRICHED_NUMERIC_FEATURES = GAME_NUMERIC_FEATURES + [
+    "batter_prior_pa",
+    "batter_prior_hit_rate",
+    "batter_prior_walk_rate",
+    "batter_prior_strikeout_rate",
+    "batter_prior_home_run_rate",
+    "batter_prior_reach_base_rate",
+    "batter_prior_extra_base_hit_rate",
+    "pitcher_prior_batters_faced",
+    "pitcher_prior_hit_allowed_rate",
+    "pitcher_prior_walk_allowed_rate",
+    "pitcher_prior_strikeout_rate",
+    "pitcher_prior_home_run_allowed_rate",
+    "pitcher_prior_reach_base_allowed_rate",
+    "pitcher_prior_extra_base_hit_allowed_rate",
+    "home_team_prior_win_rate",
+    "home_team_prior_runs_scored_per_game",
+    "home_team_prior_runs_allowed_per_game",
+    "away_team_prior_win_rate",
+    "away_team_prior_runs_scored_per_game",
+    "away_team_prior_runs_allowed_per_game",
+    "context_prior_pa",
+    "context_prior_hit_rate",
+    "context_prior_walk_rate",
+    "context_prior_strikeout_rate",
+    "context_prior_home_run_rate",
+    "context_prior_reach_base_rate",
+    "context_prior_extra_base_hit_rate",
+    "context_prior_batting_team_win_rate",
+]
+GAME_ENRICHED_CATEGORICAL_FEATURES = GAME_CATEGORICAL_FEATURES
 PA_TARGETS = {
     "pa_batter_hit": "is_hit",
     "pa_batter_walk": "is_walk",
@@ -83,13 +146,19 @@ def database_url() -> str | URL:
 
 
 def load_examples(
-    engine, *, target_id: str, min_season: int, max_season: int, sample_rate: float
+    engine,
+    *,
+    target_id: str,
+    min_season: int,
+    max_season: int,
+    sample_rate: float,
+    feature_set: str,
 ) -> pd.DataFrame:
     if not 0 < sample_rate <= 1:
         raise ValueError("--sample-rate must be between 0 and 1")
     sample_ppm = int(sample_rate * 1_000_000)
 
-    if target_id == "game_home_win":
+    if target_id == "game_home_win" and feature_set == "basic":
         sql = """
             SELECT
                 season,
@@ -111,7 +180,79 @@ def load_examples(
               AND mod(abs(hashtext(game_id || ':' || event_id::text)), 1000000) < :sample_ppm
         """
         target_col = "final_home_win"
-    elif target_id in PA_TARGETS:
+    elif target_id == "game_home_win" and feature_set == "enriched":
+        sql = """
+            SELECT
+                examples.season,
+                examples.inning,
+                examples.is_bottom_inning::integer AS is_bottom_inning,
+                examples.outs_before,
+                examples.start_bases,
+                examples.balls,
+                examples.strikes,
+                examples.home_score_diff,
+                examples.away_score_before,
+                examples.home_score_before,
+                COALESCE(examples.batter_hand::text, 'U') AS batter_hand,
+                COALESCE(examples.pitcher_hand::text, 'U') AS pitcher_hand,
+                batter.prior_pa AS batter_prior_pa,
+                batter.prior_hit_rate AS batter_prior_hit_rate,
+                batter.prior_walk_rate AS batter_prior_walk_rate,
+                batter.prior_strikeout_rate AS batter_prior_strikeout_rate,
+                batter.prior_home_run_rate AS batter_prior_home_run_rate,
+                batter.prior_reach_base_rate AS batter_prior_reach_base_rate,
+                batter.prior_extra_base_hit_rate AS batter_prior_extra_base_hit_rate,
+                pitcher.prior_batters_faced AS pitcher_prior_batters_faced,
+                pitcher.prior_hit_allowed_rate AS pitcher_prior_hit_allowed_rate,
+                pitcher.prior_walk_allowed_rate AS pitcher_prior_walk_allowed_rate,
+                pitcher.prior_strikeout_rate AS pitcher_prior_strikeout_rate,
+                pitcher.prior_home_run_allowed_rate AS pitcher_prior_home_run_allowed_rate,
+                pitcher.prior_reach_base_allowed_rate AS pitcher_prior_reach_base_allowed_rate,
+                pitcher.prior_extra_base_hit_allowed_rate AS pitcher_prior_extra_base_hit_allowed_rate,
+                home_team.prior_win_rate AS home_team_prior_win_rate,
+                home_team.prior_runs_scored_per_game AS home_team_prior_runs_scored_per_game,
+                home_team.prior_runs_allowed_per_game AS home_team_prior_runs_allowed_per_game,
+                away_team.prior_win_rate AS away_team_prior_win_rate,
+                away_team.prior_runs_scored_per_game AS away_team_prior_runs_scored_per_game,
+                away_team.prior_runs_allowed_per_game AS away_team_prior_runs_allowed_per_game,
+                context.prior_pa AS context_prior_pa,
+                context.prior_hit_rate AS context_prior_hit_rate,
+                context.prior_walk_rate AS context_prior_walk_rate,
+                context.prior_strikeout_rate AS context_prior_strikeout_rate,
+                context.prior_home_run_rate AS context_prior_home_run_rate,
+                context.prior_reach_base_rate AS context_prior_reach_base_rate,
+                context.prior_extra_base_hit_rate AS context_prior_extra_base_hit_rate,
+                context.prior_batting_team_win_rate AS context_prior_batting_team_win_rate,
+                examples.final_home_win::integer AS final_home_win
+            FROM features.game_outcome_examples examples
+            LEFT JOIN features.batter_prior_season_pa_summary batter
+              ON batter.feature_season = examples.season
+             AND batter.batter_id = examples.batter_id
+            LEFT JOIN features.pitcher_prior_season_pa_summary pitcher
+              ON pitcher.feature_season = examples.season
+             AND pitcher.pitcher_id = examples.pitcher_id
+            LEFT JOIN features.team_prior_season_summary home_team
+              ON home_team.feature_season = examples.season
+             AND home_team.team_id = examples.home_team_id
+            LEFT JOIN features.team_prior_season_summary away_team
+              ON away_team.feature_season = examples.season
+             AND away_team.team_id = examples.away_team_id
+            LEFT JOIN features.pa_context_prior_season_rates context
+              ON context.feature_season = examples.season
+             AND context.batter_hand = COALESCE(examples.batter_hand::text, 'U')
+             AND context.pitcher_hand = COALESCE(examples.pitcher_hand::text, 'U')
+             AND context.inning = examples.inning
+             AND context.is_bottom_inning = examples.is_bottom_inning
+             AND context.outs_before = examples.outs_before
+             AND context.start_bases = examples.start_bases
+             AND context.balls = examples.balls
+             AND context.strikes = examples.strikes
+            WHERE examples.season BETWEEN :min_season AND :max_season
+              AND examples.final_home_win IS NOT NULL
+              AND mod(abs(hashtext(examples.game_id || ':' || examples.event_id::text)), 1000000) < :sample_ppm
+        """
+        target_col = "final_home_win"
+    elif target_id in PA_TARGETS and feature_set == "basic":
         target_col_name = PA_TARGETS[target_id]
         sql = f"""
             SELECT
@@ -130,6 +271,77 @@ def load_examples(
             WHERE season BETWEEN :min_season AND :max_season
               AND {target_col_name} IS NOT NULL
               AND mod(abs(hashtext(game_id || ':' || plate_appearance_id::text)), 1000000) < :sample_ppm
+        """
+        target_col = "target"
+    elif target_id in PA_TARGETS and feature_set == "enriched":
+        target_col_name = PA_TARGETS[target_id]
+        sql = f"""
+            SELECT
+                examples.season,
+                examples.inning,
+                examples.is_bottom_inning::integer AS is_bottom_inning,
+                examples.outs_before,
+                examples.start_bases,
+                examples.balls,
+                examples.strikes,
+                examples.home_score_diff,
+                COALESCE(examples.batter_hand::text, 'U') AS batter_hand,
+                COALESCE(examples.pitcher_hand::text, 'U') AS pitcher_hand,
+                batter.prior_pa AS batter_prior_pa,
+                batter.prior_hit_rate AS batter_prior_hit_rate,
+                batter.prior_walk_rate AS batter_prior_walk_rate,
+                batter.prior_strikeout_rate AS batter_prior_strikeout_rate,
+                batter.prior_home_run_rate AS batter_prior_home_run_rate,
+                batter.prior_reach_base_rate AS batter_prior_reach_base_rate,
+                batter.prior_extra_base_hit_rate AS batter_prior_extra_base_hit_rate,
+                pitcher.prior_batters_faced AS pitcher_prior_batters_faced,
+                pitcher.prior_hit_allowed_rate AS pitcher_prior_hit_allowed_rate,
+                pitcher.prior_walk_allowed_rate AS pitcher_prior_walk_allowed_rate,
+                pitcher.prior_strikeout_rate AS pitcher_prior_strikeout_rate,
+                pitcher.prior_home_run_allowed_rate AS pitcher_prior_home_run_allowed_rate,
+                pitcher.prior_reach_base_allowed_rate AS pitcher_prior_reach_base_allowed_rate,
+                pitcher.prior_extra_base_hit_allowed_rate AS pitcher_prior_extra_base_hit_allowed_rate,
+                batting_team.prior_win_rate AS batting_team_prior_win_rate,
+                batting_team.prior_runs_scored_per_game AS batting_team_prior_runs_scored_per_game,
+                batting_team.prior_runs_allowed_per_game AS batting_team_prior_runs_allowed_per_game,
+                fielding_team.prior_win_rate AS fielding_team_prior_win_rate,
+                fielding_team.prior_runs_scored_per_game AS fielding_team_prior_runs_scored_per_game,
+                fielding_team.prior_runs_allowed_per_game AS fielding_team_prior_runs_allowed_per_game,
+                context.prior_pa AS context_prior_pa,
+                context.prior_hit_rate AS context_prior_hit_rate,
+                context.prior_walk_rate AS context_prior_walk_rate,
+                context.prior_strikeout_rate AS context_prior_strikeout_rate,
+                context.prior_home_run_rate AS context_prior_home_run_rate,
+                context.prior_reach_base_rate AS context_prior_reach_base_rate,
+                context.prior_extra_base_hit_rate AS context_prior_extra_base_hit_rate,
+                context.prior_batting_team_win_rate AS context_prior_batting_team_win_rate,
+                examples.{target_col_name}::integer AS target
+            FROM features.plate_appearance_examples examples
+            LEFT JOIN features.batter_prior_season_pa_summary batter
+              ON batter.feature_season = examples.season
+             AND batter.batter_id = examples.batter_id
+            LEFT JOIN features.pitcher_prior_season_pa_summary pitcher
+              ON pitcher.feature_season = examples.season
+             AND pitcher.pitcher_id = examples.pitcher_id
+            LEFT JOIN features.team_prior_season_summary batting_team
+              ON batting_team.feature_season = examples.season
+             AND batting_team.team_id = examples.batting_team_id
+            LEFT JOIN features.team_prior_season_summary fielding_team
+              ON fielding_team.feature_season = examples.season
+             AND fielding_team.team_id = examples.fielding_team_id
+            LEFT JOIN features.pa_context_prior_season_rates context
+              ON context.feature_season = examples.season
+             AND context.batter_hand = COALESCE(examples.batter_hand::text, 'U')
+             AND context.pitcher_hand = COALESCE(examples.pitcher_hand::text, 'U')
+             AND context.inning = examples.inning
+             AND context.is_bottom_inning = examples.is_bottom_inning
+             AND context.outs_before = examples.outs_before
+             AND context.start_bases = examples.start_bases
+             AND context.balls = examples.balls
+             AND context.strikes = examples.strikes
+            WHERE examples.season BETWEEN :min_season AND :max_season
+              AND examples.{target_col_name} IS NOT NULL
+              AND mod(abs(hashtext(examples.game_id || ':' || examples.plate_appearance_id::text)), 1000000) < :sample_ppm
         """
         target_col = "target"
     else:
@@ -285,11 +497,19 @@ def train(args: argparse.Namespace) -> None:
     engine = create_engine(database_url())
     try:
         if args.target_id == "game_home_win":
-            numeric_features = GAME_NUMERIC_FEATURES
-            categorical_features = GAME_CATEGORICAL_FEATURES
+            if args.feature_set == "enriched":
+                numeric_features = GAME_ENRICHED_NUMERIC_FEATURES
+                categorical_features = GAME_ENRICHED_CATEGORICAL_FEATURES
+            else:
+                numeric_features = GAME_NUMERIC_FEATURES
+                categorical_features = GAME_CATEGORICAL_FEATURES
         elif args.target_id in PA_TARGETS:
-            numeric_features = PA_NUMERIC_FEATURES
-            categorical_features = PA_CATEGORICAL_FEATURES
+            if args.feature_set == "enriched":
+                numeric_features = PA_ENRICHED_NUMERIC_FEATURES
+                categorical_features = PA_ENRICHED_CATEGORICAL_FEATURES
+            else:
+                numeric_features = PA_NUMERIC_FEATURES
+                categorical_features = PA_CATEGORICAL_FEATURES
         else:
             raise ValueError(f"Unknown target_id: {args.target_id}")
 
@@ -299,6 +519,7 @@ def train(args: argparse.Namespace) -> None:
             min_season=args.min_season,
             max_season=args.max_season,
             sample_rate=args.sample_rate,
+            feature_set=args.feature_set,
         )
         if frame.empty:
             raise SystemExit(
@@ -317,6 +538,7 @@ def train(args: argparse.Namespace) -> None:
             "numeric_features": numeric_features,
             "categorical_features": categorical_features,
             "target": "target",
+            "feature_set": args.feature_set,
         }
         for model_name, model in build_models(
             numeric_features=numeric_features, categorical_features=categorical_features
@@ -380,6 +602,12 @@ def main() -> None:
         type=float,
         default=0.10,
         help="Deterministic row sample from 0.0 to 1.0.",
+    )
+    parser.add_argument(
+        "--feature-set",
+        choices=["basic", "enriched"],
+        default="enriched",
+        help="Use basic state features or enriched prior-season feature marts.",
     )
     parser.add_argument(
         "--no-activate",

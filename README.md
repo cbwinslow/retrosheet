@@ -100,13 +100,20 @@ python3 scripts/train_models.py --target-id game_home_win --sample-rate 0.10 --t
 Train a plate-appearance model:
 
 ```bash
-python3 scripts/train_models.py --target-id pa_batter_hit --sample-rate 0.05 --train-through 2022
+python3 scripts/train_models.py --target-id pa_batter_hit --sample-rate 0.05 --train-through 2022 --feature-set enriched
 ```
 
 Compare trained plate-appearance models:
 
 ```bash
 python3 scripts/analyze_pa_models.py
+```
+
+Promote the best registered model versions after candidate training:
+
+```bash
+python3 scripts/promote_best_models.py --target-prefix 'pa_%' --min-validation-rows 10000
+python3 scripts/promote_best_models.py --target-id game_home_win --min-validation-rows 10000
 ```
 
 Artifacts are written under `data/models/` and model metadata is registered in `models.model_registry`.

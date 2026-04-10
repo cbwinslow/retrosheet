@@ -101,3 +101,15 @@
   - `features.pa_context_prior_season_rates`: 612,126 rows.
   - `features.half_inning_outcome_summary`: 1,118,579 rows.
 - Kept prior-season marts keyed by `feature_season = season + 1` so model training can join historical performance without same-season leakage.
+- Added enriched model training support in `scripts/train_models.py` and active-model promotion in `scripts/promote_best_models.py`.
+- Updated plate-appearance inference to load the enriched feature shape from Postgres before scoring.
+- Trained and activated enriched 5% sample models. Active validation ROC AUC:
+  - `game_home_win`: 0.850 gradient boosting, 0.843 logistic regression.
+  - `pa_batter_walk`: 0.961 logistic regression, 0.960 gradient boosting.
+  - `pa_batter_strikeout`: 0.854 gradient boosting, 0.851 logistic regression.
+  - `pa_batter_reach_base`: 0.683 gradient boosting, 0.676 logistic regression.
+  - `pa_batter_home_run`: 0.683 logistic regression, 0.675 gradient boosting.
+  - `pa_batter_extra_base_hit`: 0.646 gradient boosting, 0.639 logistic regression.
+  - `pa_batter_hit`: 0.643 gradient boosting, 0.634 logistic regression.
+- Verified enriched plate-appearance inference on `ANA202506060` plate appearance `30`.
+- Noted future feature work: add coarser context-rate fallbacks because exact inning/base/count/hand context joins can be sparse.

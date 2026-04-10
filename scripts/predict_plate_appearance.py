@@ -107,18 +107,68 @@ def predict_plate_appearance(
     try:
         sql = """
             SELECT
-                season,
-                inning,
-                is_bottom_inning::integer AS is_bottom_inning,
-                outs_before,
-                start_bases,
-                balls,
-                strikes,
-                home_score_diff,
-                COALESCE(batter_hand::text, 'U') AS batter_hand,
-                COALESCE(pitcher_hand::text, 'U') AS pitcher_hand
-            FROM features.plate_appearance_examples
-            WHERE game_id = :game_id AND plate_appearance_id = :plate_appearance_id
+                examples.season,
+                examples.inning,
+                examples.is_bottom_inning::integer AS is_bottom_inning,
+                examples.outs_before,
+                examples.start_bases,
+                examples.balls,
+                examples.strikes,
+                examples.home_score_diff,
+                COALESCE(examples.batter_hand::text, 'U') AS batter_hand,
+                COALESCE(examples.pitcher_hand::text, 'U') AS pitcher_hand,
+                batter.prior_pa AS batter_prior_pa,
+                batter.prior_hit_rate AS batter_prior_hit_rate,
+                batter.prior_walk_rate AS batter_prior_walk_rate,
+                batter.prior_strikeout_rate AS batter_prior_strikeout_rate,
+                batter.prior_home_run_rate AS batter_prior_home_run_rate,
+                batter.prior_reach_base_rate AS batter_prior_reach_base_rate,
+                batter.prior_extra_base_hit_rate AS batter_prior_extra_base_hit_rate,
+                pitcher.prior_batters_faced AS pitcher_prior_batters_faced,
+                pitcher.prior_hit_allowed_rate AS pitcher_prior_hit_allowed_rate,
+                pitcher.prior_walk_allowed_rate AS pitcher_prior_walk_allowed_rate,
+                pitcher.prior_strikeout_rate AS pitcher_prior_strikeout_rate,
+                pitcher.prior_home_run_allowed_rate AS pitcher_prior_home_run_allowed_rate,
+                pitcher.prior_reach_base_allowed_rate AS pitcher_prior_reach_base_allowed_rate,
+                pitcher.prior_extra_base_hit_allowed_rate AS pitcher_prior_extra_base_hit_allowed_rate,
+                batting_team.prior_win_rate AS batting_team_prior_win_rate,
+                batting_team.prior_runs_scored_per_game AS batting_team_prior_runs_scored_per_game,
+                batting_team.prior_runs_allowed_per_game AS batting_team_prior_runs_allowed_per_game,
+                fielding_team.prior_win_rate AS fielding_team_prior_win_rate,
+                fielding_team.prior_runs_scored_per_game AS fielding_team_prior_runs_scored_per_game,
+                fielding_team.prior_runs_allowed_per_game AS fielding_team_prior_runs_allowed_per_game,
+                context.prior_pa AS context_prior_pa,
+                context.prior_hit_rate AS context_prior_hit_rate,
+                context.prior_walk_rate AS context_prior_walk_rate,
+                context.prior_strikeout_rate AS context_prior_strikeout_rate,
+                context.prior_home_run_rate AS context_prior_home_run_rate,
+                context.prior_reach_base_rate AS context_prior_reach_base_rate,
+                context.prior_extra_base_hit_rate AS context_prior_extra_base_hit_rate,
+                context.prior_batting_team_win_rate AS context_prior_batting_team_win_rate
+            FROM features.plate_appearance_examples examples
+            LEFT JOIN features.batter_prior_season_pa_summary batter
+              ON batter.feature_season = examples.season
+             AND batter.batter_id = examples.batter_id
+            LEFT JOIN features.pitcher_prior_season_pa_summary pitcher
+              ON pitcher.feature_season = examples.season
+             AND pitcher.pitcher_id = examples.pitcher_id
+            LEFT JOIN features.team_prior_season_summary batting_team
+              ON batting_team.feature_season = examples.season
+             AND batting_team.team_id = examples.batting_team_id
+            LEFT JOIN features.team_prior_season_summary fielding_team
+              ON fielding_team.feature_season = examples.season
+             AND fielding_team.team_id = examples.fielding_team_id
+            LEFT JOIN features.pa_context_prior_season_rates context
+              ON context.feature_season = examples.season
+             AND context.batter_hand = COALESCE(examples.batter_hand::text, 'U')
+             AND context.pitcher_hand = COALESCE(examples.pitcher_hand::text, 'U')
+             AND context.inning = examples.inning
+             AND context.is_bottom_inning = examples.is_bottom_inning
+             AND context.outs_before = examples.outs_before
+             AND context.start_bases = examples.start_bases
+             AND context.balls = examples.balls
+             AND context.strikes = examples.strikes
+            WHERE examples.game_id = :game_id AND examples.plate_appearance_id = :plate_appearance_id
         """
         df = pd.read_sql_query(
             text(sql),

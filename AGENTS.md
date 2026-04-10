@@ -69,3 +69,5 @@ Load Retrosheet reference metadata with `scripts/load_reference_metadata.py` aft
 Load broader Retrosheet auxiliary metadata with `scripts/load_auxiliary_retrosheet.py` after the reference metadata step. It preserves source rows in `raw_retrosheet` and exposes normalized `core` views for rosters, All-Star rosters/games, schedules, umpires, coaches, ejections, and player relatives. Keep raw auxiliary tables source-preserved; add typed joins/views in `core` instead of reshaping the raw layer destructively.
 
 Build indexed ML feature marts with `sql/050_feature_marts.sql` after auxiliary metadata is loaded. Prior-season feature marts should use `feature_season = source season + 1` to avoid leaking same-season labels into training rows.
+
+Train candidate models with `scripts/train_models.py --feature-set enriched` once feature marts exist. Promote best registered versions with `scripts/promote_best_models.py` instead of hand-editing `models.model_registry.is_active`.
