@@ -1,0 +1,117 @@
+# Retrosheet Warehouse
+
+PostgreSQL-first warehouse tooling for historical Retrosheet play-by-play data and live MLB game feeds.
+
+The goal is to train models on historical play-by-play states, then run the same feature pipeline against live MLB data.
+
+## Architecture
+
+- `raw_retrosheet`: source-preserved Retrosheet/Chadwick extracts.
+- `raw_mlb`: source-preserved MLB Stats API / GUMBO payloads.
+- `bridge`: cross-reference tables for player, team, park, and game IDs.
+- `core`: canonical views/tables that will make Retrosheet and MLB live data look the same.
+- `features`: ML-ready training and inference tables.
+- `predictions`: live and backtest model outputs.
+
+## Database
+
+These scripts use your existing PostgreSQL server on port `5432`. Configure connection details with either `DATABASE_URL` or standard `PG*` variables.
+
+Example:
+
+```bash
+export PGHOST=localhost
+export PGPORT=5432
+export PGDATABASE=retrosheet
+export PGUSER=postgres
+```
+
+Then initialize schemas:
+
+```bash
+python3 scripts/warehouse.py init-db
+```
+
+Apply the typed core/modeling migration after loading Chadwick data:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/010_core_games_events.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/020_plate_appearances.sql
+```
+
+## Retrosheet Play-By-Play
+
+Install Chadwick tools first. The warehouse uses Chadwick as the official parser layer for Retrosheet event files.
+
+```bash
+python3 scripts/warehouse.py check-deps
+python3 scripts/warehouse.py fetch-retrosheet
+python3 scripts/warehouse.py init-db
+python3 scripts/warehouse.py extract-chadwick --years 2023 --outputs all
+python3 scripts/warehouse.py load-chadwick --years 2023 --outputs all
+```
+
+For a range:
+
+```bash
+python3 scripts/warehouse.py extract-chadwick --years 2000-2025 --outputs all
+python3 scripts/warehouse.py load-chadwick --years 2000-2025 --outputs all
+```
+
+The Chadwick outputs loaded today are:
+
+- `raw_retrosheet.chadwick_events` from `cwevent`
+- `raw_retrosheet.chadwick_games` from `cwgame`
+- `raw_retrosheet.chadwick_daily` from `cwdaily`
+- `raw_retrosheet.chadwick_substitutions` from `cwsub`
+- `raw_retrosheet.chadwick_comments` from `cwcomment`
+
+See [docs/WAREHOUSE_PLAN.md](docs/WAREHOUSE_PLAN.md) for the staged normalization plan.
+
+See [docs/PREDICTION_ENGINE_PLAN.md](docs/PREDICTION_ENGINE_PLAN.md) for the reusable ML, agent, live-data, and market-intelligence architecture.
+
+See [docs/CORE_SCHEMA.md](docs/CORE_SCHEMA.md) for the typed database layer, constraints, indexes, and feature seed.
+
+See [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md) for a running build log of major warehouse, modeling, and planning steps.
+
+## Modeling
+
+Install Python modeling dependencies:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+Train initial game-win models from the typed feature layer:
+
+```bash
+python3 scripts/train_models.py --sample-rate 0.10 --train-through 2022
+```
+
+Artifacts are written under `data/models/` and model metadata is registered in `models.model_registry`.
+
+AI inference provider configuration is documented in [config/ai_providers.example.json](config/ai_providers.example.json). The intended providers are OpenRouter, Groq, and Codex/OpenAI-compatible agent orchestration.
+
+## MLB Live Feed
+
+Store a source-preserved snapshot of MLB's live game feed:
+
+```bash
+python3 scripts/warehouse.py fetch-live-game --game-pk 748555
+```
+
+The live feed endpoint used is:
+
+```text
+https://statsapi.mlb.com/api/v1.1/game/{gamePk}/feed/live
+```
+
+## Notes
+
+Retrosheet data attribution:
+
+```text
+The information used here was obtained free of
+charge from and is copyrighted by Retrosheet. Interested
+parties may contact Retrosheet at "www.retrosheet.org".
+```
