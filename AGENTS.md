@@ -58,6 +58,58 @@ Use the installed Chadwick command-line tools:
 
 Always include `-n` for new extracts so the first row has official Chadwick column names.
 
+## Live Data Ingestion Procedure
+
+The system supports real-time MLB game data ingestion alongside historical Retrosheet data, maintaining clean separation between data sources.
+
+### Data Separation Architecture
+
+- **Historical Data**: `core.games`, `core.events`, `core.plate_appearances` (Retrosheet/Chadwick sourced)
+- **Live Data**: `core.live_games`, `core.live_events` (MLB Stats API sourced)
+- **Analysis Layer**: `analysis.*` views combine both sources for unified querying
+- **Bridge Tables**: `bridge.player_xref`, `bridge.team_xref` map IDs between systems
+
+### Live Data Ingestion Workflow
+
+1. **Schedule Discovery**: `python3 scripts/fetch_mlb_schedule.py --yesterday`
+   - Discovers active/completed MLB games
+   - Identifies games available for ingestion
+
+2. **Game Ingestion**: `python3 scripts/warehouse.py fetch-live-game --game-pk <GAME_PK>`
+   - Downloads live game feed from MLB Stats API
+   - Stores raw JSON in `raw_mlb.live_feed_snapshots`
+
+3. **Data Transformation**: `python3 scripts/transform_live_game.py --game-pk <GAME_PK>`
+   - Transforms MLB API JSON to core schema
+   - Applies ID mapping via bridge tables
+   - Populates `core.live_games` and `core.live_events`
+
+4. **Batch Processing**: `python3 scripts/ingest_live_games.py --schedule`
+   - Orchestrates discovery and ingestion for multiple games
+   - Includes duplicate detection and error handling
+
+5. **Bridge Table Management**: `python3 scripts/populate_bridge_tables.py`
+   - Downloads Chadwick Bureau Register (comprehensive player/team ID mappings)
+   - Populates `bridge.player_xref` and `bridge.team_xref` tables
+   - Enables seamless ID translation between MLB and Retrosheet systems
+
+### Analysis & Combined Queries
+
+Use `analysis.*` views for unified access to both historical and live data:
+
+- `analysis.combined_games`: Union of historical + live games
+- `analysis.combined_events`: Union of historical + live events
+- `analysis.combined_plate_appearances`: Combined plate appearance data
+- `analysis.get_data_source_stats()`: Statistics across data sources
+- `analysis.get_recent_games(days_back)`: Recent games from both sources
+
+### Live Data Maintenance
+
+- Live data tables are additive - no historical data is modified
+- Bridge tables enable ID mapping without data duplication
+- Analysis views provide transparent access to combined datasets
+- Separate ingestion scripts prevent accidental mixing of data sources
+
 ## Recommended Workflow
 
 1. `python3 scripts/warehouse.py check-deps`

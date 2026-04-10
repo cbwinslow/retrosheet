@@ -1,6 +1,7 @@
 CREATE SCHEMA IF NOT EXISTS features;
 CREATE SCHEMA IF NOT EXISTS predictions;
 
+DROP VIEW IF EXISTS features.plate_appearance_outcome_validation_summary;
 DROP MATERIALIZED VIEW IF EXISTS features.plate_appearance_outcome_examples;
 
 CREATE MATERIALIZED VIEW features.plate_appearance_outcome_examples AS

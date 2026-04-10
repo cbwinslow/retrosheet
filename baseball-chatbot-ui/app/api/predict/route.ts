@@ -15,6 +15,24 @@ export async function POST(request: Request): Promise<Response> {
       )
     }
 
+    if (body.target_id === 'pa_outcome_distribution') {
+      const args = [
+        '--game-id',
+        gameId,
+        '--plate-appearance-id',
+        String(plateAppearanceId),
+      ]
+      if (body.model_name) {
+        args.push('--model-name', String(body.model_name))
+      }
+      if (body.model_version) {
+        args.push('--model-version', String(body.model_version))
+      }
+
+      const output = await runPythonScript('predict_pa_outcome_distribution.py', args)
+      return Response.json(JSON.parse(output))
+    }
+
     const output = await runPythonScript('predict_plate_appearance.py', [
       '--game-id',
       gameId,

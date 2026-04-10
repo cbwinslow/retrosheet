@@ -38,6 +38,13 @@ Full reproducible rebuild order:
 YEARS=2000-2025 PGDATABASE=retrosheet scripts/rebuild_warehouse.sh
 ```
 
+The rebuild script now includes:
+- Core schema setup (games, events, plate appearances)
+- MLB live data infrastructure (raw_mlb, bridge tables, live core tables)
+- Reference and auxiliary metadata loading
+- Feature marts (basic, advanced, temporal, half-inning)
+- Model training data preparation
+
 Apply the typed core/modeling migration after loading Chadwick data:
 
 ```bash
@@ -124,7 +131,13 @@ python3 scripts/train_models.py --target-id pa_batter_hit --sample-rate 0.05 --t
 Train the granular multiclass plate-appearance outcome distribution model:
 
 ```bash
-python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022
+python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022 --no-activate
+```
+
+Score a historical plate appearance with a registered multiclass outcome model:
+
+```bash
+python3 scripts/predict_pa_outcome_distribution.py --game-id ANA202506060 --plate-appearance-id 30
 ```
 
 Run a reproducible hyperparameter sweep without committing model binaries:
@@ -133,10 +146,40 @@ Run a reproducible hyperparameter sweep without committing model binaries:
 python3 scripts/sweep_hyperparameters.py --target-id pa_batter_hit --feature-set advanced --sample-rate 0.05 --max-candidates 12
 ```
 
+Evaluate model performance with cross-validation:
+
+```bash
+python3 scripts/cross_validate_models.py --target-id pa_batter_hit --sample-rate 0.05 --cv-folds 5
+```
+
 Compare trained plate-appearance models:
 
 ```bash
 python3 scripts/analyze_pa_models.py
+```
+
+Run fast inference with model caching:
+
+```bash
+python3 scripts/fast_prediction_service.py
+```
+
+Test inference performance:
+
+```bash
+python3 scripts/test_inference_performance.py
+```
+
+Run the AI Baseball Chatbot:
+
+```bash
+python3 scripts/baseball_chatbot.py
+```
+
+Run comprehensive testing suite:
+
+```bash
+python3 scripts/test_baseball_analytics.py --test-type all
 ```
 
 Promote the best registered model versions after candidate training:
@@ -144,6 +187,13 @@ Promote the best registered model versions after candidate training:
 ```bash
 python3 scripts/promote_best_models.py --target-prefix 'pa_%' --min-validation-rows 10000
 python3 scripts/promote_best_models.py --target-id game_home_win --min-validation-rows 10000
+```
+
+Automatically promote best models based on cross-validation performance:
+
+```bash
+python3 scripts/auto_promote_models.py --target-prefix 'pa_%'  # Promote best PA models
+python3 scripts/auto_promote_models.py --dry-run  # Preview changes without applying
 ```
 
 Artifacts are written under ignored `data/models/` and model metadata is registered in `models.model_registry`. We intentionally do not use Git LFS; models should be regenerated from the scripts and database, or later stored in regular object storage if needed.
@@ -179,15 +229,18 @@ Apply the interface persistence schema before running the cockpit against a fres
 
 ```bash
 psql -h localhost -p 5432 -d retrosheet -f sql/075_interface_workflows.sql
-psql -h localhost -p 5432 -d retrosheet -f sql/076_plate_appearance_outcome_model.sql
 ```
 
 ## MLB Live Feed
 
-Store a source-preserved snapshot of MLB's live game feed:
+Store a source-preserved snapshot of MLB's live game feed and transform it into core schema:
 
 ```bash
+# Fetch live game data
 python3 scripts/warehouse.py fetch-live-game --game-pk 748555
+
+# Transform into core schema for live prediction
+python3 scripts/transform_live_game.py --game-pk 748555
 ```
 
 The live feed endpoint used is:
@@ -195,6 +248,8 @@ The live feed endpoint used is:
 ```text
 https://statsapi.mlb.com/api/v1.1/game/{gamePk}/feed/live
 ```
+
+Live games are stored in `core.live_games` and `core.live_events` with the same schema as historical data, enabling real-time predictions with trained models.
 
 ## Notes
 

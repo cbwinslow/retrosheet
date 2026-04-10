@@ -197,6 +197,21 @@ PA_TARGETS = {
     "pa_batter_extra_base_hit": "is_extra_base_hit",
 }
 
+HI_NUMERIC_FEATURES = [
+    "inning",
+    "is_bottom_inning",
+    "start_outs",
+    "start_bases",
+    "start_balls",
+    "start_strikes",
+    "start_score_diff",
+]
+HI_CATEGORICAL_FEATURES = []  # No categorical features for half-inning level
+HI_TARGETS = {
+    "half_inning_any_run": "any_run_scored",
+    "half_inning_lhb_any_hit": "any_left_handed_hit",
+}
+
 
 def database_kwargs() -> dict[str, str]:
     return {
@@ -536,6 +551,25 @@ def load_examples(
               AND mod(abs(hashtext(game_id || ':' || plate_appearance_id::text)), 1000000) < :sample_ppm
         """
         target_col = "target"
+    elif target_id in HI_TARGETS and feature_set == "basic":
+        target_col_name = HI_TARGETS[target_id]
+        sql = f"""
+            SELECT
+                season,
+                inning,
+                is_bottom_inning::integer AS is_bottom_inning,
+                start_outs,
+                start_bases,
+                start_balls,
+                start_strikes,
+                start_score_diff,
+                {target_col_name}::integer AS target
+            FROM features.half_inning_examples
+            WHERE season BETWEEN :min_season AND :max_season
+              AND {target_col_name} IS NOT NULL
+              AND mod(abs(hashtext(game_id || ':' || inning::text || ':' || is_bottom_inning::text)), 1000000) < :sample_ppm
+        """
+        target_col = "target"
     else:
         raise ValueError(f"Unknown target_id: {target_id}")
 
@@ -708,6 +742,10 @@ def train(args: argparse.Namespace) -> None:
             else:
                 numeric_features = PA_NUMERIC_FEATURES
                 categorical_features = PA_CATEGORICAL_FEATURES
+        elif args.target_id in HI_TARGETS:
+            # Half-inning targets only support basic features for now
+            numeric_features = HI_NUMERIC_FEATURES
+            categorical_features = HI_CATEGORICAL_FEATURES
         else:
             raise ValueError(f"Unknown target_id: {args.target_id}")
 
