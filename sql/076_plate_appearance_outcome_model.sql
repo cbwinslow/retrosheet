@@ -1,6 +1,8 @@
 CREATE SCHEMA IF NOT EXISTS features;
 CREATE SCHEMA IF NOT EXISTS predictions;
 
+DROP VIEW IF EXISTS features.pitch_sequence_validation_summary;
+DROP MATERIALIZED VIEW IF EXISTS features.pitch_sequence_examples;
 DROP VIEW IF EXISTS features.plate_appearance_outcome_validation_summary;
 DROP MATERIALIZED VIEW IF EXISTS features.plate_appearance_outcome_examples;
 
@@ -12,6 +14,20 @@ SELECT
     pa.half_inning_pa_number,
     pa.season,
     pa.game_date,
+    CASE
+        WHEN pa.season BETWEEN 2000 AND 2009 THEN '2000_2009'
+        WHEN pa.season BETWEEN 2010 AND 2014 THEN '2010_2014'
+        WHEN pa.season BETWEEN 2015 AND 2019 THEN '2015_2019'
+        WHEN pa.season = 2020 THEN '2020'
+        WHEN pa.season BETWEEN 2021 AND 2022 THEN '2021_2022'
+        ELSE '2023_plus'
+    END AS season_era,
+    CASE
+        WHEN pa.season = 2020 THEN 'pandemic_2020'
+        WHEN pa.season BETWEEN 2021 AND 2022 THEN 'enforcement_transition'
+        WHEN pa.season >= 2023 THEN 'post_2023_rules'
+        ELSE 'pre_2020_rules'
+    END AS rules_context_era,
     pa.inning,
     pa.is_bottom_inning,
     pa.outs_before,

@@ -170,3 +170,34 @@ For chat/agent work, start with tool-routed answers over curated SQL and scripts
 The safe terminal/workbench pattern is: browser button -> named API action -> allow-listed local command -> captured stdout/stderr. A full embedded terminal requires authentication, `node-pty`, WebSocket session controls, command restrictions, and project-root isolation.
 
 Persist interface activity when practical. Chat prompts should write to `chat.query_logs`, and simulation/backtest workflows should write reproducible filters and summaries to tables under `predictions`.
+## 📚 Letta Log Hook (automatic)
+
+All Hermes agents (including Kilocode) now run with the following hooks:
+
+```json
+{
+  "pre_prompt_hook":  "~/dotfiles/ai/shared/skills/letta_log/scripts/hermes_hook.py prompt",
+  "post_response_hook": "~/dotfiles/ai/shared/skills/letta_log/scripts/hermes_hook.py response",
+  "error_hook": "~/dotfiles/ai/shared/skills/letta_log/scripts/hermes_hook.py error"
+}
+```
+
+**What this does**
+
+* **Prompt** → Logged as an archival memory entry with tags `hermes,prompt,YYYY‑MM‑DD`.
+* **Response** → Logged with tags `hermes,response,YYYY‑MM‑DD`.
+* **Error** → Logged with tags `hermes,error,YYYY‑MM‑DD`.
+
+All entries are attached to the persistent **`agent‑log`** conversation and include:
+- LLM and model name (`HERMIT_LLM`, `HERMIT_MODEL`),
+- environment metadata (hostname, OS, user),
+- optional `turn_id` for linking prompt ↔ response (enable via `HERMIT_LINK_TURN=1`),
+- rate‑limiting to avoid duplicate records.
+
+> **Tip:** Enable a dry‑run globally during development:
+> ```bash
+> export HERMIT_HOOK_DRY_RUN=1
+> ```
+> The hooks will then just print the JSON payload without inserting anything into Letta.
+
+The hooks are active for **every** Hermes turn, ensuring a complete, searchable audit trail in the Letta memory system.
