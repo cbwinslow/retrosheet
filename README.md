@@ -70,7 +70,7 @@ psql -h localhost -p 5432 -d retrosheet -f sql/077_pitch_sequence_model.sql
 
 `sql/070_temporal_and_production_marts.sql` adds team rest/travel context, player season production, pitcher season production, and temporal example views for future model training.
 
-`sql/076_plate_appearance_outcome_model.sql` adds a granular multiclass plate-appearance outcome feature layer and registers the `pa_outcome_distribution` prediction target. See [docs/AT_BAT_OUTCOME_MODEL_REVIEW.md](docs/AT_BAT_OUTCOME_MODEL_REVIEW.md) for how this maps the at-bat outcome design spec onto the current warehouse.
+`sql/076_plate_appearance_outcome_model.sql` adds a granular multiclass plate-appearance outcome feature layer, reusable season-era / rules-era columns, and registers the `pa_outcome_distribution` prediction target. See [docs/AT_BAT_OUTCOME_MODEL_REVIEW.md](docs/AT_BAT_OUTCOME_MODEL_REVIEW.md) for how this maps the at-bat outcome design spec onto the current warehouse.
 
 `sql/077_pitch_sequence_model.sql` normalizes `pitch_seq_tx` into one row per Retrosheet pitch-sequence symbol, preserves official symbol semantics, and exposes reusable pitch-sequence features for future same-PA and pitch-level modeling.
 
@@ -106,6 +106,8 @@ See [docs/WAREHOUSE_PLAN.md](docs/WAREHOUSE_PLAN.md) for the staged normalizatio
 See [docs/PREDICTION_ENGINE_PLAN.md](docs/PREDICTION_ENGINE_PLAN.md) for the reusable ML, agent, live-data, and market-intelligence architecture.
 
 See [docs/RESEARCH_METHODOLOGY.md](docs/RESEARCH_METHODOLOGY.md) for the formal CRISP-DM methodology, notation, objective functions, and evaluation logic.
+
+See [docs/TEMPORAL_MODEL_SELECTION.md](docs/TEMPORAL_MODEL_SELECTION.md) for the recency-weighting policy, era segmentation, fixed-window benchmarks, and validation procedure for choosing how much history to train on.
 
 See [docs/CORE_SCHEMA.md](docs/CORE_SCHEMA.md) for the typed database layer, constraints, indexes, and feature seed.
 
@@ -205,6 +207,13 @@ Train the granular multiclass plate-appearance outcome distribution model:
 
 ```bash
 python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022 --no-activate
+```
+
+Train the same model with explicit temporal policy controls:
+
+```bash
+python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022 --recent-window 7 --no-activate
+python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022 --season-half-life 5 --downweight-2020 0.5 --no-activate
 ```
 
 Score a historical plate appearance with a registered multiclass outcome model:

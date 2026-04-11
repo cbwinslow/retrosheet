@@ -374,6 +374,14 @@ The current operational split is:
 - train through 2022
 - validate on 2023-2025
 
+Temporal weighting and era-selection policy are documented in [TEMPORAL_MODEL_SELECTION.md](./TEMPORAL_MODEL_SELECTION.md). The short version is:
+
+\[
+w_s = 2^{-(T-s)/h}
+\]
+
+with candidate half-lives \(h \in \{3,5,7,10\}\), compared against fixed recent windows by out-of-time validation.
+
 ### Primary Metrics
 
 For multiclass PA modeling, priority is:

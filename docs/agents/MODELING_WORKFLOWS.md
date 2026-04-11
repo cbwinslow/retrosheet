@@ -26,6 +26,17 @@
 
 ## Near-Term Modeling Roadmap
 
+### Temporal Policy
+
+The project should treat season history as non-stationary. Use [docs/TEMPORAL_MODEL_SELECTION.md](../TEMPORAL_MODEL_SELECTION.md) as the canonical policy for:
+
+- recent-window benchmarks
+- exponential season weighting
+- explicit era indicators
+- `2023-2025` out-of-time validation for choosing the best policy
+
+Do not assume that equal weighting from `2000-2025` is the correct default.
+
 ### Priority 1: Multiclass PA Outcome Model
 
 Why it matters:

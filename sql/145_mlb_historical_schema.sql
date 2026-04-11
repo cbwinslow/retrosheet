@@ -251,7 +251,7 @@ CREATE TABLE mlb.players (
     FOREIGN KEY (current_team_id) REFERENCES mlb.teams(mlb_id)
 );
 
--- MLB Teams
+-- MLB Teams (must be created before players that reference it)
 CREATE TABLE mlb.teams (
     mlb_id integer PRIMARY KEY,
     retrosheet_id text,

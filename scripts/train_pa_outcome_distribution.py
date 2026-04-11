@@ -34,7 +34,7 @@ BASIC_NUMERIC_FEATURES = [
     "strikes",
     "home_score_diff",
 ]
-BASIC_CATEGORICAL_FEATURES = ["batter_hand", "pitcher_hand"]
+BASIC_CATEGORICAL_FEATURES = ["batter_hand", "pitcher_hand", "season_era", "rules_context_era"]
 
 ADVANCED_NUMERIC_FEATURES = BASIC_NUMERIC_FEATURES + [
     "batter_career_prior_pa",
@@ -123,6 +123,8 @@ def load_examples(
             SELECT
                 outcome.season,
                 outcome.outcome_class AS target,
+                outcome.season_era,
+                outcome.rules_context_era,
                 advanced.inning,
                 advanced.is_bottom_inning::integer AS is_bottom_inning,
                 advanced.outs_before,
@@ -180,6 +182,8 @@ def load_examples(
             SELECT
                 season,
                 outcome_class AS target,
+                season_era,
+                rules_context_era,
                 inning,
                 is_bottom_inning::integer AS is_bottom_inning,
                 outs_before,
@@ -209,6 +213,51 @@ def filter_sparse_classes(frame: pd.DataFrame, min_class_rows: int) -> pd.DataFr
     counts = frame["target"].value_counts()
     keep = counts[counts >= min_class_rows].index
     return frame[frame["target"].isin(keep)].copy()
+
+
+def apply_recent_window(frame: pd.DataFrame, *, train_through: int, recent_window: int | None) -> pd.DataFrame:
+    if recent_window is None:
+        return frame
+    min_included_season = train_through - recent_window + 1
+    return frame[frame["season"] >= min_included_season].copy()
+
+
+def season_weight_map(
+    *,
+    min_season: int,
+    max_season: int,
+    train_through: int,
+    season_half_life: float | None,
+    downweight_2020: float | None,
+) -> dict[int, float]:
+    weights: dict[int, float] = {}
+    for season in range(min_season, max_season + 1):
+        weight = 1.0
+        if season_half_life is not None:
+            weight *= float(2 ** (-(train_through - season) / season_half_life))
+        if downweight_2020 is not None and season == 2020:
+            weight *= downweight_2020
+        weights[season] = weight
+    return weights
+
+
+def add_temporal_weights(
+    frame: pd.DataFrame,
+    *,
+    train_through: int,
+    season_half_life: float | None,
+    downweight_2020: float | None,
+) -> tuple[pd.DataFrame, dict[int, float]]:
+    frame = frame.copy()
+    weights = season_weight_map(
+        min_season=int(frame["season"].min()),
+        max_season=int(frame["season"].max()),
+        train_through=train_through,
+        season_half_life=season_half_life,
+        downweight_2020=downweight_2020,
+    )
+    frame["sample_weight"] = frame["season"].map(weights).astype(float)
+    return frame, weights
 
 
 def preprocessor(
@@ -380,6 +429,13 @@ def train(args: argparse.Namespace) -> None:
             sample_rate=args.sample_rate,
             feature_set=args.feature_set,
         )
+        if args.exclude_2020:
+            frame = frame[frame["season"] != 2020].copy()
+        frame = apply_recent_window(
+            frame,
+            train_through=args.train_through,
+            recent_window=args.recent_window,
+        )
         frame = filter_sparse_classes(frame, args.min_class_rows)
         if frame.empty:
             raise SystemExit("No rows returned after sparse-class filtering.")
@@ -388,6 +444,13 @@ def train(args: argparse.Namespace) -> None:
         validation_frame = frame[frame["season"] > args.train_through].copy()
         if train_frame.empty or validation_frame.empty:
             raise SystemExit("Need both training and validation rows.")
+        train_frame, train_season_weights = add_temporal_weights(
+            train_frame,
+            train_through=args.train_through,
+            season_half_life=args.season_half_life,
+            downweight_2020=args.downweight_2020,
+        )
+        validation_frame["sample_weight"] = 1.0
 
         version = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         class_counts = frame["target"].value_counts().sort_index().to_dict()
@@ -399,6 +462,10 @@ def train(args: argparse.Namespace) -> None:
             "feature_set": args.feature_set,
             "min_class_rows": args.min_class_rows,
             "classes": sorted(frame["target"].unique().tolist()),
+            "recent_window": args.recent_window,
+            "season_half_life": args.season_half_life,
+            "exclude_2020": args.exclude_2020,
+            "downweight_2020": args.downweight_2020,
         }
 
         for model_name, model in build_models(
@@ -408,6 +475,7 @@ def train(args: argparse.Namespace) -> None:
             model.fit(
                 train_frame[numeric_features + categorical_features],
                 train_frame["target"],
+                model__sample_weight=train_frame["sample_weight"].to_numpy(),
             )
             metrics = {
                 "train": metrics_for(
@@ -426,6 +494,12 @@ def train(args: argparse.Namespace) -> None:
                 "min_season": args.min_season,
                 "max_season": args.max_season,
                 "train_through": args.train_through,
+                "recent_window": args.recent_window,
+                "season_half_life": args.season_half_life,
+                "exclude_2020": args.exclude_2020,
+                "downweight_2020": args.downweight_2020,
+                "train_weight_sum": float(train_frame["sample_weight"].sum()),
+                "season_weights": {str(k): float(v) for k, v in train_season_weights.items()},
                 "class_counts": class_counts,
             }
             artifact_path = MODEL_DIR / f"{TARGET_ID}_{model_name}_{version}.joblib"
@@ -455,6 +529,29 @@ def main() -> None:
     parser.add_argument("--train-through", type=int, default=2022)
     parser.add_argument("--sample-rate", type=float, default=0.05)
     parser.add_argument(
+        "--recent-window",
+        type=int,
+        default=None,
+        help="Restrict training/validation rows to the most recent N seasons up to --max-season.",
+    )
+    parser.add_argument(
+        "--season-half-life",
+        type=float,
+        default=None,
+        help="Apply exponential recency weighting with half-life in seasons.",
+    )
+    parser.add_argument(
+        "--exclude-2020",
+        action="store_true",
+        help="Exclude the shortened 2020 season entirely before training/validation splits.",
+    )
+    parser.add_argument(
+        "--downweight-2020",
+        type=float,
+        default=None,
+        help="Multiply 2020 training weight by this factor. Ignored if --exclude-2020 is set.",
+    )
+    parser.add_argument(
         "--feature-set",
         choices=["basic", "advanced"],
         default="advanced",
@@ -472,6 +569,14 @@ def main() -> None:
         help="Register model metrics without marking the new version active.",
     )
     args = parser.parse_args()
+    if args.recent_window is not None and args.recent_window <= 0:
+        raise SystemExit("--recent-window must be positive.")
+    if args.season_half_life is not None and args.season_half_life <= 0:
+        raise SystemExit("--season-half-life must be positive.")
+    if args.downweight_2020 is not None and not 0 < args.downweight_2020 <= 1:
+        raise SystemExit("--downweight-2020 must be in the interval (0, 1].")
+    if args.exclude_2020 and args.downweight_2020 is not None:
+        raise SystemExit("--exclude-2020 and --downweight-2020 are mutually exclusive.")
     train(args)
 
 

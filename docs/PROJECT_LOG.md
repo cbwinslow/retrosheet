@@ -1,5 +1,93 @@
 # Project Log
 
+## 2026-04-10 (Temporal Policy Training Controls)
+
+### Built
+
+- Extended `scripts/train_pa_outcome_distribution.py` with direct temporal-policy controls:
+  - `--recent-window`
+  - `--season-half-life`
+  - `--exclude-2020`
+  - `--downweight-2020`
+- Added reusable era columns to `features.plate_appearance_outcome_examples`:
+  - `season_era`
+  - `rules_context_era`
+- Included the era columns in the multiclass trainer feature set.
+- Registered temporal-policy metadata in both `feature_spec` and `metrics` for `models.model_registry`.
+- Updated user-facing docs and procedures to show temporal-policy training commands.
+
+### Validation
+
+- `python3 -m py_compile scripts/train_pa_outcome_distribution.py` passed.
+- Rebuilt `sql/076_plate_appearance_outcome_model.sql` and `sql/077_pitch_sequence_model.sql` serially after adding era columns to the PA outcome layer.
+- Test training run completed successfully:
+  - `python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.01 --train-through 2022 --recent-window 7 --season-half-life 5 --downweight-2020 0.5 --no-activate`
+- Registered model version `20260410T211408Z` stores:
+  - `recent_window = 7`
+  - `season_half_life = 5.0`
+  - `downweight_2020 = 0.5`
+- `features.plate_appearance_outcome_examples` now exposes `season_era` and `rules_context_era`.
+- Validation metrics from that smoke test:
+  - `hist_gradient_boosting_multiclass`: log loss `1.8108`, top-3 accuracy `0.7133`, accuracy `0.3768`, validation rows `5,448`
+  - `multinomial_logistic_regression`: log loss `2.1386`, top-3 accuracy `0.4855`, accuracy `0.2676`, validation rows `5,448`
+
+### Next
+
+1. Add era-feature columns to the PA training views.
+2. Run a formal temporal sweep across recent windows and half-lives.
+3. Compare policies on `2023-2025` log loss, Brier score, calibration, and subgroup drift.
+
+## 2026-04-10 (Temporal Model Selection)
+
+### Built
+
+- Added `docs/TEMPORAL_MODEL_SELECTION.md` to define how the project should handle non-stationarity across seasons.
+- Documented a formal training-policy recommendation:
+  - primary production-style policy: exponential recency weighting
+  - benchmark policy: fixed recent windows
+  - structural-feature policy: explicit era indicators for known regime changes
+- Added exact warehouse support for the policy using `features.plate_appearance_outcome_examples`.
+
+### Validation
+
+- Confirmed current multiclass PA layer spans `2000-2025` with `4,779,662` rows.
+- Computed fixed-window sample sizes ending in `2025`:
+  - 3 years: `559,688`
+  - 5 years: `929,476`
+  - 7 years: `1,189,370`
+  - 10 years: `1,752,609`
+  - 15 years: `2,688,466`
+  - full span: `4,779,662`
+- Confirmed clear season-environment shifts in the warehouse:
+  - hit rate `0.2375` in `2000` versus `0.2191` in `2025`
+  - home-run rate trough `0.0228` in `2014`
+  - home-run rate peak `0.0363` in `2019`
+  - shortened `2020` season remains structurally abnormal
+
+### Decision
+
+- Do not equally weight all seasons from `2000-2025` in the main PA outcome model.
+- Use fixed windows only as benchmarks, not as the default production policy.
+- Use `2023-2025` out-of-time validation to choose between:
+  - fixed windows `W ∈ {3,5,7,10,15,all}`
+  - exponential half-lives `h ∈ {3,5,7,10}`
+- Add era indicators for:
+  - `2000-2009`
+  - `2010-2014`
+  - `2015-2019`
+  - `2020`
+  - `2021-2022`
+  - `2023+`
+
+### Sources
+
+- Concept-drift support:
+  - Lu et al., *Learning under Concept Drift: A Review* (2020)
+  - Zaidi et al., *On the Inter-relationships among Drift rate, Forgetting rate, Bias/variance profile and Error* (2018)
+- Baseball regime-change support:
+  - MLB foreign-substance enforcement guidance (2021)
+  - MLB 2023 rule-change announcement (2022)
+
 ## 2026-04-10 (Pitch Sequence Normalization)
 
 ### Built

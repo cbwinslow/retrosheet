@@ -9,6 +9,7 @@ This folder is the durable project map for humans and AI agents. Read these file
 - `PROCEDURES.md`: canonical workflows for rebuilding data, adding features, training models, and updating the interface.
 - `MODELING_WORKFLOWS.md`: model families, target definitions, feature sources, evaluation expectations, and next-model priorities.
 - `RESEARCH_METHODOLOGY.md`: CRISP-DM framing, math notation, objective functions, and modeling assumptions.
+- `TEMPORAL_MODEL_SELECTION.md`: recency weighting, era features, fixed-window benchmarks, and the model-selection procedure for non-stationary seasons.
 - `FEATURE_AUDIT.md`: which fields/features are trusted now, which are only preserved raw, and where feature work still beats hyperparameter work.
 
 ## Operating Rule
