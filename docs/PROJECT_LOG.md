@@ -1,5 +1,637 @@
 # Project Log
 
+## 2026-04-12 (Team/Park Bridge Repair And Live Priors Activation)
+
+### Built
+
+- Extended `scripts/populate_bridge_tables.py` so it now populates:
+  - `bridge.player_xref`
+  - `bridge.team_xref`
+  - `bridge.park_xref`
+- Added `scripts/replay_live_bridge_backfill.py` so stored latest-successful MLB raw snapshots can be replayed through the repaired transform path in a controlled, additive way.
+- Added canonical MLB abbreviation-to-Retrosheet team mapping for the active seasonless `bridge.team_xref` schema.
+- Added canonical MLB venue-id-to-Retrosheet park mapping for MLB venues observed across `2000-2025`.
+- Updated `sql/122_live_pa_feature_parity.sql` so live parity rows can now join:
+  - `features.park_prior_season_run_environment`
+  - `features.team_rolling_30_game_summary`
+
+### Validation
+
+- Syntax validation:
+  - `python3 -m py_compile scripts/populate_bridge_tables.py`
+- Bridge population run succeeded:
+  - `python3 scripts/populate_bridge_tables.py`
+- Updated bridge counts:
+  - `bridge.team_xref`: `30 / 292` rows now have `mlb_team_id`
+  - `bridge.park_xref`: `45 / 656` rows now have `mlb_venue_id`
+- The only currently unmapped MLB venue id surfaced by the script is:
+  - `2529 | Sutter Health Park`
+- Spot-check after re-transform:
+  - `python3 scripts/transform_live_game.py --game-pk 599374`
+  - canonical row now lands as:
+    - `game_id = WAS201910260`
+    - `home_team_id = WAS`
+    - `away_team_id = HOU`
+    - `park_id = WAS11`
+- Replay utility smoke test:
+  - `python3 -m py_compile scripts/replay_live_bridge_backfill.py`
+  - `python3 scripts/replay_live_bridge_backfill.py --season-from 2019 --season-to 2019 --limit 1`
+  - selected `1` stored game and replayed `game_pk 564721 -> ANA201903010`
+- Live parity reapply succeeded:
+  - `psql -h localhost -p 5432 -d retrosheet -v ON_ERROR_STOP=1 -f sql/122_live_pa_feature_parity.sql`
+- Spot-check of the repaired live parity row for `WAS201910260` now shows:
+  - `park_prior_total_runs_per_game = 9.585`
+  - `batting_team_rolling_30_win_rate = 0.6667`
+  - `fielding_team_rolling_30_win_rate = 0.7333`
+
+### Limitation
+
+- `bridge.team_xref` is still seasonless.
+- That means franchise-move/name-change MLB ids are currently mapped to one current/canonical Retrosheet team id for live scoring:
+  - `MON/WSH -> WAS`
+  - `FLA/MIA -> MIA`
+  - `ATH/OAK -> OAK`
+- The current park crosswalk intentionally covers the observed regular-season MLB venue surface from `2000-2025`; spring-training or other non-regular-season venues may still remain as `MLB###` fallback park ids after replay.
+- This is acceptable for the current live-scoring objective, but it is not a complete historical MLB-team reconciliation design for replaying all `2000-2025` raw MLB feeds.
+- Most existing `core.live_*` rows were transformed before the bridge repair, so overall live-parity counts for park/team priors remain near zero until those stored snapshots are replayed through the repaired transform path.
+
+### Decision
+
+- Team/park bridge repair is now good enough to unblock the next live step.
+- The next live-data task is a controlled replay/backfill of stored `raw_mlb.live_feed_snapshots` into `core.live_*` so the repaired bridge and the new park/team live priors apply broadly instead of only to newly transformed games.
+
+## 2026-04-12 (First Live `advanced_count` Parity View And Scorer)
+
+### Built
+
+- Added `sql/122_live_pa_feature_parity.sql` to create `features.live_plate_appearance_advanced_count_examples`.
+- Added `scripts/predict_live_pa_outcome_distribution.py` so stored live MLB plate appearances can be scored with the registered `advanced_count` PA model and optional isotonic calibration artifact.
+- Updated `scripts/rebuild_warehouse.sh` so the canonical rebuild now applies `sql/122_live_pa_feature_parity.sql`.
+
+### Validation
+
+- Applied:
+  - `psql -h localhost -p 5432 -d retrosheet -v ON_ERROR_STOP=1 -f sql/122_live_pa_feature_parity.sql`
+- Syntax validation:
+  - `python3 -m py_compile scripts/predict_live_pa_outcome_distribution.py`
+- Live parity coverage:
+  - `features.live_plate_appearance_advanced_count_examples`: `5,172,187` live PA rows
+  - with batter career priors: `4,568,784`
+  - with pitcher career priors: `4,425,839`
+  - with batter count-state priors: `3,169,510`
+  - with pitcher count-state priors: `3,017,181`
+- Live calibrated scoring succeeded:
+  - `python3 scripts/predict_live_pa_outcome_distribution.py --game-id MLB117201910300 --plate-appearance-id 79 --model-version 20260412T045759Z --apply-calibration`
+- Example live scoring result:
+  - event text: `Michael Brantley strikes out swinging.`
+  - raw `P(strikeout)`: `0.1652`
+  - calibrated `P(strikeout)`: `0.1307`
+  - calibrated `P(walk)`: `0.3262`
+
+### Limitation
+
+- The live parity view currently leaves these features nullable:
+  - park prior environment
+  - batting-team rolling form
+  - fielding-team rolling form
+- That is intentional for now because `bridge.team_xref.mlb_team_id` and `bridge.park_xref.mlb_venue_id` are still unpopulated in the active database.
+
+### Decision
+
+- The historical best PA model can now score stored live MLB plate appearances through a documented additive live parity layer.
+- The next live-data task is bridge completion for team/park/game reconciliation so the remaining null live priors can be filled instead of imputed.
+
+## 2026-04-12 (Count-State Feature Marts For PA Reliability)
+
+### Built
+
+- Added `sql/082_count_state_feature_marts.sql` to create:
+  - `features.batter_count_state_prior_pa_summary`
+  - `features.pitcher_count_state_prior_pa_summary`
+  - `features.pa_count_state_context_prior_season_rates`
+  - `features.plate_appearance_count_state_advanced_examples`
+  - `features.count_state_feature_mart_validation_summary`
+- Extended `scripts/train_pa_outcome_distribution.py` with `--feature-set advanced_count`.
+- Extended `scripts/predict_pa_outcome_distribution.py` so the scorer can load rows from the count-state-enhanced advanced PA view.
+- Extended `scripts/analyze_pa_outcome_calibration.py` so the evaluation path supports the new feature set.
+- Updated `scripts/rebuild_warehouse.sh` so the canonical rebuild now applies `sql/082_count_state_feature_marts.sql`.
+
+### Validation
+
+- Applied:
+  - `psql -h localhost -p 5432 -d retrosheet -v ON_ERROR_STOP=1 -f sql/082_count_state_feature_marts.sql`
+- Validation summary:
+  - `features.batter_count_state_prior_pa_summary`: `214,174`
+  - `features.pitcher_count_state_prior_pa_summary`: `207,345`
+  - `features.pa_count_state_context_prior_season_rates`: `44,327`
+  - `features.plate_appearance_count_state_advanced_examples`: `4,779,662`
+- Grouped 5% benchmark:
+  - `python3 scripts/train_pa_outcome_distribution.py --feature-set advanced_count --target-taxonomy grouped --sample-rate 0.05 --train-through 2022 --no-activate`
+  - HGB validation metrics:
+    - log loss `1.5089213670264499`
+    - Brier `0.7145995102201933`
+    - accuracy `0.41305275131522823`
+    - top-3 accuracy `0.8202402957486137`
+- Subgroup reliability improvements versus the earlier grouped advanced baseline:
+  - `0-2` top-probability gap: `0.0449` -> `0.0351`
+  - `1-2` top-probability gap: `0.0405` -> `0.0341`
+  - `2-2` top-probability gap: `0.0438` -> `0.0386`
+- Raw class-level improvement:
+  - strikeout ECE: about `0.0181` -> `0.0152`
+- Registered calibration artifact for the new model version:
+  - `20260412T045759Z_isotonic_artifact`
+  - `data/models/calibration/pa_outcome_distribution/20260412T045759Z_isotonic_artifact.joblib`
+  - held-out `2025` calibrated log loss `1.5049255969621713`
+
+### Decision
+
+- Count-state prior features are a useful additive improvement. They improve the targeted two-strike reliability problem and slightly improve the grouped HGB objective.
+- The current best research direction is now:
+  - grouped HGB
+  - count-state-enhanced advanced features
+  - reusable isotonic calibration artifact
+
+## 2026-04-12 (Reusable Calibration Artifacts And Calibrated Scoring)
+
+### Built
+
+- Added `sql/081_probability_calibration_artifacts.sql` to extend `predictions.calibration_reports` with `artifact_uri` and refresh the recent-report view.
+- Added `scripts/register_pa_outcome_calibration.py` to fit, persist, and register reusable isotonic calibration artifacts for `pa_outcome_distribution`.
+- Extended `scripts/predict_pa_outcome_distribution.py` to support:
+  - `--apply-calibration`
+  - `--calibration-report-name`
+- Extended `baseball-chatbot-ui/app/api/predict/route.ts` to pass optional calibrated-scoring controls through to the Python scorer.
+- Updated `scripts/rebuild_warehouse.sh` so the canonical rebuild now applies `sql/081_probability_calibration_artifacts.sql`.
+
+### Validation
+
+- Applied:
+  - `psql -h localhost -p 5432 -d retrosheet -v ON_ERROR_STOP=1 -f sql/081_probability_calibration_artifacts.sql`
+- Syntax validation:
+  - `python3 -m py_compile scripts/register_pa_outcome_calibration.py scripts/predict_pa_outcome_distribution.py`
+- Registered one real isotonic calibration artifact:
+  - `python3 scripts/register_pa_outcome_calibration.py --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z --notes 'first persisted isotonic calibration artifact'`
+- Registration result:
+  - `artifact_uri = data/models/calibration/pa_outcome_distribution/20260411T230512Z_isotonic_artifact.joblib`
+  - `predictions.prediction_runs.prediction_run_id = 2`
+  - `predictions.calibration_reports.report_name = 20260411T230512Z_isotonic_artifact`
+- Calibrated scoring now works:
+  - `python3 scripts/predict_pa_outcome_distribution.py --game-id ANA202506060 --plate-appearance-id 30 --model-version 20260411T230512Z --apply-calibration`
+- Example calibrated PA result:
+  - actual outcome: `walk`
+  - raw `P(walk)`: `0.4613`
+  - calibrated `P(walk)`: `0.4260`
+
+### Decision
+
+- Calibrated scoring is no longer only a read-only experiment. The project now has a reusable calibration-artifact path that can be loaded at inference time without changing the underlying registered base model.
+- The next question is policy, not mechanics: whether calibrated scoring should become the default served path for historical and later live inference.
+
+## 2026-04-12 (Durable Probability Evaluation Reports)
+
+### Built
+
+- Added `sql/079_probability_evaluation_reports.sql` to create:
+  - `predictions.calibration_reports`
+  - `predictions.bootstrap_reports`
+  - `predictions.recent_calibration_reports`
+  - `predictions.recent_bootstrap_reports`
+- Added `scripts/persist_pa_outcome_reports.py` to persist canonical PA outcome evaluation artifacts for a registered model version.
+- Updated `scripts/rebuild_warehouse.sh` so the canonical rebuild now applies:
+  - `sql/075_interface_workflows.sql`
+  - `sql/079_probability_evaluation_reports.sql`
+
+### Validation
+
+- Applied:
+  - `psql -h localhost -p 5432 -d retrosheet -v ON_ERROR_STOP=1 -f sql/079_probability_evaluation_reports.sql`
+- Syntax validation:
+  - `python3 -m py_compile scripts/persist_pa_outcome_reports.py`
+- Persisted one real evaluation-report run:
+  - `python3 scripts/persist_pa_outcome_reports.py --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z --bootstrap-replicates 20 --notes 'initial durable evaluation report persistence'`
+- Stored artifacts created successfully:
+  - `predictions.prediction_runs.prediction_run_id = 1`
+  - one raw validation calibration report
+  - one held-out isotonic calibration report
+  - one bootstrap summary report
+
+### Decision
+
+- Calibration and bootstrap evidence are now durable warehouse artifacts tied to a registered model version and prediction run.
+- The next modeling decision is whether calibrated probabilities themselves should become first-class registered prediction artifacts rather than remaining evaluation-only outputs.
+
+## 2026-04-12 (Current Snapshot And Handoff Docs)
+
+### Built
+
+- Added `docs/agents/CURRENT_SNAPSHOT.md` as the shortest durable handoff document for:
+  - canonical architecture
+  - current warehouse status
+  - current best historical PA model
+  - calibration status
+  - active blockers
+  - compute notes
+  - recommended next move
+- Updated:
+  - `AGENTS.md`
+  - `docs/agents/README.md`
+  - `docs/agents/FILE_INVENTORY.md`
+  - `docs/agents/PROCEDURES.md`
+- The procedures now explicitly define a resume flow after context loss and point agents at `CURRENT_SNAPSHOT.md` first.
+
+### Decision
+
+- The project now has a dedicated handoff layer separate from the longer historical log and the manuscript.
+- Another agent should be able to recover project state from:
+  1. `docs/agents/CURRENT_SNAPSHOT.md`
+  2. `docs/PROJECT_LOG.md`
+  3. `docs/agents/MODELING_WORKFLOWS.md`
+  4. the linked GitHub issues
+
+### Next
+
+1. Mirror the same state into the active GitHub issues.
+2. Optimize the bootstrap evaluator before treating bootstrap uncertainty as a standard workflow.
+3. Continue with calibrated-output handling and live feature parity after the bootstrap/reporting layer is stable.
+
+## 2026-04-12 (Optimized Bootstrap Evaluation)
+
+### Built
+
+- Reworked `scripts/bootstrap_pa_outcome_evaluation.py` to use season-stratified cluster bootstrap with cached per-game sufficient statistics instead of row-level metric recomputation on every replicate.
+- Cached per-game bootstrap contributions now include:
+  - row count
+  - summed log-loss contribution
+  - summed multiclass Brier contribution
+  - exact-correct count
+  - top-3-correct count
+  - confusion matrix
+
+### Validation
+
+- Smoke validation:
+  - `python3 -m py_compile scripts/bootstrap_pa_outcome_evaluation.py`
+  - 10-replicate run finished successfully in about `1:08.90`
+- Full validation:
+  - `python3 scripts/bootstrap_pa_outcome_evaluation.py --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z --replicates 50 --output-json data/reports/pa_outcome_bootstrap_20260411T230512Z.json`
+- 50-replicate season-stratified game-cluster bootstrap summary for the winning grouped advanced HGB model:
+  - log loss mean `1.5126657511688808`, p05 `1.5108156698991362`, p95 `1.5155488052002872`
+  - multiclass Brier mean `0.7147813509752445`, p05 `0.7137519854821855`, p95 `0.7156254209444188`
+  - accuracy mean `0.41377036716524146`, p05 `0.41249056512030724`, p95 `0.4150872475294815`
+  - macro F1 mean `0.17791156672767003`, p05 `0.17688164429547665`, p95 `0.17868857715135572`
+  - weighted F1 mean `0.3252916679974539`, p05 `0.3240275273391974`, p95 `0.32660157389683137`
+  - top-3 accuracy mean `0.8187160954493463`, p05 `0.8175555438624159`, p95 `0.8196167974638292`
+
+### Decision
+
+- Bootstrap uncertainty evaluation is now operational for the historical grouped PA baseline.
+- The current grouped advanced HGB model appears reasonably stable under dependence-aware season-stratified game-cluster resampling.
+- The next step is no longer “make bootstrap work.” It is “decide how bootstrap summaries and calibrated outputs should be stored and surfaced.”
+
+## 2026-04-11 (Grouped PA Trainer Support)
+
+### Built
+
+- Extended `scripts/train_pa_outcome_distribution.py` to support:
+  - `--target-taxonomy granular`
+  - `--target-taxonomy grouped`
+- The trainer now reads from:
+  - `features.plate_appearance_outcome_examples` for granular training
+  - `features.plate_appearance_outcome_grouped_examples` for grouped training
+- Updated modeling workflow and procedure docs to show the grouped baseline training path.
+
+### Decision
+
+- Grouped and granular PA outcome training should stay in the same trainer so model registration, temporal-policy controls, and evaluation remain consistent.
+
+### Next
+
+1. Validate the trainer with a grouped-taxonomy smoke run.
+2. Compare grouped `basic` versus `advanced` benchmarks.
+3. Use grouped-model diagnostics to decide whether the first promoted PA distribution model should remain grouped or move back to granular classes.
+
+## 2026-04-11 (MLB Historical Raw Acquisition Complete)
+
+### Built
+
+- Completed the canonical historical MLB raw backfill across the project target range `2000-2025`.
+- Restarted the bulk historical downloader with the idempotent downloader logic and faster settings:
+  - `--workers 8`
+  - `--delay 0.25`
+- Verified full historical season coverage in `raw_mlb.live_feed_snapshots`.
+
+### Validation
+
+- `raw_mlb.schedule_snapshots`: `9,286`
+- `raw_mlb.live_feed_snapshots`: `72,199`
+- `raw_mlb.live_feed_snapshots` with `http_status = 200`: `72,184`
+- `raw_mlb.reference_snapshots`: `2,405`
+- `core.live_games`: `67,913`
+- `core.live_events`: `5,172,275`
+- Successful live-feed season coverage now spans every season from `2000` through `2025` with zero missing seasons.
+- Reference endpoint coverage spans all `26` seasons from `2000-2025`.
+
+### Residual Issues
+
+- There are `7` distinct `game_pk` values with no successful raw live-feed snapshot after targeted retry:
+  - `243297`
+  - `243298`
+  - `243313`
+  - `243314`
+  - `308207`
+  - `764834`
+  - `764836`
+- A targeted retry through the canonical fetch path on `2026-04-11` confirmed that all `7` still return MLB API `HTTP 500` with a JSON error body:
+  - `{"messageNumber":1,"message":"Internal error occurred", ...}`
+- Schedule metadata shows that all `7` unresolved games are `gameType = 'E'` exhibition/special-event games:
+  - four Tokyo Dome exhibition games in `2004`
+  - one exhibition game in `2011`
+  - two Gocheok Sky Dome exhibition games in `2024`
+- These should therefore be treated as upstream MLB API exhibition-game exceptions rather than uncertain regular-season data gaps.
+
+### Decision
+
+- The historical MLB raw acquisition layer is complete for practical modeling purposes.
+- The unresolved set should be tracked as a small exception list rather than blocking downstream warehouse and modeling work.
+
+### Next
+
+1. Log the unresolved `game_pk` exceptions in GitHub and the runbook.
+2. Move back to bridge reconciliation, live feature parity, and PA outcome modeling on top of the now-complete historical raw MLB layer.
+
+## 2026-04-11 (Idempotent MLB Raw Acquisition)
+
+### Built
+
+- Updated `scripts/download_mlb_bulk.py` so successful raw MLB schedule and game-feed inserts are logically idempotent on rerun.
+- Updated `scripts/fetch_mlb_reference_data.py` so successful raw MLB reference endpoint inserts are logically idempotent on rerun.
+
+### Decision
+
+- The canonical raw acquisition rule is now:
+  - preserve source rows
+  - allow append-only history
+  - but do not append another successful row once a successful snapshot already exists for the same logical resource
+- Logical resource keys are:
+  - schedules: `snapshot_date`
+  - game feeds: `game_pk`
+  - reference snapshots: `endpoint_family + resource_key + season`
+
+### Next
+
+1. Validate the patched downloaders with syntax checks and targeted rerun behavior.
+2. If needed, stop and restart the bulk downloader with faster settings now that successful reruns are idempotent.
+
+## 2026-04-11 (Grouped PA Outcome Infrastructure)
+
+### Built
+
+- Added `sql/078_plate_appearance_outcome_grouped.sql` as the additive grouped target layer for baseline PA modeling.
+- Created:
+  - `features.plate_appearance_outcome_grouped_examples`
+  - `features.plate_appearance_outcome_grouped_validation_summary`
+- The grouped taxonomy preserves the existing granular canonical outcome rows while exposing a more stable first-pass modeling target:
+  - `single`
+  - `double`
+  - `triple`
+  - `home_run`
+  - `walk`
+  - `hit_by_pitch`
+  - `strikeout`
+  - `ground_out`
+  - `air_or_other_out`
+  - `reach_on_error_or_fc`
+  - `productive_out`
+  - `other_rare`
+
+### Decision
+
+- The grouped PA layer is the correct next additive modeling object because it improves target stability without replacing the granular canonical PA outcome layer.
+- This should be the first target layer used for baseline direct multiclass PA benchmarks.
+
+### Next
+
+1. Apply `sql/078_plate_appearance_outcome_grouped.sql` and validate grouped class counts.
+2. Extend the PA trainer to support grouped-taxonomy training directly.
+3. Benchmark grouped `basic` versus `advanced` models under the existing temporal-policy controls.
+
+## 2026-04-11 (Canonical MLB Backfill Status Utility)
+
+### Built
+
+- Added `scripts/raw_mlb_backfill_status.py` as the canonical read-only status utility for the ongoing MLB raw backfill.
+- The script reports:
+  - `raw_mlb.schedule_snapshots`
+  - `raw_mlb.live_feed_snapshots`
+  - `raw_mlb.reference_snapshots`
+  - `core.live_games`
+  - `core.live_events`
+  - live-feed coverage by season
+  - reference coverage by endpoint family
+- Updated `docs/agents/FILE_INVENTORY.md` and `docs/agents/PROCEDURES.md` so contributors have one canonical way to monitor download progress without depending on the experimental EdgeForge scripts.
+
+### Decision
+
+- The raw MLB backfill should be monitored through a canonical read-only script that only depends on the current documented warehouse layers.
+- Experimental monitoring scripts tied to `mlb_enhanced` or other non-canonical schemas remain outside the main runbook.
+
+### Next
+
+1. Let the current 2000-2025 backfills finish.
+2. Use `scripts/raw_mlb_backfill_status.py` for the completion audit.
+3. Continue with additive warehouse/modeling infrastructure only after the raw acquisition baseline is settled.
+
+## 2026-04-11 (Baseline PA Modeling Specification)
+
+### Built
+
+- Added `docs/PA_BASELINE_MODEL_SPEC.md` as the implementation-grade baseline design for the plate appearance probability engine.
+- Converted the broader at-bat modeling discussion into a concrete v1 plan:
+  - preserve the current granular canonical outcome taxonomy
+  - train the first operational model on a grouped multiclass taxonomy
+  - keep feature engineering in PostgreSQL and model training in the existing Python stack
+  - defer pitch-level recursive simulation and third-source pitch enrichments until after the direct PA model is stable
+
+### Validation
+
+- Confirmed `features.plate_appearance_outcome_examples` spans `2000-2025` with `4,779,662` rows.
+- Confirmed exact join coverage from `features.plate_appearance_outcome_examples` to `features.plate_appearance_advanced_examples`: `4,779,662`.
+- Confirmed coverage in the current PA outcome layer:
+  - pitch sequence: `4,779,662 / 4,779,662`
+  - batted-ball type: `3,372,283 / 4,779,662`
+  - batted-ball location: `3,277,405 / 4,779,662`
+- Recomputed current raw class counts from the warehouse and used those counts to define the grouped v1 modeling taxonomy.
+
+### Decision
+
+- The first production-style PA model should remain a direct multiclass model, not a recursive pitch model.
+- The first operational taxonomy should group the sparsest terminal classes for calibration stability while preserving the raw canonical classes in the warehouse.
+- The next additive SQL object should be a grouped training layer under `features`, not a rewrite of the current raw outcome layer.
+
+### Next
+
+1. Add `features.plate_appearance_outcome_grouped_examples`.
+2. Extend the PA trainer to support grouped-taxonomy training directly.
+3. Run grouped `basic` versus `advanced` benchmarks with temporal-policy variants.
+
+## 2026-04-11 (Typed MLB Reference Views)
+
+### Built
+
+- Added `sql/095_mlb_reference_views.sql` as the canonical typed transform layer over `raw_mlb.reference_snapshots`.
+- Created `core` views for the main MLB reference families:
+  - `core.mlb_api_teams`
+  - `core.mlb_api_team_rosters`
+  - `core.mlb_api_players`
+  - `core.mlb_api_venues`
+  - `core.mlb_api_standings`
+- Updated `scripts/rebuild_warehouse.sh` so the typed MLB reference layer is part of the canonical rebuild path.
+- Updated the agent inventory and procedures so contributors know the raw-to-typed MLB reference workflow.
+
+### Validation
+
+- Applied `sql/095_mlb_reference_views.sql` successfully to the local `retrosheet` database.
+- Current typed row counts from the stored 2025 reference backfill:
+  - `core.mlb_api_teams`: `30`
+  - `core.mlb_api_team_rosters`: `1,691`
+  - `core.mlb_api_players`: `1,470`
+  - `core.mlb_api_venues`: `30`
+  - `core.mlb_api_standings`: `0`
+- Verified that the zero-row standings result is caused by the current raw snapshot payload containing `records: []`, not by a SQL parsing error.
+
+### Decision
+
+- The canonical MLB reference workflow is now:
+  - fetch source-preserved endpoint payloads into `raw_mlb.reference_snapshots`
+  - build typed `core.mlb_api_*` views from the latest successful snapshots
+  - keep bridge/reconciliation and downstream enrichment out of the raw schema
+- Empty MLB standings snapshots are acceptable raw outcomes and should be preserved as-is until a richer standings acquisition strategy is explicitly adopted.
+
+### Next
+
+1. Use the typed MLB reference views to improve `bridge` reconciliation and MLB-to-Retrosheet entity linking.
+2. Decide whether standings need broader endpoint coverage or alternate query parameters for better historical completeness.
+3. Continue with the temporal sweep and live feature-parity work once the reference path is stable.
+
+## 2026-04-11 (Expanded MLB Source Coverage)
+
+### Built
+
+- Extended the canonical raw MLB schema so source preservation is no longer limited to live game feeds.
+- Updated `sql/090_mlb_live_data.sql` so `raw_mlb.schedule_snapshots` is part of the canonical raw schema, not just an incidental table from older work.
+- Added `sql/091_mlb_reference_raw.sql` creating `raw_mlb.reference_snapshots` for source-preserved MLB reference endpoint payloads.
+- Added `scripts/fetch_mlb_reference_data.py` as the canonical fetcher for the main non-game MLB endpoint families:
+  - `teams`
+  - `rosters`
+  - `people`
+  - `venues`
+  - `standings`
+- Updated rebuild/docs/procedures so the broad MLB source-coverage policy is explicit.
+
+### Validation
+
+- `python3 -m py_compile scripts/fetch_mlb_reference_data.py` passed.
+- `python3 scripts/fetch_mlb_reference_data.py --help` passed.
+- Reapplied:
+  - `sql/090_mlb_live_data.sql`
+  - `sql/091_mlb_reference_raw.sql`
+- Confirmed canonical raw MLB tables now include:
+  - `raw_mlb.schedule_snapshots`
+  - `raw_mlb.live_feed_snapshots`
+  - `raw_mlb.reference_snapshots`
+
+### Decision
+
+- For project purposes, “download all MLB source data” now means preserving the full required MLB source families for modeling and reconciliation:
+  - schedules
+  - live game feeds
+  - teams
+  - rosters
+  - people
+  - venues
+  - standings
+- This is the canonical MLB raw coverage scope until an explicit architecture change expands it further.
+
+### Next
+
+1. Use `scripts/fetch_mlb_reference_data.py` to backfill the reference endpoint families across the target season range.
+2. Define the canonical typed transform path from `raw_mlb.reference_snapshots` into bridge/core/reference layers.
+3. Continue with the temporal sweep and live feature-parity work after the source-preservation layer is settled.
+
+## 2026-04-11 (Canonical Historical MLB Backfill)
+
+### Built
+
+- Promoted `scripts/download_mlb_bulk.py` to the canonical historical MLB raw backfill utility.
+- Updated the script to match the raw-ingestion provenance standard:
+  - store `payload_checksum` for successful game-feed fetches
+  - persist failed game-feed fetch attempts into `raw_mlb.live_feed_snapshots`
+  - preserve request/status/error metadata consistently
+- Updated `README.md`, `docs/agents/PROCEDURES.md`, `docs/agents/FILE_INVENTORY.md`, and `docs/EDGEFORGE_TRIAGE.md` to reflect that decision.
+
+### Validation
+
+- `python3 -m py_compile scripts/download_mlb_bulk.py` passed.
+- `python3 scripts/download_mlb_bulk.py --help` passed.
+- Confirmed the script writes to the canonical raw tables:
+  - `raw_mlb.schedule_snapshots`
+  - `raw_mlb.live_feed_snapshots`
+- Confirmed the active raw schema includes:
+  - request params
+  - HTTP status
+  - response time
+  - error text
+  - payload checksum
+  - game date / season on game feeds
+
+### Decision
+
+- `scripts/download_mlb_bulk.py` is now the official historical MLB raw backfill path.
+- Historical MLB raw acquisition should feed the same canonical downstream transform path used by the rest of the project.
+- The remaining EdgeForge / MLB-enhanced scripts still remain experimental unless explicitly merged into canonical layers.
+
+### Next
+
+1. Decide the canonical follow-on transform/backfill procedure after raw MLB bulk download.
+2. Extract useful MLB-enhanced feature ideas into one canonical design path.
+3. Run the formal temporal sweep for `pa_outcome_distribution`.
+
+## 2026-04-11 (EdgeForge Triage)
+
+### Built
+
+- Reviewed the newly appeared `EdgeForge` / MLB-enhanced files against the documented warehouse architecture.
+- Added `docs/EDGEFORGE_TRIAGE.md` as the durable classification note for those files.
+- Updated `AGENTS.md`, `README.md`, and `docs/agents/*` to make the architectural rule explicit:
+  - `EdgeForge` / `mlb_features` / `mlb_models` / `mlb_enhanced` files remain experimental until explicitly merged into the canonical warehouse layers.
+
+### Decision
+
+- Keep a single canonical warehouse path:
+  - `raw_retrosheet -> core -> features`
+  - `raw_mlb -> bridge -> core.live_* -> analysis/features`
+- Do not adopt a second parallel stack built around:
+  - `mlb_features`
+  - `mlb_models`
+  - `mlb_enhanced`
+- Treat `docs/agents/EdgeForge.agent.md` as a product-direction note, not as a source-of-truth architecture document.
+- Mine the experimental files for useful ideas, but rewrite those ideas into canonical schemas and workflows instead of promoting the prototypes directly.
+
+### Validation
+
+- Confirmed that the untracked file set includes:
+  - product-direction docs
+  - experimental MLB bulk-ingestion scripts
+  - experimental feature-engineering and training scripts
+  - dashboard/alert/status prototypes
+- Confirmed those files depend on parallel schemas and orchestration paths not currently owned by the canonical project map.
+
+### Next
+
+1. Decide whether `scripts/download_mlb_bulk.py` should become part of the canonical historical MLB backfill workflow.
+2. Extract the useful MLB-enhanced feature ideas into one canonical design/migration path under existing schemas.
+3. Run the formal temporal sweep for `pa_outcome_distribution`.
+
 ## 2026-04-10 (Temporal Policy Training Controls)
 
 ### Built
@@ -492,3 +1124,181 @@
   - live feature parity for `pa_outcome_distribution`
   - better contact/batted-ball derived features
   - explicit rare-class policy for multiclass outcome modeling
+
+### MLB Raw Backfill Completion And PA Grouped Baseline
+
+- Completed the canonical MLB raw acquisition for the target historical range `2000-2025`.
+- Final raw MLB counts after the full backfill:
+  - `raw_mlb.schedule_snapshots`: `9,286`
+  - `raw_mlb.live_feed_snapshots`: `72,199`
+  - successful `raw_mlb.live_feed_snapshots`: `72,184`
+  - `raw_mlb.reference_snapshots`: `2,405`
+- Final transformed live counts at the same checkpoint:
+  - `core.live_games`: `67,913`
+  - `core.live_events`: `5,172,275`
+- Verified successful live-feed season coverage for every season from `2000` through `2025`.
+- Verified reference coverage across all `26` seasons for the tracked endpoint families (`teams`, `rosters`, `people`, `venues`, `standings`).
+- Investigated the residual failed MLB game-feed fetches and confirmed they are upstream Stats API `HTTP 500` responses for seven exhibition/special-event games:
+  - `243297`
+  - `243298`
+  - `243313`
+  - `243314`
+  - `308207`
+  - `764834`
+  - `764836`
+- Decision: the MLB raw layer is current and complete enough to continue. The unresolved failures are upstream exhibition-game holes, not a local ingestion bug.
+
+- Added `sql/078_plate_appearance_outcome_grouped.sql` to create an additive grouped PA target layer on top of the canonical granular layer:
+  - `features.plate_appearance_outcome_grouped_examples`
+  - `features.plate_appearance_outcome_grouped_validation_summary`
+- Validation for the grouped layer:
+  - `4,779,662` rows
+  - `62,598` distinct games
+  - `12` grouped classes
+  - pitch-sequence coverage `1.0000`
+  - batted-ball coverage `0.7055`
+- Extended `scripts/train_pa_outcome_distribution.py` with `--target-taxonomy granular|grouped`.
+- Grouped recent-window benchmark setup:
+  - `train_through = 2022`
+  - `recent_window = 7`
+  - validation seasons `2023-2025`
+  - `sample_rate = 0.05`
+- Full grouped class coverage over the recent window:
+  - all `12` grouped classes are present in both training and validation before sparse-class filtering
+  - sampled runs retain `11` classes because `other_rare` falls below `--min-class-rows 100`
+- Benchmarks at `sample_rate = 0.05`:
+  - grouped `basic` logistic: log loss `2.0809`, accuracy `0.2821`, top-3 accuracy `0.4821`
+  - grouped `basic` HGB: log loss `1.5253`, accuracy `0.4066`, top-3 accuracy `0.8194`
+  - grouped `advanced` logistic: log loss `2.1086`, accuracy `0.2864`, top-3 accuracy `0.4973`
+  - grouped `advanced` HGB: log loss `1.5242`, accuracy `0.4081`, top-3 accuracy `0.8176`
+- Decision: for the grouped target, histogram gradient boosting is the only viable current model family. The present advanced mart yields only marginal lift over basic on log loss (`1.5242` vs `1.5253`), so the next high-value work is temporal-policy comparison and feature-quality improvements rather than model-family churn.
+
+- Added `scripts/sweep_pa_outcome_temporal.py` as the canonical temporal-policy sweep runner for `pa_outcome_distribution`.
+- The sweep runner reuses the existing trainer, emits one JSON row per policy/model pair, and can optionally write a consolidated JSON report for reproducible comparisons.
+- Smoke validation:
+  - `python3 -m py_compile scripts/sweep_pa_outcome_temporal.py`
+  - `python3 scripts/sweep_pa_outcome_temporal.py --feature-set advanced --target-taxonomy grouped --sample-rate 0.01 --recent-windows 7 --season-half-lives 5 --output-json data/reports/temporal_sweep_smoke.json`
+- Smoke sweep result for grouped `advanced` HGB:
+  - fixed `window = 7`: log loss `1.5816`
+  - full-history `half_life = 5`: log loss `1.5748`
+- Decision: the temporal sweep runner is working and the early smoke signal supports continuing with a larger grouped HGB policy comparison before changing feature marts or promotion rules.
+
+### Research Report Draft
+
+- Added `research_report.md` at the repository root as the paper-style running research manuscript.
+- The report consolidates:
+  - research objective and CRISP-DM framing
+  - canonical warehouse design
+  - historical and MLB raw-data coverage
+  - state representation and leakage constraints
+  - grouped PA target design
+  - statistical objective and temporal weighting equations
+  - grouped PA benchmark results
+  - limitations and next experiments
+- Decision: use `research_report.md` as the evolving manuscript draft while keeping `docs/RESEARCH_METHODOLOGY.md`, `docs/TEMPORAL_MODEL_SELECTION.md`, `docs/PA_BASELINE_MODEL_SPEC.md`, and `docs/FEATURE_AUDIT.md` as supporting technical appendices/source documents.
+
+### Full Grouped PA Temporal Sweep
+
+- Ran the full grouped advanced temporal-policy sweep with:
+  - `python3 scripts/sweep_pa_outcome_temporal.py --feature-set advanced --target-taxonomy grouped --sample-rate 0.05 --include-all-window --output-json data/reports/pa_grouped_temporal_sweep.json`
+- Sweep scope:
+  - fixed windows `3, 5, 7, 10, 15, all`
+  - half-lives `3, 5, 7, 10`
+  - training through `2022`
+  - validation on `2023-2025`
+- Ranked HGB results by validation log loss:
+  - `all seasons, no decay`: `1.5094`
+  - `all seasons, half_life = 10`: `1.5122`
+  - `15-year window`: `1.5123`
+  - `all seasons, half_life = 7`: `1.5129`
+  - `all seasons, half_life = 5`: `1.5144`
+  - `10-year window`: `1.5168`
+  - `all seasons, half_life = 3`: `1.5201`
+  - `7-year window`: `1.5234`
+  - `5-year window`: `1.5287`
+  - `3-year window`: `1.5429`
+- Best current grouped advanced policy:
+  - `window_all__half_life_none__keep_2020`
+  - validation log loss `1.50943420932027`
+  - validation accuracy `0.41184416323048484`
+  - validation top-3 accuracy `0.8209512299161098`
+  - validation rows `28,132`
+- Decision:
+  - for the current grouped advanced HGB benchmark, equal-weight full-history training beats shorter windows and beats the tested recency-decay policies
+  - temporal policy still matters, but the current evidence does not support aggressive forgetting for this target
+  - the next modeling work should shift toward calibration, subgroup diagnostics, and feature-quality improvements
+
+### Grouped PA Calibration And Subgroup Diagnostics
+
+- Added `scripts/analyze_pa_outcome_calibration.py` as a read-only calibration and subgroup analysis runner for registered `pa_outcome_distribution` models.
+- Validation command:
+  - `python3 -m py_compile scripts/analyze_pa_outcome_calibration.py`
+  - `python3 scripts/analyze_pa_outcome_calibration.py --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z --output-json data/reports/pa_outcome_calibration_20260411T230512Z.json`
+- Scope:
+  - winning grouped advanced HGB candidate
+  - validation seasons `2023-2025`
+  - `559,688` validation rows
+- Aggregate registered validation metrics:
+  - log loss `1.50943420932027`
+  - multiclass Brier score `0.7151476390866868`
+  - accuracy `0.41184416323048484`
+  - top-3 accuracy `0.8209512299161098`
+- Per-class calibration highlights:
+  - best ECE values:
+    - `triple`: `0.0002`
+    - `reach_on_error_or_fc`: `0.0003`
+    - `double`: `0.0004`
+    - `hit_by_pitch`: `0.0007`
+    - `productive_out`: `0.0011`
+    - `home_run`: `0.0011`
+  - moderate ECE values:
+    - `walk`: `0.0026`
+    - `ground_out`: `0.0058`
+    - `single`: `0.0079`
+    - `air_or_other_out`: `0.0092`
+  - worst current class:
+    - `strikeout`: `ECE = 0.0181`
+    - mean predicted probability `0.2415`
+    - observed rate `0.2253`
+- Subgroup reliability highlights using top-class confidence versus realized top-class accuracy:
+  - two-strike counts are the main overconfidence pocket:
+    - `0-2`: gap `0.0449`
+    - `1-2`: gap `0.0405`
+    - `2-2`: gap `0.0438`
+  - outs-based gaps are smaller, roughly `0.020-0.024`
+  - several occupied-base states widen the gap, including `start_bases = 6` at `0.0406`
+  - handedness gaps are moderate; largest observed `RvR` gap is `0.0252`
+  - season-level gap is stable across `2023-2025`, roughly `0.021-0.022`
+- Decision:
+  - the grouped advanced HGB model is a valid research baseline but not yet promotable as a production-style probability engine
+  - next work should prioritize calibration correction, subgroup-specific reliability reporting, and feature work around strikeout-heavy/two-strike states
+
+### Held-Out Isotonic Calibration For Grouped PA Model
+
+- Added `scripts/calibrate_pa_outcome_model.py` for read-only post-hoc calibration experiments on registered `pa_outcome_distribution` models.
+- Current calibration procedure:
+  - fit one-vs-rest isotonic calibrators on validation-era seasons `2023-2024`
+  - evaluate calibrated probabilities on held-out `2025`
+  - renormalize per-class isotonic outputs back to the multiclass simplex
+- Validation command:
+  - `python3 -m py_compile scripts/calibrate_pa_outcome_model.py`
+  - `python3 scripts/calibrate_pa_outcome_model.py --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z --output-json data/reports/pa_outcome_isotonic_20260411T230512Z.json`
+- Held-out `2025` results for the winning grouped advanced HGB model:
+  - raw log loss `1.5077587730803081`
+  - calibrated log loss `1.5047021152352906`
+  - raw multiclass Brier score `0.7138235869159922`
+  - calibrated multiclass Brier score `0.7124996244921831`
+  - raw accuracy `0.4142544706033706`
+  - calibrated accuracy `0.4143670397529911`
+  - raw top-3 accuracy `0.8207952742398902`
+  - calibrated top-3 accuracy `0.8206076589905228`
+- Key per-class ECE improvements on held-out `2025`:
+  - `strikeout`: `0.0179` -> `0.0036`
+  - `single`: `0.0082` -> `0.0018`
+  - `air_or_other_out`: `0.0092` -> `0.0049`
+  - `ground_out`: `0.0057` -> `0.0035`
+  - `home_run`: `0.0015` -> `0.0005`
+- Decision:
+  - post-hoc isotonic calibration improves held-out probability quality without materially harming classification behavior
+  - this is the first concrete result supporting a calibration layer for `pa_outcome_distribution`
+  - next work should turn this experimental calibration pass into a repeatable report and decide whether calibrated outputs should be stored separately from raw model probabilities

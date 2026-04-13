@@ -2,6 +2,21 @@
 
 These are the canonical workflows. Use them before creating new ad hoc scripts.
 
+## Resume After Context Loss
+
+Purpose: recover the current project state quickly before adding new code or changing direction.
+
+Read in this order:
+
+1. `docs/agents/CURRENT_SNAPSHOT.md`
+2. `docs/PROJECT_LOG.md`
+3. `docs/agents/MODELING_WORKFLOWS.md`
+4. the relevant GitHub issues listed in `docs/agents/CURRENT_SNAPSHOT.md`
+
+Rule:
+
+- update `docs/agents/CURRENT_SNAPSHOT.md` whenever the current best model, main blocker, live-data status, or recommended next move changes materially
+
 ## Full Warehouse Rebuild
 
 Purpose: recreate the historical warehouse and feature layers from source data.
@@ -23,10 +38,14 @@ Expected order:
 7. Build `core.plate_appearances`.
 8. Load reference metadata.
 9. Load auxiliary metadata.
-10. Build feature marts.
-11. Build interface persistence.
-12. Build multiclass PA outcome examples.
-13. Build pitch-sequence normalization examples.
+10. Build typed MLB reference views.
+11. Build feature marts.
+12. Build interface persistence.
+13. Build multiclass PA outcome examples.
+14. Build pitch-sequence normalization examples.
+15. Build grouped PA outcome examples.
+16. Build probability evaluation report tables.
+17. Build count-state PA feature marts.
 
 When adding a required SQL migration, add it to `scripts/rebuild_warehouse.sh` and document it in `README.md`.
 
@@ -45,10 +64,16 @@ python3 scripts/populate_bridge_tables.py
 Expected order:
 
 1. Download Chadwick Bureau Register CSV files.
-2. Parse player and team ID mappings.
-3. Populate `bridge.player_xref` with MLB ↔ Retrosheet ID mappings.
-4. Populate `bridge.team_xref` with team ID mappings.
-5. Create indexes for fast lookups.
+2. Parse player register rows.
+3. Populate `bridge.player_xref` with MLB ↔ Retrosheet player ID mappings.
+4. Populate `bridge.team_xref` with current/canonical MLB franchise mappings from `core.mlb_api_teams`.
+5. Populate `bridge.park_xref` with MLB venue-id mappings covering the observed `2000-2025` MLB venue surface.
+
+Limitation:
+
+- `bridge.team_xref` is currently seasonless.
+- Franchise-move cases are therefore mapped to a current/canonical Retrosheet id for live scoring rather than a season-specific historical id.
+- Do not treat that as a complete replay-grade historical MLB team bridge until a season-aware bridge design exists.
 
 ### Ongoing Live Data Ingestion
 
@@ -70,6 +95,24 @@ Expected order:
    - Upsert into `core.live_games` and `core.live_events`.
 4. Refresh `analysis.combined_plate_appearances` when live rows change and downstream combined PA analysis depends on current live state.
 
+Important operational note:
+
+- rows transformed before the April 2026 team/park bridge repair may still carry `MLB###` fallback ids in `core.live_*`
+- the repaired bridge only applies automatically to newly transformed or replayed snapshots
+- if park priors or team rolling features are unexpectedly null for older live rows, replay those stored snapshots through `scripts/transform_live_game.py`
+
+Controlled replay command:
+
+```bash
+python3 scripts/replay_live_bridge_backfill.py --season-from 2019 --season-to 2019 --limit 50
+```
+
+Replay guidance:
+
+1. Start with a bounded season slice and a small `--limit`.
+2. Prefer regular-season slices first; spring-training and other non-regular-season venues may still remain as `MLB###` park fallbacks.
+3. Validate a sample of replayed `core.live_games` rows and the matching `features.live_plate_appearance_advanced_count_examples` priors before scaling up.
+
 ### Analysis with Combined Data
 
 Use `analysis.*` views for unified queries across historical and live data:
@@ -88,6 +131,81 @@ FROM analysis.combined_events ce
 JOIN analysis.combined_games cg USING (game_id)
 WHERE ce.source_type = 'mlb_live';
 ```
+
+## Historical MLB Raw Backfill
+
+Purpose: bulk backfill source-preserved historical MLB schedule and game-feed snapshots into `raw_mlb` without bypassing the raw provenance rules.
+
+Command:
+
+```bash
+python3 scripts/download_mlb_bulk.py --start-season 2000 --end-season 2025 --mode schedules
+python3 scripts/download_mlb_bulk.py --start-season 2000 --end-season 2025 --mode games --workers 4 --delay 1.0
+```
+
+Expected order:
+
+1. Backfill `raw_mlb.schedule_snapshots` by date range.
+2. Discover completed games from stored schedule payloads.
+3. Backfill `raw_mlb.live_feed_snapshots` for those game PKs.
+4. Preserve request parameters, HTTP status, response time, error text, and payload checksum in the raw layer.
+5. Transform raw backfilled games only through documented follow-on canonical scripts; do not create a second historical MLB warehouse path.
+6. Reruns are logically idempotent for successful resources:
+   - schedule success rows are skipped once a successful row already exists for the date
+   - game-feed success rows are skipped once a successful row already exists for the game
+
+Use this workflow for historical MLB raw acquisition. Use `scripts/fetch_mlb_schedule.py` and `scripts/ingest_live_games.py` for ongoing near-live ingestion.
+
+Status check:
+
+```bash
+python3 scripts/raw_mlb_backfill_status.py
+```
+
+## MLB Reference Endpoint Backfill
+
+Purpose: preserve the non-game MLB source families needed for roster, player, venue, and standings enrichment.
+
+Command:
+
+```bash
+python3 scripts/fetch_mlb_reference_data.py --start-season 2000 --end-season 2025
+```
+
+Coverage:
+
+- `teams`
+- `rosters`
+- `people`
+- `venues`
+- `standings`
+
+Outputs:
+
+- `raw_mlb.reference_snapshots`
+
+Rules:
+
+1. Keep responses source-preserved in `raw_mlb.reference_snapshots`.
+2. Build typed `core` views from the latest successful snapshots with `sql/095_mlb_reference_views.sql`.
+3. Treat the snapshots as raw source data; put typing and joins in `core`, not back into `raw_mlb`.
+4. Use this workflow alongside `scripts/download_mlb_bulk.py` if the goal is broad MLB source preservation rather than only game feeds.
+5. Reruns are logically idempotent for successful resources:
+   - successful `teams`, `standings`, `rosters`, `people`, and `venues` snapshots are skipped once a successful row already exists for the same endpoint family/resource/season key
+
+Status check:
+
+```bash
+python3 scripts/raw_mlb_backfill_status.py
+```
+
+Typed outputs:
+
+- `core.mlb_api_teams`
+- `core.mlb_api_team_rosters`
+- `core.mlb_api_players`
+- `core.mlb_api_venues`
+- `core.mlb_api_standings`
 
 ## Add A New Prediction Target
 
@@ -155,11 +273,136 @@ Example:
 python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022 --no-activate
 ```
 
+Grouped baseline example:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/078_plate_appearance_outcome_grouped.sql
+python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --target-taxonomy grouped --sample-rate 0.05 --train-through 2022 --no-activate
+```
+
 Temporal-policy examples:
 
 ```bash
 python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022 --recent-window 7 --no-activate
 python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022 --season-half-life 5 --downweight-2020 0.5 --no-activate
+```
+
+Count-state-enhanced feature example:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/082_count_state_feature_marts.sql
+python3 scripts/train_pa_outcome_distribution.py --feature-set advanced_count --target-taxonomy grouped --sample-rate 0.05 --train-through 2022 --no-activate
+```
+
+## Persist PA Probability Evaluation Reports
+
+Purpose: store calibration and bootstrap evidence as durable warehouse artifacts tied to a registered model version.
+
+Setup:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/079_probability_evaluation_reports.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/081_probability_calibration_artifacts.sql
+```
+
+Command:
+
+```bash
+python3 scripts/persist_pa_outcome_reports.py --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z
+```
+
+Expected order:
+
+1. Look up the registered `pa_outcome_distribution` model in `models.model_registry`.
+2. Run:
+   - `scripts/analyze_pa_outcome_calibration.py`
+   - `scripts/calibrate_pa_outcome_model.py`
+   - `scripts/bootstrap_pa_outcome_evaluation.py`
+3. Insert one `predictions.prediction_runs` row with `run_context = 'evaluation_report'`.
+4. Persist:
+   - raw validation calibration diagnostics in `predictions.calibration_reports`
+   - held-out isotonic calibration comparison in `predictions.calibration_reports`
+   - bootstrap summary metrics in `predictions.bootstrap_reports`
+
+Use this workflow when a PA outcome benchmark becomes important enough to preserve as a durable warehouse record instead of transient JSON output.
+
+## Register A Calibrated PA Scoring Artifact
+
+Purpose: persist a reusable isotonic calibration artifact so the PA scorer and API can return calibrated probabilities instead of only raw model outputs.
+
+Setup:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/081_probability_calibration_artifacts.sql
+```
+
+Command:
+
+```bash
+python3 scripts/register_pa_outcome_calibration.py --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z
+```
+
+What it does:
+
+1. Loads the registered `pa_outcome_distribution` model.
+2. Fits one-vs-rest isotonic calibrators on the configured holdout calibration window.
+3. Saves the calibration artifact under ignored `data/models/calibration/`.
+4. Inserts:
+   - one `predictions.prediction_runs` row with `run_context = 'calibration_artifact'`
+   - one `predictions.calibration_reports` row with `artifact_uri`
+
+Use the calibrated scorer:
+
+```bash
+python3 scripts/predict_pa_outcome_distribution.py --game-id ANA202506060 --plate-appearance-id 30 --model-version 20260411T230512Z --apply-calibration
+python3 scripts/predict_pa_outcome_distribution.py --game-id ANA202506060 --plate-appearance-id 30 --model-version 20260411T230512Z --calibration-report-name 20260411T230512Z_isotonic_artifact
+```
+
+API consumers can pass the same controls through `/api/predict` for `target_id: "pa_outcome_distribution"`.
+
+## Score A Stored Live PA
+
+Purpose: score a stored MLB live plate appearance using the same historical `advanced_count` PA model contract.
+
+Setup:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/122_live_pa_feature_parity.sql
+```
+
+Command:
+
+```bash
+python3 scripts/predict_live_pa_outcome_distribution.py --game-id MLB117201910300 --plate-appearance-id 79 --model-version 20260412T045759Z --apply-calibration
+```
+
+Current limitation:
+
+- player, count-state, and coarse context priors are wired
+- park prior and team rolling features remain nullable in the live view until team/park bridge reconciliation is completed
+
+Temporal sweep example:
+
+```bash
+python3 scripts/sweep_pa_outcome_temporal.py --feature-set advanced --target-taxonomy grouped --sample-rate 0.05 --include-all-window --output-json data/reports/pa_grouped_temporal_sweep.json
+```
+
+Calibration and subgroup evaluation example:
+
+```bash
+python3 scripts/analyze_pa_outcome_calibration.py --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z --output-json data/reports/pa_outcome_calibration_20260411T230512Z.json
+```
+
+Held-out post-hoc calibration experiment:
+
+```bash
+python3 scripts/calibrate_pa_outcome_model.py --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z --output-json data/reports/pa_outcome_isotonic_20260411T230512Z.json
+```
+
+Bootstrap uncertainty evaluation:
+
+```bash
+python3 scripts/bootstrap_pa_outcome_evaluation.py --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z --replicates 50 --output-json data/reports/pa_outcome_bootstrap_20260411T230512Z.json
 ```
 
 Target:
@@ -170,11 +413,13 @@ Feature source:
 
 - `features.plate_appearance_outcome_examples`
 - `features.plate_appearance_advanced_examples` for advanced features
+- `features.plate_appearance_outcome_grouped_examples` when `--target-taxonomy grouped` is used
 
 Evaluation priority:
 
 1. Log loss.
 2. Calibration / reliability by class.
+3. Subgroup reliability by count, base/out state, handedness matchup, and season.
 3. Brier score.
 4. Top-k accuracy.
 5. Macro/weighted F1 as secondary diagnostics.
@@ -188,6 +433,27 @@ python3 scripts/predict_pa_outcome_distribution.py --game-id ANA202506060 --plat
 ```
 
 The scorer returns class probabilities plus derived aggregates such as hit, extra-base hit, traditional on-base, reach-base-any, ball-in-play, and expected total bases. API consumers can request the same path through `/api/predict` with `target_id: "pa_outcome_distribution"`.
+
+## Build Grouped PA Outcome Layer
+
+Purpose: create the first stable grouped target taxonomy for baseline multiclass PA modeling without replacing the granular canonical outcome layer.
+
+Command:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -v ON_ERROR_STOP=1 -f sql/078_plate_appearance_outcome_grouped.sql
+```
+
+Outputs:
+
+- `features.plate_appearance_outcome_grouped_examples`
+- `features.plate_appearance_outcome_grouped_validation_summary`
+
+Rules:
+
+1. Keep `features.plate_appearance_outcome_examples` as the raw canonical outcome source.
+2. Use the grouped layer for the first stable direct PA multiclass benchmarks.
+3. Treat this as additive target infrastructure; do not collapse or overwrite the granular layer.
 
 ## Normalize Pitch Sequences
 

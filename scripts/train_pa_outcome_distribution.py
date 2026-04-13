@@ -74,6 +74,30 @@ ADVANCED_NUMERIC_FEATURES = BASIC_NUMERIC_FEATURES + [
     "fielding_team_rolling_30_runs_allowed_per_game",
 ]
 ADVANCED_CATEGORICAL_FEATURES = BASIC_CATEGORICAL_FEATURES + ["park_id"]
+ADVANCED_COUNT_NUMERIC_FEATURES = ADVANCED_NUMERIC_FEATURES + [
+    "batter_count_state_prior_pa",
+    "batter_count_state_prior_hit_rate",
+    "batter_count_state_prior_walk_rate",
+    "batter_count_state_prior_strikeout_rate",
+    "batter_count_state_prior_home_run_rate",
+    "batter_count_state_prior_reach_base_rate",
+    "batter_count_state_prior_extra_base_hit_rate",
+    "pitcher_count_state_prior_batters_faced",
+    "pitcher_count_state_prior_hit_allowed_rate",
+    "pitcher_count_state_prior_walk_allowed_rate",
+    "pitcher_count_state_prior_strikeout_rate",
+    "pitcher_count_state_prior_home_run_allowed_rate",
+    "pitcher_count_state_prior_reach_base_allowed_rate",
+    "pitcher_count_state_prior_extra_base_hit_allowed_rate",
+    "count_state_context_prior_pa",
+    "count_state_context_prior_hit_rate",
+    "count_state_context_prior_walk_rate",
+    "count_state_context_prior_strikeout_rate",
+    "count_state_context_prior_home_run_rate",
+    "count_state_context_prior_reach_base_rate",
+    "count_state_context_prior_extra_base_hit_rate",
+]
+ADVANCED_COUNT_CATEGORICAL_FEATURES = ADVANCED_CATEGORICAL_FEATURES
 
 
 def database_kwargs() -> dict[str, str]:
@@ -101,6 +125,8 @@ def database_url() -> str | URL:
 
 
 def feature_columns(feature_set: str) -> tuple[list[str], list[str]]:
+    if feature_set == "advanced_count":
+        return ADVANCED_COUNT_NUMERIC_FEATURES, ADVANCED_COUNT_CATEGORICAL_FEATURES
     if feature_set == "advanced":
         return ADVANCED_NUMERIC_FEATURES, ADVANCED_CATEGORICAL_FEATURES
     return BASIC_NUMERIC_FEATURES, BASIC_CATEGORICAL_FEATURES
@@ -113,16 +139,34 @@ def load_examples(
     max_season: int,
     sample_rate: float,
     feature_set: str,
+    target_taxonomy: str,
 ) -> pd.DataFrame:
     if not 0 < sample_rate <= 1:
         raise ValueError("--sample-rate must be between 0 and 1")
     sample_ppm = int(sample_rate * 1_000_000)
 
-    if feature_set == "advanced":
+    if target_taxonomy not in {"granular", "grouped"}:
+        raise ValueError("--target-taxonomy must be granular or grouped")
+
+    source_relation = (
+        "features.plate_appearance_outcome_grouped_examples"
+        if target_taxonomy == "grouped"
+        else "features.plate_appearance_outcome_examples"
+    )
+    target_column = (
+        "grouped_outcome_class" if target_taxonomy == "grouped" else "outcome_class"
+    )
+
+    if feature_set in {"advanced", "advanced_count"}:
+        advanced_relation = (
+            "features.plate_appearance_count_state_advanced_examples"
+            if feature_set == "advanced_count"
+            else "features.plate_appearance_advanced_examples"
+        )
         sql = """
             SELECT
                 outcome.season,
-                outcome.outcome_class AS target,
+                outcome.""" + target_column + """ AS target,
                 outcome.season_era,
                 outcome.rules_context_era,
                 advanced.inning,
@@ -169,9 +213,34 @@ def load_examples(
                 advanced.fielding_team_rolling_30_games,
                 advanced.fielding_team_rolling_30_win_rate,
                 advanced.fielding_team_rolling_30_runs_scored_per_game,
-                advanced.fielding_team_rolling_30_runs_allowed_per_game
-            FROM features.plate_appearance_outcome_examples outcome
-            JOIN features.plate_appearance_advanced_examples advanced
+                advanced.fielding_team_rolling_30_runs_allowed_per_game""" + (
+                """
+                ,
+                advanced.batter_count_state_prior_pa,
+                advanced.batter_count_state_prior_hit_rate,
+                advanced.batter_count_state_prior_walk_rate,
+                advanced.batter_count_state_prior_strikeout_rate,
+                advanced.batter_count_state_prior_home_run_rate,
+                advanced.batter_count_state_prior_reach_base_rate,
+                advanced.batter_count_state_prior_extra_base_hit_rate,
+                advanced.pitcher_count_state_prior_batters_faced,
+                advanced.pitcher_count_state_prior_hit_allowed_rate,
+                advanced.pitcher_count_state_prior_walk_allowed_rate,
+                advanced.pitcher_count_state_prior_strikeout_rate,
+                advanced.pitcher_count_state_prior_home_run_allowed_rate,
+                advanced.pitcher_count_state_prior_reach_base_allowed_rate,
+                advanced.pitcher_count_state_prior_extra_base_hit_allowed_rate,
+                advanced.count_state_context_prior_pa,
+                advanced.count_state_context_prior_hit_rate,
+                advanced.count_state_context_prior_walk_rate,
+                advanced.count_state_context_prior_strikeout_rate,
+                advanced.count_state_context_prior_home_run_rate,
+                advanced.count_state_context_prior_reach_base_rate,
+                advanced.count_state_context_prior_extra_base_hit_rate
+                """ if feature_set == "advanced_count" else ""
+            ) + """
+            FROM """ + source_relation + """ outcome
+            JOIN """ + advanced_relation + """ advanced
               ON advanced.game_id = outcome.game_id
              AND advanced.plate_appearance_id = outcome.plate_appearance_id
             WHERE outcome.season BETWEEN :min_season AND :max_season
@@ -181,7 +250,7 @@ def load_examples(
         sql = """
             SELECT
                 season,
-                outcome_class AS target,
+                """ + target_column + """ AS target,
                 season_era,
                 rules_context_era,
                 inning,
@@ -193,7 +262,7 @@ def load_examples(
                 home_score_diff,
                 COALESCE(batter_hand::text, 'U') AS batter_hand,
                 COALESCE(pitcher_hand::text, 'U') AS pitcher_hand
-            FROM features.plate_appearance_outcome_examples
+            FROM """ + source_relation + """
             WHERE season BETWEEN :min_season AND :max_season
               AND mod(abs(hashtext(game_id || ':' || plate_appearance_id::text)), 1000000) < :sample_ppm
         """
@@ -428,6 +497,7 @@ def train(args: argparse.Namespace) -> None:
             max_season=args.max_season,
             sample_rate=args.sample_rate,
             feature_set=args.feature_set,
+            target_taxonomy=args.target_taxonomy,
         )
         if args.exclude_2020:
             frame = frame[frame["season"] != 2020].copy()
@@ -460,6 +530,7 @@ def train(args: argparse.Namespace) -> None:
             "target": "target",
             "target_id": TARGET_ID,
             "feature_set": args.feature_set,
+            "target_taxonomy": args.target_taxonomy,
             "min_class_rows": args.min_class_rows,
             "classes": sorted(frame["target"].unique().tolist()),
             "recent_window": args.recent_window,
@@ -494,6 +565,7 @@ def train(args: argparse.Namespace) -> None:
                 "min_season": args.min_season,
                 "max_season": args.max_season,
                 "train_through": args.train_through,
+                "target_taxonomy": args.target_taxonomy,
                 "recent_window": args.recent_window,
                 "season_half_life": args.season_half_life,
                 "exclude_2020": args.exclude_2020,
@@ -553,9 +625,15 @@ def main() -> None:
     )
     parser.add_argument(
         "--feature-set",
-        choices=["basic", "advanced"],
+        choices=["basic", "advanced", "advanced_count"],
         default="advanced",
-        help="Use basic game-state/count features or the existing advanced PA feature view.",
+        help="Use basic features, the existing advanced PA view, or the count-state-enhanced advanced PA view.",
+    )
+    parser.add_argument(
+        "--target-taxonomy",
+        choices=["granular", "grouped"],
+        default="granular",
+        help="Train against the raw granular PA outcome classes or the grouped baseline taxonomy.",
     )
     parser.add_argument(
         "--min-class-rows",

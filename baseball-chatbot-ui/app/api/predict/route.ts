@@ -28,6 +28,12 @@ export async function POST(request: Request): Promise<Response> {
       if (body.model_version) {
         args.push('--model-version', String(body.model_version))
       }
+      if (body.apply_calibration) {
+        args.push('--apply-calibration')
+      }
+      if (body.calibration_report_name) {
+        args.push('--calibration-report-name', String(body.calibration_report_name))
+      }
 
       const output = await runPythonScript('predict_pa_outcome_distribution.py', args)
       return Response.json(JSON.parse(output))

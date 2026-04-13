@@ -11,7 +11,7 @@
 | `pa_batter_home_run` | Binary PA | `scripts/train_models.py` | Same PA feature sources | Rare-event target; calibration matters. |
 | `pa_batter_reach_base` | Binary PA | `scripts/train_models.py` | Same PA feature sources | Useful aggregate target. |
 | `pa_batter_extra_base_hit` | Binary PA | `scripts/train_models.py` | Same PA feature sources | Rare-ish aggregate target. |
-| `pa_outcome_distribution` | Multiclass PA | `scripts/train_pa_outcome_distribution.py` | `features.plate_appearance_outcome_examples`, advanced PA view | Inactive 5% advanced candidate exists; needs calibration/subgroup diagnostics before promotion. |
+| `pa_outcome_distribution` | Multiclass PA | `scripts/train_pa_outcome_distribution.py` | `features.plate_appearance_outcome_examples` or `features.plate_appearance_outcome_grouped_examples`, plus advanced PA view | Granular and grouped-taxonomy training supported; grouped baseline should be benchmarked before promotion. |
 | `half_inning_any_run` | Scenario | `scripts/train_models.py` where `features.half_inning_examples` exists | Half-inning examples | Candidate target. |
 | `half_inning_lhb_any_hit` | Scenario | `scripts/train_models.py` where `features.half_inning_examples` exists | Half-inning examples | Candidate target; target definition must be precise. |
 
@@ -52,6 +52,13 @@ psql -h localhost -p 5432 -d retrosheet -f sql/076_plate_appearance_outcome_mode
 python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022 --no-activate
 ```
 
+Grouped baseline:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/078_plate_appearance_outcome_grouped.sql
+python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --target-taxonomy grouped --sample-rate 0.05 --train-through 2022 --no-activate
+```
+
 Do before promotion:
 
 - Larger advanced-feature training run beyond the current 5% inactive benchmark.
@@ -75,6 +82,30 @@ Needed assets:
 - Reliability plots.
 - Rolling-origin validation.
 - Report UI in command center.
+
+Current status:
+
+- The grouped PA baseline is now operational through `scripts/train_pa_outcome_distribution.py --target-taxonomy grouped`.
+- On the current 7-season recent-window benchmark (`train_through = 2022`, validation `2023-2025`, `sample_rate = 0.05`), histogram gradient boosting materially outperforms logistic regression for grouped PA outcomes.
+- The current advanced PA mart provides only marginal log-loss lift over the grouped basic feature set.
+- The substantive grouped advanced temporal sweep is now complete. For HGB, the best current policy is full-history training with no decay (`log_loss = 1.5094` on validation `2023-2025`), followed closely by `half_life = 10` and a `15-year` window.
+- Season-stratified game-cluster bootstrap is now operational for the winning grouped advanced HGB baseline and shows reasonably tight uncertainty bands around the validation metrics.
+- Durable report storage now exists through `sql/079_probability_evaluation_reports.sql` and `scripts/persist_pa_outcome_reports.py`.
+- Reusable isotonic calibration artifacts can now be registered and loaded during scoring through:
+  - `sql/081_probability_calibration_artifacts.sql`
+  - `scripts/register_pa_outcome_calibration.py`
+  - `scripts/predict_pa_outcome_distribution.py --apply-calibration`
+- Count-state-specific prior features are now available through:
+  - `sql/082_count_state_feature_marts.sql`
+  - `features.plate_appearance_count_state_advanced_examples`
+  - `scripts/train_pa_outcome_distribution.py --feature-set advanced_count`
+- The first live scorer parity path now exists through:
+  - `sql/122_live_pa_feature_parity.sql`
+  - `features.live_plate_appearance_advanced_count_examples`
+  - `scripts/predict_live_pa_outcome_distribution.py`
+- So the next modeling priority is no longer to guess the temporal policy. It is:
+  - deciding whether the current isotonic artifact path is sufficient to treat calibrated scoring as the default production-style path
+  - targeted feature-quality improvements
 
 ### Priority 3: Model-Driven Half-Inning Monte Carlo
 

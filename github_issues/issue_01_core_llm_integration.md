@@ -62,3 +62,8 @@ class BaseballQueryAgent:
 - #7 (API Design)
 
 **Labels**: enhancement, ai, llm, core, priority:high
+
+### Documentation Links
+- **AGENTS.md**: [`AGENTS.md`](../AGENTS.md)
+- **Overall Strategy**: [`docs/OVERALL_STRATEGY.md`](../docs/OVERALL_STRATEGY.md)
+- **Adaptation Map**: [`docs/agents/ADAPTATION_MAP.md`](../docs/agents/ADAPTATION_MAP.md)

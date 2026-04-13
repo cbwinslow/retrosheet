@@ -218,8 +218,9 @@ rows, which is usable. A 3-year window would be much weaker for rare events. Tha
 
 The current project decision is:
 
-- **Primary modeling policy**: recent-history training with exponential recency weighting.
-- **Default benchmark window**: 7 years.
+- **Current best grouped PA policy**: all seasons `2000-2022` with no recency decay for the grouped advanced HGB benchmark evaluated on `2023-2025`.
+- **Best competing alternatives**: `half_life = 10`, `15-year window`, and `half_life = 7` are close but slightly worse on log loss.
+- **Default benchmark window**: 7 years remains a useful diagnostic benchmark, but it is not the current winning policy.
 - **Required era indicators**: `2020`, `2021-2022`, and `2023+`, with broader environment buckets available as optional features.
 - **Do not discard old data globally**: older seasons should still support priors, rare-class stability, and calibration analysis.
 
@@ -230,11 +231,23 @@ The current project decision is:
    - `--season-half-life`
    - `--exclude-2020`
    - `--downweight-2020`
-2. Add era-feature columns to the PA training views.
-3. Run a temporal sweep over:
+2. Era-feature columns are now present in the PA training views through `season_era` and `rules_context_era`.
+3. Temporal sweep orchestration now exists in `scripts/sweep_pa_outcome_temporal.py`.
+4. Run the full sweep over:
    - `W ∈ {3,5,7,10,15,all}`
    - `h ∈ {3,5,7,10}`
-4. Compare by `2023-2025` multiclass log loss, Brier score, calibration, and subgroup drift.
+5. The grouped advanced sweep at `sample_rate = 0.05` is now complete and ranks HGB policies as follows by log loss:
+   - `all seasons, no decay`: `1.5094`
+   - `all seasons, half_life = 10`: `1.5122`
+   - `15-year window`: `1.5123`
+   - `all seasons, half_life = 7`: `1.5129`
+   - `all seasons, half_life = 5`: `1.5144`
+   - `10-year window`: `1.5168`
+   - `all seasons, half_life = 3`: `1.5201`
+   - `7-year window`: `1.5234`
+   - `5-year window`: `1.5287`
+   - `3-year window`: `1.5429`
+6. Compare by `2023-2025` multiclass log loss, Brier score, calibration, and subgroup drift before promoting a production-style default.
 
 ## Sources
 

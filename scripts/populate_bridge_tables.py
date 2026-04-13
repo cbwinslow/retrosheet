@@ -22,6 +22,97 @@ import psycopg2
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# bridge.team_xref is currently seasonless, so franchise moves/renames that share a
+# single MLBAM team id can only map to one canonical Retrosheet team id here.
+# These mappings prioritize the current/canonical franchise label for live scoring.
+TEAM_ABBREVIATION_TO_RETROSHEET = {
+    "ANA": "ANA",
+    "ATH": "OAK",
+    "ATL": "ATL",
+    "AZ": "ARI",
+    "BAL": "BAL",
+    "BOS": "BOS",
+    "CHC": "CHN",
+    "CIN": "CIN",
+    "CLE": "CLE",
+    "COL": "COL",
+    "CWS": "CHA",
+    "DET": "DET",
+    "FLA": "MIA",
+    "HOU": "HOU",
+    "KC": "KCA",
+    "LA": "ANA",
+    "LAA": "ANA",
+    "LAD": "LAN",
+    "MIA": "MIA",
+    "MIL": "MIL",
+    "MIN": "MIN",
+    "MON": "WAS",
+    "NYM": "NYN",
+    "NYY": "NYA",
+    "OAK": "OAK",
+    "PHI": "PHI",
+    "PIT": "PIT",
+    "SD": "SDN",
+    "SEA": "SEA",
+    "SF": "SFN",
+    "STL": "SLN",
+    "TB": "TBA",
+    "TEX": "TEX",
+    "TOR": "TOR",
+    "WSH": "WAS",
+}
+
+# MLB venue ids are stable for a venue even as the display name changes.
+# Using venue ids avoids name-alias drift for 2000-2025 park reconciliation.
+MLB_VENUE_ID_TO_RETROSHEET_PARK = {
+    1: "ANA01",
+    2: "BAL12",
+    3: "BOS07",
+    4: "CHI12",
+    5: "CLE08",
+    7: "KAN06",
+    8: "MIN03",
+    9: "NYC16",
+    10: "OAK01",
+    12: "STP01",
+    13: "ARL02",
+    14: "TOR02",
+    15: "PHO01",
+    16: "ATL02",
+    17: "CHI11",
+    18: "CIN08",
+    19: "DEN02",
+    20: "MIA01",
+    22: "LOS03",
+    23: "MIL05",
+    24: "MON02",
+    25: "NYC17",
+    26: "PHI12",
+    27: "PIT07",
+    28: "SAN01",
+    30: "STL09",
+    31: "PIT08",
+    32: "MIL06",
+    680: "SEA03",
+    2392: "HOU03",
+    2394: "DET05",
+    2395: "SFO03",
+    2523: "TAM02",
+    2602: "CIN09",
+    2680: "SAN02",
+    2681: "PHI13",
+    2721: "WAS10",
+    2889: "STL10",
+    3289: "NYC20",
+    3309: "WAS11",
+    3312: "MIN04",
+    3313: "NYC21",
+    4169: "MIA02",
+    4705: "ATL03",
+    5325: "ARL03",
+}
+
 
 def database_kwargs() -> dict[str, str]:
     return {
@@ -170,6 +261,143 @@ def insert_player_mappings(conn, records: List[Dict[str, str]]) -> None:
         print(f"Total player mappings inserted: {inserted}")
 
 
+def insert_team_mappings(conn) -> None:
+    """Populate bridge.team_xref with current/canonical MLBAM team mappings."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            WITH latest_teams AS (
+                SELECT DISTINCT ON (mlb_team_id)
+                    mlb_team_id,
+                    abbreviation,
+                    team_name,
+                    season
+                FROM core.mlb_api_teams
+                WHERE mlb_team_id IS NOT NULL
+                ORDER BY mlb_team_id, season DESC
+            )
+            SELECT mlb_team_id, abbreviation, team_name, season
+            FROM latest_teams
+            ORDER BY mlb_team_id
+            """
+        )
+        teams = cur.fetchall()
+
+    inserted = 0
+    skipped = []
+    with conn.cursor() as cur:
+        for mlb_team_id, abbreviation, team_name, season in teams:
+            retrosheet_team_id = TEAM_ABBREVIATION_TO_RETROSHEET.get(abbreviation)
+            if retrosheet_team_id is None:
+                skipped.append(
+                    {
+                        "mlb_team_id": mlb_team_id,
+                        "abbreviation": abbreviation,
+                        "team_name": team_name,
+                        "season": season,
+                        "reason": "no canonical abbreviation mapping",
+                    }
+                )
+                continue
+
+            cur.execute(
+                """
+                UPDATE bridge.team_xref
+                SET mlb_team_id = %s,
+                    updated_at = now()
+                WHERE retrosheet_team_id = %s
+                """,
+                (mlb_team_id, retrosheet_team_id),
+            )
+            if cur.rowcount == 0:
+                skipped.append(
+                    {
+                        "mlb_team_id": mlb_team_id,
+                        "abbreviation": abbreviation,
+                        "team_name": team_name,
+                        "season": season,
+                        "reason": f"missing bridge.team_xref row for {retrosheet_team_id}",
+                    }
+                )
+                continue
+
+            inserted += 1
+
+    conn.commit()
+    print(f"Total team mappings updated: {inserted}")
+    if skipped:
+        print("Team mappings skipped:")
+        for item in skipped:
+            print(json.dumps(item, sort_keys=True))
+
+
+def insert_park_mappings(conn) -> None:
+    """Populate bridge.park_xref with MLB venue id mappings for 2000-2025 venues."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            WITH venues AS (
+                SELECT DISTINCT ON (venue_id)
+                    venue_id,
+                    venue_name,
+                    season
+                FROM core.mlb_api_teams
+                WHERE venue_id IS NOT NULL
+                ORDER BY venue_id, season DESC
+            )
+            SELECT venue_id, venue_name, season
+            FROM venues
+            ORDER BY venue_id
+            """
+        )
+        venues = cur.fetchall()
+
+    inserted = 0
+    skipped = []
+    with conn.cursor() as cur:
+        for venue_id, venue_name, season in venues:
+            retrosheet_park_id = MLB_VENUE_ID_TO_RETROSHEET_PARK.get(venue_id)
+            if retrosheet_park_id is None:
+                skipped.append(
+                    {
+                        "venue_id": venue_id,
+                        "venue_name": venue_name,
+                        "season": season,
+                        "reason": "no canonical venue mapping",
+                    }
+                )
+                continue
+
+            cur.execute(
+                """
+                UPDATE bridge.park_xref
+                SET mlb_venue_id = %s,
+                    updated_at = now()
+                WHERE retrosheet_park_id = %s
+                """,
+                (venue_id, retrosheet_park_id),
+            )
+            if cur.rowcount == 0:
+                skipped.append(
+                    {
+                        "venue_id": venue_id,
+                        "venue_name": venue_name,
+                        "season": season,
+                        "reason": f"missing bridge.park_xref row for {retrosheet_park_id}",
+                    }
+                )
+                continue
+
+            inserted += 1
+
+    conn.commit()
+    print(f"Total park mappings updated: {inserted}")
+    if skipped:
+        print("Park mappings skipped:")
+        for item in skipped:
+            print(json.dumps(item, sort_keys=True))
+
+
 def populate_bridge_tables() -> None:
     """Main function to populate bridge tables."""
     try:
@@ -185,6 +413,8 @@ def populate_bridge_tables() -> None:
         conn = psycopg2.connect(**database_kwargs())
         try:
             insert_player_mappings(conn, records)
+            insert_team_mappings(conn)
+            insert_park_mappings(conn)
             print("Bridge table population complete!")
         finally:
             conn.close()
