@@ -185,5 +185,16 @@ Next improvements:
 - No automated betting/trading.
 - No arbitrary browser shell.
 - No LLM-generated SQL writes.
-- No model binaries in git or Git LFS.
-- No replacement of Retrosheet raw data with transformed-only tables.
+ - No model binaries in git or Git LFS.
+ - No replacement of Retrosheet raw data with transformed-only tables.
+
+ ## New Additions (April 2026)
+
+ The following assets were added to support LLM‑driven retrieval‑augmented generation (RAG) and model management:
+
+ - **`scripts/build_llamaindex.py`** – Placeholder script that will build a LlamaIndex vector store indexing documentation, SQL, and code artifacts.
+ - **`scripts/agent_adapter.py`** – Adapter exposing a unified `BaseballAgent` interface that selects between the legacy custom agent and the forthcoming LangChain implementation based on the `AGENT_BACKEND` environment variable.
+ - **`scripts/langchain_baseball_agent.py`** – Minimal stub for the future LangChain‑based agent, including a no‑op Prometheus counter (`langchain_agent_queries_total`).
+ - **`sql/150_model_registry.sql`** – Migration creating the `models.model_registry` table for tracking model artifacts, versions, and metrics.
+
+ These files are referenced in the updated documentation and issue tracking to ensure traceability and compliance with the project’s AI‑programming standards.
