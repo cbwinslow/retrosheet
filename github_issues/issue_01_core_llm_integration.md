@@ -3,9 +3,14 @@
 <!-- Progress: Updated to include required markdown links and progress comments -->
 
 ## Documentation Links
-- [`AGENTS.md`](../AGENTS.md)
-- [`docs/OVERALL_STRATEGY.md`](../docs/OVERALL_STRATEGY.md)
-- [`docs/agents/ADAPTATION_MAP.md`](../docs/agents/ADAPTATION_MAP.md)
+-- [`AGENTS.md`](../AGENTS.md)
+-- [`docs/OVERALL_STRATEGY.md`](../docs/OVERALL_STRATEGY.md)
+-- [`docs/agents/ADAPTATION_MAP.md`](../docs/agents/ADAPTATION_MAP.md)
+
+## Links & Context
+- **Next Steps Doc**: [Next Steps](../docs/agents/next_steps.md)
+- **SQL Migration**: [MLB Data Completeness](../sql/150_mlb_data_completeness.sql)
+- **Related Issue**: #05_documentation_and_issue_linking
 
 ## Issue #1: 🏗️ Core LLM Integration with Tool Calling
 

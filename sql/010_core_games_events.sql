@@ -170,9 +170,10 @@ SET player_name = COALESCE(EXCLUDED.player_name, core.players.player_name),
     last_season = GREATEST(core.players.last_season, EXCLUDED.last_season),
     updated_at = now();
 
-DROP MATERIALIZED VIEW IF EXISTS features.game_outcome_examples;
-DROP VIEW IF EXISTS core.validation_summary;
-DROP VIEW IF EXISTS core.game_states;
+  -- Drop dependent objects in correct order to avoid dependency errors
+  DROP MATERIALIZED VIEW IF EXISTS features.game_outcome_examples;
+  DROP VIEW IF EXISTS core.validation_summary;
+  DROP VIEW IF EXISTS core.game_states;
 DROP TABLE IF EXISTS core.events CASCADE;
 DROP TABLE IF EXISTS core.games CASCADE;
 
