@@ -1,5 +1,12 @@
 # GitHub Issues for AI Baseball Analytics Chatbot
 
+<!-- Progress: Updated to include required markdown links and progress comments -->
+
+## Documentation Links
+- [`AGENTS.md`](../AGENTS.md)
+- [`docs/OVERALL_STRATEGY.md`](../docs/OVERALL_STRATEGY.md)
+- [`docs/agents/ADAPTATION_MAP.md`](../docs/agents/ADAPTATION_MAP.md)
+
 ## Issue #1: 🏗️ Core LLM Integration with Tool Calling
 
 ### Description

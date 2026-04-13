@@ -1,5 +1,7 @@
 # Issue 5: Documentation & Issue Linking Policy
 
+<!-- Progress: Updated to include required markdown links and progress comments -->
+
 **Purpose**: Establish a project‑wide standard for how GitHub issues are documented, updated, and cross‑referenced. This ensures that every piece of work is traceable, reproducible, and linked to the relevant code, SQL migrations, and design documents.
 
 ## Policy Summary (mirrored in `AGENTS.md`)
@@ -24,4 +26,3 @@
 ---
 
 *Please ensure that any new issue created from now on follows this policy. Add a comment linking back to this issue when the policy is applied.*
-
