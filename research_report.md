@@ -48,17 +48,18 @@ and
 \]
 
 ## 2. Research Framework
+## 2. Research Framework (CRISP‑DM)
 
-The overall program follows the CRISP-DM structure:
+The project adheres to the **CRISP‑DM** (Cross‑Industry Standard Process for Data Mining) methodology, which provides a disciplined, repeatable workflow for data‑driven research.  The six phases are:
 
-1. Business Understanding
-2. Data Understanding
-3. Data Preparation
-4. Modeling
-5. Evaluation
-6. Deployment
+1. **Business Understanding** – Define the problem (probability engine for baseball), success metrics, and constraints.
+2. **Data Understanding** – Explore Retrosheet, Chadwick, and MLB Stats API sources; assess completeness and quality (see Section 4).
+3. **Data Preparation** – Preserve raw layers, build bridge tables, and generate canonical `core` tables; apply the new validation script (`scripts/validate_mlb_ingestion.py`).
+4. **Modeling** – Train plate‑appearance outcome models, experiment with gradient‑boosted trees, and incorporate advanced feature families (Section 5).
+5. **Evaluation** – Use calibrated log‑loss, Brier score, and out‑of‑sample temporal splits (2023‑2025) to assess predictive performance.
+6. **Deployment** – Export models to `models/model_registry`, serve via `fast_prediction_service.py`, and integrate with the LLM‑driven chatbot.
 
-This report focuses primarily on the first four stages and records the current empirical results from the initial modeling phase.
+This explicit CRISP‑DM framing clarifies hand‑offs between the data‑engineering and ML‑engineering teams and ensures that each iteration is documented, reproducible, and auditable.
 
 ## 3. Data Sources And Canonical Warehouse Design
 

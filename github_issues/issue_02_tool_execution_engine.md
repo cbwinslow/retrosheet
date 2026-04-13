@@ -98,3 +98,8 @@ class SafeQueryExecutor:
 - #8 (Testing Framework)
 
 **Labels**: enhancement, security, infrastructure, tools, priority:high
+
+## Links & Context
+- **Next Steps Doc**: [Next Steps](../docs/agents/next_steps.md)
+- **SQL Migration**: [MLB Data Completeness](../sql/150_mlb_data_completeness.sql)
+- **Related Issue**: #05_documentation_and_issue_linking

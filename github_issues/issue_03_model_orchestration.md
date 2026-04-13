@@ -102,8 +102,13 @@ class OddsCalculator:
 - `tests/test_orchestrator.py` - Integration tests
 
 ### Related Issues
-- #2 (Tool Execution Engine)
-- #5 (Real-time Data Pipeline)
-- #7 (API Design)
+ - #2 (Tool Execution Engine)
+ - #5 (Real-time Data Pipeline)
+ - #7 (API Design)
+
+## Links & Context
+- **Next Steps Doc**: [Next Steps](../docs/agents/next_steps.md)
+- **SQL Migration**: [MLB Data Completeness](../sql/150_mlb_data_completeness.sql)
+- **Related Issue**: #05_documentation_and_issue_linking
 
 **Labels**: enhancement, ml, real-time, orchestration, priority:high

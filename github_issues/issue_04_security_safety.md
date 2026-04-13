@@ -97,7 +97,12 @@ class AuditLogger:
 - `tests/test_security.py` - Security and penetration tests
 
 ### Related Issues
-- #2 (Tool Execution Engine)
+ - #2 (Tool Execution Engine)
+
+## Links & Context
+- **Next Steps Doc**: [Next Steps](../docs/agents/next_steps.md)
+- **SQL Migration**: [MLB Data Completeness](../sql/150_mlb_data_completeness.sql)
+- **Related Issue**: #05_documentation_and_issue_linking
 - #7 (API Design)
 - #8 (Testing Framework)
 
