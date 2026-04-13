@@ -1,0 +1,68 @@
+# Core Schema
+
+The raw Chadwick tables intentionally preserve source data as text. The `core` schema is the typed, constrained layer for analytics, ML features, live-data bridging, and prediction targets.
+
+## Tables
+
+- `core.teams`: Retrosheet team identifiers observed in Chadwick game/event data.
+- `core.parks`: Retrosheet park identifiers observed in Chadwick game data.
+- `core.players`: Retrosheet player identifiers observed in events, with best-effort name, batting hand, throwing hand, and season coverage.
+- `core.games`: one typed row per game with team, park, score, pitcher, date, weather, and winner fields.
+- `core.events`: one typed row per event/play with game state, batter/pitcher, outcome flags, scores before/after, and plate-appearance flags.
+- `core.plate_appearances`: one typed row per completed plate appearance with batter/pitcher matchup context and common PA outcome labels.
+- `core.game_states`: model-friendly view joining events to games and final game outcomes.
+- `features.game_outcome_examples`: materialized training examples for baseline win-probability models.
+- `features.plate_appearance_examples`: materialized training examples for hit, walk, strikeout, reach-base, home-run, and extra-base-hit models.
+- `raw_retrosheet.biofile`, `raw_retrosheet.teams_reference`, and `raw_retrosheet.ballparks_reference`: source-preserved Retrosheet reference metadata loaded from the cloned Retrosheet repository.
+- `raw_retrosheet.biofile_legacy`, `raw_retrosheet.coaches`, `raw_retrosheet.ejections`, `raw_retrosheet.relatives`, `raw_retrosheet.season_rosters`, `raw_retrosheet.season_teams`, `raw_retrosheet.season_schedules`, `raw_retrosheet.season_umpires`, and `raw_retrosheet.special_gamelog_lines`: source-preserved Retrosheet auxiliary metadata.
+- `core.roster_entries`, `core.allstar_roster_entries`, `core.allstar_games`, `core.scheduled_games`, `core.umpires`, `core.coach_assignments`, `core.ejections`, and `core.player_relatives`: typed views over auxiliary Retrosheet metadata for modeling, validation, and future MLB ID bridging.
+- `features.batter_prior_season_pa_summary`, `features.pitcher_prior_season_pa_summary`, `features.team_prior_season_summary`, `features.pa_context_prior_season_rates`, and `features.half_inning_outcome_summary`: indexed materialized feature marts for model joins, scenario queries, and live inference baselines.
+- `features.pa_context_coarse_prior_season_rates`, `features.batter_career_prior_pa_summary`, `features.pitcher_career_prior_pa_summary`, `features.batter_pitcher_prior_matchup_summary`, `features.park_prior_season_run_environment`, and `features.team_rolling_30_game_summary`: advanced leakage-safe feature marts for stronger models.
+- `features.plate_appearance_advanced_examples` and `features.game_outcome_advanced_examples`: advanced training views that join base examples to career, matchup, context, park, and rolling-team features.
+- `features.team_game_context`, `features.player_production_season`, and `features.pitcher_production_season`: temporal team context and production reporting marts.
+- `features.plate_appearance_temporal_examples` and `features.game_outcome_temporal_examples`: temporal training views that add rest/travel/doubleheader context to advanced examples.
+
+## Constraints And Indexes
+
+- `core.games.game_id` is the primary key.
+- `core.events` uses `(game_id, event_id)` as the primary key.
+- `core.events.game_id` references `core.games`.
+- Team, park, batter, pitcher, and pitcher-decision fields use foreign keys where source IDs are available.
+- Common query paths are indexed by season/date, team/date, game sequence, game state, batter, pitcher, and plate appearance.
+
+## Raw-To-Core Rule
+
+Do not mutate raw Chadwick tables to make modeling easier. Add typed columns, constraints, and derived feature logic in `core`, `features`, `models`, and `predictions`.
+
+## Refresh
+
+After raw Chadwick tables are loaded, apply:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/010_core_games_events.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/020_plate_appearances.sql
+python3 scripts/load_reference_metadata.py
+python3 scripts/load_auxiliary_retrosheet.py
+psql -h localhost -p 5432 -d retrosheet -f sql/050_feature_marts.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/060_advanced_feature_marts.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/070_temporal_and_production_marts.sql
+```
+
+Then refresh the materialized feature table after future core changes:
+
+```sql
+REFRESH MATERIALIZED VIEW CONCURRENTLY features.game_outcome_examples;
+```
+
+After feature marts are rebuilt, train enriched models with:
+
+```bash
+python3 scripts/train_models.py --target-id pa_batter_hit --sample-rate 0.05 --train-through 2022 --feature-set enriched
+python3 scripts/promote_best_models.py --target-prefix 'pa_%' --min-validation-rows 10000
+```
+
+For larger searches, use:
+
+```bash
+python3 scripts/sweep_hyperparameters.py --target-id pa_batter_hit --feature-set advanced --sample-rate 0.05 --max-candidates 12
+```

@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest
+
+      - name: Run unit tests
+        run: pytest
+
+      - name: Build LlamaIndex placeholder
+        run: |
+          python scripts/build_llamaindex.py
+
+      - name: Sanity‑check LlamaIndex query via adapter
+        env:
+          AGENT_BACKEND: langchain
+        run: |
+          python - <<'PY'
+          import os
+          from scripts.agent_adapter import BaseballAgent
+          os.environ['AGENT_BACKEND'] = 'langchain'
+          agent = BaseballAgent()
+          result = agent.process_query('sanity check query')
+          if result.get('status') != 'placeholder':
+              raise SystemExit('Sanity check failed')
+          print('Sanity check passed:', result)
+          PY
+

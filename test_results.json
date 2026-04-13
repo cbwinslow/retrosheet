@@ -1,0 +1,32 @@
+{
+  "inference_schema_exists": {
+    "test_name": "inference_schema_exists",
+    "status": "PASS",
+    "duration": 0.004487037658691406,
+    "result": true
+  },
+  "inference_view_plate_appearance_features_exists": {
+    "test_name": "inference_view_plate_appearance_features_exists",
+    "status": "PASS",
+    "duration": 0.0030107498168945312,
+    "result": false
+  },
+  "inference_function_get_plate_appearance_features_exists": {
+    "test_name": "inference_function_get_plate_appearance_features_exists",
+    "status": "PASS",
+    "duration": 0.009730100631713867,
+    "result": true
+  },
+  "inference_function_predict_plate_appearance_batch_exists": {
+    "test_name": "inference_function_predict_plate_appearance_batch_exists",
+    "status": "PASS",
+    "duration": 0.001705169677734375,
+    "result": true
+  },
+  "simulation_states_table_exists": {
+    "test_name": "simulation_states_table_exists",
+    "status": "PASS",
+    "duration": 0.0019288063049316406,
+    "result": true
+  }
+}
