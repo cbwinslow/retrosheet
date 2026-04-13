@@ -4,6 +4,8 @@ PostgreSQL-first warehouse tooling for historical Retrosheet play-by-play data a
 
 The goal is to train models on historical play-by-play states, then run the same feature pipeline against live MLB data.
 
+For the paper-style running research narrative, see [research_report.md](research_report.md).
+
 ## Architecture
 
 - `raw_retrosheet`: source-preserved Retrosheet/Chadwick extracts.
@@ -58,6 +60,9 @@ psql -h localhost -p 5432 -d retrosheet -f sql/070_temporal_and_production_marts
 psql -h localhost -p 5432 -d retrosheet -f sql/075_interface_workflows.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/076_plate_appearance_outcome_model.sql
 psql -h localhost -p 5432 -d retrosheet -f sql/077_pitch_sequence_model.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/078_plate_appearance_outcome_grouped.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/079_probability_evaluation_reports.sql
+psql -h localhost -p 5432 -d retrosheet -f sql/081_probability_calibration_artifacts.sql
 ```
 
 `load_reference_metadata.py` loads Retrosheet `biofile.csv`, `teams.csv`, and `ballparks.csv`, backfills player handedness, and refreshes the materialized feature views.
@@ -73,6 +78,16 @@ psql -h localhost -p 5432 -d retrosheet -f sql/077_pitch_sequence_model.sql
 `sql/076_plate_appearance_outcome_model.sql` adds a granular multiclass plate-appearance outcome feature layer, reusable season-era / rules-era columns, and registers the `pa_outcome_distribution` prediction target. See [docs/AT_BAT_OUTCOME_MODEL_REVIEW.md](docs/AT_BAT_OUTCOME_MODEL_REVIEW.md) for how this maps the at-bat outcome design spec onto the current warehouse.
 
 `sql/077_pitch_sequence_model.sql` normalizes `pitch_seq_tx` into one row per Retrosheet pitch-sequence symbol, preserves official symbol semantics, and exposes reusable pitch-sequence features for future same-PA and pitch-level modeling.
+
+`sql/078_plate_appearance_outcome_grouped.sql` adds the grouped PA outcome layer used by the first stable direct multiclass PA benchmarks.
+
+`sql/079_probability_evaluation_reports.sql` adds durable calibration and bootstrap report storage in `predictions`.
+
+`sql/081_probability_calibration_artifacts.sql` extends calibration reports with persisted artifact support so calibrated multiclass scorers can load a registered isotonic artifact by report name or latest report.
+
+`sql/082_count_state_feature_marts.sql` adds batter, pitcher, and context prior-rate marts split by ball-strike count plus `features.plate_appearance_count_state_advanced_examples` for count-state-enhanced PA modeling.
+
+`sql/122_live_pa_feature_parity.sql` adds the first live `advanced_count` parity view, `features.live_plate_appearance_advanced_count_examples`, so the current best historical PA model can score stored MLB live plate appearances. Player/count/context priors are wired, and park/team rolling priors now populate for rows transformed through the repaired bridge path. Older `core.live_*` rows that were transformed before the bridge repair still need a replay/backfill pass if you want those priors populated historically.
 
 ## Retrosheet Play-By-Play
 
@@ -109,6 +124,8 @@ See [docs/RESEARCH_METHODOLOGY.md](docs/RESEARCH_METHODOLOGY.md) for the formal 
 
 See [docs/TEMPORAL_MODEL_SELECTION.md](docs/TEMPORAL_MODEL_SELECTION.md) for the recency-weighting policy, era segmentation, fixed-window benchmarks, and validation procedure for choosing how much history to train on.
 
+See [docs/EDGEFORGE_TRIAGE.md](docs/EDGEFORGE_TRIAGE.md) for the current status of the unintegrated EdgeForge / MLB-enhanced files. Those files are experimental until they are merged into the documented warehouse architecture.
+
 See [docs/CORE_SCHEMA.md](docs/CORE_SCHEMA.md) for the typed database layer, constraints, indexes, and feature seed.
 
 See [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md) for a running build log of major warehouse, modeling, and planning steps.
@@ -134,7 +151,13 @@ Populate bridge tables for ID mapping between MLB and Retrosheet systems:
 python3 scripts/populate_bridge_tables.py
 ```
 
-This downloads the Chadwick Bureau Register and populates player mappings. Team and park mappings stay in `bridge` as separate tables.
+This downloads the Chadwick Bureau Register and populates:
+
+- `bridge.player_xref`
+- `bridge.team_xref`
+- `bridge.park_xref`
+
+Important limitation: `bridge.team_xref` is currently seasonless. Current/canonical MLB franchise ids are mapped for live scoring, but franchise-move cases such as `MON -> WAS` and `FLA -> MIA` still need a future season-aware bridge design if you want perfect historical MLB-team reconciliation across the entire `2000-2025` raw MLB archive.
 
 ### Ongoing Live Data Ingestion
 
@@ -161,6 +184,14 @@ psql -h localhost -p 5432 -d retrosheet -c "REFRESH MATERIALIZED VIEW analysis.c
 
 New raw snapshots store request params, HTTP status, checksum, game date, and season in addition to the full JSON payload.
 
+If you need to reapply bridge/transform fixes to already stored MLB snapshots, use the bounded replay utility:
+
+```bash
+python3 scripts/replay_live_bridge_backfill.py --season-from 2019 --season-to 2019 --limit 50
+```
+
+Start with regular-season slices. Spring-training and other non-regular-season venues may still remain as `MLB###` park fallbacks until a broader non-regular-season park crosswalk is added.
+
 ### Combined Data Analysis
 
 Query across historical and live data using analysis views:
@@ -182,6 +213,41 @@ WHERE ce.source_type = 'mlb_live'
 ```
 
 See [docs/LIVE_DATA_ARCHITECTURE.md](docs/LIVE_DATA_ARCHITECTURE.md) for complete architecture diagrams and procedures.
+
+### Historical MLB Raw Backfill
+
+For bulk historical MLB raw acquisition, use:
+
+```bash
+python3 scripts/download_mlb_bulk.py --start-season 2000 --end-season 2025 --mode schedules
+python3 scripts/download_mlb_bulk.py --start-season 2000 --end-season 2025 --mode games --workers 4 --delay 1.0
+```
+
+This path backfills source-preserved rows into `raw_mlb.schedule_snapshots` and `raw_mlb.live_feed_snapshots` with request/status/error provenance. It is the canonical historical MLB raw backfill utility. Follow it with the documented canonical transform path rather than building a second parallel MLB warehouse.
+
+For broader MLB source coverage beyond schedules and game feeds, also backfill reference endpoints:
+
+```bash
+python3 scripts/fetch_mlb_reference_data.py --start-season 2000 --end-season 2025
+```
+
+This stores source-preserved snapshots for `teams`, `rosters`, `people`, `venues`, and `standings` in `raw_mlb.reference_snapshots`. In practice, this is the canonical answer to “download all MLB source data” for the project’s modeling scope: game schedules, live feeds, and the main reference endpoint families needed for enrichment and reconciliation.
+
+Build the typed reference layer with:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -v ON_ERROR_STOP=1 -f sql/095_mlb_reference_views.sql
+```
+
+This creates:
+
+- `core.mlb_api_teams`
+- `core.mlb_api_team_rosters`
+- `core.mlb_api_players`
+- `core.mlb_api_venues`
+- `core.mlb_api_standings`
+
+These views intentionally read from the latest successful raw snapshots. Keep source preservation in `raw_mlb`; put typing and downstream joins in `core`.
 
 ## Modeling
 
@@ -209,6 +275,13 @@ Train the granular multiclass plate-appearance outcome distribution model:
 python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022 --no-activate
 ```
 
+Train the grouped baseline multiclass plate-appearance outcome model:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/078_plate_appearance_outcome_grouped.sql
+python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --target-taxonomy grouped --sample-rate 0.05 --train-through 2022 --no-activate
+```
+
 Train the same model with explicit temporal policy controls:
 
 ```bash
@@ -216,10 +289,50 @@ python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample
 python3 scripts/train_pa_outcome_distribution.py --feature-set advanced --sample-rate 0.05 --train-through 2022 --season-half-life 5 --downweight-2020 0.5 --no-activate
 ```
 
+Train the count-state-enhanced grouped multiclass PA model:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/082_count_state_feature_marts.sql
+python3 scripts/train_pa_outcome_distribution.py --feature-set advanced_count --target-taxonomy grouped --sample-rate 0.05 --train-through 2022 --no-activate
+```
+
 Score a historical plate appearance with a registered multiclass outcome model:
 
 ```bash
 python3 scripts/predict_pa_outcome_distribution.py --game-id ANA202506060 --plate-appearance-id 30
+```
+
+Persist calibration and bootstrap evidence for a registered multiclass outcome model:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/079_probability_evaluation_reports.sql
+python3 scripts/persist_pa_outcome_reports.py --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z
+```
+
+This stores durable records in:
+
+- `predictions.prediction_runs`
+- `predictions.calibration_reports`
+- `predictions.bootstrap_reports`
+
+Register a reusable isotonic calibration artifact and score with calibrated probabilities:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/081_probability_calibration_artifacts.sql
+python3 scripts/register_pa_outcome_calibration.py --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z
+python3 scripts/predict_pa_outcome_distribution.py --game-id ANA202506060 --plate-appearance-id 30 --model-name hist_gradient_boosting_multiclass --model-version 20260411T230512Z --apply-calibration
+```
+
+The Next.js `/api/predict` route accepts the same optional calibration controls for `target_id = "pa_outcome_distribution"`:
+
+- `apply_calibration`
+- `calibration_report_name`
+
+Score a stored live MLB plate appearance with the same calibrated `advanced_count` model:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/122_live_pa_feature_parity.sql
+python3 scripts/predict_live_pa_outcome_distribution.py --game-id MLB117201910300 --plate-appearance-id 79 --model-version 20260412T045759Z --apply-calibration
 ```
 
 Run a reproducible hyperparameter sweep without committing model binaries:

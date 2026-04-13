@@ -19,6 +19,7 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 - Keep this `AGENTS.md` current when project conventions change.
 - Keep `docs/agents/` current when file purposes, modeling goals, or canonical procedures change.
 - Keep `docs/PROJECT_LOG.md` current with significant completed work, validation counts, and next-step decisions.
+- Treat unintegrated `EdgeForge` / `mlb_features` / `mlb_models` / `mlb_enhanced` files as experimental until they are explicitly merged into the canonical warehouse layers and documented in `docs/agents/FILE_INVENTORY.md`. See `docs/EDGEFORGE_TRIAGE.md`.
 - Use Chadwick-generated headers and documented field names instead of hand-invented column mappings.
 - Put database typing, constraints, foreign keys, indexes, and reusable ML features in `core`, `features`, `models`, and `predictions`, not in raw landing tables.
 - Maintain reproducibility: scripts should run from a clean checkout with documented dependencies.
@@ -28,9 +29,9 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 ## Data Layers
 
 - `raw_retrosheet`: source-preserved Chadwick extracts and Retrosheet reference tables.
-- `raw_mlb`: source-preserved MLB Stats API / GUMBO live snapshots.
+- `raw_mlb`: source-preserved MLB Stats API / GUMBO schedules, live game feeds, and reference endpoint snapshots.
 - `bridge`: cross-reference tables between Retrosheet IDs, MLB IDs, and other public IDs.
-- `core`: canonical baseball entities and game-state views shared by historical and live sources.
+- `core`: canonical baseball entities, typed MLB reference views, and game-state views shared by historical and live sources.
 - `features`: ML-ready training and inference tables.
 - `predictions`: model outputs, backtests, and live prediction snapshots.
 
@@ -39,6 +40,7 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 Use these docs as the project map:
 
 - `docs/agents/PROJECT_OBJECTIVES.md`: prediction-engine objectives, modeling goals, and non-goals.
+- `docs/agents/CURRENT_SNAPSHOT.md`: shortest handoff doc for current architecture, model status, blockers, and next steps.
 - `docs/agents/FILE_INVENTORY.md`: inventory of SQL, scripts, docs, interface routes, generated artifacts, and ownership.
 - `docs/agents/PROCEDURES.md`: canonical workflows for warehouse rebuilds, target creation, feature marts, model training, simulation, live bridge work, interface changes, and GitHub issues.
 - `docs/agents/MODELING_WORKFLOWS.md`: target/model inventory, evaluation priorities, Moneyball-style modeling goals, leakage checklist, and promotion rules.
@@ -141,7 +143,15 @@ For the broader reusable probability engine, follow `docs/PREDICTION_ENGINE_PLAN
 
 Use `scripts/train_models.py` for first-pass model training. Store model artifacts under `data/models/`, register metrics in `models.model_registry`, and keep AI inference providers configured through environment variables rather than hard-coded secrets.
 
-When creating GitHub issues, include concrete links to relevant docs, scripts, migrations, and tables. Issues should be written as durable project records, not vague reminders.
+When creating or updating GitHub issues, always include concrete markdown links to relevant documentation, scripts, migrations, and tables, and provide detailed comments describing progress, decisions, and next steps.
+
+### Documentation & Issue Linking Policy
+- **Comprehensive Updates**: Every issue must contain a detailed comment thread that records the rationale, implementation details, and any open questions.
+- **Linking**: Include markdown links (`[doc](path/to/doc.md)`) to all related documents (e.g., `docs/agents/*.md`), code files, SQL migrations, and other GitHub issues or sub‑issues.
+- **Cross‑Reference**: When an issue resolves or depends on another, reference the related issue number (e.g., `#42`) and add a comment linking back.
+- **Sub‑issues**: For large tasks, create sub‑issues and link them in the parent issue description and comments.
+- **Review Cycle**: Before closing, ensure the issue thread fully captures the work performed and all relevant artifacts are linked.
+- **Automation**: Use the repository's issue templates to enforce these fields where possible.
 
 Load Retrosheet reference metadata with `scripts/load_reference_metadata.py` after rebuilding `core.games`, `core.events`, and `core.plate_appearances`; it backfills player handedness and refreshes feature materialized views.
 

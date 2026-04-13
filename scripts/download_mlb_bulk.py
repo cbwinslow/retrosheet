@@ -6,6 +6,7 @@ Focuses on game days only and uses intelligent batching for efficiency.
 
 import argparse
 import concurrent.futures
+import hashlib
 import json
 import os
 import time
@@ -83,13 +84,20 @@ def store_schedule_batch(results: list):
     try:
         with conn.cursor() as cur:
             for date_str, result in results:
+                # Idempotent raw acquisition rule: once a successful snapshot exists
+                # for a schedule date, reruns should not append another success row.
                 cur.execute(
                     """
                     INSERT INTO raw_mlb.schedule_snapshots
                     (snapshot_date, fetched_at, endpoint, payload, request_params,
                      http_status, response_time_ms, error_text)
-                    VALUES (%s, now(), %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (snapshot_date, fetched_at) DO NOTHING
+                    SELECT %s, now(), %s, %s, %s, %s, %s, %s
+                    WHERE NOT EXISTS (
+                        SELECT 1
+                        FROM raw_mlb.schedule_snapshots existing
+                        WHERE existing.snapshot_date = %s
+                          AND existing.http_status = 200
+                    )
                 """,
                     (
                         date_str,
@@ -101,6 +109,7 @@ def store_schedule_batch(results: list):
                         result.get("http_status"),
                         result.get("response_time_ms"),
                         result.get("error") if not result.get("success") else None,
+                        date_str,
                     ),
                 )
 
@@ -195,7 +204,7 @@ def download_game_feeds_for_season(season: int, max_workers: int = 4) -> int:
                     downloaded += 1
 
             # Rate limiting between batches
-            time.sleep(2)
+            time.sleep(1)
 
     print(f"✅ Downloaded {downloaded}/{len(games)} game feeds for {season}")
     return downloaded
@@ -206,6 +215,7 @@ def download_and_store_game_feed(game_pk: int) -> bool:
     import urllib.request
 
     url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
+    conn = None
 
     try:
         start_time = time.time()
@@ -215,6 +225,7 @@ def download_and_store_game_feed(game_pk: int) -> bool:
 
             if response.status == 200:
                 data = json.loads(response.read().decode("utf-8"))
+                payload_json = json.dumps(data, separators=(",", ":"))
 
                 # Extract metadata for indexing
                 game_data = data.get("gameData", {})
@@ -225,29 +236,40 @@ def download_and_store_game_feed(game_pk: int) -> bool:
                     else None
                 )
                 season = game_info.get("season")
+                payload_checksum = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+                request_params = {"game_pk": int(game_pk)}
 
                 # Store in database
                 conn = psycopg2.connect(**database_kwargs())
                 try:
                     with conn.cursor() as cur:
+                        # Idempotent raw acquisition rule: once a successful game feed
+                        # exists for a game_pk, reruns should not append another success row.
                         cur.execute(
                             """
                             INSERT INTO raw_mlb.live_feed_snapshots
                             (game_pk, fetched_at, endpoint, payload, request_params,
-                             http_status, response_time_ms, error_text, game_date, season)
-                            VALUES (%s, now(), %s, %s, %s, %s, %s, %s, %s, %s)
-                            ON CONFLICT (game_pk, fetched_at) DO NOTHING
+                             http_status, response_time_ms, error_text, payload_checksum, game_date, season)
+                            SELECT %s, now(), %s, %s, %s, %s, %s, %s, %s, %s, %s
+                            WHERE NOT EXISTS (
+                                SELECT 1
+                                FROM raw_mlb.live_feed_snapshots existing
+                                WHERE existing.game_pk = %s
+                                  AND existing.http_status = 200
+                            )
                         """,
                             (
                                 game_pk,
                                 url,
                                 Json(data),
-                                Json({}),
+                                Json(request_params),
                                 response.status,
                                 response_time_ms,
                                 None,
+                                payload_checksum,
                                 game_date,
                                 season,
+                                game_pk,
                             ),
                         )
 
@@ -259,11 +281,63 @@ def download_and_store_game_feed(game_pk: int) -> bool:
 
             else:
                 print(f"❌ HTTP {response.status} for game {game_pk}")
+                conn = psycopg2.connect(**database_kwargs())
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        INSERT INTO raw_mlb.live_feed_snapshots
+                        (game_pk, fetched_at, endpoint, payload, request_params,
+                         http_status, response_time_ms, error_text, payload_checksum, game_date, season)
+                        VALUES (%s, now(), %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                        (
+                            game_pk,
+                            url,
+                            Json({}),
+                            Json({"game_pk": int(game_pk)}),
+                            response.status,
+                            response_time_ms,
+                            f"HTTP {response.status}",
+                            None,
+                            None,
+                            None,
+                        ),
+                    )
+                conn.commit()
                 return False
 
     except Exception as e:
         print(f"❌ Error downloading game {game_pk}: {e}")
+        try:
+            conn = psycopg2.connect(**database_kwargs())
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO raw_mlb.live_feed_snapshots
+                    (game_pk, fetched_at, endpoint, payload, request_params,
+                     http_status, response_time_ms, error_text, payload_checksum, game_date, season)
+                    VALUES (%s, now(), %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                    (
+                        game_pk,
+                        url,
+                        Json({}),
+                        Json({"game_pk": int(game_pk)}),
+                        None,
+                        None,
+                        str(e),
+                        None,
+                        None,
+                        None,
+                    ),
+                )
+            conn.commit()
+        except Exception as insert_error:
+            print(f"❌ Failed to persist download error for game {game_pk}: {insert_error}")
         return False
+    finally:
+        if conn is not None:
+            conn.close()
 
 
 def main():
@@ -283,10 +357,10 @@ def main():
         help="What to download: schedules, games, or both",
     )
     parser.add_argument(
-        "--workers", type=int, default=4, help="Number of parallel workers"
+        "--workers", type=int, default=8, help="Number of parallel workers"
     )
     parser.add_argument(
-        "--delay", type=float, default=1.0, help="Delay between requests"
+        "--delay", type=float, default=0.5, help="Delay between requests"
     )
 
     args = parser.parse_args()
