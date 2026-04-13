@@ -13,11 +13,13 @@ echo "Rebuilding Retrosheet warehouse for years: ${YEARS}"
 echo "Database: ${PGHOST}:${PGPORT}/${PGDATABASE}"
 
 python3 scripts/warehouse.py check-deps
-# Skip fetching Retrosheet data if SKIP_FETCH is set; assumes raw data already present.
-if [ -z "${SKIP_FETCH:-}" ]; then
+# By default, skip the large Retrosheet download to preserve existing raw data.
+# To force a fresh download, set FETCH_RETROSHEET=1 before running.
+if [ -n "${FETCH_RETROSHEET:-}" ]; then
+  echo "[info] FETCH_RETROSHEET is set – downloading Retrosheet data."
   python3 scripts/warehouse.py fetch-retrosheet
 else
-  echo "[info] Skipping Retrosheet download (SKIP_FETCH set)."
+  echo "[info] Skipping Retrosheet download (default). Set FETCH_RETROSHEET=1 to re-download."
 fi
 python3 scripts/warehouse.py init-db
 python3 scripts/warehouse.py extract-chadwick --years "$YEARS" --outputs all
