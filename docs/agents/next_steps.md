@@ -4,6 +4,10 @@
 	- Run `scripts/complete_mlb_ingestion.sh` to ensure all seasons 2000‑2025 are present.
 	- Verify completeness with the new view `raw_mlb.latest_feed` and the validation script `scripts/validate_mlb_ingestion.py`.
 	- Add any missing schedules or game feeds via `scripts/download_mlb_bulk.py` (now includes jitter and retry logic).
+	- **Optional RAG setup** – after the KB is populated, run `python3 scripts/ingest_kb_llamaindex.py` to build a LlamaIndex vector store for semantic search over the knowledge base.
+	- **Optional RAG setup** – after the KB is populated, run `make kb` (or the individual scripts) to build a LlamaIndex vector store for semantic search over the knowledge base.
+	- **Optional RAG setup** – after the KB is populated, run `make kb` (or the individual scripts) to build a LlamaIndex vector store for semantic search over the knowledge base.
+	- For bulk/parallel execution, use `make kb_parallel` which runs the scrape, download, and web‑search steps concurrently before optional ingestion.
 
 ## 2. Implement Real‑Time Query Progress Monitoring
 - Deploy the FastAPI endpoint (`scripts/query_monitor.py`) that surfaces `pg_stat_activity` and `mlb.query_progress`.

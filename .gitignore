@@ -55,6 +55,9 @@ venv.bak/
 # VS Code
 .vscode/
 
+# Knowledge‑base folder (large PDFs, scraped HTML, logs)
+kb/
+
 # Local data
 data/
 *.log

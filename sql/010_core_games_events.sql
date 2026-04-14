@@ -171,7 +171,12 @@ SET player_name = COALESCE(EXCLUDED.player_name, core.players.player_name),
     updated_at = now();
 
   -- Drop dependent objects in correct order to avoid dependency errors
-  DROP MATERIALIZED VIEW IF EXISTS features.game_outcome_examples;
+  -- Views that depend on the materialized view must be dropped first
+  -- Use CASCADE to automatically drop any objects that depend on the materialized view.
+  DROP VIEW IF EXISTS features.temporal_production_validation_summary;
+  DROP VIEW IF EXISTS features.game_outcome_temporal_examples;
+  DROP VIEW IF EXISTS features.game_outcome_advanced_examples;
+  DROP MATERIALIZED VIEW IF EXISTS features.game_outcome_examples CASCADE;
   DROP VIEW IF EXISTS core.validation_summary;
   DROP VIEW IF EXISTS core.game_states;
 DROP TABLE IF EXISTS core.events CASCADE;

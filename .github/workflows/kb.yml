@@ -1,0 +1,35 @@
+name: Knowledge Base Refresh
+
+on:
+  schedule:
+    # Run every day at 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  refresh-kb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install requests beautifulsoup4 tqdm llama-index openai pymupdf
+
+      - name: Run KB pipeline in parallel
+        run: |
+          make kb_parallel
+
+      - name: Upload KB artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: knowledge-base
+          path: kb/**

@@ -159,6 +159,7 @@ FROM core.live_events;
 
 -- Materialized view for combined plate appearances (refreshed periodically)
 -- This combines historical plate appearances with live events converted to PA format
+DROP MATERIALIZED VIEW IF EXISTS analysis.combined_plate_appearances CASCADE;
 CREATE MATERIALIZED VIEW analysis.combined_plate_appearances AS
 SELECT
     game_id,
@@ -220,12 +221,12 @@ SELECT
 FROM core.live_events
 WHERE is_plate_appearance = true;
 
--- Create indexes on the materialized view
-CREATE INDEX combined_plate_appearances_season_idx
+-- Create indexes on the materialized view (if they do not already exist)
+CREATE INDEX IF NOT EXISTS combined_plate_appearances_season_idx
     ON analysis.combined_plate_appearances (season);
-CREATE INDEX combined_plate_appearances_batter_idx
+CREATE INDEX IF NOT EXISTS combined_plate_appearances_batter_idx
     ON analysis.combined_plate_appearances (batter_id);
-CREATE INDEX combined_plate_appearances_game_idx
+CREATE INDEX IF NOT EXISTS combined_plate_appearances_game_idx
     ON analysis.combined_plate_appearances (game_id);
 
 -- Function to refresh combined data views
