@@ -2,7 +2,10 @@ CREATE SCHEMA IF NOT EXISTS core;
 CREATE SCHEMA IF NOT EXISTS features;
 CREATE SCHEMA IF NOT EXISTS predictions;
 
-DROP MATERIALIZED VIEW IF EXISTS features.plate_appearance_examples;
+-- Drop dependent view that references the materialized view
+DROP VIEW IF EXISTS core.plate_appearance_validation_summary;
+-- Use CASCADE to ensure any lingering dependents are removed safely
+DROP MATERIALIZED VIEW IF EXISTS features.plate_appearance_examples CASCADE;
 DROP TABLE IF EXISTS core.plate_appearances CASCADE;
 
 CREATE TABLE core.plate_appearances AS

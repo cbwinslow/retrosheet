@@ -16,6 +16,16 @@
 - CI pipeline passes all steps.
 
 ## Links & Context
-- **Documentation**: [Next Steps](../docs/agents/next_steps.md)
-- **SQL Migration**: [MLB Data Completeness](../sql/150_mlb_data_completeness.sql)
-- **Related Issue**: #05_documentation_and_issue_linking
+-- **Documentation**: [Next Steps](../docs/agents/next_steps.md)
+-- **SQL Migration**: [MLB Data Completeness](../sql/150_mlb_data_completeness.sql)
+-- **Related Issue**: #05_documentation_and_issue_linking
+
+### Recent Update
+
+*Added team‑game‑context features to the enriched numeric feature list in `scripts/train_models.py`.*
+
+- **File modified**: `scripts/train_models.py`
+- **Features added**: `days_since_previous_game`, `played_yesterday`, `doubleheader_same_day`, `same_park_as_previous_game`, `changed_home_road_status`, `same_opponent_as_previous_game`
+- **Purpose**: Incorporate temporal context from `features.team_game_context` into the model training pipeline.
+
+These changes support the **Model Training Pipeline** task by enriching the feature set used for model training and validation.

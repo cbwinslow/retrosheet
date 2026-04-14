@@ -109,6 +109,13 @@ GAME_ENRICHED_NUMERIC_FEATURES = GAME_NUMERIC_FEATURES + [
     "context_prior_reach_base_rate",
     "context_prior_extra_base_hit_rate",
     "context_prior_batting_team_win_rate",
+    # Team game‑context features from features.team_game_context
+    "days_since_previous_game",
+    "played_yesterday",
+    "doubleheader_same_day",
+    "same_park_as_previous_game",
+    "changed_home_road_status",
+    "same_opponent_as_previous_game",
 ]
 GAME_ENRICHED_CATEGORICAL_FEATURES = GAME_CATEGORICAL_FEATURES
 PA_ADVANCED_NUMERIC_FEATURES = PA_NUMERIC_FEATURES + [

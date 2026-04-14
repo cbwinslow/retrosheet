@@ -8,10 +8,11 @@ export async function GET() {
       queryJson(`
         SELECT object_name, row_count
         FROM (
-          SELECT * FROM core.auxiliary_validation_summary
-          UNION ALL SELECT * FROM features.feature_mart_validation_summary
-          UNION ALL SELECT * FROM features.advanced_feature_mart_validation_summary
-          UNION ALL SELECT * FROM features.temporal_production_validation_summary
+        SELECT * FROM core.auxiliary_validation_summary
+        UNION ALL SELECT * FROM features.feature_mart_validation_summary
+        UNION ALL SELECT * FROM features.advanced_feature_mart_validation_summary
+        UNION ALL SELECT * FROM features.temporal_production_validation_summary
+        UNION ALL SELECT * FROM features.count_state_feature_mart_validation_summary
         ) summary
         ORDER BY object_name
       `),

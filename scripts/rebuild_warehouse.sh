@@ -52,3 +52,9 @@ psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/122_li
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/130_analysis_views.sql
 
 echo "Warehouse rebuild complete."
+
+# Start the FastAPI query monitor in the background (non‑blocking).
+# This provides real‑time visibility into any long‑running queries that may be
+# triggered by subsequent operations (e.g., model training, data ingestion).
+# The monitor runs on port 8000 and binds to all interfaces.
+nohup uvicorn scripts.query_monitor:app --host 0.0.0.0 --port 8000 >/dev/null 2>&1 &
