@@ -17,6 +17,7 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 - Prefer additive migrations and views over destructive schema changes.
 - Keep `README.md` current when commands, setup, or workflow changes.
 - Keep this `AGENTS.md` current when project conventions change.
+ - Add and maintain backup procedures for database objects. See `scripts/backup_procedures.sh`.
 - Keep `docs/agents/` current when file purposes, modeling goals, or canonical procedures change.
 - Keep `docs/PROJECT_LOG.md` current with significant completed work, validation counts, and next-step decisions.
 - Treat unintegrated `EdgeForge` / `mlb_features` / `mlb_models` / `mlb_enhanced` files as experimental until they are explicitly merged into the canonical warehouse layers and documented in `docs/agents/FILE_INVENTORY.md`. See `docs/EDGEFORGE_TRIAGE.md`.

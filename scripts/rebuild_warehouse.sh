@@ -32,6 +32,8 @@ psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/091_ml
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/095_mlb_reference_views.sql
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/100_bridge_tables.sql
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/110_live_core_tables.sql
+# Load MLB play‑by‑play table definition
+psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/080_mlb_pbp.sql
 python3 scripts/load_reference_metadata.py
 python3 scripts/load_auxiliary_retrosheet.py
 
