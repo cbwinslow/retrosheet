@@ -1,10 +1,10 @@
 CREATE SCHEMA IF NOT EXISTS features;
 
-DROP MATERIALIZED VIEW IF EXISTS features.pa_context_prior_season_rates;
-DROP MATERIALIZED VIEW IF EXISTS features.team_prior_season_summary;
-DROP MATERIALIZED VIEW IF EXISTS features.pitcher_prior_season_pa_summary;
-DROP MATERIALIZED VIEW IF EXISTS features.batter_prior_season_pa_summary;
-DROP MATERIALIZED VIEW IF EXISTS features.half_inning_outcome_summary;
+DROP MATERIALIZED VIEW IF EXISTS features.pa_context_prior_season_rates CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS features.team_prior_season_summary CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS features.pitcher_prior_season_pa_summary CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS features.batter_prior_season_pa_summary CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS features.half_inning_outcome_summary CASCADE;
 
 CREATE MATERIALIZED VIEW features.batter_prior_season_pa_summary AS
 SELECT

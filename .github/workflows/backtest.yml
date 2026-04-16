@@ -1,0 +1,73 @@
+name: Model Backtest CI
+
+on:
+  push:
+    branches: [setup-complete]
+  pull_request:
+    branches: [setup-complete]
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    # The workflow assumes a bare‑metal PostgreSQL instance is already
+    # available on the runner (as requested by the user). No Docker service is
+    # provisioned here.
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..10}; do
+            pg_isready -h localhost -p 5432 && break || sleep 3;
+          done
+
+      - name: Run migrations (feature marts and production)
+        env:
+          PGPASSWORD: postgres
+        run: |
+          # Load core feature marts required by the back‑test view
+          psql -h localhost -U postgres -d retrosheet -f sql/050_feature_marts.sql
+          # Load temporal/production views (now safe because dependent tables exist)
+          psql -h localhost -U postgres -d retrosheet -f sql/070_temporal_and_production_marts.sql
+          # Ensure the predictions.win_probabilities placeholder exists so the view can be created
+          # Ensure the predictions schema exists
+          psql -h localhost -U postgres -d retrosheet -c "CREATE SCHEMA IF NOT EXISTS predictions;"
+          # Recreate the placeholder table with the correct TEXT type for game_id.
+          # Dropping first guarantees any previous BIGINT definition is removed.
+          psql -h localhost -U postgres -d retrosheet -c "DROP TABLE IF EXISTS predictions.win_probabilities;"
+          psql -h localhost -U postgres -d retrosheet -c "CREATE TABLE predictions.win_probabilities (game_id TEXT PRIMARY KEY, predicted_home_win_prob DOUBLE PRECISION);"
+          # Finally create the back‑test materialized view
+          psql -h localhost -U postgres -d retrosheet -f sql/080_backtest_results.sql
+
+      - name: Train enriched model on sample data
+        env:
+          PGPASSWORD: postgres
+        run: |
+          # Use a small season for quick CI run
+          python3 scripts/train_models.py --feature-set enriched --sample-season 2022
+
+      - name: Verify backtest view populated
+        env:
+          PGPASSWORD: postgres
+        run: |
+          rowcount=$(psql -h localhost -U postgres -d retrosheet -t -c "SELECT count(*) FROM features.backtest_results;" | xargs)
+          echo "Backtest rows: $rowcount"
+          if [ "$rowcount" -eq "0" ]; then
+            echo "Backtest view is empty – fail"
+            exit 1
+          fi
+
+      - name: Optional Brier score check (placeholder)
+        run: |
+          echo "Add Brier score comparison here if needed"

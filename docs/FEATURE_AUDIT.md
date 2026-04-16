@@ -26,6 +26,41 @@ Conclusion:
 - We should continue some model tuning, but the highest-return work right now is still feature work, not large hyperparameter sweeps.
 - The most valuable next feature investments are pitch-level normalization, same-game temporal features, live feature parity, and a few carefully chosen baseball-specific derived features.
 
+## Enriched Model Validation
+
+The enriched model now includes the **team‑game‑context** features added to
+`features.team_game_context`:
+
+* `days_since_previous_game`
+* `played_yesterday`
+* `doubleheader_same_day`
+* `same_park_as_previous_game`
+* `changed_home_road_status`
+* `same_opponent_as_previous_game`
+
+### Validation steps
+1. **Run the migrations** to materialize the view and back‑test table:
+	```bash
+	psql -h localhost -U postgres -d retrosheet -f sql/070_temporal_and_production_marts.sql
+	psql -h localhost -U postgres -d retrosheet -f sql/080_backtest_results.sql
+	```
+2. **Execute the training script** with the enriched feature set:
+	```bash
+	python3 scripts/train_models.py --feature-set enriched
+	```
+	The script will now pull the six new numeric columns listed above.
+3. **Verify the back‑test view** contains rows:
+	```sql
+	SELECT count(*) FROM features.backtest_results;
+	```
+	A non‑zero count confirms the model ran and predictions were stored.
+4. **Check CI** – the GitHub Actions workflow `.github/workflows/backtest.yml`
+	runs these steps on each push to `setup-complete` and fails if the back‑test
+	view is empty.
+
+These steps should be performed after any change to the feature list to ensure
+the pipeline remains reproducible.
+
 ## Field Understanding Status
 
 ### Tier 1: Well Understood And Actively Used

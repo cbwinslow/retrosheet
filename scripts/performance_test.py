@@ -7,8 +7,17 @@ Demonstrates the performance improvements from our inference optimizations.
 
 import os
 import time
-import psycopg2
+# ``psycopg2`` is optional for the CI environment – the performance scripts are
+# not executed during unit testing. Import lazily and tolerate its absence.
+try:
+    import psycopg2
+except Exception:  # pragma: no cover
+    psycopg2 = None
 
+
+# Prevent pytest from collecting this script as a test module
+# Prevent pytest from collecting this script as a test module
+__test__ = False
 
 def test_query_performance():
     """Test performance of different query approaches."""
@@ -91,7 +100,8 @@ def test_query_performance():
     speedup = old_time / new_time if new_time > 0 else float('inf')
 
     print("📊 Query Performance Comparison:")
-    print(".4f"    print(".4f"    print(".1f"    print()
+    # Display the measured times with reasonable formatting.
+    print(f"Old avg: {old_time:.4f}s, New avg: {new_time:.4f}s, Speedup: {speedup:.1f}x")
 
     # Test 2: Simulation workload
     print("🎯 Simulation Workload Test:")
@@ -144,11 +154,15 @@ def test_query_performance():
 
     sim_speedup = old_sim_time / new_sim_time if new_sim_time > 0 else float('inf')
 
-    print(".2f"    print(".2f"    print(".1f"    print()
+    print(f"Old simulation avg: {old_sim_time:.2f}s, New simulation avg: {new_sim_time:.2f}s, Speedup: {sim_speedup:.1f}x")
 
     # Summary
     print("🏆 PERFORMANCE OPTIMIZATION RESULTS:")
-    print("✅ Single query performance: " ".1f"    print("✅ Simulation workload: " ".1f"    print("✅ Total improvement: Massive reduction in database load"    print("✅ Memory efficiency: Pre-computed features reduce computation"    print("✅ Scalability: Optimized for high-throughput simulation"
+    print(f"✅ Single query performance: {old_time:.1f}s → {new_time:.1f}s (×{speedup:.1f})")
+    print(f"✅ Simulation workload: {old_sim_time:.1f}s → {new_sim_time:.1f}s (×{sim_speedup:.1f})")
+    print("✅ Total improvement: Massive reduction in database load")
+    print("✅ Memory efficiency: Pre-computed features reduce computation")
+    print("✅ Scalability: Optimized for high‑throughput simulation")
 
     conn.close()
 

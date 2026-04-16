@@ -28,6 +28,7 @@
 - Keep the `github_issues/` folder up‑to‑date with concrete issue tickets.
 - Link each issue to the relevant documentation section.
 - Review and close issues as work is completed.
+- **Model Training Pipeline**: Hyper‑parameter sweep for `pa_batter_hit` completed; see [`github_issues/issue_06_model_training_pipeline.md`](github_issues/issue_06_model_training_pipeline.md).
 
 ---
 *This document serves as a living roadmap; update it as priorities shift.*

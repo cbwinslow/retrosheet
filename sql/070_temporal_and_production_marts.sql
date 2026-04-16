@@ -1,11 +1,11 @@
 CREATE SCHEMA IF NOT EXISTS features;
 
-DROP VIEW IF EXISTS features.plate_appearance_temporal_examples;
-DROP VIEW IF EXISTS features.game_outcome_temporal_examples;
-DROP VIEW IF EXISTS features.temporal_production_validation_summary;
-DROP MATERIALIZED VIEW IF EXISTS features.pitcher_production_season;
-DROP MATERIALIZED VIEW IF EXISTS features.player_production_season;
-DROP MATERIALIZED VIEW IF EXISTS features.team_game_context;
+DROP VIEW IF EXISTS features.plate_appearance_temporal_examples CASCADE;
+DROP VIEW IF EXISTS features.game_outcome_temporal_examples CASCADE;
+DROP VIEW IF EXISTS features.temporal_production_validation_summary CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS features.pitcher_production_season CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS features.player_production_season CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS features.team_game_context CASCADE;
 
 CREATE MATERIALIZED VIEW features.team_game_context AS
 WITH team_games AS (

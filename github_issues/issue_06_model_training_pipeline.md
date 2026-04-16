@@ -28,4 +28,34 @@
 - **Features added**: `days_since_previous_game`, `played_yesterday`, `doubleheader_same_day`, `same_park_as_previous_game`, `changed_home_road_status`, `same_opponent_as_previous_game`
 - **Purpose**: Incorporate temporal context from `features.team_game_context` into the model training pipeline.
 
+### New Back‑test View
+
+*Created materialized view `features.backtest_results` (SQL file `sql/080_backtest_results.sql`).*
+
+- **File added**: `sql/080_backtest_results.sql`
+- **Purpose**: Joins model predictions (from `predictions.win_probabilities`) with actual outcomes in `core.games` to provide per‑game error metrics for CI back‑testing.
+- **Usage**: Run `psql -f sql/080_backtest_results.sql` after the model training step to materialize the view, then query `SELECT * FROM features.backtest_results LIMIT 5;`.
+
+These results can be used by the CI test (to be added) to verify that the model’s Brier score improves after the enriched feature set.
+
+### CI Back‑test Workflow
+
+*Added GitHub Actions workflow ` .github/workflows/backtest.yml` to run the model training on a sample season and verify that the `features.backtest_results` view is populated.*
+
+- **File added**: `.github/workflows/backtest.yml`
+- **Purpose**: Automated CI validation of the enriched model pipeline.
+
+The workflow will be triggered on pushes and pull requests to the `setup-complete` branch.
+
+---
+
+**Status:** ✅ Completed
+
+The hyper‑parameter sweep for the binary plate‑appearance hit model (`pa_batter_hit`) has been executed via `scripts/sweep_hyperparameters.py`. Five candidate models were trained, evaluated, and persisted under `data/models/`. Their metadata—including ROC‑AUC, log‑loss, and feature specifications—has been recorded in `models.model_registry` (see `sql/150_model_registry.sql`).
+
+**Next actions:**
+* Run the CI back‑test workflow (`.github/workflows/backtest.yml`) to ensure the `features.backtest_results` view is populated and model performance meets expectations.
+* Review the top‑performing sweep candidates and activate the preferred model by setting `is_active = true` in the registry.
+* Update the documentation links in `docs/agents/next_steps.md` to reflect the completed training pipeline.
+
 These changes support the **Model Training Pipeline** task by enriching the feature set used for model training and validation.
