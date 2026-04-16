@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
-"""
-Simple Performance Demonstration
+"""Simple Performance Demonstration.
 
-Shows the performance improvements from our inference optimizations.
+This script is not part of the automated test suite; it is provided for manual
+benchmarking. The original version contained malformed ``print`` statements that
+prevented the file from being imported, causing pytest collection errors. The
+issues have been fixed and a ``__test__ = False`` flag is added so pytest will
+ignore the module entirely.
 """
 
 import os
 import time
-import psycopg2
+# ``psycopg2`` may be unavailable in the CI environment. Import lazily.
+try:
+    import psycopg2
+except Exception:  # pragma: no cover
+    psycopg2 = None
 
+
+# Prevent pytest from collecting this script as a test module
+__test__ = False
 
 def run_performance_test():
     """Demonstrate performance improvements."""
@@ -41,7 +51,7 @@ def run_performance_test():
               ON pitcher.feature_season = pa.season AND pitcher.pitcher_id = pa.pitcher_id
             WHERE pa.game_id = %s AND pa.plate_appearance_id = %s
         ) sub
-    """
+"""
 
     # Test new approach (materialized view)
     new_query = """
@@ -68,7 +78,7 @@ def run_performance_test():
     speedup = old_time / new_time if new_time > 0 else float('inf')
 
     print("📊 Query Performance Comparison:")
-    print(".3f"    print(".3f"    print(".1f"    print()
+    print(f"Old avg: {old_time:.3f}s, New avg: {new_time:.3f}s, Speedup: {speedup:.1f}x")
 
     # Test simulation workload
     print("🎯 Simulation Workload Test:")
@@ -124,7 +134,7 @@ def run_performance_test():
     print("✅ Materialized views: 4.8M rows of optimized features")
     print("✅ Simulation ready: Sub-10ms feature lookups")
     print("✅ Scalability: Reduced database load by 80%+")
-    print("✅ Production ready: Optimized for high-throughput inference")
+    print("✅ Production ready: Optimized for high‑throughput inference")
 
     conn.close()
 

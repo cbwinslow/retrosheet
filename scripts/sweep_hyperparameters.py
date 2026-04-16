@@ -13,7 +13,10 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
-import train_models
+# Import the sibling ``train_models`` module using a relative import so that the
+# package can be resolved correctly when the ``scripts`` directory is a Python
+# package (as defined by ``scripts/__init__.py``).
+from . import train_models
 
 
 ROOT = Path(__file__).resolve().parents[1]
