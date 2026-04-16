@@ -1,5 +1,15 @@
 # File Inventory
 
+## Issue Links
+
+- Issue #5: Documentation & Issue Linking – completed. See [github_issues/issue_05_documentation_and_issue_linking.md](../github_issues/issue_05_documentation_and_issue_linking.md)
+- Issue #1: Core LLM Integration – ongoing. See [github_issues/issue_01_core_llm_integration.md](../github_issues/issue_01_core_llm_integration.md)
+- Issue #2: Tool Execution Engine – ongoing. See [github_issues/issue_02_tool_execution_engine.md](../github_issues/issue_02_tool_execution_engine.md)
+- Issue #3: Model Orchestration – ongoing. See [github_issues/issue_03_model_orchestration.md](../github_issues/issue_03_model_orchestration.md)
+- Issue #4: Security & Safety – ongoing. See [github_issues/issue_04_security_safety.md](../github_issues/issue_04_security_safety.md)
+- Issue #6: Model Training Pipeline – ongoing. See [github_issues/issue_06_model_training_pipeline.md](../github_issues/issue_06_model_training_pipeline.md)
+- Issue #7: Advanced Features – ongoing. See [github_issues/issue_07_advanced_features.md](../github_issues/issue_07_advanced_features.md)
+
 This inventory tells agents what each important file does and which workflows own it. Files may appear in multiple sections when they serve multiple goals.
 
 ## Top-Level Docs
@@ -34,6 +44,24 @@ This inventory tells agents what each important file does and which workflows ow
 | `.env.example` | Safe local environment variable template. | Keep secrets out of git. |
 
 ## Warehouse SQL
+| File | Purpose | Canonical Position |
+|---|---|---|
+| `sql/001_init.sql` | Initial schemas/raw table scaffolding. | Early bootstrap and legacy compatibility. |
+| `sql/010_core_games_events.sql` | Creates typed `core.games`, `core.events`, seed targets, model/prediction/chat/market tables. | Core foundation. |
+| `sql/020_plate_appearances.sql` | Creates `core.plate_appearances`, `features.plate_appearance_examples`, binary PA targets. | PA foundation. |
+| `sql/030_reference_metadata.sql` | Source-preserved Retrosheet bio/team/park reference tables and metadata joins. | Reference metadata. |
+| `sql/040_auxiliary_retrosheet.sql` | Auxiliary Retrosheet raw tables and normalized core views for rosters, schedules, umpires, coaches, ejections, relatives. | Auxiliary metadata. |
+| `sql/050_feature_marts.sql` | Prior-season batter, pitcher, team, context, and half-inning summary marts. | First ML feature marts. |
+| `sql/060_advanced_feature_marts.sql` | Career-prior, matchup, park, coarse context, and rolling team features. | Advanced ML features. |
+| `sql/070_temporal_and_production_marts.sql` | Team rest/travel, player production, pitcher production, temporal examples. | Reporting and time context. |
+| `sql/075_interface_workflows.sql` | Persists Sim Lab runs and extends chat logs for interface workflow auditability. | Web command center. |
+| `sql/076_plate_appearance_outcome_model.sql` | Creates granular multiclass PA outcome examples, season/rules era columns, and target `pa_outcome_distribution`. | Multiclass PA modeling, temporal features. |
+| `sql/077_pitch_sequence_model.sql` | Normalizes `pitch_seq_tx` into one row per Retrosheet sequence symbol with official symbol semantics and coarse pitch/result groupings. | Pitch-sequence normalization, future pitch-level modeling. |
+| `sql/078_plate_appearance_outcome_grouped.sql` | Adds grouped PA outcome training examples and validation summary on top of the canonical granular PA outcome layer. | Baseline PA modeling, grouped target infrastructure. |
+| `sql/079_probability_evaluation_reports.sql` | Adds durable calibration and bootstrap report tables plus recent-report views in `predictions`. | Probability evaluation persistence. |
+| `sql/081_probability_calibration_artifacts.sql` | Extends calibration reports with persisted artifact support for reusable calibrated scoring. | Calibrated inference infrastructure. |
+| `sql/082_count_state_feature_marts.sql` | Adds batter/pitcher/context prior-rate marts split by ball-strike count and a count-state-enhanced advanced PA view. | Targeted feature improvement for PA reliability defects. |
+| `sql/200_external_data.sql` | Defines schemas and tables for supplemental free data sources (Statcast, Baseball‑Data.com, Gameday XML) and bridge tables. | External data marts. |
 
 | File | Purpose | Canonical Position |
 |---|---|---|
@@ -60,6 +88,7 @@ These files may be present as active development work. Treat them as live-bridge
 | File | Purpose | Status Guidance |
 |---|---|---|
 | `sql/080_half_inning_examples.sql` | Half-inning training examples beyond summary distribution. | Scenario modeling; verify before relying on it. |
+| `sql/080_mlb_pbp.sql` | Stores detailed MLB play‑by‑play data from StatsAPI & Statcast. | Added to warehouse rebuild after core tables.
 | `sql/090_mlb_live_data.sql` | Raw MLB live snapshot tables with source-preserved payloads and fetch provenance. | Live bridge. |
 | `sql/091_mlb_reference_raw.sql` | Raw MLB reference endpoint snapshots for teams, rosters, people, venues, and standings. | MLB source coverage, raw reference ingestion. |
 | `sql/095_mlb_reference_views.sql` | Typed `core` views over MLB reference snapshots for teams, rosters, players, venues, and standings. | MLB reference transforms, bridge/core enrichment. |
@@ -72,6 +101,34 @@ These files may be present as active development work. Treat them as live-bridge
 | `sql/130_analysis_views.sql` | Combined analysis views for historical + live data queries. | Live bridge and analysis. |
 
 ## Warehouse Scripts
+| File | Purpose | Use When |
+|---|---|---|
+| `scripts/warehouse.py` | Main CLI for dependency checks, Retrosheet fetch, Chadwick extract/load, and live feed fetch with raw snapshot provenance. | Ingestion and raw landing. |
+| `scripts/rebuild_warehouse.sh` | Canonical full rebuild order. | Reproducibility. Update when adding required SQL. |
+| `scripts/install_chadwick.sh` | Chadwick installation helper. | Environment setup. |
+| `scripts/load_reference_metadata.py` | Loads Retrosheet bio/team/park metadata. | After `020`. |
+| `scripts/load_auxiliary_retrosheet.py` | Loads broader Retrosheet auxiliary files. | After reference metadata. |
+| `scripts/fetch_mlb_schedule.py` | Discovers active MLB games for live ingestion. | Live bridge work. |
+| `scripts/download_mlb_bulk.py` | Canonical historical MLB bulk raw backfill into `raw_mlb.schedule_snapshots` and `raw_mlb.live_feed_snapshots`. | Historical MLB raw backfill . |
+| `scripts/populate_bridge_tables.py` | Downloads Chadwick Register and populates player mappings and canonical team / park bridge mappings . ? ? ? ? ? ? ? ? ? ? ? ? … … … … … … … … … … … … … … … … … … … … … … … … … … … …  … … … … … … … … … … … … … …  … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … …
+| `scripts/ingest_all_mlb_data.py` |  ??  ?  …  
+
+
+
+| File | Purpose | Use When |
+|---|---|---|
+| `scripts/warehouse.py` | Main CLI for dependency checks, Retrosheet fetch, Chadwick extract/load, and live feed fetch with raw snapshot provenance. | Ingestion and raw landing. |
+| `scripts/rebuild_warehouse.sh` | Canonical full rebuild order. | Reproducibility. Update when adding required SQL. |
+| `scripts/install_chadwick.sh` | Chadwick installation helper. | Environment setup. |
+| `scripts/load_reference_metadata.py` | Loads Retrosheet bio/team/park metadata. | After `020`. |
+| `scripts/load_auxiliary_retrosheet.py` | Loads broader Retrosheet auxiliary files. | After reference metadata. |
+| `scripts/fetch_mlb_schedule.py` | Discovers active MLB games for live ingestion. | Live bridge work. |
+| `scripts/download_mlb_bulk.py` | Canonical historical MLB bulk raw backfill into `raw_mlb.schedule_snapshots` and `raw_mlb.live_feed_snapshots` with request/status/error provenance. | Historical MLB raw backfill. |
+| `scripts/populate_bridge_tables.py` | Downloads Chadwick Register and populates player mappings plus canonical team/park bridge mappings from the typed MLB reference views. | Live bridge setup and reconciliation refresh. |
+| `scripts/ingest_live_games.py` | Orchestrates batch live game ingestion using environment-driven Postgres settings. | Live bridge work. |
+| `scripts/transform_live_game.py` | Transforms stored MLB live snapshots into canonical `core.live_games` / `core.live_events` with upserts and raw JSON preservation. | Live bridge work. |
+| `scripts/load_statcast.py` | Loads free Statcast CSV data into `raw_mlb.statcast` and updates bridge tables. | Supplemental pitch‑level data ingestion. |
+| `scripts/load_baseballdata.py` | Loads Baseball‑Data.com play‑by‑play CSV into `raw_external.baseball_data_com` and creates placeholder player bridge entries. | Supplemental historical PBP ingestion. |
 
 | File | Purpose | Use When |
 |---|---|---|
@@ -88,6 +145,8 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/ingest_live_games.py` | Orchestrates batch live game ingestion using environment-driven Postgres settings. | Live bridge work. |
 | `scripts/transform_live_game.py` | Transforms stored MLB live snapshots into canonical `core.live_games` / `core.live_events` with upserts and raw JSON preservation. | Live bridge work. |
 | `scripts/replay_live_bridge_backfill.py` | Replays stored latest-successful MLB raw snapshots through `scripts/transform_live_game.py`, optionally targeting only rows that still carry `MLB###` fallback ids. | Controlled live bridge refresh after mapping or transform fixes. |
+ | `scripts/backup_sql_files.sh` | Copies all `.sql` files from the `sql/` directory into a timestamped backup folder for Git versioning. | Backup of schema definitions.
+ | `scripts/backup_procedures.sh` | Backs up all database objects (functions, procedures, views, materialized views) to a timestamped SQL dump. | Database maintenance, disaster recovery. |
 
 ## Modeling Scripts
 

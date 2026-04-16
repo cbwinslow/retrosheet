@@ -18,6 +18,10 @@
 - [ ] Update documentation in `docs/FEATURE_AUDIT.md` and `docs/MLB_DATA_MODEL.md`.
 - [ ] Add CI checks for the new features.
 
+### New Tasks (post‑utility functions)
+- [ ] Document the newly added utility functions in `docs/agents/UTILITY_FUNCTIONS.md` and link them from this issue.
+- [ ] Add a CI step that runs `SELECT warehouse.health_check();` after data loads to verify row counts and season range.
+
 ## Links & Context
 - Related Issue: #06_model_training_pipeline (completed)
 - Documentation: [FEATURE_AUDIT.md](../docs/FEATURE_AUDIT.md)
