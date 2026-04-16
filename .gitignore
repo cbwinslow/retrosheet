@@ -64,3 +64,4 @@ data/
 
 # macOS
 .DS_Store
+.envrc
