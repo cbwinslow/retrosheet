@@ -141,8 +141,27 @@ def check_deps(_: argparse.Namespace) -> None:
 
 
 def init_db(_: argparse.Namespace) -> None:
-    run_psql_file(ROOT / "sql" / "001_init.sql")
-    ensure_labeled_events_table()
+    """Initialize the database schema if it hasn't been set up already.
+
+    The original implementation always executed the full init script, which
+    re‑creates tables and can be time‑consuming.  To avoid unnecessary work we
+    first check for the presence of a core table that is created by the
+    ``001_init.sql`` migration (e.g., ``core.games``).  If the table exists we
+    assume the database has already been initialized and skip the heavy
+    operations.  This makes the command safe to run repeatedly during
+    development.
+    """
+    # Quick existence check using a lightweight SELECT.  If the query fails
+    # (e.g., table does not exist) we fall back to running the full init.
+    try:
+        run_psql_sql("SELECT 1 FROM core.games LIMIT 1;")
+        # Table exists – skip re‑initialization but still ensure the labeled
+        # events table is present (it may be added in later revisions).
+        ensure_labeled_events_table()
+    except Exception:
+        # Table missing – run the full init script.
+        run_psql_file(ROOT / "sql" / "001_init.sql")
+        ensure_labeled_events_table()
 
 
 def ensure_labeled_events_table() -> None:
