@@ -65,3 +65,4 @@ data/
 # macOS
 .DS_Store
 .envrc
+!.vscode/settings.json
