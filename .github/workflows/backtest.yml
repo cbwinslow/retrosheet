@@ -2,9 +2,9 @@ name: Model Backtest CI
 
 on:
   push:
-    branches: [setup-complete]
+    branches: [main, setup-complete]
   pull_request:
-    branches: [setup-complete]
+    branches: [main, setup-complete]
 
 jobs:
   backtest:

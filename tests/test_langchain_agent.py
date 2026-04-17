@@ -9,7 +9,8 @@ The current implementation in [`scripts/langchain_baseball_agent.py`](scripts/la
 import builtins
 from typing import Dict
 
-from scripts.langchain_baseball_agent import LangChainBaseballAgent
+# Updated import path after moving the LangChain agent into the LLM package
+from scripts.llm.agent import LangChainBaseballAgent
 
 
 def test_process_query_returns_expected_structure() -> None:

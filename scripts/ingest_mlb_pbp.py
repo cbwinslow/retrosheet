@@ -13,7 +13,6 @@ It can also be used to ingest a directory of CSVs with ``--dir``.
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
@@ -44,10 +43,65 @@ def _connect() -> psycopg2.extensions.connection:
 # ---------------------------------------------------------------------------
 def _insert_dataframe(conn, df: pd.DataFrame) -> None:
     """Insert rows into ``core.mlb_pbp`` using ``execute_values`` for speed.
+    
+    Resolves team names to Retrosheet team IDs using mlb.resolve_team_id function
+    which handles temporal team changes (franchise moves, relocations).
     """
+    # Add team ID columns if they don't exist
+    if 'home_team_id' not in df.columns:
+        df['home_team_id'] = None
+    if 'away_team_id' not in df.columns:
+        df['away_team_id'] = None
+    
+    # Resolve team IDs using the database function
+    with conn.cursor() as cur:
+        for idx, row in df.iterrows():
+            game_date = row.get('game_date')
+            home_team = row.get('home_team')
+            away_team = row.get('away_team')
+            
+            if game_date and home_team:
+                cur.execute(
+                    "SELECT mlb.resolve_team_id(%s, %s::date)",
+                    (home_team, game_date)
+                )
+                result = cur.fetchone()
+                if result:
+                    df.at[idx, 'home_team_id'] = result[0]
+            
+            if game_date and away_team:
+                cur.execute(
+                    "SELECT mlb.resolve_team_id(%s, %s::date)",
+                    (away_team, game_date)
+                )
+                result = cur.fetchone()
+                if result:
+                    df.at[idx, 'away_team_id'] = result[0]
+    
+    # Reorder columns to put team IDs after team names
     cols = list(df.columns)
+    if 'home_team_id' in cols and 'away_team_id' in cols:
+        # Move team ID columns after their corresponding name columns
+        home_idx = cols.index('home_team')
+        away_idx = cols.index('away_team')
+        cols.remove('home_team_id')
+        cols.remove('away_team_id')
+        cols.insert(home_idx + 1, 'home_team_id')
+        cols.insert(away_idx + 2, 'away_team_id')
+        df = df[cols]
+    
     # Convert empty strings to None for nullable columns
-    records = [tuple(None if v == "" else v for v in row) for row in df.values]
+    # Ensure pandas NA values are turned into None for proper NULL handling
+    records = []
+    for row in df.values:
+        rec = []
+        for v in row:
+            # Convert empty strings, pandas NA, and numpy NaN to None for NULL insertion
+            if v == "" or v is pd.NA or (isinstance(v, float) and pd.isna(v)):
+                rec.append(None)
+            else:
+                rec.append(v)
+        records.append(tuple(rec))
     with conn.cursor() as cur:
         sql = f"INSERT INTO core.mlb_pbp ({', '.join(cols)}) VALUES %s"
         execute_values(cur, sql, records, page_size=1000)
