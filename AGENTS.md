@@ -45,6 +45,7 @@ Use these docs as the project map:
 - `docs/agents/FILE_INVENTORY.md`: inventory of SQL, scripts, docs, interface routes, generated artifacts, and ownership.
 - `docs/agents/PROCEDURES.md`: canonical workflows for warehouse rebuilds, target creation, feature marts, model training, simulation, live bridge work, interface changes, and GitHub issues.
 - `docs/agents/MODELING_WORKFLOWS.md`: target/model inventory, evaluation priorities, Moneyball-style modeling goals, leakage checklist, and promotion rules.
+- `docs/MLB_PBP_PIPELINE.md`: MLB pitch-by-play data pipeline from raw snapshots through pitch-level extraction to Retrosheet linking.
 
 If a file is not listed there and you make it important, update the inventory in the same change.
 

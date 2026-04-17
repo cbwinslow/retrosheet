@@ -362,9 +362,10 @@ def _parse_play(play: dict, game_meta: dict, event_idx: int) -> dict:
         # Inning / situation
         "inning":           about.get("inning", ""),
         "inning_half":      about.get("halfInning", ""),   # "top" / "bottom"
-        "outs_after":       outs_after,
-        "balls":            count.get("balls", ""),
-        "strikes":          count.get("strikes", ""),
+        # Use None for missing numeric values to allow pandas nullable Int64 dtype
+        "outs_after":       outs_after if outs_after != "" else None,
+        "balls":            count.get("balls") if count.get("balls") is not None else None,
+        "strikes":          count.get("strikes") if count.get("strikes") is not None else None,
         # Batter / Pitcher
         "batter_id":        matchup.get("batter", {}).get("id", ""),
         "batter_name":      matchup.get("batter", {}).get("fullName", ""),
@@ -380,11 +381,12 @@ def _parse_play(play: dict, game_meta: dict, event_idx: int) -> dict:
                             if isinstance(lp_details.get("type"), dict)
                             else lp_details.get("type", ""),
         "pitch_desc":       lp_details.get("description", ""),
-        "release_speed":    lp_pitch_data.get("startSpeed", ""),
-        "spin_rate":        lp_breaks.get("spinRate", ""),
-        "plate_x":          lp_coords.get("pX", ""),
-        "plate_z":          lp_coords.get("pZ", ""),
-        "zone":             lp_pitch_data.get("zone", ""),
+        # Pitch metrics – use None for missing values to keep nullable types safe
+        "release_speed":    lp_pitch_data.get("startSpeed") if lp_pitch_data.get("startSpeed") not in (None, "") else None,
+        "spin_rate":        lp_breaks.get("spinRate") if lp_breaks.get("spinRate") not in (None, "") else None,
+        "plate_x":          lp_coords.get("pX") if lp_coords.get("pX") not in (None, "") else None,
+        "plate_z":          lp_coords.get("pZ") if lp_coords.get("pZ") not in (None, "") else None,
+        "zone":             lp_pitch_data.get("zone") if lp_pitch_data.get("zone") not in (None, "") else None,
         # Statcast (populated later by merge)
         "launch_speed":              "",
         "launch_angle":              "",
@@ -526,7 +528,10 @@ def collect_game(
         return pd.DataFrame()
 
     rows = [_parse_play(play, game_meta, i + 1) for i, play in enumerate(all_plays)]
-    df   = pd.DataFrame(rows)
+    # Use object dtype to prevent pandas from inferring nullable integer types that reject empty strings
+    df   = pd.DataFrame(rows, dtype=object)
+    # Convert empty strings to pandas NA for consistency
+    df = df.replace('', pd.NA)
 
     if statcast_df is not None and not statcast_df.empty:
         df = _merge_statcast(df, statcast_df)
@@ -546,7 +551,7 @@ def collect_season(
     output_csv: Optional[str] = None,
     max_games:  Optional[int] = None,
     merge_statcast_data: bool = True,
-) -> pd.DataFrame:
+    ) -> pd.DataFrame:
     """
     Download PBP data for every game in the season (or a filtered window).
 
@@ -594,7 +599,8 @@ def collect_season(
 
     for gdate in sorted(by_date):
         sc_df = None
-        if merge_statcast_data and PYBASEBALL_AVAILABLE:
+        # Statcast data is only reliably available for seasons 2006 and later.
+        if merge_statcast_data and PYBASEBALL_AVAILABLE and season >= 2006:
             sc_df = _load_statcast(gdate, gdate)
             time.sleep(RATE_LIMIT_SLEEP)
 
@@ -612,6 +618,8 @@ def collect_season(
         return pd.DataFrame()
 
     result = pd.concat(all_frames, ignore_index=True)
+    # Replace any lingering empty strings with pandas NA before enforcing column order
+    result = result.replace('', pd.NA)
     result = _enforce_column_order(result)
 
     if output_csv:

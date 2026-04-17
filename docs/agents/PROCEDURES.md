@@ -162,6 +162,96 @@ Status check:
 python3 scripts/raw_mlb_backfill_status.py
 ```
 
+## Historical MLB Data Transformation (Pitch-Level)
+
+Purpose: Transform the 72,830+ stored live feed snapshots into pitch-level data that supplements Retrosheet events.
+
+**Prerequisites**: 
+- `raw_mlb.live_feed_snapshots` populated (via Historical MLB Raw Backfill)
+- `bridge.*` tables populated (via Bridge Population above)
+
+### Option A: Play-by-Play CSV Path (Current)
+
+Command:
+
+```bash
+# Collect via pybaseball + MLB Stats API to CSV
+python3 scripts/mlb_pbp_collector.py --season 2024 --output-csv data/mlb_pbp/mlb_pbp_2024.csv
+
+# Ingest CSV to core.mlb_pbp
+python3 scripts/ingest_mlb_pbp.py --csv data/mlb_pbp/mlb_pbp_2024.csv
+
+# Or ingest entire directory
+python3 scripts/ingest_mlb_pbp.py --dir data/mlb_pbp/
+```
+
+Expected order:
+
+1. `mlb_pbp_collector.py` queries MLB Stats API play-by-play endpoint.
+2. Merges with Statcast data via pybaseball for pitch metrics.
+3. Outputs CSV with one row per plate appearance (pitch sequence as string).
+4. `ingest_mlb_pbp.py` loads CSV into `core.mlb_pbp`.
+
+Limitations:
+
+- One row per PA, not per individual pitch.
+- Pitch sequence stored as string (e.g., "CBSBFC"), not broken out.
+- Pitch metrics only for last pitch of each PA.
+
+Data destination: `core.mlb_pbp`
+
+### Option B: Live Feed Snapshot Extraction (Future)
+
+Purpose: Extract individual pitch rows from stored `raw_mlb.live_feed_snapshots`.
+
+Status: **NOT YET IMPLEMENTED** - Requires new script `scripts/extract_pitches_from_snapshots.py`.
+
+Proposed command:
+
+```bash
+python3 scripts/extract_pitches_from_snapshots.py --season-from 2000 --season-to 2025 --batch-size 100
+```
+
+Expected behavior:
+
+1. Query `raw_mlb.live_feed_snapshots` for unextracted games.
+2. Parse `liveData.plays.allPlays[].playEvents[]` JSON.
+3. Filter events where `isPitch = true`.
+4. Extract per-pitch fields: speed, spin, location, break, etc.
+5. Insert into `mlb.pitches` with link to `mlb.play_events`.
+
+Data destination: `mlb.pitches` (one row per pitch)
+
+Advantages over Option A:
+
+- True pitch-level granularity.
+- All pitches have metrics, not just last pitch of PA.
+- Uses already-downloaded snapshots (72,830 games).
+- No additional API calls required.
+
+### Linking to Retrosheet
+
+After transformation, link MLB data to Retrosheet events via bridge tables:
+
+```sql
+-- Validate linking capability
+SELECT 
+    r.game_id,
+    r.event_id,
+    p.game_pk,
+    p.pitch_number,
+    p.pitch_type_code,
+    p.release_speed
+FROM core.events r
+JOIN bridge.game_xref gx ON r.game_id = gx.retrosheet_game_id
+JOIN mlb.pitches p ON gx.mlb_game_pk = p.game_pk
+WHERE r.bat_id = p.batter_id
+  AND r.pit_id = p.pitcher_id
+  AND r.inning = p.inning;
+```
+
+See `docs/MLB_PBP_PIPELINE.md` for full pipeline documentation.
+
 ## MLB Reference Endpoint Backfill
 
 Purpose: preserve the non-game MLB source families needed for roster, player, venue, and standings enrichment.

@@ -5,7 +5,9 @@ CREATE TABLE IF NOT EXISTS core.mlb_pbp (
     game_pk                BIGINT,
     game_date              DATE,
     home_team              TEXT,
+    home_team_id           TEXT,  -- Resolved via mlb.resolve_team_id() using core.teams temporal support
     away_team              TEXT,
+    away_team_id           TEXT,  -- Resolved via mlb.resolve_team_id() using core.teams temporal support
     venue                  TEXT,
     retro_game_id          TEXT,
     retro_event_id         TEXT,
