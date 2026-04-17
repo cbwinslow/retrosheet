@@ -1,15 +1,2 @@
-# CodeRabbit AI Code Review Setup
-# 
-# CodeRabbit is installed as a GitHub App, not a GitHub Action.
-# To enable CodeRabbit for this repository:
-#
-# 1. Visit https://github.com/marketplace/coderabbitai
-# 2. Click "Install" and authorize for cbwinslow/retrosheet
-# 3. Configure review settings in the CodeRabbit dashboard
-# 4. CodeRabbit will automatically review all future PRs
-#
-# Features:
-# - AI-powered pull request reviews
-# - Context-aware feedback and suggestions
-# - Real-time chat for clarification
-# - Customizable review focus areas
+# This file is intentionally left empty
+# CodeRabbit setup documentation has been moved to docs/CODERABBIT_SETUP.md
