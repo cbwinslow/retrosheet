@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ["setup-complete", "master"]
+    branches: ["main", "setup-complete", "master"]
   pull_request:
-    branches: ["setup-complete", "master"]
+    branches: ["main", "setup-complete", "master"]
 
 jobs:
   test:

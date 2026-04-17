@@ -2,7 +2,7 @@ name: Feature Marts Migration
 
 on:
   push:
-    branches: [master, setup-complete]
+    branches: [main, master, setup-complete]
   schedule:
     # Nightly run at 03:00 UTC to keep marts up‑to‑date
     - cron: "0 3 * * *"
