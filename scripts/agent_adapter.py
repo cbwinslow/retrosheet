@@ -38,7 +38,8 @@ def _load_langchain_agent():
         # The LangChain implementation is expected to live in this module.
         # Import lazily to avoid import errors if the file does not yet exist.
         try:
-            from scripts.langchain_baseball_agent import LangChainBaseballAgent as LCAgent
+            # Updated import path after moving LangChain agent to the new LLM package
+            from scripts.llm.agent import LangChainBaseballAgent as LCAgent
         except ImportError as exc:
             raise RuntimeError(
                 "LangChain agent module not found. Ensure 'scripts/langchain_baseball_agent.py' exists."

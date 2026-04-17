@@ -127,6 +127,9 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/populate_bridge_tables.py` | Downloads Chadwick Register and populates player mappings plus canonical team/park bridge mappings from the typed MLB reference views. | Live bridge setup and reconciliation refresh. |
 | `scripts/ingest_live_games.py` | Orchestrates batch live game ingestion using environment-driven Postgres settings. | Live bridge work. |
 | `scripts/transform_live_game.py` | Transforms stored MLB live snapshots into canonical `core.live_games` / `core.live_events` with upserts and raw JSON preservation. | Live bridge work. |
+| `scripts/transform_live_comprehensive.py` | Enhanced transform creating Retrosheet-compatible `core.live_games` and `core.live_events` with extended field coverage. | Live bridge work, detailed Retrosheet alignment. |
+| `scripts/mlb_pbp_collector.py` | Collects MLB play-by-play data via MLB-StatsAPI and pybaseball Statcast, outputs CSV with pitch metrics. | Historical MLB PBP CSV generation. |
+| `scripts/ingest_mlb_pbp.py` | Ingests MLB PBP CSV files into `core.mlb_pbp` table. | CSV to database loader for MLB PBP. |
 | `scripts/load_statcast.py` | Loads free Statcast CSV data into `raw_mlb.statcast` and updates bridge tables. | Supplemental pitch‑level data ingestion. |
 | `scripts/load_baseballdata.py` | Loads Baseball‑Data.com play‑by‑play CSV into `raw_external.baseball_data_com` and creates placeholder player bridge entries. | Supplemental historical PBP ingestion. |
 
@@ -144,8 +147,11 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/populate_bridge_tables.py` | Downloads Chadwick Register and populates player mappings plus canonical team/park bridge mappings from the typed MLB reference views. Tolerates current bridge-schema variations in the active database. | Live bridge setup and reconciliation refresh. |
 | `scripts/ingest_live_games.py` | Orchestrates batch live game ingestion using environment-driven Postgres settings. | Live bridge work. |
 | `scripts/transform_live_game.py` | Transforms stored MLB live snapshots into canonical `core.live_games` / `core.live_events` with upserts and raw JSON preservation. | Live bridge work. |
+| `scripts/transform_live_comprehensive.py` | Enhanced transform creating Retrosheet-compatible `core.live_games` and `core.live_events` with extended field coverage. | Live bridge work, detailed Retrosheet alignment. |
+| `scripts/mlb_pbp_collector.py` | Collects MLB play-by-play data via MLB-StatsAPI and pybaseball Statcast, outputs CSV with pitch metrics. | Historical MLB PBP CSV generation. |
+| `scripts/ingest_mlb_pbp.py` | Ingests MLB PBP CSV files into `core.mlb_pbp` table. | CSV to database loader for MLB PBP. |
 | `scripts/replay_live_bridge_backfill.py` | Replays stored latest-successful MLB raw snapshots through `scripts/transform_live_game.py`, optionally targeting only rows that still carry `MLB###` fallback ids. | Controlled live bridge refresh after mapping or transform fixes. |
- | `scripts/backup_sql_files.sh` | Copies all `.sql` files from the `sql/` directory into a timestamped backup folder for Git versioning. | Backup of schema definitions.
+| `scripts/backup_sql_files.sh` | Copies all `.sql` files from the `sql/` directory into a timestamped backup folder for Git versioning. | Backup of schema definitions.
  | `scripts/backup_procedures.sh` | Backs up all database objects (functions, procedures, views, materialized views) to a timestamped SQL dump. | Database maintenance, disaster recovery. |
 
 ## Modeling Scripts

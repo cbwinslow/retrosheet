@@ -66,3 +66,66 @@ data/
 .DS_Store
 .envrc
 !.vscode/settings.json
+
+# Debug and temporary files
+debug_*.txt
+debug_*.py
+diagnosis*.txt
+fix_*.txt
+fix_*.py
+*_output.txt
+*_status.txt
+*_ref.txt
+*_tables*.txt
+team_*.txt
+test_*.txt
+verify_*.txt
+logging.json
+test_results.json
+
+# Model files (generated artifacts)
+models/*.pkl
+models/*.joblib
+models/*.h5
+models/*.pt
+models/*.pth
+
+# IDE-specific directories
+.cursor/
+.cline/
+.windsurf/
+.codebuddy/
+.commandcode/
+.continue/
+.kilocode/
+.kiro/
+.mcpjam/
+.mux/
+.neovate/
+.openhands/
+.pochi/
+.qoder/
+.qodo/
+.qwen/
+.roo/
+.trae/
+.zencoder/
+.zenflow/
+.adal/
+.agent/
+.agents/
+.claude/
+.factory/
+
+# Next.js build artifacts
+baseball-chatbot-ui/.next/
+baseball-chatbot-ui/node_modules/
+
+# Python cache directories
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+__pycache__/
+
+# Skills directories (duplicate across IDEs)
+skills/
