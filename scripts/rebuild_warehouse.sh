@@ -12,6 +12,29 @@ PGDATABASE="${PGDATABASE:-retrosheet}"
 echo "Rebuilding Retrosheet warehouse for years: ${YEARS}"
 echo "Database: ${PGHOST}:${PGPORT}/${PGDATABASE}"
 
+# Canonical Path Validation
+# Enforce: raw_retrosheet → core → features → models → predictions (historical)
+# Enforce: raw_mlb → bridge → core.live_* → features.live_* → predictions (live)
+# Forbidden: EdgeForge, mlb_features, mlb_models, mlb_enhanced directories
+FORBIDDEN_DIRS=("EdgeForge" "mlb_features" "mlb_models" "mlb_enhanced")
+VIOLATIONS=0
+
+for dir in "${FORBIDDEN_DIRS[@]}"; do
+  if [ -d "$ROOT/$dir" ]; then
+    echo "[ERROR] Forbidden prototype directory exists: $dir"
+    echo "[ERROR] Per docs/agents/PROCEDURES.md, prototype schemas must be merged into canonical layers before use"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  fi
+done
+
+if [ $VIOLATIONS -gt 0 ]; then
+  echo "[ERROR] Canonical path validation failed. Found $VIOLATIONS violations."
+  echo "[ERROR] Resolve prototype directories or document their integration before proceeding."
+  exit 1
+fi
+
+echo "[info] Canonical path validation passed."
+
 python3 scripts/warehouse.py check-deps
 # By default, skip the large Retrosheet download to preserve existing raw data.
 # To force a fresh download, set FETCH_RETROSHEET=1 before running.
@@ -31,6 +54,7 @@ psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/090_ml
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/091_mlb_reference_raw.sql
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/095_mlb_reference_views.sql
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/100_bridge_tables.sql
+psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/085_mlb_team_resolution.sql
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/110_live_core_tables.sql
 # Load MLB play‑by‑play table definition
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/080_mlb_pbp.sql
@@ -47,6 +71,7 @@ psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/078_pl
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/079_probability_evaluation_reports.sql
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/081_probability_calibration_artifacts.sql
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/082_count_state_feature_marts.sql
+psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/083_live_prediction_logging.sql
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/080_half_inning_examples.sql
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/120_inference_optimization.sql
 psql -h "$PGHOST" -p "$PGPORT" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f sql/121_inference_functions.sql

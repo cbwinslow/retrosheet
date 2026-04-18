@@ -129,3 +129,4 @@ __pycache__/
 
 # Skills directories (duplicate across IDEs)
 skills/
+current_mappings.txt

@@ -1,0 +1,7 @@
+INSERT 0 0
+ retrosheet_team_id |           name            
+--------------------+---------------------------
+ ALS                | American League All Stars
+ NLS                | National League All Stars
+(2 rows)
+

@@ -42,6 +42,7 @@ This inventory tells agents what each important file does and which workflows ow
 | `config/chadwick_event_columns.txt` | Chadwick event-column reference used to avoid hand-invented mappings. | Check before changing raw event parsing. |
 | `config/ai_providers.example.json` | Example provider configuration for OpenRouter, Groq, and Codex/OpenAI-compatible inference. | Never commit real keys. |
 | `.env.example` | Safe local environment variable template. | Keep secrets out of git. |
+| `docker-compose.yml` | MCP gateway configuration for multi-database PostgreSQL access. | MCP server orchestration. |
 
 ## Warehouse SQL
 | File | Purpose | Canonical Position |
@@ -80,6 +81,8 @@ This inventory tells agents what each important file does and which workflows ow
 | `sql/079_probability_evaluation_reports.sql` | Adds durable calibration and bootstrap report tables plus recent-report views in `predictions`. | Probability evaluation persistence. |
 | `sql/081_probability_calibration_artifacts.sql` | Extends calibration reports with persisted artifact support for reusable calibrated scoring. | Calibrated inference infrastructure. |
 | `sql/082_count_state_feature_marts.sql` | Adds batter/pitcher/context prior-rate marts split by ball-strike count and a count-state-enhanced advanced PA view. | Targeted feature improvement for PA reliability defects. |
+| `sql/083_live_prediction_logging.sql` | Durable storage for live plate appearance predictions and API request tracking with feature snapshots, state snapshots, and prediction provenance. | Live prediction logging, monitoring, and calibration tracking. |
+| `sql/084_pa_predictions_table.sql` | Historical PA predictions table with indexes for game_id, plate_appearance_id, model_id, prediction_run_id, prediction_timestamp. | Historical predictions storage. |
 
 ## Live And Inference SQL
 
@@ -137,7 +140,6 @@ These files may be present as active development work. Treat them as live-bridge
 |---|---|---|
 | `scripts/warehouse.py` | Main CLI for dependency checks, Retrosheet fetch, Chadwick extract/load, and live feed fetch with raw snapshot provenance. | Ingestion and raw landing. |
 | `scripts/rebuild_warehouse.sh` | Canonical full rebuild order. | Reproducibility. Update when adding required SQL. |
-| `scripts/install_chadwick.sh` | Chadwick installation helper. | Environment setup. |
 | `scripts/load_reference_metadata.py` | Loads Retrosheet bio/team/park metadata. | After `020`. |
 | `scripts/load_auxiliary_retrosheet.py` | Loads broader Retrosheet auxiliary files. | After reference metadata. |
 | `scripts/fetch_mlb_schedule.py` | Discovers active MLB games for live ingestion. | Live bridge work. |
@@ -168,6 +170,8 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/register_pa_outcome_calibration.py` | Fits, saves, and registers a reusable isotonic calibration artifact for a registered multiclass PA outcome model. | Calibrated inference path for `pa_outcome_distribution`. |
 | `scripts/predict_pa_outcome_distribution.py` | Scores a historical PA with the registered multiclass outcome model and returns class + derived probabilities. | Historical multiclass inference path. |
 | `scripts/predict_live_pa_outcome_distribution.py` | Scores a stored live MLB plate appearance from the live parity view using the registered multiclass PA outcome model and optional calibration artifact. | Live multiclass inference path. |
+| `scripts/check_model_status.py` | Checks model registry and predictions table status. | Model monitoring. |
+| `scripts/generate_historical_pa_predictions.py` | Generates historical PA outcome predictions in bulk and stores in predictions.pa_predictions. | Batch historical prediction generation. |
 | `scripts/sweep_hyperparameters.py` | Deterministic candidate grid/sweep training. | Candidate model registry rows. |
 | `scripts/promote_best_models.py` | Promotes best registered model versions based on thresholds. | Updates `models.model_registry.is_active`. |
 | `scripts/auto_promote_models.py` | Candidate automation for model promotion. | Verify policy before using. |
@@ -180,14 +184,32 @@ These files may be present as active development work. Treat them as live-bridge
 | File | Purpose | Notes |
 |---|---|---|
 | `scripts/predict_plate_appearance.py` | Scores binary PA targets for a known historical PA using active models. | Current inference path for `pa_batter_*`. |
-| `scripts/simulate_half_inning.py` | Monte Carlo half-inning simulator candidate. | Must use correct baseball state transitions before production use. |
-| `scripts/fast_prediction_service.py` | Model caching and batch prediction service candidate. | Useful for simulation/live latency. |
 | `scripts/test_inference_performance.py` | Inference benchmark tests. | Performance validation. |
 | `scripts/test_baseball_analytics.py` | Data/schema/model smoke test suite candidate. | CI candidate. |
 | `scripts/benchmark_queries.py` | SQL/query benchmark runner. | Warehouse performance. |
 | `scripts/benchmark_report.py` | Benchmark reporting helper. | Query-performance reports. |
 | `scripts/performance_test.py` | Performance experiment script. | Verify syntax/status before relying on it. |
 | `scripts/simple_perf_test.py` | Simple performance demonstration. | Local investigation. |
+
+## Archived Prototype Scripts
+
+| File | Purpose | Archival Reason |
+|---|---|---|
+| `scripts/archive/simulate_half_inning.py` | Monte Carlo half-inning simulator candidate. | Unvalidated baseball state transitions; frozen per AGENTS.md until validated and integrated into canonical layers. |
+| `scripts/archive/fast_prediction_service.py` | Model caching and batch prediction service candidate. | Predates canonical live prediction logging infrastructure; must integrate with `predictions.live_pa_predictions` before reactivation. |
+| `retrosheet/event.py` | Legacy event parsing module. | Not imported anywhere in codebase; predates canonical Retrosheet/Chadwick-based ingestion pipeline; deleted 2026-04-17. |
+
+## Archived SQL Files
+
+| File | Purpose | Archival Reason |
+|---|---|---|
+| `sql/archive/121_inference_functions_legacy.sql` | Legacy inference functions with placeholder mock data. | Placeholder SQL functions predating canonical Python prediction path; archived 2026-04-17. |
+| `sql/archive/092_live_odds_views.sql` | Legacy live odds/market-adjacent views. | Predates canonical market integration schema; archived 2026-04-17. |
+
+| File | Purpose | Archival Reason |
+|---|---|---|
+| `sql/archive/092_live_odds_views.sql` | Materialized views for hit and strikeout odds derived from features.play_snapshot. | Prototype odds views; must be validated against canonical market comparison architecture before reactivation. |
+| `sql/archive/121_inference_functions_legacy.sql` | Placeholder inference functions for fast batch predictions and simulation state management. | Returns mock data instead of real predictions; must integrate with canonical Python prediction serving path before reactivation. |
 
 ## Agent And Interface Scripts
 

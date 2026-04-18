@@ -6,151 +6,18 @@ import json
 from pathlib import Path
 from typing import Any
 
-import joblib
 import numpy as np
 import pandas as pd
-import psycopg2
 from sqlalchemy import create_engine, text
 
-from train_pa_outcome_distribution import (
-    ROOT,
-    TARGET_ID,
-    database_kwargs,
-    database_url,
+from train_pa_outcome_distribution import ROOT, TARGET_ID, database_url
+from retrosheet.prediction import (
+    DEFAULT_MODEL_NAME,
+    apply_calibrators,
+    derived_probabilities,
+    load_calibration_artifact,
+    load_registered_model,
 )
-
-
-DEFAULT_MODEL_NAME = "hist_gradient_boosting_multiclass"
-
-
-def load_registered_model(
-    *,
-    model_name: str,
-    model_version: str | None,
-) -> tuple[Any, dict[str, Any], dict[str, Any]]:
-    conn = psycopg2.connect(**database_kwargs())
-    try:
-        with conn.cursor() as cur:
-            if model_version:
-                cur.execute(
-                    """
-                    SELECT model_name, model_version, artifact_uri, feature_spec, metrics, is_active
-                           , model_id
-                    FROM models.model_registry
-                    WHERE target_id = %s
-                      AND model_name = %s
-                      AND model_version = %s
-                    """,
-                    (TARGET_ID, model_name, model_version),
-                )
-            else:
-                cur.execute(
-                    """
-                    SELECT model_name, model_version, artifact_uri, feature_spec, metrics, is_active
-                           , model_id
-                    FROM models.model_registry
-                    WHERE target_id = %s
-                      AND model_name = %s
-                    ORDER BY is_active DESC, model_version DESC
-                    LIMIT 1
-                    """,
-                    (TARGET_ID, model_name),
-                )
-            row = cur.fetchone()
-            if not row:
-                raise ValueError(
-                    f"No registered {TARGET_ID} model found for {model_name}"
-                    + (f" version {model_version}" if model_version else "")
-                )
-
-    finally:
-        conn.close()
-
-    metadata = {
-        "model_name": row[0],
-        "model_version": row[1],
-        "artifact_uri": row[2],
-        "feature_spec": row[3],
-        "metrics": row[4],
-        "is_active": row[5],
-        "model_id": row[6],
-    }
-    artifact_path = ROOT / metadata["artifact_uri"]
-    if not artifact_path.exists():
-        raise FileNotFoundError(f"Model artifact not found: {artifact_path}")
-    return joblib.load(artifact_path), metadata["feature_spec"], metadata
-
-
-def normalize_rows(probabilities: np.ndarray) -> np.ndarray:
-    probabilities = np.clip(probabilities, 1e-12, 1.0)
-    row_sums = probabilities.sum(axis=1, keepdims=True)
-    row_sums[row_sums == 0.0] = 1.0
-    return probabilities / row_sums
-
-
-def apply_calibrators(probabilities: np.ndarray, calibrators: list[Any]) -> np.ndarray:
-    calibrated = np.zeros_like(probabilities)
-    for class_index, calibrator in enumerate(calibrators):
-        calibrated[:, class_index] = calibrator.predict(probabilities[:, class_index])
-    return normalize_rows(calibrated)
-
-
-def load_calibration_artifact(
-    *,
-    model_id: int,
-    calibration_report_name: str | None,
-) -> tuple[dict[str, Any], dict[str, Any]]:
-    conn = psycopg2.connect(**database_kwargs())
-    try:
-        with conn.cursor() as cur:
-            if calibration_report_name:
-                cur.execute(
-                    """
-                    SELECT calibration_report_id, report_name, calibration_method, artifact_uri, summary
-                    FROM predictions.calibration_reports
-                    WHERE target_id = %s
-                      AND model_id = %s
-                      AND report_name = %s
-                      AND artifact_uri IS NOT NULL
-                    ORDER BY created_at DESC
-                    LIMIT 1
-                    """,
-                    (TARGET_ID, model_id, calibration_report_name),
-                )
-            else:
-                cur.execute(
-                    """
-                    SELECT calibration_report_id, report_name, calibration_method, artifact_uri, summary
-                    FROM predictions.calibration_reports
-                    WHERE target_id = %s
-                      AND model_id = %s
-                      AND artifact_uri IS NOT NULL
-                    ORDER BY created_at DESC
-                    LIMIT 1
-                    """,
-                    (TARGET_ID, model_id),
-                )
-            row = cur.fetchone()
-            if not row:
-                raise ValueError(
-                    "No calibration artifact found for model_id "
-                    f"{model_id}"
-                    + (f" and report {calibration_report_name}" if calibration_report_name else "")
-                )
-    finally:
-        conn.close()
-
-    metadata = {
-        "calibration_report_id": row[0],
-        "report_name": row[1],
-        "calibration_method": row[2],
-        "artifact_uri": row[3],
-        "summary": row[4],
-    }
-    artifact_path = ROOT / metadata["artifact_uri"]
-    if not artifact_path.exists():
-        raise FileNotFoundError(f"Calibration artifact not found: {artifact_path}")
-    return joblib.load(artifact_path), metadata
 
 
 def feature_query(feature_set: str) -> str:
@@ -319,13 +186,30 @@ def derived_probabilities(probabilities: dict[str, float]) -> dict[str, float]:
     }
 
 
+def _state_snapshot(frame: pd.DataFrame) -> dict[str, Any]:
+    """Extract game state snapshot from feature frame for prediction logging."""
+    row = frame.iloc[0]
+    state_fields = [
+        "inning", "is_bottom_inning", "outs_before", "balls", "strikes",
+        "start_bases", "home_score_diff"
+    ]
+    return {field: row.get(field) for field in state_fields if field in row}
+
+
+def _missing_features(frame: pd.DataFrame, numeric_features: list[str], categorical_features: list[str]) -> list[str]:
+    """Identify which features are null/missing in the feature frame."""
+    row = frame.iloc[0]
+    all_features = numeric_features + categorical_features
+    return [col for col in all_features if col in row and pd.isna(row[col])]
+
+
 def predict_pa_outcome_distribution(
     *,
     game_id: str,
     plate_appearance_id: int,
     model_name: str = DEFAULT_MODEL_NAME,
     model_version: str | None = None,
-    apply_calibration: bool = False,
+    apply_calibration: bool = True,
     calibration_report_name: str | None = None,
 ) -> dict[str, Any]:
     model, feature_spec, metadata = load_registered_model(
@@ -380,6 +264,10 @@ def predict_pa_outcome_distribution(
     probabilities = {label: float(probability_vector[index]) for index, label in enumerate(classes)}
     probability_sum = float(sum(probabilities.values()))
 
+    # Extract state snapshot and missing features for alignment with live scorer
+    state = _state_snapshot(frame)
+    missing = _missing_features(frame, numeric_features, categorical_features)
+
     result = {
         "target_id": TARGET_ID,
         "game_id": game_id,
@@ -395,6 +283,8 @@ def predict_pa_outcome_distribution(
         "probability_sum": probability_sum,
         "class_probabilities": probabilities,
         "derived_probabilities": derived_probabilities(probabilities),
+        "state_snapshot": state,
+        "missing_features": missing,
         "input_features": frame.iloc[0][numeric_features + categorical_features].to_dict(),
     }
     if calibration_metadata is not None:

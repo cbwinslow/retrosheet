@@ -23,6 +23,8 @@ CREATE TABLE bridge.team_xref (
     team_name TEXT,
     league TEXT,
     division TEXT,
+    season_start INTEGER DEFAULT 1876,  -- First season this team ID is valid
+    season_end INTEGER DEFAULT 9999,    -- Last season this team ID is valid
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 

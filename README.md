@@ -109,23 +109,45 @@ cd ..
 
 ### Running the Warehouse Build
 
-The canonical rebuild order is encapsulated in `scripts/rebuild_warehouse.sh`.  For a full historical + live setup:
+The canonical rebuild order is encapsulated in `scripts/rebuild_warehouse.sh`. For a full historical + live setup:
 
 ```bash
-./scripts/rebuild_warehouse.sh
+YEARS=2000-2025 ./scripts/rebuild_warehouse.sh
 ```
 
-The script performs the following steps (see `docs/agents/PROJECT_OBJECTIVES.md` for rationale):
+The script performs the following steps:
 
-1. **Dependency check** – `scripts/warehouse.py check-deps`
-2. **Retrosheet fetch & extract** – `scripts/warehouse.py fetch-retrosheet` → `scripts/warehouse.py extract-chadwick`
-3. **Load Chadwick data** – `scripts/warehouse.py load-chadwick`
-4. **Populate bridge tables** – `scripts/populate_bridge_tables.py`
-5. **Create analysis views** – `psql -f sql/130_analysis_views.sql`
-6. **Load reference & auxiliary metadata** – `scripts/load_reference_metadata.py` & `scripts/load_auxiliary_retrosheet.py`
-7. **Build feature marts** – `psql -f sql/050_feature_marts.sql`
-8. **(Optional) Advanced feature marts** – `psql -f sql/060_advanced_feature_marts.sql`
-9. **Train models** – `scripts/train_models.py --feature-set enriched`
+1. **Canonical path validation** – Checks for forbidden prototype directories (`EdgeForge`, `mlb_features`, `mlb_models`, `mlb_enhanced`)
+2. **Dependency check** – `scripts/warehouse.py check-deps`
+3. **Retrosheet fetch** – `scripts/warehouse.py fetch-retrosheet` (skipped by default unless `FETCH_RETROSHEET=1`)
+4. **Database initialization** – `scripts/warehouse.py init-db`
+5. **Chadwick extraction** – `scripts/warehouse.py extract-chadwick --years $YEARS --outputs all`
+6. **Chadwick loading** – `scripts/warehouse.py load-chadwick --years $YEARS --outputs all`
+7. **Core schema migrations** – Sequential SQL migrations for games, events, plate appearances
+8. **MLB live data schema** – `sql/090_mlb_live_data.sql`, `sql/091_mlb_reference_raw.sql`
+9. **MLB reference views** – `sql/095_mlb_reference_views.sql`
+10. **Bridge tables** – `sql/100_bridge_tables.sql`
+11. **Team resolution** – `sql/085_mlb_team_resolution.sql`
+12. **Live core tables** – `sql/110_live_core_tables.sql`
+13. **MLB play-by-play** – `sql/080_mlb_pbp.sql`
+14. **Reference metadata** – `scripts/load_reference_metadata.py`
+15. **Auxiliary metadata** – `scripts/load_auxiliary_retrosheet.py`
+16. **Feature marts** – `sql/050_feature_marts.sql`, `sql/060_advanced_feature_marts.sql`, `sql/070_temporal_and_production_marts.sql`
+17. **Interface workflows** – `sql/075_interface_workflows.sql`
+18. **PA outcome models** – `sql/076_plate_appearance_outcome_model.sql`, `sql/078_plate_appearance_outcome_grouped.sql`
+19. **Probability evaluation** – `sql/079_probability_evaluation_reports.sql`, `sql/081_probability_calibration_artifacts.sql`
+20. **Count-state features** – `sql/082_count_state_feature_marts.sql`
+21. **Live prediction logging** – `sql/083_live_prediction_logging.sql`
+22. **Half-inning examples** – `sql/080_half_inning_examples.sql`
+23. **Inference optimization** – `sql/120_inference_optimization.sql`, `sql/121_inference_functions.sql`
+24. **Live PA feature parity** – `sql/122_live_pa_feature_parity.sql`
+25. **Analysis views** – `sql/130_analysis_views.sql`
+26. **Query monitor** – Starts FastAPI query monitor on port 8000
+
+**Environment variables:**
+- `YEARS` – Year range for historical data (default: `2000-2025`)
+- `PGHOST`, `PGPORT`, `PGDATABASE` – PostgreSQL connection (default: `localhost:5432/retrosheet`)
+- `FETCH_RETROSHEET` – Set to `1` to force fresh Retrosheet download
 
 ---
 
@@ -230,6 +252,108 @@ All model training is reproducible via the `scripts/cross_validate_models.py` an
 Each script prints usage information when invoked with `-h`.
 
 ---
+
+## Testing
+
+The project includes comprehensive test coverage for core functionality:
+
+### Unit Tests
+- Baseball state transition logic (`retrosheet/simulation/test_baseball_state.py`)
+- PA prediction service (`retrosheet/prediction/test_pa_service.py`)
+- Calibration logic (`retrosheet/prediction/test_calibration.py`)
+- Feature engineering (`retrosheet/prediction/test_feature_engineering.py`)
+- Data transformation (`retrosheet/prediction/test_data_transformation.py`)
+
+Run unit tests:
+```bash
+pytest retrosheet/prediction/test_*.py -v
+pytest retrosheet/simulation/test_*.py -v
+```
+
+### Integration Tests
+- Prediction serving workflows (`scripts/test_integration_prediction.py`)
+
+Run integration tests:
+```bash
+pytest scripts/test_integration_prediction.py -v
+```
+
+### Validation Tests
+- Model predictions against historical data (`scripts/test_validation_model_predictions.py`)
+- Simulation outputs against historical distributions (`scripts/test_validation_simulation.py`)
+
+Run validation tests:
+```bash
+pytest scripts/test_validation_*.py -v
+```
+
+### Data Quality Validation
+- Schema validation, null rate monitoring, value range validation
+- Referential integrity checks, temporal consistency validation
+
+Run data quality validation:
+```bash
+python3 scripts/validate_data_quality.py
+```
+
+## Training & Onboarding
+
+Comprehensive training materials are available for new contributors:
+
+- **Warehouse Rebuild**: `docs/TRAINING_WAREHOUSE_REBUILD.md` - Step-by-step warehouse rebuild guide
+- **Model Training**: `docs/TRAINING_MODEL_TRAINING.md` - Model training and evaluation guide
+- **Prediction Serving**: `docs/TRAINING_PREDICTION_SERVING.md` - Prediction serving guide
+- **Troubleshooting**: `docs/TROUBLESHOOTING.md` - Common issues and solutions
+- **FAQ**: `docs/FAQ.md` - Frequently asked questions
+- **Contributor Onboarding**: `docs/CONTRIBUTOR_ONBOARDING.md` - New contributor guide
+
+## Quality & Monitoring
+
+### Data Quality SLAs
+- Schema validation SLAs defined in `docs/DATA_QUALITY_SLAs.md`
+- Null rate SLAs: 5% for non-critical, 0% for critical fields
+- Value range SLAs: 0 out-of-range values
+- Referential integrity SLAs: 0% orphan rate
+
+### Reliability Dashboard
+- Model calibration metrics (ECE, confidence gaps)
+- Feature null rates monitoring
+- Prediction latency tracking
+- Drift detection (feature drift, prediction drift)
+- Design documented in `docs/RELIABILITY_DASHBOARD.md`
+
+### Performance Optimization
+- Model loading optimization (caching, lazy loading)
+- Database query optimization (indexes, connection pooling)
+- Prediction inference optimization (batch processing, vectorization)
+- Calibration optimization (lookup tables, pre-computation)
+- Documented in `docs/PERFORMANCE_OPTIMIZATION.md`
+
+## Simulation
+
+The project includes a baseball state transition engine for simulation and odds calculation:
+
+- State machine in `retrosheet/simulation/baseball_state.py`
+- Handles base occupancy, out count, run scoring, lineup progression
+- Documented in `docs/MLB_SIMULATION.md`
+
+Usage:
+```python
+from retrosheet.simulation.baseball_state import BaseballState, apply_event
+
+state = BaseballState(bases=0, outs=0, home_score=0, away_score=0, inning=1)
+new_state = apply_event(state, event_type='single')
+```
+
+## Market Integration (Design)
+
+Market comparison layer design for comparing model predictions with public prediction markets:
+
+- Market snapshot tables (`sql/125_market_snapshot_tables.sql`)
+- Model edge comparison views (`sql/126_model_edge_comparison.sql`)
+- Architecture documented in `docs/MARKET_INTEGRATION.md`
+
+Note: This is currently in design phase; requires market data ingestion for implementation.
 
 ## Testing
 

@@ -2,7 +2,7 @@
 
 This file is the shortest durable handoff for another agent. Read this first when resuming work after context loss.
 
-Last updated: `2026-04-12`
+Last updated: `2026-04-18`
 
 ## Current Objective
 
@@ -29,6 +29,17 @@ Use these layers and do not invent parallel ones:
 - `analysis`: historical + live combined read layer
 
 Do not treat `mlb_features`, `mlb_models`, `mlb_enhanced`, or EdgeForge prototype schemas as canonical.
+
+## Prediction Serving Status
+
+**Default Calibration:** All PA outcome predictions now default to calibrated output (apply_calibration=True).
+- Historical scorer: `scripts/predict_pa_outcome_distribution.py`
+- Live scorer: `scripts/predict_live_pa_outcome_distribution.py`
+- API route: `baseball-chatbot-ui/app/api/predict/route.ts`
+
+**Override:** Pass `apply_calibration=false` to request raw probabilities.
+
+**API Contract:** TypeScript types defined in `baseball-chatbot-ui/lib/types/predict.ts` with stable error contracts.
 
 ## Current Data State
 
@@ -230,15 +241,50 @@ Important limitation:
 - park reconciliation is still intentionally regular-season-oriented; spring-training/non-regular-season venues may still remain as `MLB###` fallback park ids after replay
 - This is acceptable for current live scoring, but not a complete historical MLB-team replay design.
 
+## Model Registry Status
+
+114 models registered in `models.model_registry`:
+- Active models: 2 (both half-inning models)
+  - `half_inning_any_run` (logistic_regression)
+  - `half_inning_lhb_any_hit` (logistic_regression)
+- Active PA model: 1 (hist_gradient_boosting_multiclass, model_id 101)
+- Inactive models: 111 (other PA outcome distribution models)
+- Best PA model: `hist_gradient_boosting_multiclass` (model_id 101)
+  - Train accuracy: 44.3%, log_loss: 1.39
+  - Validation accuracy: 41.3%, log_loss: 1.51
+  - Top-3 accuracy: 84.1% (train), 82.0% (validation)
+  - Trained on 2000-2022 data (211K training rows)
+- Predictions table `predictions.pa_predictions` exists (created 2026-04-18)
+- No predictions generated yet
+
+## Recent Bug Fixes (2026-04-18)
+
+- Fixed data quality validation script (column_name undefined error)
+- Fixed baseball state engine bugs (dataclass mutable default, double transition, sacrifice fly, out transition)
+- All unit tests now passing
+
+## Recent Infrastructure Work (2026-04-18)
+
+- Created `predictions.pa_predictions` table for historical PA predictions
+- Activated best PA model (model_id 101) for PA outcome distribution
+- Created `scripts/generate_historical_pa_predictions.py` for bulk prediction generation
+- Resolved PostgreSQL MCP server conflicts using multi-database approach
+
+## MCP Server Status
+
+- PostgreSQL MCP servers resolved using `multi-postgres-mcp-server` approach
+- Single `postgres` server supports multiple databases (epstein, letta, retrosheet, cbw_rag)
+- Full read-write access to all databases through MCP server
+- Docker compose approach no longer needed
+
 ## Best Move Right Now
 
 Do this next:
 
-1. decide whether the count-state-enhanced calibrated scorer should become the default served path for this target
-2. persist the full bootstrap-backed report set for the new model version
-3. use `scripts/replay_live_bridge_backfill.py` on a bounded regular-season slice and measure how many live parity rows pick up park/team priors
-4. complete `game_xref` and season-aware team reconciliation after the replay path exists
-5. add durable live prediction logging on top of the new live scorer
+1. Generate historical predictions using `scripts/generate_historical_pa_predictions.py`
+2. Set up live prediction pipeline for real-time scoring
+3. Backtest and evaluate model performance on historical predictions
+4. Implement calibration if needed
 
 Do not do this yet:
 
@@ -271,3 +317,63 @@ Resume from these issues before starting new work:
 - `#30` Create live PA outcome feature parity view for model inference
 - `#31` Add live PA outcome scoring workflow and prediction logging
 - `#22` Add pipeline runbook and warehouse health panel
+
+## Recent Work Completed (2026-04-17)
+
+### Phase 4.2: Baseball State Transition Engine
+- Created `retrosheet/simulation/baseball_state.py` with state machine for base occupancy, outs, scoring
+- Created comprehensive unit tests in `retrosheet/simulation/test_baseball_state.py`
+- Created reproducibility tests in `retrosheet/simulation/test_reproducibility.py`
+- Documented state machine rules in `docs/MLB_SIMULATION.md`
+
+### Phase 6: Market Comparison Layer (Design)
+- Archived `sql/092_live_odds_views.sql` to `sql/archive/`
+- Archived `sql/121_inference_functions.sql` to `sql/archive/`
+- Created `sql/125_market_snapshot_tables.sql` for market data schema
+- Created `sql/126_model_edge_comparison.sql` for edge analysis views
+- Created `docs/MARKET_INTEGRATION.md` documenting market integration architecture
+
+### Phase 7: Refactor and Consolidate
+- Created `retrosheet/prediction/__init__.py` shared module for common prediction logic
+- Refactored `scripts/predict_pa_outcome_distribution.py` to use shared module
+- Refactored `scripts/predict_live_pa_outcome_distribution.py` to use shared module
+- Deleted unused `retrosheet/event.py` (legacy event parser)
+- Created `docs/FEATURE_STORE_ARCHITECTURE.md` for feature store design
+
+### Phase 8: Quality and Monitoring (Design)
+- Created `docs/RELIABILITY_DASHBOARD.md` for dashboard design
+- Created `scripts/validate_data_quality.py` for data quality validation
+- Created `docs/DATA_QUALITY_SLAs.md` for data quality SLAs
+- Created `docs/PERFORMANCE_OPTIMIZATION.md` for performance optimization strategies
+
+### Phase 9.1: Update Documentation
+- Updated `docs/agents/CURRENT_SNAPSHOT.md` with recent work
+- Created `docs/CONTRIBUTOR_ONBOARDING.md` for contributor onboarding guide
+
+### Phase 9.2: Training and Onboarding
+- Created `docs/TRAINING_WAREHOUSE_REBUILD.md` for warehouse rebuild training
+- Created `docs/TRAINING_MODEL_TRAINING.md` for model training training
+- Created `docs/TRAINING_PREDICTION_SERVING.md` for prediction serving training
+- Created `docs/TROUBLESHOOTING.md` for troubleshooting procedures
+- Created `docs/FAQ.md` for frequently asked questions
+
+### Phase 10: Testing and Validation
+- Created unit tests in `retrosheet/prediction/test_pa_service.py` for PA prediction service
+- Created unit tests in `retrosheet/prediction/test_calibration.py` for calibration logic
+- Created unit tests in `retrosheet/prediction/test_feature_engineering.py` for feature engineering
+- Created unit tests in `retrosheet/prediction/test_data_transformation.py` for data transformation
+- Created integration tests in `scripts/test_integration_prediction.py` for prediction serving
+- Created validation tests in `scripts/test_validation_model_predictions.py` for model predictions
+- Created validation tests in `scripts/test_validation_simulation.py` for simulation outputs
+- Created `docs/VALIDATION_REPORT_TEMPLATES.md` for validation report templates
+
+### Phase 11: Deployment and Operations (Design)
+- Created `docs/PRODUCTION_REQUIREMENTS.md` for production environment requirements
+- Created `docs/OPERATIONS_RUNBOOKS.md` for operations runbooks
+- Created `docs/CICD_PIPELINE.md` for CI/CD pipeline design
+- Created `docs/SCALING_PREPARATION.md` for scaling strategies
+
+### Archive and Documentation
+- Archived legacy SQL files to `sql/archive/`
+- Deleted unused `retrosheet/event.py`
+- Updated `docs/agents/FILE_INVENTORY.md` with 28 new files

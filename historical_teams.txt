@@ -1,0 +1,296 @@
+ retrosheet_team_id |          city           |     nickname     | first_season | last_season 
+--------------------+-------------------------+------------------+--------------+-------------
+ CH1                | Chicago                 | White Stockings  |         1871 |        1871
+ FW1                | Ft. Wayne               | Kekiongas        |         1871 |        1871
+ RC1                | Rockford                | Forest Citys     |         1871 |        1871
+ BR1                | Brooklyn                | Eckfords         |         1872 |        1872
+ MID                | Middletown              | Mansfields       |         1872 |        1872
+ WS3                | Washington              | Olympics         |         1871 |        1872
+ WS4                | Washington              | Nationals        |         1872 |        1872
+ TRO                | Troy                    | Haymakers        |         1871 |        1872
+ CL1                | Cleveland               | Forest Cities    |         1871 |        1872
+ BL4                | Baltimore               | Marylands        |         1873 |        1873
+ ELI                | Elizabeth               | Resolutes        |         1873 |        1873
+ WS5                | Washington              | Nationals        |         1873 |        1873
+ BL1                | Baltimore               | Lord Baltimores  |         1872 |        1874
+ WS6                | Washington              | Olympics         |         1875 |        1875
+ BR2                | Brooklyn                | Atlantics        |         1872 |        1875
+ HR1                | Hartford                | Dark Blues       |         1874 |        1875
+ NH1                | New Haven               | New Havens       |         1875 |        1875
+ SL2                | St. Louis               | Brown Stockings  |         1875 |        1875
+ SL1                | St. Louis               | Red Stockings    |         1875 |        1875
+ BS1                | Boston                  | Braves           |         1871 |        1875
+ PH3                | Philadelphia            | Centennials      |         1875 |        1875
+ CH2                | Chicago                 | White Stockings  |         1874 |        1875
+ PH2                | Philadelphia            | White Stockings  |         1873 |        1875
+ KEO                | Keokuk                  | Westerns         |         1875 |        1875
+ PH1                | Philadelphia            | Athletics        |         1871 |        1875
+ NY2                | New York                | Mutuals          |         1871 |        1875
+ PHN                | Philadelphia            | Athletics        |         1876 |        1876
+ NY3                | New York                | Mutuals          |         1876 |        1876
+ LS1                | Louisville              | Grays            |         1876 |        1877
+ HAR                | Hartford                | Dark Blues       |         1876 |        1877
+ SL3                | St. Louis               | Brown Stockings  |         1876 |        1877
+ ML2                | Milwaukee               | Cream Citys      |         1878 |        1878
+ IN1                | Indianapolis            | Blues            |         1878 |        1878
+ SR1                | Syracuse                | Stars            |         1879 |        1879
+ CN4                | Cincinnati              | Stars            |         1880 |        1880
+ CN1                | Cincinnati              | Reds             |         1876 |        1880
+ WOR                | Worcester               | Ruby Legs        |         1880 |        1882
+ TRN                | Troy                    | Trojans          |         1879 |        1882
+ WS7                | Washington              | Nationals        |         1884 |        1884
+ CNU                | Cincinnati              | Outlaw Reds      |         1884 |        1884
+ SLU                | St. Louis               | Maroons          |         1884 |        1884
+ TL1                | Toledo                  | Blue Stockings   |         1884 |        1884
+ RIC                | Richmond                | Virginias        |         1884 |        1884
+ WIL                | Wilmington              | Quicksteps       |         1884 |        1884
+ WSU                | Washington              | Nationals        |         1884 |        1884
+ BLU                | Baltimore               | Monumentals      |         1884 |        1884
+ SPU                | St. Paul                | Saints           |         1884 |        1884
+ MLU                | Milwaukee               | Brewers          |         1884 |        1884
+ CL5                | Columbus                | Colts            |         1883 |        1884
+ IN2                | Indianapolis            | Blues            |         1884 |        1884
+ CL2                | Cleveland               | Spiders          |         1879 |        1884
+ ALT                | Altoona                 | Mountain Citys   |         1884 |        1884
+ BSU                | Boston                  | Reds             |         1884 |        1884
+ PHU                | Philadelphia            | Keystones        |         1884 |        1884
+ CHU                | Chicago-Pittsburgh      | Browns           |         1884 |        1884
+ KCU                | Kansas City             | Cowboys          |         1884 |        1884
+ BFN                | Buffalo                 | Bisons           |         1879 |        1885
+ PRO                | Providence              | Grays            |         1878 |        1885
+ PT1                | Pittsburgh              | Pirates          |         1882 |        1886
+ KCN                | Kansas City             | Cowboys          |         1886 |        1886
+ SL5                | St. Louis               | Maroons          |         1885 |        1886
+ NY4                | New York                | Metropolitans    |         1883 |        1887
+ CL3                | Cleveland               | Spiders          |         1887 |        1888
+ DTN                | Detroit                 | Wolverines       |         1881 |        1888
+ KC2                | Kansas City             | Cowboys          |         1888 |        1889
+ WS8                | Washington              | Senators         |         1886 |        1889
+ BL2                | Baltimore               | Orioles          |         1882 |        1889
+ BR3                | Brooklyn                | Dodgers          |         1884 |        1889
+ CN2                | Cincinnati              | Reds             |         1882 |        1889
+ IN3                | Indianapolis            | Hoosiers         |         1887 |        1889
+ TL2                | Toledo                  | Maumees          |         1890 |        1890
+ PHP                | Philadelphia            | Quakers          |         1890 |        1890
+ BRP                | Brooklyn                | Wonders          |         1890 |        1890
+ BFP                | Buffalo                 | Bisons           |         1890 |        1890
+ CHP                | Chicago                 | Pirates          |         1890 |        1890
+ PTP                | Pittsburgh              | Burghers         |         1890 |        1890
+ NYP                | New York                | Giants           |         1890 |        1890
+ SR2                | Syracuse                | Stars            |         1890 |        1890
+ BR4                | Brooklyn                | Gladiators       |         1890 |        1890
+ CLP                | Cleveland               | Infants          |         1890 |        1890
+ BSP                | Boston                  | Reds             |         1890 |        1890
+ RC2                | Rochester               | Hop Bitters      |         1890 |        1890
+ BL3                | Baltimore               | Orioles          |         1890 |        1891
+ SL4                | St. Louis               | Cardinals        |         1882 |        1891
+ BS2                | Boston                  | Reds             |         1891 |        1891
+ CL6                | Columbus                | Colts            |         1889 |        1891
+ CN3                | Cincinnati              | Kelly's Killers  |         1891 |        1891
+ PH4                | Philadelphia            | Athletics        |         1882 |        1891
+ LS2                | Louisville              | Colonels         |         1882 |        1891
+ WS9                | Washington              | Senators         |         1891 |        1891
+ ML3                | Milwaukee               | Brewers          |         1891 |        1891
+ LS3                | Louisville              | Colonels         |         1892 |        1899
+ BLN                | Baltimore               | Orioles          |         1892 |        1899
+ WSN                | Washington              | Senators         |         1892 |        1899
+ CL4                | Cleveland               | Spiders          |         1889 |        1899
+ MLA                | Milwaukee               | Brewers          |         1901 |        1901
+ BLA                | Baltimore               | Orioles          |         1901 |        1902
+ CUX                | X-Cuban                 | Giants           |         1903 |        1904
+ PHG                | Philadelphia            | Giants           |         1903 |        1904
+ IND                | Indianapolis            | Hoosiers         |         1914 |        1914
+ KCF                | Kansas City             | Packers          |         1914 |        1915
+ BRF                | Brooklyn                | Tip-Tops         |         1914 |        1915
+ SLF                | St.Louis                | Terriers         |         1914 |        1915
+ BUF                | Buffalo                 | Blues            |         1914 |        1915
+ PTF                | Pittsburgh              | Rebels           |         1914 |        1915
+ CHF                | Chicago                 | Whales           |         1914 |        1915
+ NEW                | Newark                  | Peppers          |         1915 |        1915
+ BLF                | Baltimore               | Terrapins        |         1914 |        1915
+ PRC                | Pennsylvania            | Red Caps         |         1917 |        1920
+ CG1                | Chicago                 | Giants           |         1910 |        1921
+ SLG                | St. Louis               | Giants           |         1911 |        1921
+ CB1                | Columbus                | Buckeyes         |         1921 |        1921
+ CNN                | Cincinnati              | Cubans           |         1921 |        1921
+ STA                | Decatur                 | Staleys          |         1921 |        1921
+ PTK                | Pittsburgh              | Keystones        |         1922 |        1922
+ CV1                | Cleveland               | Tate Stars       |         1922 |        1922
+ NBG                | New York                | Bacharach Giants |         1922 |        1922
+ ML4                | Milwaukee               | Bears            |         1923 |        1923
+ TLN                | Toledo                  | Tigers           |         1923 |        1923
+ WSE                | Washington              | Potomacs         |         1924 |        1924
+ CV2                | Cleveland               | Browns           |         1924 |        1924
+ WLE                | Wilmington              | Potomacs         |         1925 |        1925
+ BXG                | Bronx                   | Giants           |         1925 |        1925
+ IN4                | Indianapolis            | ABC's            |         1907 |        1926
+ DAY                | Dayton                  | Marcos           |         1918 |        1926
+ CV3                | Cleveland               | Elites           |         1926 |        1926
+ NWS                | Newark                  | Stars            |         1926 |        1926
+ HAE                | Harrisburg              | Giants           |         1924 |        1927
+ CV4                | Cleveland               | Hornets          |         1927 |        1927
+ PHE                | Philadelphia            | Tigers           |         1928 |        1928
+ CV5                | Cleveland               | Tigers           |         1928 |        1928
+ CLG                | Cleveland               | Giants           |         1928 |        1928
+ ASL                | Lou Gehrig              | All Stars        |         1929 |        1929
+ ACY                | Atlantic City           | Bacharach Giants |         1916 |        1929
+ CUE                | Cuban                   | Stars (East)     |         1916 |        1929
+ NYL                | New York                | Lincoln Giants   |         1911 |        1930
+ KLK                | Kelley                  | Kars             |         1930 |        1930
+ CUW                | Cuban                   | Stars (West)     |         1906 |        1930
+ ALN                | American League         | All Stars        |         1926 |        1930
+ ASG                | Lefty Grove             | All Stars        |         1930 |        1930
+ ASC                | Max Carey               | All Stars        |         1930 |        1931
+ HAS                | Harlem                  | Stars            |         1931 |        1931
+ SCU                | Stars                   | of Cuba          |         1931 |        1931
+ ASO                | Steve O'Neill           | All Stars        |         1931 |        1931
+ DT1                | Detroit                 | Stars            |         1919 |        1931
+ SSN                | St. Louis               | Stars            |         1922 |        1931
+ CV6                | Cleveland               | Cubs             |         1931 |        1931
+ CUH                | Cuban                   | House of David   |         1931 |        1931
+ WSW                | Washington              | Pilots           |         1932 |        1932
+ ASB                | Baltimore               | All Stars        |         1927 |        1932
+ CUP                | Cuban                   | Stars            |         1932 |        1932
+ CVS                | Cleveland               | Stars            |         1932 |        1932
+ DTW                | Detroit                 | Wolves           |         1932 |        1932
+ HIL                | Hilldale                | Club             |         1917 |        1932
+ IN5                | Indianapolis            | ABC's            |         1931 |        1932
+ LRS                | Little Rock             | Black Travelers  |         1932 |        1932
+ LS4                | Louisville              | White Caps       |         1930 |        1932
+ MNR                | Monroe                  | Monarchs         |         1932 |        1932
+ MTG                | Montgomery              | Grey Sox         |         1932 |        1932
+ NLN                | National League         | All Stars        |         1932 |        1932
+ NWW                | Newark                  | Browns           |         1932 |        1932
+ CB2                | Columbus                | Bluebirds        |         1933 |        1933
+ CV7                | Cleveland               | Giants           |         1933 |        1933
+ SHV                | Shevlin                 | All Stars        |         1933 |        1933
+ DI1                | Detroit - Indianapolis  | Stars            |         1933 |        1933
+ AKR                | Akron                   | Grays            |         1933 |        1933
+ NSH                | Nashville               | Elite Giants     |         1929 |        1934
+ BLS                | Baltimore               | Black Sox        |         1920 |        1934
+ BKB                | Brooklyn                | Bushwicks        |         1934 |        1934
+ CV8                | Cleveland               | Red Sox          |         1934 |        1934
+ ALM                | American League         | Stars in Mexico  |         1935 |        1935
+ BRS                | Babe Ruth               | All Stars        |         1935 |        1935
+ CHM                | Chicago                 | Mills            |         1934 |        1935
+ BIS                | Bismarck                | Club             |         1935 |        1935
+ SHR                | Shroyer                 | All Stars        |         1935 |        1935
+ NW1                | Newark                  | Dodgers          |         1934 |        1935
+ CB3                | Columbus                | Elite Giants     |         1935 |        1935
+ BRN                | Brooklyn                | Eagles           |         1935 |        1936
+ PH6                | Philadelphia            | Bacharach Giants |         1934 |        1936
+ CUS                | Cuban                   | Stars (Ind)      |         1932 |        1937
+ WEG                | Washington              | Elite Giants     |         1936 |        1937
+ BRG                | Brooklyn                | Royal Giants     |         1904 |        1937
+ IN6                | Indianapolis            | Athletics        |         1937 |        1937
+ SDO                | Santo Domingo           | All Stars        |         1937 |        1937
+ DT2                | Detroit                 | Stars            |         1937 |        1937
+ CI1                | Cincinnati              | Tigers           |         1936 |        1937
+ WHK                | White                   | Kings            |         1925 |        1937
+ IN7                | Indianapolis            | ABC's            |         1938 |        1938
+ WBS                | Washington              | Black Senators   |         1938 |        1938
+ PTC                | Pittsburgh              | Crawfords        |         1931 |        1938
+ BFA                | Buffalo                 | Black Aces       |         1938 |        1938
+ TLC                | Toledo                  | Crawfords        |         1939 |        1939
+ ATN                | Atlanta                 | Black Crackers   |         1932 |        1939
+ SSA                | St. Louis               | Stars            |         1937 |        1939
+ CV9                | Cleveland               | Bears            |         1939 |        1940
+ AST                | Taylor                  | All Stars        |         1940 |        1940
+ IN8                | Indianapolis            | Crawfords        |         1940 |        1940
+ ECG                | Eastern                 | Colored Giants   |         1941 |        1941
+ SNO                | St. Louis - New Orleans | Stars            |         1940 |        1941
+ TWA                | Ted Williams            | All Stars        |         1941 |        1941
+ NNL                | NNL                     | All Stars        |         1937 |        1941
+ NAL                | NAL                     | All Stars        |         1937 |        1942
+ JAX                | Jacksonville            | Red Caps         |         1938 |        1942
+ PRG                | Philadelphia            | Royal Giants     |         1925 |        1942
+ CCB                | Cincinnati-Cleveland    | Buckeyes         |         1942 |        1942
+ ASD                | Dizzy Dean              | All Stars        |         1934 |        1942
+ PIR                | Pirrone                 | All Stars        |         1925 |        1943
+ BCG                | Baltimore               | Colored Giants   |         1943 |        1943
+ HWS                | Honus Wagner            | All-Stars        |         1943 |        1943
+ GLK                | Great Lakes             | Naval Training   |         1943 |        1943
+ HSL                | Harrisburg - St. Louis  | Stars            |         1943 |        1943
+ WPS                | Western Pipe & Steel    | Boilermakers     |         1943 |        1943
+ CI2                | Cincinnati              | Clowns           |         1942 |        1943
+ AGS                | Augie Galan             | All Stars        |         1944 |        1944
+ SAS                | South                   | All Stars        |         1944 |        1945
+ NAS                | North                   | All Stars        |         1944 |        1945
+ NNS                | Negro League            | All Stars        |         1934 |        1945
+ PHB                | Phil-Birm               | Baron Stars      |         1945 |        1945
+ VDA                | Vince DiMaggio          | All Stars        |         1945 |        1945
+ CIA                | Cincinnati-Indianapolis | Clowns           |         1944 |        1945
+ PRK                | Parker                  | All Stars        |         1942 |        1945
+ CDA                | Chuck Dressen           | All Stars        |         1945 |        1945
+ SPZ                | Sprinz                  | All Stars        |         1945 |        1945
+ VMA                | Vander Meer             | All Stars        |         1946 |        1946
+ CCR                | Cincinnati              | Crescents        |         1946 |        1946
+ ASP                | Satchel Paige           | All-Stars        |         1946 |        1946
+ ASF                | Bob Feller              | All Stars        |         1945 |        1947
+ KCR                | Kansas City             | Royals           |         1943 |        1948
+ NY5                | New York                | Black Yankees    |         1932 |        1948
+ CVB                | Cleveland               | Buckeyes         |         1943 |        1948
+ NW2                | Newark                  | Eagles           |         1936 |        1948
+ HOM                | Homestead               | Grays            |         1918 |        1948
+ MLS                | Major League            | All Stars        |         1931 |        1948
+ KCM                | Kansas City             | Monarchs         |         1920 |        1949
+ NY6                | New York                | Cubans           |         1935 |        1949
+ BLG                | Baltimore               | Elite Giants     |         1938 |        1949
+ HOE                | Houston                 | Eagles           |         1949 |        1949
+ CAG                | Chicago                 | American Giants  |         1911 |        1949
+ IN9                | Indianapolis            | Clowns           |         1946 |        1949
+ BIR                | Birmingham              | Black Barons     |         1923 |        1949
+ LCB                | Louisville-Cleveland    | Buckeyes         |         1949 |        1949
+ MEM                | Memphis                 | Red Sox          |         1924 |        1949
+ PH5                | Philadelphia            | Stars            |         1934 |        1949
+ BSN                | Boston                  | Braves           |         1876 |        1952
+ SLA                | St.Louis                | Browns           |         1902 |        1953
+ PHA                | Philadelphia            | Athletics        |         1901 |        1954
+ NY1                | New York                | Giants           |         1883 |        1957
+ BRO                | Brooklyn                | Dodgers          |         1890 |        1957
+ WS1                | Washington              | Senators         |         1901 |        1960
+ ASE                | East                    | All Stars        |         1933 |        1962
+ ASW                | West                    | All Stars        |         1933 |        1962
+ LAA                | Los Angeles             | Angels           |         1961 |        1964
+ MLN                | Milwaukee               | Braves           |         1953 |        1965
+ KC1                | Kansas City             | Athletics        |         1955 |        1967
+ SE1                | Seattle                 | Pilots           |         1969 |        1969
+ WS2                | Washington              | Senators         |         1961 |        1971
+ CAL                | California              | Angels           |         1965 |        1996
+ MON                | Montreal                | Expos            |         1969 |        2004
+ FLO                | Florida                 | Marlins          |         1993 |        2011
+ OAK                | Oakland                 | Athletics        |         1968 |        2024
+ TEX                | Texas                   | Rangers          |         1972 |        2025
+ SLN                | St. Louis               | Cardinals        |         1892 |        2025
+ SFN                | San Francisco           | Giants           |         1958 |        2025
+ SEA                | Seattle                 | Mariners         |         1977 |        2025
+ SDN                | San Diego               | Padres           |         1969 |        2025
+ TOR                | Toronto                 | Blue Jays        |         1977 |        2025
+ BAL                | Baltimore               | Orioles          |         1954 |        2025
+ CHA                | Chicago                 | White Sox        |         1901 |        2025
+ CHN                | Chicago                 | Cubs             |         1876 |        2025
+ PIT                | Pittsburgh              | Pirates          |         1887 |        2025
+ CIN                | Cincinnati              | Reds             |         1890 |        2025
+ WAS                | Washington              | Nationals        |         2005 |        2025
+ CLE                | Cleveland               | Guardians        |         1901 |        2025
+ COL                | Colorado                | Rockies          |         1993 |        2025
+ PHI                | Philadelphia            | Phillies         |         1883 |        2025
+ ATL                | Atlanta                 | Braves           |         1966 |        2025
+ ATH                | Sacramento              | Athletics        |         2025 |        2025
+ DET                | Detroit                 | Tigers           |         1901 |        2025
+ NYN                | New York                | Mets             |         1962 |        2025
+ NYA                | New York                | Yankees          |         1903 |        2025
+ NLS                | National League         | All Stars        |         1933 |        2025
+ HOU                | Houston                 | Astros           |         1962 |        2025
+ KCA                | Kansas City             | Royals           |         1969 |        2025
+ ALS                | American League         | All Stars        |         1933 |        2025
+ MIN                | Minnesota               | Twins            |         1961 |        2025
+ MIL                | Milwaukee               | Brewers          |         1970 |        2025
+ LAN                | Los Angeles             | Dodgers          |         1958 |        2025
+ MIA                | Miami                   | Marlins          |         2012 |        2025
+ ARI                | Arizona                 | Diamondbacks     |         1998 |        2025
+ BOS                | Boston                  | Red Sox          |         1901 |        2025
+ ANA                | Anaheim                 | Angels           |         1997 |        2025
+ TBA                | Tampa Bay               | Devil Rays       |         1998 |        2025
+(292 rows)
+

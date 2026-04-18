@@ -2,6 +2,56 @@
 
 These are the canonical workflows. Use them before creating new ad hoc scripts.
 
+## Canonical Data Path Enforcement
+
+**Non-negotiable data flow rules:**
+
+### Historical Training Path (Only)
+```
+raw_retrosheet → core → features → models → predictions
+```
+
+- All historical Retrosheet/Chadwick data MUST flow through this path
+- Do NOT create alternative historical data pipelines
+- Do NOT mix raw_retrosheet data directly into features or models
+- Use `scripts/rebuild_warehouse.sh` as the only canonical historical rebuild mechanism
+
+### Live Inference Path (Only)
+```
+raw_mlb → bridge → core.live_* → features.live_* → predictions
+```
+
+- All live MLB data MUST flow through this path
+- Do NOT score raw MLB JSON directly in production paths
+- Do NOT merge raw MLB rows into historical raw layers
+- Historical/live combination belongs in `analysis.*` views only
+- Use `scripts/fetch_mlb_schedule.py` and `scripts/ingest_live_games.py` for live ingestion
+
+### Prototype Schema Freeze
+
+The following schemas/directories are EXPERIMENTAL until explicitly merged into canonical layers:
+- `EdgeForge` files
+- `mlb_features` files  
+- `mlb_models` files
+- `mlb_enhanced` files
+
+**Rule:** Do NOT use these in production workflows. They remain experimental until:
+1. Merged into canonical warehouse layers (raw_retrosheet, raw_mlb, bridge, core, features, models, predictions)
+2. Documented in `docs/agents/FILE_INVENTORY.md`
+3. Added to canonical rebuild procedures in `scripts/rebuild_warehouse.sh`
+
+### Violation Detection
+
+Before creating new SQL, scripts, models, routes, or docs:
+1. Check `docs/agents/FILE_INVENTORY.md` - does an existing workflow already own this job?
+2. Check this PROCEDURES.md - is there a canonical procedure for this?
+3. If creating new schema/table - does it fit into canonical layers above?
+4. If creating new data pipeline - does it follow the canonical path enforcement rules?
+
+If you cannot answer YES to all checks, either:
+- Use the existing canonical workflow, OR
+- Document the gap and get approval before creating a new path
+
 ## Resume After Context Loss
 
 Purpose: recover the current project state quickly before adding new code or changing direction.
@@ -48,6 +98,20 @@ Expected order:
 17. Build count-state PA feature marts.
 
 When adding a required SQL migration, add it to `scripts/rebuild_warehouse.sh` and document it in `README.md`.
+
+## Prediction Serving
+
+### Default Calibration
+
+**Rule:** All PA outcome predictions default to calibrated output.
+
+- Historical scorer (`scripts/predict_pa_outcome_distribution.py`): `apply_calibration=True` by default
+- Live scorer (`scripts/predict_live_pa_outcome_distribution.py`): `apply_calibration=True` by default
+- API route (`baseball-chatbot-ui/app/api/predict/route.ts`): `DEFAULT_APPLY_CALIBRATION = true`
+
+**Override:** Pass `apply_calibration=false` to request raw (uncalibrated) model probabilities.
+
+**Rationale:** Calibration improves probability reliability for decision-making and market comparison. Raw probabilities remain available for debugging and model evaluation.
 
 ## Live Data Ingestion
 
@@ -131,6 +195,188 @@ FROM analysis.combined_events ce
 JOIN analysis.combined_games cg USING (game_id)
 WHERE ce.source_type = 'mlb_live';
 ```
+
+## Data Quality Validation
+
+Purpose: validate warehouse data quality against defined SLAs.
+
+Command:
+
+```bash
+python3 scripts/validate_data_quality.py
+```
+
+Optional output:
+
+```bash
+python3 scripts/validate_data_quality.py --output validation_report.json
+```
+
+Expected checks:
+
+1. Schema validation: verify all expected tables and columns exist
+2. Null rate monitoring: check null rates against SLAs (5% for non-critical, 0% for critical)
+3. Value range validation: verify values are within expected ranges
+4. Referential integrity: check for orphan records in foreign key relationships
+5. Temporal consistency: verify dates align with seasons
+
+When to run:
+
+- After warehouse rebuild
+- After data ingestion
+- Before model training
+- Regularly in production (daily/weekly)
+
+If checks fail:
+
+1. Review failed checks in output
+2. Investigate root cause
+3. Fix data or schema issues
+4. Re-run validation
+5. Document findings in `docs/PROJECT_LOG.md`
+
+## Testing Workflows
+
+### Unit Tests
+
+Purpose: validate individual functions and modules.
+
+Command:
+
+```bash
+# PA prediction service tests
+pytest retrosheet/prediction/test_pa_service.py -v
+
+# Calibration tests
+pytest retrosheet/prediction/test_calibration.py -v
+
+# Feature engineering tests
+pytest retrosheet/prediction/test_feature_engineering.py -v
+
+# Data transformation tests
+pytest retrosheet/prediction/test_data_transformation.py -v
+
+# Baseball state transition tests
+pytest retrosheet/simulation/test_baseball_state.py -v
+
+# Reproducibility tests
+pytest retrosheet/simulation/test_reproducibility.py -v
+```
+
+When to run:
+
+- Before committing code changes
+- In CI/CD pipeline on pull requests
+- After refactoring code
+
+### Integration Tests
+
+Purpose: validate end-to-end workflows with warehouse data.
+
+Command:
+
+```bash
+# Prediction serving integration tests
+pytest scripts/test_integration_prediction.py -v
+```
+
+When to run:
+
+- After code changes that affect data flow
+- Before deploying to production
+- In CI/CD pipeline on main branch
+
+### Validation Tests
+
+Purpose: validate model predictions and simulation outputs against historical data.
+
+Command:
+
+```bash
+# Model prediction validation tests
+pytest scripts/test_validation_model_predictions.py -v
+
+# Simulation validation tests
+pytest scripts/test_validation_simulation.py -v
+```
+
+When to run:
+
+- After model training
+- After calibration
+- Before model promotion
+- Regularly in production to detect drift
+
+## Model Calibration
+
+Purpose: improve probability reliability through post-hoc calibration.
+
+Command:
+
+```bash
+python3 scripts/calibrate_pa_outcome_model.py \
+    --model-id <MODEL_ID> \
+    --calibration-years 2023-2024 \
+    --validation-years 2025 \
+    --calibration-type isotonic
+```
+
+Expected order:
+
+1. Load registered model
+2. Extract probabilities on calibration years
+3. Fit isotonic regression calibrator
+4. Apply calibration to validation years
+5. Compare raw vs calibrated metrics
+6. Save calibration artifact
+
+When to run:
+
+- After training a new model
+- Before promoting to production
+- When calibration quality degrades
+
+Calibration types:
+
+- `isotonic`: non-parametric isotonic regression (recommended)
+- `sigmoid`: parametric sigmoid regression
+- `beta`: beta calibration (for small datasets)
+
+## Baseball Simulation
+
+Purpose: simulate game state transitions for odds calculation and analysis.
+
+State machine implementation:
+
+- `retrosheet/simulation/baseball_state.py`: BaseballState class with state transition logic
+- `apply_event()`: apply event type to state to get new state
+- State includes: bases, outs, score, inning, batting order
+
+Command for simulation:
+
+```python
+from retrosheet.simulation.baseball_state import BaseballState, apply_event
+
+# Create initial state
+state = BaseballState(
+    bases=0,
+    outs=0,
+    home_score=0,
+    away_score=0,
+    inning=1,
+    is_bottom_inning=False,
+)
+
+# Apply event
+new_state = apply_event(state, event_type='single')
+```
+
+When to use:
+
+- Monte Carlo simulation for game outcomes
+- Odds calculation for betting markets
+- What-if scenario analysis
+- Validation of state transition logic
 
 ## Historical MLB Raw Backfill
 
