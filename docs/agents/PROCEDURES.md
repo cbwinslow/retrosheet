@@ -207,6 +207,127 @@ Typed outputs:
 - `core.mlb_api_venues`
 - `core.mlb_api_standings`
 
+## ESPN Data Ingestion
+
+Purpose: ingest MLB data from ESPN API as an additional external data source.
+
+### Setup
+
+Command:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/220_espn_schema.sql
+```
+
+Expected order:
+
+1. Create `raw_espn` schema
+2. Create tables: `raw_espn.game_snapshots`, `raw_espn.schedule_snapshots`, `raw_espn.player_stats_snapshots`, `raw_espn.team_stats_snapshots`
+3. Create indexes for common queries
+
+### Ongoing ESPN Data Ingestion
+
+Command:
+
+```bash
+# Fetch schedule for a specific date
+python3 scripts/fetch_espn_mlb.py schedule --date 2024-04-15
+
+# Fetch specific game data
+python3 scripts/fetch_espn_mlb.py game --game-id 401434845
+```
+
+Expected order:
+
+1. Query ESPN API for schedule or game data
+2. Compute checksum for deduplication
+3. Store source-preserved JSON with fetch provenance in `raw_espn.*_snapshots`
+4. Preserve request parameters, HTTP status, response time, and checksum
+
+Rules:
+
+1. Keep responses source-preserved in `raw_espn`.
+2. Use checksum-based deduplication to avoid duplicate fetches.
+3. ESPN data is supplemental to Retrosheet and MLB Stats API data.
+4. Future work: create bridge tables for ESPN IDs and transform to canonical shapes if needed.
+
+Use this workflow for ESPN data acquisition. Transform and integration decisions should be documented in separate procedures once use cases are identified.
+
+## Ingest Run Tracking
+
+Purpose: track all data ingestion runs with script metadata, progress, and error tracking for reproducibility and debugging.
+
+### Setup
+
+Command:
+
+```bash
+psql -h localhost -p 5432 -d retrosheet -f sql/225_ingest_run_tracking.sql
+```
+
+Expected order:
+
+1. Expand `raw_retrosheet.ingest_runs` table with script tracking columns
+2. Create helper functions for run logging (start_ingest_run, update_ingest_run_progress, complete_ingest_run, fail_ingest_run)
+3. Add triggers for auto-updating timestamps on bridge tables
+4. Create monitoring views (recent_ingest_runs, ingest_run_stats_by_script)
+
+### Script Integration Pattern
+
+Ingestion scripts should follow this pattern:
+
+```python
+from scripts.fetch_espn_mlb import start_run, update_run_progress, complete_run, fail_run
+
+# Start run logging
+script_name = os.path.basename(__file__)
+command_args = vars(args)
+run_id = start_run("source_name", script_name, command_args)
+
+try:
+    # Fetch data
+    update_run_progress(run_id, records_downloaded=1)
+    
+    # Store data
+    if store_data(data):
+        update_run_progress(run_id, records_ingested=1)
+    else:
+        update_run_progress(run_id, records_failed=1)
+    
+    # Complete run
+    complete_run(run_id, {"command": args.command})
+except Exception as e:
+    fail_run(run_id, str(e), {"exception_type": type(e).__name__})
+    sys.exit(1)
+```
+
+### Monitoring Queries
+
+```sql
+-- Recent runs
+SELECT * FROM raw_retrosheet.recent_ingest_runs;
+
+-- Stats by script
+SELECT * FROM raw_retrosheet.ingest_run_stats_by_script;
+
+-- Failed runs
+SELECT * FROM raw_retrosheet.ingest_runs WHERE status = 'failed' ORDER BY started_at DESC;
+```
+
+### Design Decisions
+
+- **Script storage in DB**: Not storing full script content in separate table (overkill). Git is canonical source.
+- **Metadata only**: Track script_name, script_version (git commit), command_args - sufficient for reproducibility.
+- **Progress tracking**: Update counters as data flows through download → ingest pipeline.
+- **Error handling**: Always fail_run on exceptions with error message and exception type.
+
+### Helper Functions
+
+- `raw_retrosheet.start_ingest_run(source_name, script_name, git_commit, command_args)`: Start new run, returns run_id
+- `raw_retrosheet.update_ingest_run_progress(run_id, records_downloaded, records_ingested, records_failed)`: Update counters
+- `raw_retrosheet.complete_ingest_run(run_id, final_details)`: Mark as completed
+- `raw_retrosheet.fail_ingest_run(run_id, error_message, error_details)`: Mark as failed
+
 ## Add A New Prediction Target
 
 Purpose: add a precise target that can be trained, scored, logged, and explained.
