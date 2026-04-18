@@ -127,6 +127,9 @@ baseball-chatbot-ui/node_modules/
 .mypy_cache/
 __pycache__/
 
+# Biome cache directory
+.biome_cache/
+
 # Skills directories (duplicate across IDEs)
 skills/
 current_mappings.txt

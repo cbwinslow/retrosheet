@@ -33,6 +33,7 @@ This inventory tells agents what each important file does and which workflows ow
 | `docs/PA_BASELINE_MODEL_SPEC.md` | Exact baseline PA modeling contract: grouped taxonomy, feature set, SQL object plan, and validation policy. | Multiclass PA modeling, implementation planning |
 | `docs/ab_outcome.md` | User-provided spec for at-bat/pitch outcome modeling. Treat as requirements guidance, not direct implementation. | Multiclass PA and pitch-model roadmap |
 | `docs/retrosheet_key.md` | Retrosheet documentation index and external reference map. | Retrosheet parsing/reference |
+| `docs/ARCHIVED_DOCUMENTATION.md` | Inventory of archived documentation with reasons and replacements. | Documentation governance |
 | `CHATBOT_INTERFACE_DESIGN.md` | Current/future web command-center design notes. | Interface, agents |
 
 ## Configuration
@@ -63,6 +64,8 @@ This inventory tells agents what each important file does and which workflows ow
 | `sql/081_probability_calibration_artifacts.sql` | Extends calibration reports with persisted artifact support for reusable calibrated scoring. | Calibrated inference infrastructure. |
 | `sql/082_count_state_feature_marts.sql` | Adds batter/pitcher/context prior-rate marts split by ball-strike count and a count-state-enhanced advanced PA view. | Targeted feature improvement for PA reliability defects. |
 | `sql/200_external_data.sql` | Defines schemas and tables for supplemental free data sources (Statcast, Baseball‑Data.com, Gameday XML) and bridge tables. | External data marts. |
+| `sql/220_espn_schema.sql` | Defines `raw_espn` schema and tables for ESPN API data (game snapshots, schedule snapshots, player stats, team stats). | ESPN external data ingestion. |
+| `sql/225_ingest_run_tracking.sql` | Expands `raw_retrosheet.ingest_runs` table with script metadata, adds helper functions for run logging, triggers for auto-timestamps, and monitoring views. | Ingest run tracking and reproducibility. |
 
 | File | Purpose | Canonical Position |
 |---|---|---|
@@ -135,6 +138,7 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/ingest_mlb_pbp.py` | Ingests MLB PBP CSV files into `core.mlb_pbp` table. | CSV to database loader for MLB PBP. |
 | `scripts/load_statcast.py` | Loads free Statcast CSV data into `raw_mlb.statcast` and updates bridge tables. | Supplemental pitch‑level data ingestion. |
 | `scripts/load_baseballdata.py` | Loads Baseball‑Data.com play‑by‑play CSV into `raw_external.baseball_data_com` and creates placeholder player bridge entries. | Supplemental historical PBP ingestion. |
+| `scripts/fetch_espn_mlb.py` | Fetches MLB schedule and game data from ESPN API and stores source-preserved JSON in `raw_espn`. | ESPN external data ingestion. |
 
 | File | Purpose | Use When |
 |---|---|---|

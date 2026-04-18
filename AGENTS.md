@@ -31,7 +31,8 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 
 - `raw_retrosheet`: source-preserved Chadwick extracts and Retrosheet reference tables.
 - `raw_mlb`: source-preserved MLB Stats API / GUMBO schedules, live game feeds, and reference endpoint snapshots.
-- `bridge`: cross-reference tables between Retrosheet IDs, MLB IDs, and other public IDs.
+- `raw_espn`: source-preserved ESPN API data for MLB games, schedules, and statistics.
+- `bridge`: cross-reference tables between Retrosheet IDs, MLB IDs, ESPN IDs, and other public IDs.
 - `core`: canonical baseball entities, typed MLB reference views, and game-state views shared by historical and live sources.
 - `features`: ML-ready training and inference tables.
 - `predictions`: model outputs, backtests, and live prediction snapshots.
