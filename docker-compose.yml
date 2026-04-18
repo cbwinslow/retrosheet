@@ -42,7 +42,7 @@ services:
   github-mcp-server:
     image: ghcr.io/github/github-mcp-server:latest
     environment:
-      GITHUB_PERSONAL_ACCESS_TOKEN: 
+      # GITHUB_PERSONAL_ACCESS_TOKEN: 
 
 configs:
   mcp_configs:
