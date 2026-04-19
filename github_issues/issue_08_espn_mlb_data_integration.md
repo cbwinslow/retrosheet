@@ -163,6 +163,13 @@ python3 scripts/fetch_espn_mlb.py ingest-historical --start-date YYYY-MM-DD --en
 -- Verify game snapshots
 SELECT COUNT(*) FROM raw_espn.game_snapshots; -- 71,739
 
+-- Verify Play-by-Play Data Ingestion
+- Endpoint: ESPN summary endpoint (fixed from Core API v2 which returned 404)
+- Stores raw JSON in `raw_espn.plays_snapshots`
+- Includes game_date and season metadata extracted from summary response
+- Checksum-based deduplication on (game_id, checksum)
+- Updated `fetch_espn_mlb.py` to use summary endpoint instead of Core API v2
+
 -- Verify play-by-play snapshots (2024-2026 only)
 SELECT COUNT(*) FROM raw_espn.plays_snapshots; -- varies based on 2024-2026 games
 
