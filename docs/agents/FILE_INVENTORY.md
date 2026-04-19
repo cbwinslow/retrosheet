@@ -1,7 +1,6 @@
 # File Inventory
 
 ## Issue Links
-
 - Issue #5: Documentation & Issue Linking – completed. See [github_issues/issue_05_documentation_and_issue_linking.md](../github_issues/issue_05_documentation_and_issue_linking.md)
 - Issue #1: Core LLM Integration – ongoing. See [github_issues/issue_01_core_llm_integration.md](../github_issues/issue_01_core_llm_integration.md)
 - Issue #2: Tool Execution Engine – ongoing. See [github_issues/issue_02_tool_execution_engine.md](../github_issues/issue_02_tool_execution_engine.md)
@@ -9,6 +8,9 @@
 - Issue #4: Security & Safety – ongoing. See [github_issues/issue_04_security_safety.md](../github_issues/issue_04_security_safety.md)
 - Issue #6: Model Training Pipeline – ongoing. See [github_issues/issue_06_model_training_pipeline.md](../github_issues/issue_06_model_training_pipeline.md)
 - Issue #7: Advanced Features – ongoing. See [github_issues/issue_07_advanced_features.md](../github_issues/issue_07_advanced_features.md)
+- Issue #8: ESPN MLB Data Integration – completed. See [github_issues/issue_08_espn_mlb_data_integration.md](../github_issues/issue_08_espn_mlb_data_integration.md)
+- Issue #9: Comprehensive Retrosheet Data Acquisition – completed. See [github_issues/issue_09_retrosheet_comprehensive_data_acquisition.md](../github_issues/issue_09_retrosheet_comprehensive_data_acquisition.md)
+- Issue #10: Statcast Pitch-Level Data Ingestion – completed. See [github_issues/issue_10_statcast_pitch_level_data_ingestion.md](../github_issues/issue_10_statcast_pitch_level_data_ingestion.md)
 
 This inventory tells agents what each important file does and which workflows own it. Files may appear in multiple sections when they serve multiple goals.
 
@@ -44,6 +46,35 @@ This inventory tells agents what each important file does and which workflows ow
 | `config/ai_providers.example.json` | Example provider configuration for OpenRouter, Groq, and Codex/OpenAI-compatible inference. | Never commit real keys. |
 | `.env.example` | Safe local environment variable template. | Keep secrets out of git. |
 
+## Retrosheet Data Files
+
+Downloaded April 18, 2026 (1,748.81 MB total). All stored in `data/` directory.
+
+| File | Purpose | Size |
+|---|---|---|
+| `data/retrosheet_alldata.zip` | Traditional Retrosheet data (event files, box-score files, game logs, etc.) | 326 MB |
+| `data/retrosheet_biodata.zip` | Biographical data (biofile0.csv, relatives.csv, coaches0.csv, ballparks0.csv, managers0.csv, teams0.csv, umpires0.csv) | 1.3 MB |
+| `data/retrosheet_csv_downloads.zip` | CSV parsed data (allplayers.csv, gameinfo.csv, teamstats.csv, batting.csv, pitching.csv, fielding.csv, plays.csv) | 710 MB |
+| `data/retrosheet_allstar.zip` | All-Star game data (1933-2025) | 630 KB |
+| `data/retrosheet_postseason.zip` | Postseason game data (1903-2025) | 7.3 MB |
+| `data/retrosheet_negroleagues.zip` | Negro Leagues data (1903-1962) | 6.9 MB |
+| `data/retrosheet_regular.zip` | Regular season games (1898-2025, includes tiebreaker playoffs) | 696 MB |
+| `data/retrosheet_tiebreakers.zip` | Tiebreaker playoff games (1946-2018) | 127 KB |
+
+Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
+
+## Data Source Status
+
+**Completed:**
+- Retrosheet reference tables (ballparks_reference: 656, biofile: 26,961, coaches: 12,501, ejections: 19,730, relatives: 1,320, teams_reference: 292)
+- Lahman database tables (batting: 110,495, pitching: 49,430, fielding: 147,080, people: 20,673, teams: 2,985)
+- Baseball Databank data (same as Lahman - already loaded in lahman schema)
+- Statcast data (raw_mlb.statcast: 7,797,034 rows, 118 fields, seasons 2015-2025, 24,079+ games, 4,229+ batters, 3,251+ pitchers)
+- ESPN MLB data (game_snapshots: 71,739, plays_snapshots: 1,271, schedule_snapshots: 5,212; seasons 2000-2025; play-by-play data only available for 2024-2026; 21 failures out of 71,739 games, 0.03% failure rate)
+
+**Outstanding:**
+- ESPN player_stats_snapshots and team_stats_snapshots (0 rows - not yet loaded)
+
 ## Warehouse SQL
 | File | Purpose | Canonical Position |
 |---|---|---|
@@ -62,6 +93,7 @@ This inventory tells agents what each important file does and which workflows ow
 | `sql/079_probability_evaluation_reports.sql` | Adds durable calibration and bootstrap report tables plus recent-report views in `predictions`. | Probability evaluation persistence. |
 | `sql/081_probability_calibration_artifacts.sql` | Extends calibration reports with persisted artifact support for reusable calibrated scoring. | Calibrated inference infrastructure. |
 | `sql/082_count_state_feature_marts.sql` | Adds batter/pitcher/context prior-rate marts split by ball-strike count and a count-state-enhanced advanced PA view. | Targeted feature improvement for PA reliability defects. |
+| `sql/040_coach_umpire_bridge_tables.sql` | Creates `bridge.coach_xref` and `bridge.umpire_xref` tables for cross-source ID mapping of coaches and umpires. | Coach/umpire bridge tables. |
 | `sql/200_external_data.sql` | Defines schemas and tables for supplemental free data sources (Statcast, Baseball‑Data.com, Gameday XML) and bridge tables. | External data marts. |
 | `sql/220_espn_schema.sql` | Defines `raw_espn` schema and tables for ESPN API data (game snapshots, schedule snapshots, player stats, team stats). | ESPN external data ingestion. |
 | `sql/225_ingest_run_tracking.sql` | Expands `raw_retrosheet.ingest_runs` table with script metadata, adds helper functions for run logging, triggers for auto-timestamps, and monitoring views. | Ingest run tracking and reproducibility. |
@@ -109,36 +141,6 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/warehouse.py` | Main CLI for dependency checks, Retrosheet fetch, Chadwick extract/load, and live feed fetch with raw snapshot provenance. | Ingestion and raw landing. |
 | `scripts/rebuild_warehouse.sh` | Canonical full rebuild order. | Reproducibility. Update when adding required SQL. |
 | `scripts/install_chadwick.sh` | Chadwick installation helper. | Environment setup. |
-| `scripts/load_reference_metadata.py` | Loads Retrosheet bio/team/park metadata. | After `020`. |
-| `scripts/load_auxiliary_retrosheet.py` | Loads broader Retrosheet auxiliary files. | After reference metadata. |
-| `scripts/fetch_mlb_schedule.py` | Discovers active MLB games for live ingestion. | Live bridge work. |
-| `scripts/download_mlb_bulk.py` | Canonical historical MLB bulk raw backfill into `raw_mlb.schedule_snapshots` and `raw_mlb.live_feed_snapshots`. | Historical MLB raw backfill . |
-| `scripts/populate_bridge_tables.py` | Downloads Chadwick Register and populates player mappings and canonical team / park bridge mappings . ? ? ? ? ? ? ? ? ? ? ? ? … … … … … … … … … … … … … … … … … … … … … … … … … … … …  … … … … … … … … … … … … … …  … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … … …
-| `scripts/ingest_all_mlb_data.py` |  ??  ?  …  
-
-
-
-| File | Purpose | Use When |
-|---|---|---|
-| `scripts/warehouse.py` | Main CLI for dependency checks, Retrosheet fetch, Chadwick extract/load, and live feed fetch with raw snapshot provenance. | Ingestion and raw landing. |
-| `scripts/rebuild_warehouse.sh` | Canonical full rebuild order. | Reproducibility. Update when adding required SQL. |
-| `scripts/install_chadwick.sh` | Chadwick installation helper. | Environment setup. |
-| `scripts/load_reference_metadata.py` | Loads Retrosheet bio/team/park metadata. | After `020`. |
-| `scripts/load_auxiliary_retrosheet.py` | Loads broader Retrosheet auxiliary files. | After reference metadata. |
-| `scripts/fetch_mlb_schedule.py` | Discovers active MLB games for live ingestion. | Live bridge work. |
-| `scripts/download_mlb_bulk.py` | Canonical historical MLB bulk raw backfill into `raw_mlb.schedule_snapshots` and `raw_mlb.live_feed_snapshots` with request/status/error provenance. | Historical MLB raw backfill. |
-| `scripts/populate_bridge_tables.py` | Downloads Chadwick Register and populates player mappings plus canonical team/park bridge mappings from the typed MLB reference views. | Live bridge setup and reconciliation refresh. |
-| `scripts/ingest_live_games.py` | Orchestrates batch live game ingestion using environment-driven Postgres settings. | Live bridge work. |
-| `scripts/transform_live_game.py` | Transforms stored MLB live snapshots into canonical `core.live_games` / `core.live_events` with upserts and raw JSON preservation. | Live bridge work. |
-| `scripts/load_statcast.py` | Loads free Statcast CSV data into `raw_mlb.statcast` and updates bridge tables. | Supplemental pitch‑level data ingestion. |
-| `scripts/load_baseballdata.py` | Loads Baseball‑Data.com play‑by‑play CSV into `raw_external.baseball_data_com` and creates placeholder player bridge entries. | Supplemental historical PBP ingestion. |
-| `scripts/fetch_espn_mlb.py` | Fetches MLB schedule and game data from ESPN API and stores source-preserved JSON in `raw_espn`. | ESPN external data ingestion. |
-
-| File | Purpose | Use When |
-|---|---|---|
-| `scripts/warehouse.py` | Main CLI for dependency checks, Retrosheet fetch, Chadwick extract/load, and live feed fetch with raw snapshot provenance. | Ingestion and raw landing. |
-| `scripts/rebuild_warehouse.sh` | Canonical full rebuild order. | Reproducibility. Update when adding required SQL. |
-| `scripts/install_chadwick.sh` | Chadwick installation helper. | Environment setup. |
 | `scripts/load_reference_metadata.py` | Loads Retrosheet bio/team/park metadata. | After `020`. |
 | `scripts/load_auxiliary_retrosheet.py` | Loads broader Retrosheet auxiliary files. | After reference metadata. |
 | `scripts/fetch_mlb_schedule.py` | Discovers active MLB games for live ingestion. | Live bridge work. |
@@ -149,8 +151,15 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/ingest_live_games.py` | Orchestrates batch live game ingestion using environment-driven Postgres settings. | Live bridge work. |
 | `scripts/transform_live_game.py` | Transforms stored MLB live snapshots into canonical `core.live_games` / `core.live_events` with upserts and raw JSON preservation. | Live bridge work. |
 | `scripts/replay_live_bridge_backfill.py` | Replays stored latest-successful MLB raw snapshots through `scripts/transform_live_game.py`, optionally targeting only rows that still carry `MLB###` fallback ids. | Controlled live bridge refresh after mapping or transform fixes. |
- | `scripts/backup_sql_files.sh` | Copies all `.sql` files from the `sql/` directory into a timestamped backup folder for Git versioning. | Backup of schema definitions.
- | `scripts/backup_procedures.sh` | Backs up all database objects (functions, procedures, views, materialized views) to a timestamped SQL dump. | Database maintenance, disaster recovery. |
+| `scripts/backup_sql_files.sh` | Copies all `.sql` files from the `sql/` directory into a timestamped backup folder for Git versioning. | Backup of schema definitions. |
+| `scripts/backup_procedures.sh` | Backs up all database objects (functions, procedures, views, materialized views) to a timestamped SQL dump. | Database maintenance, disaster recovery. |
+| `scripts/record_retrosheet_downloads.py` | Records comprehensive Retrosheet data downloads in monitoring table with file sizes, checksums, and metadata. | Retrosheet data acquisition tracking. |
+| `scripts/load_statcast.py` | Loads free Statcast CSV data into `raw_mlb.statcast` and updates bridge tables. | Supplemental pitch-level data ingestion. |
+| `scripts/load_baseballdata.py` | Loads Baseball-Data.com play-by-play CSV into `raw_external.baseball_data_com` and creates placeholder player bridge entries. | Supplemental historical PBP ingestion. |
+| `scripts/fetch_espn_mlb.py` | Fetches MLB schedule and game data from ESPN API and stores source-preserved JSON in `raw_espn`. | ESPN external data ingestion. |
+| `scripts/populate_coach_umpire_bridge.py` | Populates `bridge.coach_xref` and `bridge.umpire_xref` from Retrosheet auxiliary data. | Coach/umpire bridge table population. |
+| `scripts/download_statcast_pitch_level.py` | Downloads Statcast pitch-level data using pybaseball.statcast() for date ranges or seasons. | Statcast pitch-level data download. |
+| `scripts/ingest_espn_plays.py` | Ingests ESPN play-by-play data into `raw_espn.plays` table. | ESPN external data ingestion |
 
 ## Modeling Scripts
 

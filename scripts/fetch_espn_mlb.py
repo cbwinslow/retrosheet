@@ -20,7 +20,8 @@ import os
 import sys
 import time
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 import psycopg2
@@ -32,10 +33,13 @@ load_dotenv()
 
 # ESPN API Endpoints
 ESPN_BASE_URL = "http://site.api.espn.com/apis/site/v2/sports/baseball/mlb"
+ESPN_CORE_URL = "https://sports.core.api.espn.com/v2/sports/baseball/mlb"
 ENDPOINTS = {
     "scoreboard": f"{ESPN_BASE_URL}/scoreboard",
     "schedule": f"{ESPN_BASE_URL}/schedule",
     "game": f"{ESPN_BASE_URL}/scoreboard",
+    "summary": f"{ESPN_BASE_URL}/summary",
+    "plays": f"{ESPN_CORE_URL}/events",
 }
 
 
@@ -157,8 +161,14 @@ def compute_checksum(data: Any) -> str:
 
 
 def fetch_espn_schedule(date: str) -> Optional[Dict[str, Any]]:
-    """Fetch MLB schedule for a specific date from ESPN API."""
-    url = f"{ENDPOINTS['schedule']}?dates={date}"
+    """Fetch MLB schedule for a specific date from ESPN API.
+    
+    ESPN API uses the scoreboard endpoint with dates parameter for schedule data.
+    Date format should be YYYYMMDD (no hyphens).
+    """
+    # Convert YYYY-MM-DD to YYYYMMDD format for ESPN API
+    date_formatted = date.replace('-', '')
+    url = f"{ENDPOINTS['scoreboard']}?dates={date_formatted}"
     
     try:
         start_time = time.time()
@@ -191,8 +201,8 @@ def fetch_espn_schedule(date: str) -> Optional[Dict[str, Any]]:
 
 
 def fetch_espn_game(game_id: str) -> Optional[Dict[str, Any]]:
-    """Fetch specific MLB game data from ESPN API."""
-    url = f"{ENDPOINTS['scoreboard']}?gameId={game_id}"
+    """Fetch specific MLB game data from ESPN API using summary endpoint for detailed data."""
+    url = f"http://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event={game_id}"
     
     try:
         start_time = time.time()
@@ -221,6 +231,61 @@ def fetch_espn_game(game_id: str) -> Optional[Dict[str, Any]]:
             }
     except Exception as e:
         print(f"Error fetching game {game_id}: {e}")
+        return None
+
+
+def fetch_espn_plays(game_id: str) -> Optional[Dict[str, Any]]:
+    """Fetch play-by-play data for a specific game from ESPN summary endpoint.
+    
+    NOTE: Previously used ESPN Core API v2 endpoint which returns 404.
+    Changed to summary endpoint which contains plays array in the response.
+    This is the correct endpoint for ESPN play-by-play data.
+    
+    The plays data is included in the summary response, not a separate endpoint."""
+    url = f"http://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event={game_id}"
+    
+    try:
+        start_time = time.time()
+        response = requests.get(url, timeout=30)
+        response_time_ms = (time.time() - start_time) * 1000
+        
+        if response.status_code == 200:
+            data = response.json()
+            # Extract plays from the summary response
+            plays_data = data.get("plays", [])
+            
+            # Return the plays data wrapped in the expected structure
+            result = {
+                "url": url,
+                "status": response.status_code,
+                "response_time_ms": response_time_ms,
+                "data": plays_data,
+                "checksum": compute_checksum(plays_data),
+            }
+            
+            # Also include game metadata from header
+            if "header" in data and "competitions" in data["header"]:
+                comp = data["header"]["competitions"][0]
+                result["game_date"] = comp.get("date")
+                # Extract season year from date if not in season.type
+                season_year = comp.get("season", {}).get("year")
+                if not season_year and comp.get("date"):
+                    # Extract year from date string (format: "2026-04-19T01:38Z")
+                    season_year = int(comp["date"][:4])
+                result["season"] = season_year
+            
+            return result
+        else:
+            print(f"Error fetching plays for game {game_id}: HTTP {response.status_code}")
+            return {
+                "url": url,
+                "status": response.status_code,
+                "response_time_ms": response_time_ms,
+                "data": None,
+                "checksum": None,
+            }
+    except Exception as e:
+        print(f"Error fetching plays for game {game_id}: {e}")
         return None
 
 
@@ -329,6 +394,110 @@ def store_game_snapshot(snapshot_data: Dict[str, Any], game_id: str) -> bool:
         conn.close()
 
 
+def store_plays_snapshot(snapshot_data: Dict[str, Any], game_id: str) -> bool:
+    """Store plays snapshot in raw_espn.plays_snapshots."""
+    if not snapshot_data or snapshot_data["data"] is None:
+        return False
+    
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            # Extract game_date and season from snapshot_data (now included by fetch_espn_plays)
+            game_date = snapshot_data.get("game_date")
+            season = snapshot_data.get("season")
+            
+            # Check if snapshot already exists
+            cur.execute("""
+                SELECT snapshot_id FROM raw_espn.plays_snapshots
+                WHERE game_id = %s AND checksum = %s
+            """, (game_id, snapshot_data["checksum"]))
+            
+            if cur.fetchone():
+                print(f"Plays snapshot for {game_id} already exists (same checksum)")
+                return True
+            
+            # Insert new snapshot
+            cur.execute("""
+                INSERT INTO raw_espn.plays_snapshots
+                (game_id, endpoint, http_status, fetched_at, response_time_ms, raw_payload, checksum, game_date, season)
+                VALUES (%s, %s, %s, NOW(), %s, %s, %s, %s, %s)
+                ON CONFLICT (game_id, checksum) DO NOTHING
+            """, (
+                game_id,
+                snapshot_data["url"],
+                snapshot_data["status"],
+                snapshot_data["response_time_ms"],
+                Json(snapshot_data["data"]),
+                snapshot_data["checksum"],
+                game_date,
+                season,
+            ))
+            
+        conn.commit()
+        print(f"Stored plays snapshot for {game_id}")
+        return True
+    except Exception as e:
+        print(f"Error storing plays snapshot: {e}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
+
+
+def fetch_games_batch(game_ids: List[str], include_plays: bool = False, max_workers: int = 10) -> Dict[str, int]:
+    """Fetch multiple games in parallel using ThreadPoolExecutor.
+    
+    Returns dict with counts: {'downloaded': int, 'ingested': int, 'failed': int}
+    """
+    counts = {'downloaded': 0, 'ingested': 0, 'failed': 0}
+    
+    def fetch_and_store_game(game_id: str) -> Dict[str, int]:
+        """Fetch and store a single game, return counts for this game."""
+        local_counts = {'downloaded': 0, 'ingested': 0, 'failed': 0}
+        
+        # Fetch game summary
+        snapshot = fetch_espn_game(game_id)
+        if snapshot and snapshot["data"]:
+            local_counts['downloaded'] += 1
+            if store_game_snapshot(snapshot, game_id):
+                local_counts['ingested'] += 1
+            else:
+                local_counts['failed'] += 1
+            
+            # Fetch plays if requested
+            if include_plays:
+                plays_snapshot = fetch_espn_plays(game_id)
+                if plays_snapshot and plays_snapshot["data"]:
+                    local_counts['downloaded'] += 1
+                    if store_plays_snapshot(plays_snapshot, game_id):
+                        local_counts['ingested'] += 1
+                    else:
+                        local_counts['failed'] += 1
+        else:
+            local_counts['failed'] += 1
+        
+        return local_counts
+    
+    print(f"Fetching {len(game_ids)} games with {max_workers} workers...")
+    
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(fetch_and_store_game, game_id): game_id for game_id in game_ids}
+        
+        for future in as_completed(futures):
+            game_id = futures[future]
+            try:
+                result = future.result()
+                counts['downloaded'] += result['downloaded']
+                counts['ingested'] += result['ingested']
+                counts['failed'] += result['failed']
+                print(f"Completed game {game_id}: {result}")
+            except Exception as e:
+                print(f"Error processing game {game_id}: {e}")
+                counts['failed'] += 1
+    
+    return counts
+
+
 def main():
     parser = argparse.ArgumentParser(description="Fetch ESPN MLB data")
 
@@ -341,6 +510,23 @@ def main():
     # Game command
     game_parser = subparsers.add_parser("game", help="Fetch game data")
     game_parser.add_argument("--game-id", type=str, required=True, help="ESPN game ID")
+    game_parser.add_argument("--include-plays", action="store_true", help="Also fetch play-by-play data")
+
+    # Plays command
+    plays_parser = subparsers.add_parser("plays", help="Fetch play-by-play data")
+    plays_parser.add_argument("--game-id", type=str, required=True, help="ESPN game ID")
+
+    # Batch command
+    batch_parser = subparsers.add_parser("batch", help="Fetch multiple games in parallel")
+    batch_parser.add_argument("--game-ids", type=str, required=True, help="Comma-separated list of ESPN game IDs")
+    batch_parser.add_argument("--include-plays", action="store_true", help="Also fetch play-by-play data")
+    batch_parser.add_argument("--workers", type=int, default=10, help="Number of parallel workers (default: 10)")
+
+    # Ingest historical command
+    historical_parser = subparsers.add_parser("ingest-historical", help="Ingest historical games from a date range")
+    historical_parser.add_argument("--start-date", type=str, required=True, help="Start date in YYYY-MM-DD format")
+    historical_parser.add_argument("--end-date", type=str, required=True, help="End date in YYYY-MM-DD format")
+    historical_parser.add_argument("--workers", type=int, default=10, help="Number of parallel workers (default: 10)")
 
     args = parser.parse_args()
 
@@ -378,8 +564,83 @@ def main():
                     update_run_progress(run_id, records_ingested=1)
                 else:
                     update_run_progress(run_id, records_failed=1)
+                
+                # Fetch plays if requested
+                if args.include_plays:
+                    print(f"Fetching ESPN plays for game {game_id}")
+                    plays_snapshot = fetch_espn_plays(game_id)
+                    if plays_snapshot:
+                        update_run_progress(run_id, records_downloaded=1)
+                        if store_plays_snapshot(plays_snapshot, game_id):
+                            update_run_progress(run_id, records_ingested=1)
+                        else:
+                            update_run_progress(run_id, records_failed=1)
             else:
                 fail_run(run_id, f"Failed to fetch game {game_id}")
+
+        elif args.command == "plays":
+            game_id = args.game_id
+            print(f"Fetching ESPN plays for game {game_id}")
+
+            snapshot = fetch_espn_plays(game_id)
+            if snapshot:
+                update_run_progress(run_id, records_downloaded=1)
+                if store_plays_snapshot(snapshot, game_id):
+                    update_run_progress(run_id, records_ingested=1)
+                else:
+                    update_run_progress(run_id, records_failed=1)
+            else:
+                fail_run(run_id, f"Failed to fetch plays for game {game_id}")
+
+        elif args.command == "batch":
+            game_ids = args.game_ids.split(',')
+            game_ids = [gid.strip() for gid in game_ids]
+            print(f"Fetching {len(game_ids)} games in batch mode")
+
+            counts = fetch_games_batch(game_ids, args.include_plays, args.workers)
+            update_run_progress(run_id, records_downloaded=counts['downloaded'])
+            update_run_progress(run_id, records_ingested=counts['ingested'])
+            update_run_progress(run_id, records_failed=counts['failed'])
+            
+            print(f"Batch fetch complete: {counts}")
+
+        elif args.command == "ingest-historical":
+            start_date = datetime.strptime(args.start_date, "%Y-%m-%d")
+            end_date = datetime.strptime(args.end_date, "%Y-%m-%d")
+            
+            # Iterate backwards from end_date to start_date
+            current_date = end_date
+            all_game_ids = []
+            
+            while current_date >= start_date:
+                date_str = current_date.strftime("%Y-%m-%d")
+                print(f"Fetching schedule for {date_str}")
+                
+                schedule = fetch_espn_schedule(date_str)
+                if schedule and schedule["data"]:
+                    events = schedule["data"].get("events", [])
+                    game_ids = [event.get("id") for event in events if event.get("id")]
+                    all_game_ids.extend(game_ids)
+                    print(f"  Found {len(game_ids)} games on {date_str}")
+                    
+                    # Store schedule snapshot
+                    store_schedule_snapshot(schedule, date_str)
+                
+                current_date -= timedelta(days=1)
+            
+            # Deduplicate game IDs
+            all_game_ids = list(set(all_game_ids))
+            print(f"Total unique games to fetch: {len(all_game_ids)}")
+            
+            # Batch fetch all games
+            if all_game_ids:
+                counts = fetch_games_batch(all_game_ids, include_plays=True, max_workers=args.workers)
+                update_run_progress(run_id, records_downloaded=counts['downloaded'])
+                update_run_progress(run_id, records_ingested=counts['ingested'])
+                update_run_progress(run_id, records_failed=counts['failed'])
+                print(f"Historical ingestion complete: {counts}")
+            else:
+                print("No games found in date range")
 
         # Complete run successfully
         complete_run(run_id, {"command": args.command})

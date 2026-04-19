@@ -235,6 +235,9 @@ python3 scripts/fetch_espn_mlb.py schedule --date 2024-04-15
 
 # Fetch specific game data
 python3 scripts/fetch_espn_mlb.py game --game-id 401434845
+
+# Fetch historical games for a date range
+python3 scripts/fetch_espn_mlb.py ingest-historical --start-date YYYY-MM-DD --end-date YYYY-MM-DD --workers 10
 ```
 
 Expected order:
@@ -244,12 +247,31 @@ Expected order:
 3. Store source-preserved JSON with fetch provenance in `raw_espn.*_snapshots`
 4. Preserve request parameters, HTTP status, response time, and checksum
 
+### ESPN Play-by-Play Data Ingestion
+
+Command:
+
+```bash
+# Ingest play-by-play data for games that don't have it yet
+python3 scripts/ingest_espn_plays.py
+```
+
+Expected order:
+
+1. Query ESPN summary endpoint for plays data (not Core API v2 endpoint)
+2. Extract plays array from summary response
+3. Extract game_date and season from summary response
+4. Store source-preserved JSON with fetch provenance in `raw_espn.plays_snapshots`
+5. Skip games with empty plays arrays or no game data available
+
 Rules:
 
 1. Keep responses source-preserved in `raw_espn`.
 2. Use checksum-based deduplication to avoid duplicate fetches.
-3. ESPN data is supplemental to Retrosheet and MLB Stats API data.
-4. Future work: create bridge tables for ESPN IDs and transform to canonical shapes if needed.
+3. ESPN play-by-play data is only available for recent games (2024-2026).
+4. Historical play-by-play data (2000-2015) is not available via ESPN API - use Retrosheet/Chadwick or MLB Stats API instead.
+5. ESPN data is supplemental to Retrosheet and MLB Stats API data.
+6. Future work: create bridge tables for ESPN IDs and transform to canonical shapes if needed.
 
 Use this workflow for ESPN data acquisition. Transform and integration decisions should be documented in separate procedures once use cases are identified.
 

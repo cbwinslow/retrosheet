@@ -30,12 +30,20 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 ## Data Layers
 
 - `raw_retrosheet`: source-preserved Chadwick extracts and Retrosheet reference tables.
-- `raw_mlb`: source-preserved MLB Stats API / GUMBO schedules, live game feeds, and reference endpoint snapshots.
+- `raw_mlb`: source-preserved MLB Stats API / GUMBO schedules, live game feeds, reference endpoint snapshots, and Statcast pitch-level tracking data.
 - `raw_espn`: source-preserved ESPN API data for MLB games, schedules, and statistics.
-- `bridge`: cross-reference tables between Retrosheet IDs, MLB IDs, ESPN IDs, and other public IDs.
+- `bridge`: cross-reference tables between Retrosheet IDs, MLB IDs, Lahman IDs, ESPN IDs, and other public IDs. Includes player_xref, team_xref, game_xref, park_xref, coach_xref, umpire_xref, external_player_xref, external_team_xref.
 - `core`: canonical baseball entities, typed MLB reference views, and game-state views shared by historical and live sources.
 - `features`: ML-ready training and inference tables.
 - `predictions`: model outputs, backtests, and live prediction snapshots.
+
+## PostgreSQL ML Extensions
+
+The following PostgreSQL extensions have been researched for in-database ML and analytics:
+- **pgvector**: Vector similarity search for embeddings and AI/ML applications (recommended first)
+- **MADlib**: Open-source library for scalable in-database analytics and traditional ML
+- **PostgresML**: In-database ML/AI with GPU acceleration and LLM integration
+- **TimescaleDB**: Time-series data analysis for player performance over seasons
 
 ## Required Agent References
 
@@ -123,11 +131,15 @@ Use `analysis.*` views for unified access to both historical and live data:
 
 1. `python3 scripts/warehouse.py check-deps`
 2. `python3 scripts/warehouse.py fetch-retrosheet`
-3. `python3 scripts/warehouse.py init-db`
-4. `python3 scripts/warehouse.py extract-chadwick --years 2000-2025 --outputs all`
-5. `python3 scripts/warehouse.py load-chadwick --years 2000-2025 --outputs all`
-6. `python3 scripts/populate_bridge_tables.py` (populate ID mappings)
-7. `psql -f sql/130_analysis_views.sql` (create combined analysis views)
+3. `python3 scripts/record_retrosheet_downloads.py` (record comprehensive Retrosheet data downloads in monitoring table)
+4. `python3 scripts/warehouse.py init-db`
+5. `python3 scripts/warehouse.py extract-chadwick --years 2000-2025 --outputs all`
+6. `python3 scripts/warehouse.py load-chadwick --years 2000-2025 --outputs all`
+7. `python3 scripts/external_data/load_lahman.py` (load Lahman database tables)
+8. `python3 scripts/populate_bridge_tables.py` (populate ID mappings)
+9. `python3 scripts/download_statcast_pitch_level.py --season 2015` (download Statcast for each season 2015-2025)
+10. `python3 scripts/external_data/load_statcast.py --file data/statcast/statcast_2015.csv` (load each season)
+11. `psql -f sql/130_analysis_views.sql` (create combined analysis views)
 
 ### Live Data Ingestion (Ongoing)
 
@@ -136,6 +148,38 @@ Use `analysis.*` views for unified access to both historical and live data:
 3. `SELECT * FROM analysis.get_data_source_stats();` (check ingestion status)
 
 For fast iteration, pass a smaller year range or selected outputs.
+
+### ESPN Historical Data Ingestion
+
+1. `python3 scripts/fetch_espn_mlb.py ingest-historical --start-date YYYY-MM-DD --end-date YYYY-MM-DD --workers 10`
+   - Fetches all games for the date range from ESPN API
+   - Stores game snapshots in raw_espn schema
+   - Uses parallel downloads with ThreadPoolExecutor
+   - Tracks progress in raw_retrosheet.ingest_runs table
+2. `python3 scripts/ingest_espn_plays.py` (ingest play-by-play data for available years)
+   - Fetches play-by-play data from ESPN summary endpoint
+   - ESPN only has play-by-play data for recent games (2024-2026)
+   - Historical games (2000-2015) have empty plays arrays
+3. `SELECT COUNT(*) FROM raw_espn.game_snapshots;` (verify game ingestion)
+4. `SELECT COUNT(*) FROM raw_espn.plays_snapshots;` (verify plays ingestion)
+5. `SELECT * FROM raw_retrosheet.ingest_runs WHERE source_name = 'espn_api' ORDER BY started_at DESC;` (check run history)
+
+**Current ESPN Data Status:**
+- 71,739 games ingested (seasons 2000-2025)
+- Game snapshots: 100% completeness for game_date and season
+- Play-by-play data: Available only for 2024-2026 (ESPN API limitation)
+  - ESPN summary endpoint contains plays array for recent games
+  - Historical games (2000-2015) return empty plays arrays
+  - ESPN Core API v2 plays endpoint returns 404 (incorrect endpoint)
+- 5,212 schedule snapshots
+- 21 failures out of 71,739 games (0.03% failure rate)
+- All runs tracked in raw_retrosheet.ingest_runs (run IDs 1-56)
+
+**ESPN Play-by-Play Data Limitations:**
+- ESPN API only provides play-by-play data for recent games (2024-2026)
+- Historical play-by-play data (2000-2015) not available via ESPN API
+- For historical play-by-play data, use Retrosheet/Chadwick or MLB Stats API
+- ESPN data is supplemental to Retrosheet and MLB Stats API data sources
 
 ## Modeling Direction
 
