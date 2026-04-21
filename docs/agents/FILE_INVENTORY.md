@@ -1,16 +1,16 @@
 # File Inventory
 
 ## Issue Links
-- Issue #5: Documentation & Issue Linking – completed. See [github_issues/issue_05_documentation_and_issue_linking.md](../github_issues/issue_05_documentation_and_issue_linking.md)
-- Issue #1: Core LLM Integration – ongoing. See [github_issues/issue_01_core_llm_integration.md](../github_issues/issue_01_core_llm_integration.md)
-- Issue #2: Tool Execution Engine – ongoing. See [github_issues/issue_02_tool_execution_engine.md](../github_issues/issue_02_tool_execution_engine.md)
-- Issue #3: Model Orchestration – ongoing. See [github_issues/issue_03_model_orchestration.md](../github_issues/issue_03_model_orchestration.md)
-- Issue #4: Security & Safety – ongoing. See [github_issues/issue_04_security_safety.md](../github_issues/issue_04_security_safety.md)
-- Issue #6: Model Training Pipeline – ongoing. See [github_issues/issue_06_model_training_pipeline.md](../github_issues/issue_06_model_training_pipeline.md)
-- Issue #7: Advanced Features – ongoing. See [github_issues/issue_07_advanced_features.md](../github_issues/issue_07_advanced_features.md)
-- Issue #8: ESPN MLB Data Integration – completed. See [github_issues/issue_08_espn_mlb_data_integration.md](../github_issues/issue_08_espn_mlb_data_integration.md)
-- Issue #9: Comprehensive Retrosheet Data Acquisition – completed. See [github_issues/issue_09_retrosheet_comprehensive_data_acquisition.md](../github_issues/issue_09_retrosheet_comprehensive_data_acquisition.md)
-- Issue #10: Statcast Pitch-Level Data Ingestion – completed. See [github_issues/issue_10_statcast_pitch_level_data_ingestion.md](../github_issues/issue_10_statcast_pitch_level_data_ingestion.md)
+- Issue #5: Documentation & Issue Linking – completed. See [#53](https://github.com/cbwinslow/retrosheet/issues/53)
+- Issue #1: Core LLM Integration – ongoing. See [#49](https://github.com/cbwinslow/retrosheet/issues/49)
+- Issue #2: Tool Execution Engine – ongoing. See [#50](https://github.com/cbwinslow/retrosheet/issues/50)
+- Issue #3: Model Orchestration – ongoing. See [#51](https://github.com/cbwinslow/retrosheet/issues/51)
+- Issue #4: Security & Safety – ongoing. See [#52](https://github.com/cbwinslow/retrosheet/issues/52)
+- Issue #6: Model Training Pipeline – ongoing. See [#55](https://github.com/cbwinslow/retrosheet/issues/55)
+- Issue #7: Advanced Features – ongoing. See [#56](https://github.com/cbwinslow/retrosheet/issues/56)
+- Issue #8: ESPN MLB Data Integration – completed. See [#59](https://github.com/cbwinslow/retrosheet/issues/59)
+- Issue #9: Comprehensive Retrosheet Data Acquisition – completed. See [#57](https://github.com/cbwinslow/retrosheet/issues/57)
+- Issue #10: Statcast Pitch-Level Data Ingestion – completed. See [#58](https://github.com/cbwinslow/retrosheet/issues/58)
 
 This inventory tells agents what each important file does and which workflows own it. Files may appear in multiple sections when they serve multiple goals.
 
@@ -36,6 +36,11 @@ This inventory tells agents what each important file does and which workflows ow
 | `docs/ab_outcome.md` | User-provided spec for at-bat/pitch outcome modeling. Treat as requirements guidance, not direct implementation. | Multiclass PA and pitch-model roadmap |
 | `docs/retrosheet_key.md` | Retrosheet documentation index and external reference map. | Retrosheet parsing/reference |
 | `docs/ARCHIVED_DOCUMENTATION.md` | Inventory of archived documentation with reasons and replacements. | Documentation governance |
+| `docs/BRIDGE_TABLE_IMPLEMENTATION.md` | Comprehensive documentation for bridge table design, ID formats, implementation strategies, and monitoring. | Bridge table reference |
+| `docs/ID_RECONCILIATION.md` | Documentation on ID reconciliation methods for baseball data sources, crosswalk sources, and best practices. | ID mapping reference |
+| `docs/DATA_MODELS.md` | Comprehensive data model documentation for Retrosheet, MLB Stats API, ESPN MLB API, Statcast, Lahman database, Baseball Reference, and Chadwick Bureau. | Data source reference |
+| `docs/ESPN_BRIDGE_REQUIREMENTS.md` | Requirements for ESPN bridge table integration, including dependencies, implementation status, and validation. | ESPN bridge reference |
+| `docs/CONFIDENCE_SCORING.md` | Confidence scoring framework documentation for bridge table mappings, including score levels, usage, and monitoring. | Bridge data quality reference |
 | `CHATBOT_INTERFACE_DESIGN.md` | Current/future web command-center design notes. | Interface, agents |
 
 ## Configuration
@@ -94,6 +99,15 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `sql/081_probability_calibration_artifacts.sql` | Extends calibration reports with persisted artifact support for reusable calibrated scoring. | Calibrated inference infrastructure. |
 | `sql/082_count_state_feature_marts.sql` | Adds batter/pitcher/context prior-rate marts split by ball-strike count and a count-state-enhanced advanced PA view. | Targeted feature improvement for PA reliability defects. |
 | `sql/040_coach_umpire_bridge_tables.sql` | Creates `bridge.coach_xref` and `bridge.umpire_xref` tables for cross-source ID mapping of coaches and umpires. | Coach/umpire bridge tables. |
+| `sql/mlb/100_bridge_tables.sql` | Creates core bridge tables: `bridge.player_xref`, `bridge.team_xref`, `bridge.park_xref`, `bridge.game_xref`. | Core bridge infrastructure. |
+| `sql/bridge/900_bridge_monitoring_views.sql` | Creates monitoring views for bridge table health checks, coverage statistics, and data quality. | Bridge monitoring and validation. |
+| `sql/bridge/910_confidence_scoring.sql` | Adds confidence scoring framework to bridge tables with confidence_score and confidence_source columns, plus monitoring views. | Bridge data quality tracking. |
+| `sql/bridge/920_game_xref_procedure.sql` | SQL procedure `bridge.populate_game_xref()` for populating game cross-reference by matching Retrosheet and MLB games using date, team IDs, and game number. | Game cross-reference population. |
+| `sql/bridge/930_season_aware_team_xref_procedure.sql` | SQL procedure `bridge.populate_season_aware_team_xref()` for populating season-aware team mappings to handle franchise moves (MON→WAS, FLO→MIA). | Team season coverage. |
+| `sql/bridge/940_coach_umpire_xref_procedures.sql` | SQL procedures `bridge.populate_coach_xref()` and `bridge.populate_umpire_xref()` for populating coach and umpire cross-references with biofile_legacy name resolution. | Coach/umpire bridge table population. |
+| `sql/bridge/950_park_xref_procedure.sql` | SQL procedure `bridge.populate_park_xref()` for populating park cross-reference using static MLB venue ID to Retrosheet park ID mappings. | Park cross-reference population. |
+| `sql/bridge/960_player_xref_procedure.sql` | SQL procedure `bridge.populate_player_xref()` for populating player cross-reference from temp_table.chadwick_player_data (hybrid: Python downloads Chadwick data, SQL inserts). | Player cross-reference population. |
+| `sql/bridge/999_master_bridge_population_procedure.sql` | Master orchestrator `bridge.populate_all_bridge_tables()` that calls all bridge population procedures in correct dependency order. | Complete bridge table population. |
 | `sql/200_external_data.sql` | Defines schemas and tables for supplemental free data sources (Statcast, Baseball‑Data.com, Gameday XML) and bridge tables. | External data marts. |
 | `sql/220_espn_schema.sql` | Defines `raw_espn` schema and tables for ESPN API data (game snapshots, schedule snapshots, player stats, team stats). | ESPN external data ingestion. |
 | `sql/225_ingest_run_tracking.sql` | Expands `raw_retrosheet.ingest_runs` table with script metadata, adds helper functions for run logging, triggers for auto-timestamps, and monitoring views. | Ingest run tracking and reproducibility. |
@@ -157,7 +171,13 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/load_statcast.py` | Loads free Statcast CSV data into `raw_mlb.statcast` and updates bridge tables. | Supplemental pitch-level data ingestion. |
 | `scripts/load_baseballdata.py` | Loads Baseball-Data.com play-by-play CSV into `raw_external.baseball_data_com` and creates placeholder player bridge entries. | Supplemental historical PBP ingestion. |
 | `scripts/fetch_espn_mlb.py` | Fetches MLB schedule and game data from ESPN API and stores source-preserved JSON in `raw_espn`. | ESPN external data ingestion. |
-| `scripts/populate_coach_umpire_bridge.py` | Populates `bridge.coach_xref` and `bridge.umpire_xref` from Retrosheet auxiliary data. | Coach/umpire bridge table population. |
+| `scripts/populate_coach_umpire_bridge.py` | Populates `bridge.coach_xref` and `bridge.umpire_xref` from Retrosheet auxiliary data with biofile_legacy name resolution and confidence scoring. | Coach/umpire bridge table population. |
+| `scripts/bridge/populate_game_xref.py` | Populates `bridge.game_xref` by matching games between Retrosheet and MLB using date and team IDs. | Game cross-reference mapping. |
+| `scripts/bridge/populate_season_aware_team_xref.py` | Populates season-aware team mappings in `bridge.team_xref` to handle historical franchise moves. | Team season coverage. |
+| `scripts/bridge/populate_external_bridge.py` | Populates `bridge.external_player_xref` for Statcast, Baseball Reference, and Lahman data sources using player_xref as source of truth. | External player ID mappings. |
+| `scripts/bridge/populate_espn_bridge.py` | Populates `bridge.external_player_xref` and `bridge.external_team_xref` for ESPN IDs using MLBAM ID cross-references. | ESPN ID mappings. |
+| `scripts/bridge/investigate_coach_names.py` | Investigates whether coach names can be resolved using biofile_legacy data (coach_id matches player_id). | Coach name resolution research. |
+| `scripts/bridge/investigate_umpire_ids.py` | Investigates umpire MLB ID mapping options using available data sources. | Umpire ID mapping research. |
 | `scripts/download_statcast_pitch_level.py` | Downloads Statcast pitch-level data using pybaseball.statcast() for date ranges or seasons. | Statcast pitch-level data download. |
 | `scripts/ingest_espn_plays.py` | Ingests ESPN play-by-play data into `raw_espn.plays` table. | ESPN external data ingestion |
 

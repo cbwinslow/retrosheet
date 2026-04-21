@@ -8,8 +8,8 @@ The project is documented in several core files:
 * [`AGENTS.md`](AGENTS.md:1‑21) – overall mission, non‑negotiables, data layers.
 * [`docs/agents/CURRENT_SNAPSHOT.md`](docs/agents/CURRENT_SNAPSHOT.md:7‑15) – current focus on the historical PA outcome model and live‑bridge work.
 * [`docs/agents/PROCEDURES.md`](docs/agents/PROCEDURES.md:1‑30) – canonical workflows for warehouse rebuild, live ingestion, and adding new features.
-* [`scripts/baseball_chatbot.py`](scripts/baseball_chatbot.py:1‑200) – skeleton of the core LLM agent (still a work‑in‑progress, see Issue #1).
-* [`github_issues/issue_01_core_llm_integration.md`](github_issues/issue_01_core_llm_integration.md:1‑40) – outlines the intended LLM integration with tool‑calling.
+* [`scripts/baseball_chatbot.py`](scripts/baseball_chatbot.py:1‑200) – skeleton of the core LLM agent (still a work‑in‑progress, see [#49](https://github.com/cbwinslow/retrosheet/issues/49)).
+* [#49](https://github.com/cbwinslow/retrosheet/issues/49) – outlines the intended LLM integration with tool‑calling.
 
 These files show that the system already plans to use an LLM for query handling, but the **tool‑calling orchestration** and **knowledge‑base retrieval** are still being built.
 
@@ -17,10 +17,10 @@ These files show that the system already plans to use an LLM for query handling,
 | Library | Primary Strength | How it maps to current gaps |
 |---------|------------------|------------------------------|
 | **LlamaIndex** | Structured data ingestion, index building, retrieval‑augmented generation (RAG) over arbitrary data sources (SQL, CSV, JSON). | The platform stores a rich PostgreSQL warehouse (`core`, `features`, `analysis`). LlamaIndex can create a **SQL‑index** that lets the LLM retrieve relevant rows (e.g., recent plate‑appearance stats) without writing custom SQL prompts.
-| **LangChain** | Chains, agents, tool‑calling wrappers, memory, callbacks. | The project already defines a **tool execution engine** (Issue #2) and an **LLM agent** (Issue #1). LangChain provides a battle‑tested **AgentExecutor** that can route user intents to the existing scripts, and a **ConversationBufferMemory** that can keep context across turns.
+| **LangChain** | Chains, agents, tool‑calling wrappers, memory, callbacks. | The project already defines a **tool execution engine** ([#50](https://github.com/cbwinslow/retrosheet/issues/50)) and an **LLM agent** ([#49](https://github.com/cbwinslow/retrosheet/issues/49)). LangChain provides a battle‑tested **AgentExecutor** that can route user intents to the existing scripts, and a **ConversationBufferMemory** that can keep context across turns.
 
 ## 4. Candidate Integration Points
-1. **LLM Query Layer** – Replace the custom `BaseballQueryAgent` stub with a LangChain `ConversationalAgent` that uses a **tool‑calling** wrapper around the safe executor (Issue #2). This gives us:
+1. **LLM Query Layer** – Replace the custom `BaseballQueryAgent` stub with a LangChain `ConversationalAgent` that uses a **tool‑calling** wrapper around the safe executor ([#50](https://github.com/cbwinslow/retrosheet/issues/50)). This gives us:
    * Automatic parsing of user intent.
    * Built‑in retry / fallback handling.
    * Easy addition of new tools (e.g., `predict_pa_outcome_distribution`).
@@ -30,11 +30,11 @@ These files show that the system already plans to use an LLM for query handling,
    The index can be refreshed after each warehouse rebuild (`scripts/rebuild_warehouse.sh`).
 3. **Live‑Bridge Debugging** – When a live game is ingested, we could store the raw JSON payload in a **document store** (LlamaIndex) and let the LLM answer questions like “Why did the bridge mapping fall back to `MLB###` for this game?” without writing ad‑hoc SQL.
 4. **Documentation & Knowledge Base** – Index the `docs/agents/*.md` files with LlamaIndex so the LLM can answer procedural questions (e.g., “What is the recommended workflow for adding a new feature mart?”) without hard‑coding the answers.
-5. **Prompt Engineering / Few‑Shot Templates** – LangChain’s `PromptTemplate` can centralise the prompts used for model orchestration (Issue #3) and ensure consistent formatting for calibration or odds conversion.
+5. **Prompt Engineering / Few‑Shot Templates** – LangChain’s `PromptTemplate` can centralise the prompts used for model orchestration ([#51](https://github.com/cbwinslow/retrosheet/issues/51)) and ensure consistent formatting for calibration or odds conversion.
 
 ## 5. Risks & Mitigations
 * **Performance** – RAG queries add latency. Mitigate by caching LlamaIndex query results (LangChain `Cache` wrapper) and limiting index size to the most‑used tables.
-* **Security** – Allow‑list only safe SQL queries in the LlamaIndex index. Combine with the existing **Tool Execution Engine** validation (Issue #2).
+* **Security** – Allow‑list only safe SQL queries in the LlamaIndex index. Combine with the existing **Tool Execution Engine** validation ([#50](https://github.com/cbwinslow/retrosheet/issues/50)).
 * **Complexity** – Adding two new libraries increases the dependency surface. Keep them optional: wrap imports in try/except and provide a fallback to the current handcrafted agent.
 
 ## 6. Recommended Prototype Steps

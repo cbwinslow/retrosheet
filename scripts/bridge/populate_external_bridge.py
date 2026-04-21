@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
 Populate External Bridge Tables
-Extracts external IDs from Baseball Reference, Lahman, and other sources and creates cross-reference mappings.
+Uses bridge.player_xref as source of truth to map external player/team IDs to Retrosheet IDs.
 
 Usage:
-    python3 scripts/populate_external_bridge.py
+    python3 scripts/bridge/populate_external_bridge.py
 """
 
 import os
 import psycopg2
+from psycopg2 import Error
 from dotenv import load_dotenv
 
-load_dotenv()
+_ = load_dotenv()
 
 
 def get_db_connection():
@@ -29,29 +30,94 @@ def get_db_connection():
         )
 
 
-def populate_bref_player_xref():
-    """Populate bridge.external_player_xref from raw_bref.batting_stats"""
+def populate_statcast_player_xref():
+    """Populate bridge.external_player_xref for Statcast using bridge.player_xref mlb_id mappings."""
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
-            # Extract Baseball Reference player IDs and match to retrosheet IDs
-            # Note: This is a basic match by name since we don't have direct ID mapping
+            # Pre-filter player_xref to only include rows with valid retrosheet_id
+            cur.execute("""
+                INSERT INTO bridge.external_player_xref (external_source, external_player_id, retrosheet_player_id)
+                SELECT DISTINCT 
+                    'statcast' as external_source,
+                    s.batter::text as external_player_id,
+                    px.retrosheet_id as retrosheet_player_id
+                FROM raw_mlb.statcast s
+                JOIN (
+                    SELECT mlb_id, retrosheet_id 
+                    FROM bridge.player_xref 
+                    WHERE mlb_id IS NOT NULL 
+                    AND retrosheet_id IS NOT NULL 
+                    AND retrosheet_id != ''
+                ) px ON s.batter = px.mlb_id
+                WHERE s.batter IS NOT NULL
+                ON CONFLICT (external_source, external_player_id) DO UPDATE SET
+                    retrosheet_player_id = EXCLUDED.retrosheet_player_id
+            """)
+            
+            batter_count = cur.rowcount
+            conn.commit()
+            print(f"Populated {batter_count} Statcast batters in bridge.external_player_xref")
+            
+            # Map Statcast pitcher IDs to Retrosheet IDs via bridge.player_xref
+            cur.execute("""
+                INSERT INTO bridge.external_player_xref (external_source, external_player_id, retrosheet_player_id)
+                SELECT DISTINCT 
+                    'statcast' as external_source,
+                    s.pitcher::text as external_player_id,
+                    px.retrosheet_id as retrosheet_player_id
+                FROM raw_mlb.statcast s
+                JOIN (
+                    SELECT mlb_id, retrosheet_id 
+                    FROM bridge.player_xref 
+                    WHERE mlb_id IS NOT NULL 
+                    AND retrosheet_id IS NOT NULL 
+                    AND retrosheet_id != ''
+                ) px ON s.pitcher = px.mlb_id
+                WHERE s.pitcher IS NOT NULL
+                ON CONFLICT (external_source, external_player_id) DO UPDATE SET
+                    retrosheet_player_id = EXCLUDED.retrosheet_player_id
+            """)
+            
+            pitcher_count = cur.rowcount
+            conn.commit()
+            print(f"Populated {pitcher_count} Statcast pitchers in bridge.external_player_xref")
+            
+            return batter_count + pitcher_count
+    except Error as e:
+        print(f"Error populating statcast_player_xref: {e}")
+        conn.rollback()
+        return 0
+    finally:
+        conn.close()
+
+
+def populate_bref_player_xref():
+    """Populate bridge.external_player_xref for Baseball Reference using bridge.player_xref baseball_reference_id mappings."""
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            # Map Baseball Reference IDs to Retrosheet IDs via bridge.player_xref
             cur.execute("""
                 INSERT INTO bridge.external_player_xref (external_source, external_player_id, retrosheet_player_id)
                 SELECT DISTINCT 
                     'baseball_reference' as external_source,
-                    ROW_NUMBER() OVER (ORDER BY player_id) as external_player_id,
-                    0 as retrosheet_player_id
-                FROM raw_bref.batting_stats
-                WHERE player_id IS NOT NULL
-                ON CONFLICT (external_source, external_player_id) DO NOTHING
+                    px.baseball_reference_id as external_player_id,
+                    px.retrosheet_id as retrosheet_player_id
+                FROM bridge.player_xref px
+                WHERE px.baseball_reference_id IS NOT NULL
+                AND px.baseball_reference_id != ''
+                AND px.retrosheet_id IS NOT NULL
+                AND px.retrosheet_id != ''
+                ON CONFLICT (external_source, external_player_id) DO UPDATE SET
+                    retrosheet_player_id = EXCLUDED.retrosheet_player_id
             """)
             
             bref_count = cur.rowcount
             conn.commit()
             print(f"Populated {bref_count} Baseball Reference players in bridge.external_player_xref")
             return bref_count
-    except Exception as e:
+    except Error as e:
         print(f"Error populating bref_player_xref: {e}")
         conn.rollback()
         return 0
@@ -60,57 +126,30 @@ def populate_bref_player_xref():
 
 
 def populate_lahman_player_xref():
-    """Populate bridge.external_player_xref from raw_lahman.people"""
+    """Populate bridge.external_player_xref for Lahman using retroID column."""
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
-            # Extract Lahman player IDs
+            # Map Lahman playerID to Retrosheet IDs via retroID column
             cur.execute("""
                 INSERT INTO bridge.external_player_xref (external_source, external_player_id, retrosheet_player_id)
                 SELECT DISTINCT 
                     'lahman' as external_source,
-                    1 as external_player_id,
-                    0 as retrosheet_player_id
-                FROM raw_lahman.people
-                WHERE playerid IS NOT NULL
-                ON CONFLICT (external_source, external_player_id) DO NOTHING
+                    l."playerID" as external_player_id,
+                    l."retroID" as retrosheet_player_id
+                FROM lahman.people l
+                WHERE l."retroID" IS NOT NULL
+                AND l."retroID" != ''
+                ON CONFLICT (external_source, external_player_id) DO UPDATE SET
+                    retrosheet_player_id = EXCLUDED.retrosheet_player_id
             """)
             
             lahman_count = cur.rowcount
             conn.commit()
             print(f"Populated {lahman_count} Lahman players in bridge.external_player_xref")
             return lahman_count
-    except Exception as e:
+    except Error as e:
         print(f"Error populating lahman_player_xref: {e}")
-        conn.rollback()
-        return 0
-    finally:
-        conn.close()
-
-
-def populate_bref_team_xref():
-    """Populate bridge.external_team_xref from raw_bref.batting_stats"""
-    conn = get_db_connection()
-    try:
-        with conn.cursor() as cur:
-            # Extract Baseball Reference team IDs
-            cur.execute("""
-                INSERT INTO bridge.external_team_xref (external_source, external_team_id, retrosheet_team_id)
-                SELECT DISTINCT 
-                    'baseball_reference' as external_source,
-                    ROW_NUMBER() OVER (ORDER BY team) as external_team_id,
-                    0 as retrosheet_team_id
-                FROM raw_bref.batting_stats
-                WHERE team IS NOT NULL
-                ON CONFLICT (external_source, external_team_id) DO NOTHING
-            """)
-            
-            bref_team_count = cur.rowcount
-            conn.commit()
-            print(f"Populated {bref_team_count} Baseball Reference teams in bridge.external_team_xref")
-            return bref_team_count
-    except Exception as e:
-        print(f"Error populating bref_team_xref: {e}")
         conn.rollback()
         return 0
     finally:
@@ -120,15 +159,15 @@ def populate_bref_team_xref():
 def main():
     print("Populating external bridge tables...")
     
-    bref_player_count = populate_bref_player_xref()
-    lahman_player_count = populate_lahman_player_xref()
-    bref_team_count = populate_bref_team_xref()
+    statcast_count = populate_statcast_player_xref()
+    bref_count = populate_bref_player_xref()
+    lahman_count = populate_lahman_player_xref()
     
     print("\nSummary:")
-    print(f"  Baseball Reference players: {bref_player_count}")
-    print(f"  Lahman players: {lahman_player_count}")
-    print(f"  Baseball Reference teams: {bref_team_count}")
-    print(f"  Total: {bref_player_count + lahman_player_count + bref_team_count}")
+    print(f"  Statcast players: {statcast_count}")
+    print(f"  Baseball Reference players: {bref_count}")
+    print(f"  Lahman players: {lahman_count}")
+    print(f"  Total: {statcast_count + bref_count + lahman_count}")
 
 
 if __name__ == "__main__":

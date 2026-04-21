@@ -11,36 +11,5 @@
     "rules": {
       "recommended": true
     }
-  },
-  "overrides": [
-    {
-      "includes": ["*.ts", "*.tsx"],
-      "formatter": {
-        "quoteStyle": "single",
-        "trailingCommas": "all",
-        "semicolons": "always",
-        "arrowParentheses": "always"
-      }
-    },
-    {
-      "includes": ["*.js", "*.jsx"],
-      "formatter": {
-        "quoteStyle": "single",
-        "trailingCommas": "all",
-        "semicolons": "always",
-        "arrowParentheses": "always"
-      }
-    }
-  ],
-  "files": {
-    "includes": ["**/*"],
-    "ignores": [
-      "dist",
-      "build",
-      "coverage",
-      ".turbo",
-      ".next",
-      "node_modules"
-    ]
   }
 }

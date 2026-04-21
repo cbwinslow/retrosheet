@@ -14,9 +14,8 @@ Optional arguments:
 import argparse
 import sys
 import psycopg2
-from psycopg2.extras import RealDictCursor
 
-from scripts.setup_mlb_analytics import database_kwargs
+from scripts.utility.setup_mlb_analytics import database_kwargs
 
 
 def run_validation(limit_hours: int = None) -> int:

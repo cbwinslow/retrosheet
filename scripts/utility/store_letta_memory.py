@@ -96,7 +96,7 @@ SELECT * FROM raw_retrosheet.ingest_runs WHERE source_name = 'espn_api' ORDER BY
 ## Documentation Updates
 - Updated `docs/agents/FILE_INVENTORY.md` with ESPN scripts and schema
 - Updated `AGENTS.md` to include raw_espn in data layers and ESPN procedure
-- Updated `github_issues/issue_08_espn_mlb_data_integration.md` with completion details
+- Updated [#59](https://github.com/cbwinslow/retrosheet/issues/59) with completion details
 
 ## Related GitHub Issue
 Issue #8: ESPN MLB Data Integration - Completed

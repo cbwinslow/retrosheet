@@ -16,7 +16,7 @@ from collections.abc import Sequence
 
 import psycopg2
 
-from transform_live_game import transform_live_game
+from scripts.transform.transform_live_game import transform_live_game
 
 
 def database_kwargs() -> dict[str, str]:

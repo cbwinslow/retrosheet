@@ -17,7 +17,7 @@ The codebase already satisfies the core standards:
 1. **MCP resources** – defined in `AGENTS.md` and used throughout scripts (e.g., `scripts/warehouse.py`).
 2. **Agents** – `BaseballQueryAgent` implements the agent pattern with a pluggable LLM client.
 3. **Tools** – `ToolRegistry` enumerates safe tool definitions; `scripts/baseball_chatbot.py` validates calls before execution.
-4. **Safe Execution Engine** – described in `github_issues/issue_02_tool_execution_engine.md` and partially implemented in the `_execute_tool` method.
+4. **Safe Execution Engine** – described in [#50](https://github.com/cbwinslow/retrosheet/issues/50) and partially implemented in the `_execute_tool` method.
 5. **Audit Logging** – Letta hook configuration in `AGENTS.md` ensures every prompt/response is logged.
 
 **Gaps / enhancements**:

@@ -107,6 +107,39 @@ The system supports real-time MLB game data ingestion alongside historical Retro
    - Populates `bridge.player_xref` and `bridge.team_xref` tables
    - Enables seamless ID translation between MLB and Retrosheet systems
 
+### Bridge Table Improvements
+
+**Confidence Scoring Framework:**
+- All bridge tables now include `confidence_score` (0.0-1.0) and `confidence_source` columns
+- Confidence levels: 1.0 (direct), 0.9 (high), 0.8 (medium), 0.7 (low), 0.5 (fuzzy), 0.3 (placeholder), 0.1 (unverified)
+- Monitoring views: `bridge.confidence_score_distribution`, `bridge.low_confidence_mappings`, `bridge.confidence_summary_by_source`
+- SQL migration: `sql/bridge/910_confidence_scoring.sql`
+- Documentation: `docs/CONFIDENCE_SCORING.md`
+
+**Coach Name Resolution:**
+- 100% of coaches resolved via `raw_retrosheet.biofile_legacy` (coach_id matches player_id)
+- Updated `scripts/bridge/populate_coach_umpire_bridge.py` to use biofile_legacy names
+- Confidence score: 0.9 (biofile_legacy_name_match)
+- Investigation script: `scripts/bridge/investigate_coach_names.py`
+
+**Umpire Name Resolution:**
+- Cross-referenced with biofile_legacy for players who became umpires (2,369 players with umpire debut dates)
+- Updated `scripts/bridge/populate_coach_umpire_bridge.py` to include biofile_legacy cross-reference
+- Confidence score: 0.9 (biofile_legacy_player_match) or 0.7 (retrosheet_name_only)
+- Investigation script: `scripts/bridge/investigate_umpire_ids.py`
+
+**Error Handling Improvements:**
+- All bridge scripts now use specific `psycopg2.Error` instead of generic `Exception`
+- Scripts updated: `populate_game_xref.py`, `populate_season_aware_team_xref.py`, `populate_external_bridge.py`, `populate_coach_umpire_bridge.py`, `populate_espn_bridge.py`
+
+**Validation Views:**
+- Added 5 new validation views to `sql/bridge/900_bridge_monitoring_views.sql`:
+  - `duplicate_id_detection`: Detects duplicate ID entries
+  - `orphaned_external_ids`: Identifies external IDs referencing non-existent Retrosheet IDs
+  - `cross_reference_consistency`: Checks consistency between bridge table references
+  - `season_coverage_gaps`: Identifies teams with incomplete/invalid season ranges
+  - `mapping_completeness`: Overall mapping completeness statistics by entity type
+
 ### Analysis & Combined Queries
 
 Use `analysis.*` views for unified access to both historical and live data:

@@ -1,15 +1,14 @@
 """Unit tests for the placeholder LangChain baseball agent.
 
-The current implementation in [`scripts/langchain_baseball_agent.py`](scripts/langchain_baseball_agent.py) is a stub that returns a static dictionary and optionally increments a Prometheus counter. These tests verify:
+The current implementation in [`scripts/llm/langchain_baseball_agent.py`](scripts/llm/langchain_baseball_agent.py) is a stub that returns a static dictionary and optionally increments a Prometheus counter. These tests verify:
 
 1. The public ``process_query`` method returns the expected keys and values.
 2. The method can be called without the ``prometheus_client`` package being installed (the fallback ``_NoOpCounter`` should not raise).
 """
 
-import builtins
 from typing import Dict
 
-from scripts.langchain_baseball_agent import LangChainBaseballAgent
+from scripts.llm.langchain_baseball_agent import LangChainBaseballAgent
 
 
 def test_process_query_returns_expected_structure() -> None:
@@ -45,7 +44,7 @@ def test_prometheus_counter_fallback_is_noop(monkeypatch) -> None:
 
     # Patch the counter used inside the agent module
     monkeypatch.setattr(
-        "scripts.langchain_baseball_agent.PrometheusCounter", DummyCounter, raising=False
+        "scripts.llm.langchain_baseball_agent.PrometheusCounter", DummyCounter, raising=False
     )
 
     agent = LangChainBaseballAgent()

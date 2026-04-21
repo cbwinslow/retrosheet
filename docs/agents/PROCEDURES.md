@@ -58,7 +58,20 @@ Purpose: ingest real-time MLB game data alongside historical Retrosheet data.
 Command:
 
 ```bash
-python3 scripts/populate_bridge_tables.py
+# Step 1: Populate core bridge tables (players, teams, parks)
+python3 scripts/bridge/populate_bridge_tables.py
+
+# Step 2: Populate season-aware team_xref with franchise moves
+python3 scripts/bridge/populate_season_aware_team_xref.py
+
+# Step 3: Populate external player ID mappings (Statcast, Baseball Reference, Lahman)
+python3 scripts/bridge/populate_external_bridge.py
+
+# Step 4: Populate coach and umpire bridge tables
+python3 scripts/bridge/populate_coach_umpire_bridge.py
+
+# Step 5: Create monitoring views
+psql -f sql/bridge/900_bridge_monitoring_views.sql
 ```
 
 Expected order:
@@ -68,12 +81,17 @@ Expected order:
 3. Populate `bridge.player_xref` with MLB ↔ Retrosheet player ID mappings.
 4. Populate `bridge.team_xref` with current/canonical MLB franchise mappings from `core.mlb_api_teams`.
 5. Populate `bridge.park_xref` with MLB venue-id mappings covering the observed `2000-2025` MLB venue surface.
+6. Add `valid_from_season` and `valid_to_season` columns to `bridge.team_xref` for season-aware franchise moves (e.g., MON→WAS, FLO→MIA).
+7. Populate `bridge.external_player_xref` with Statcast, Baseball Reference, and Lahman ID mappings using `bridge.player_xref` as source of truth.
+8. Populate `bridge.coach_xref` and `bridge.umpire_xref` from Retrosheet data.
+9. Create monitoring views for bridge table health checks and coverage statistics.
 
-Limitation:
+Notes:
 
-- `bridge.team_xref` is currently seasonless.
-- Franchise-move cases are therefore mapped to a current/canonical Retrosheet id for live scoring rather than a season-specific historical id.
-- Do not treat that as a complete replay-grade historical MLB team bridge until a season-aware bridge design exists.
+- `bridge.team_xref` is now season-aware with `valid_from_season` and `valid_to_season` columns.
+- Franchise-move cases are correctly represented with separate entries for each franchise period.
+- `bridge.external_player_xref` uses text columns for IDs to match Retrosheet ID formats (e.g., "aaronh101").
+- Monitoring views in `bridge.bridge_table_counts`, `bridge.external_player_coverage`, and `bridge.bridge_data_quality` provide health checks.
 
 ### Ongoing Live Data Ingestion
 

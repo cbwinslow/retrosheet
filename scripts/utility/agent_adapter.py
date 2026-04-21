@@ -11,7 +11,7 @@ it lazily imports the appropriate implementation to avoid unnecessary heavy
 imports when the alternative backend is not used.
 
 Future work will flesh out the LangChain implementation in
-``scripts/langchain_baseball_agent.py`` and add proper type hints, logging, and
+``scripts/llm/langchain_baseball_agent.py`` and add proper type hints, logging, and
 error handling.
 """
 
@@ -38,10 +38,10 @@ def _load_langchain_agent():
         # The LangChain implementation is expected to live in this module.
         # Import lazily to avoid import errors if the file does not yet exist.
         try:
-            from scripts.langchain_baseball_agent import LangChainBaseballAgent as LCAgent
+            from scripts.llm.langchain_baseball_agent import LangChainBaseballAgent as LCAgent
         except ImportError as exc:
             raise RuntimeError(
-                "LangChain agent module not found. Ensure 'scripts/langchain_baseball_agent.py' exists."
+                "LangChain agent module not found. Ensure 'scripts/llm/langchain_baseball_agent.py' exists."
             ) from exc
         _langchain_agent = LCAgent()
     return _langchain_agent

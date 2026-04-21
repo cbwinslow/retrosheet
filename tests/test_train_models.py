@@ -8,10 +8,9 @@ PostgreSQL instance – and are covered by integration tests elsewhere.
 """
 
 import pandas as pd
-import numpy as np
 
-from scripts import train_models
-from scripts import sweep_hyperparameters
+from scripts.model_training import train_models
+from scripts.model_training import sweep_hyperparameters
 
 
 def test_preprocessor_structure() -> None:

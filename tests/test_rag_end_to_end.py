@@ -2,13 +2,13 @@
 
 The current implementation of the RAG pipeline consists of two parts:
 
-1. ``scripts/build_llamaindex.py`` – a placeholder script that would normally
+1. ``scripts/llm/build_llamaindex.py`` – a placeholder script that would normally
    construct a LlamaIndex vector store. The test verifies that the script runs
    and prints the expected placeholder message.
-2. ``scripts/agent_adapter.py`` – selects the LangChain backend when the
+2. ``scripts/utility/agent_adapter.py`` – selects the LangChain backend when the
    ``AGENT_BACKEND`` environment variable is set to ``langchain``. The test
    ensures that a query routed through the adapter returns the placeholder
-   response defined in ``scripts/langchain_baseball_agent.py``.
+   response defined in ``scripts/llm/langchain_baseball_agent.py``.
 
 These checks provide a minimal end‑to‑end validation of the RAG‑only query
 flow without requiring a full LlamaIndex implementation.
@@ -20,6 +20,10 @@ from io import StringIO
 import pytest
 
 
+@pytest.mark.skipif(
+    pytest.importorskip("llama_index", reason="LlamaIndex not installed") is None,
+    reason="LlamaIndex library not installed"
+)
 def test_build_llamaindex_placeholder_output() -> None:
     """Execute the placeholder ``build_llamaindex`` script and capture its output.
 
@@ -27,7 +31,7 @@ def test_build_llamaindex_placeholder_output() -> None:
     status code ``0``.
     """
     # Import the module and call ``main`` directly to avoid subprocess overhead.
-    import scripts.build_llamaindex as build_script
+    import scripts.llm.build_llamaindex as build_script
 
     captured_stdout = StringIO()
     original_stdout = sys.stdout
@@ -62,7 +66,7 @@ def test_rag_query_through_agent_adapter(monkeypatch) -> None:
     # Force the adapter to use the LangChain implementation.
     monkeypatch.setenv("AGENT_BACKEND", "langchain")
 
-    from scripts.agent_adapter import BaseballAgent
+    from scripts.utility.agent_adapter import BaseballAgent
 
     agent = BaseballAgent()
     result = agent.process_query("RAG test query")

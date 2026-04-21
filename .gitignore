@@ -141,3 +141,5 @@ current_mappings.txt
 # Temporary CSV files in root
 *.csv
 !data/**/*.csv
+.direnv/
+tmp/
