@@ -261,7 +261,15 @@ The system supports real-time MLB game data ingestion alongside historical Retro
    - Upserts `core.live_games` and `core.live_events`
    - Preserves `raw_payload` and `raw_play` in the live canonical layer
 
-4. **Batch Processing**: `python3 scripts/ingest_live_games.py --schedule`
+4. **Live Automated Ingestion**: PostgreSQL native pg_cron jobs
+   - ✅ Running automatically 24/7 inside the database
+   - 10 second interval: primary live feed
+   - 15 second interval: all additional endpoints (play-by-play, pitch metrics, win probability, boxscore)
+   - 24 hour interval: daily schedule refresh
+   - No external scripts required
+   - Fully idempotent, no duplicates, immutable storage
+
+5. **Batch Processing**: `python3 scripts/ingest_live_games.py --schedule`
    - Orchestrates discovery and ingestion for multiple games
    - Includes duplicate detection and error handling
 
