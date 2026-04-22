@@ -22,11 +22,11 @@ DROP PROCEDURE IF EXISTS bridge.populate_all_bridge_tables();
 --                5. Umpire_xref (independent)
 --                6. Player_xref (requires external data download first)
 -- Parameters:
---   include_player_xref: Whether to include player_xref (requires temp table)
+--   include_player_xref: Whether to include player_xref (downloads Chadwick data)
 -- Returns: Summary of all operations
 -- ============================================================================
 CREATE OR REPLACE PROCEDURE bridge.populate_all_bridge_tables(
-    include_player_xref BOOLEAN DEFAULT FALSE
+    include_player_xref BOOLEAN DEFAULT TRUE
 )
 LANGUAGE plpgsql
 AS $$
@@ -76,16 +76,18 @@ BEGIN
     CALL bridge.populate_umpire_xref(umpire_xref_count);
     RAISE NOTICE '  Umpires populated: %', umpire_xref_count;
     
-    -- Step 6: Populate player_xref (optional, requires temp table)
+    -- Step 6: Populate player_xref (optional, downloads Chadwick data via SQL)
     IF include_player_xref THEN
         RAISE NOTICE '';
-        RAISE NOTICE '[6/6] Populating player_xref...';
-        CALL bridge.populate_player_xref(player_xref_count);
+        RAISE NOTICE '[6/6] Populating player_xref from Chadwick Bureau Register...';
+        CALL bridge.populate_player_xref_full();
+        -- Get count after population
+        SELECT COUNT(*) INTO player_xref_count FROM bridge.player_xref;
         RAISE NOTICE '  Players inserted: %', player_xref_count;
     ELSE
         RAISE NOTICE '';
-        RAISE NOTICE '[6/6] Skipping player_xref (requires temp table with Chadwick data)';
-        RAISE NOTICE '      Use scripts/bridge/populate_bridge_tables.py for player_xref';
+        RAISE NOTICE '[6/6] Skipping player_xref (downloads Chadwick data)';
+        RAISE NOTICE '      Call bridge.populate_player_xref_full() separately if needed';
     END IF;
     
     end_time := NOW();

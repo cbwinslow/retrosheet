@@ -27,6 +27,33 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 - Default database target is the local PostgreSQL database named `retrosheet` on port `5432`, unless `DATABASE_URL` or `PG*` environment variables override it.
 - Do not require Git LFS. Keep generated data and model binaries out of git; scripts and database metadata must be enough to regenerate artifacts.
 
+## Python Environment Standard
+
+This project uses **uv** as the official package manager with **Python 3.10** as the standard runtime. Environment activates automatically when cd'ing into the project directory via direnv.
+
+### Setup
+```bash
+# On first checkout
+direnv allow .
+
+# Install all dependencies
+uv sync --all-extras
+```
+
+### Usage
+```bash
+# Run scripts
+uv run python scripts/your_script.py
+
+# Manage dependencies
+uv add <package>
+uv add --dev <package>
+uv sync
+uv lock
+```
+
+All project scripts, CI, and environments use Python 3.10. Legacy `requirements.txt` is archived and no longer maintained.
+
 ## Data Layers
 
 - `raw_retrosheet`: source-preserved Chadwick extracts and Retrosheet reference tables.
@@ -37,13 +64,40 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 - `features`: ML-ready training and inference tables.
 - `predictions`: model outputs, backtests, and live prediction snapshots.
 
-## PostgreSQL ML Extensions
+## PostgreSQL Extensions and Features
+
+### Researched Extensions
 
 The following PostgreSQL extensions have been researched for in-database ML and analytics:
-- **pgvector**: Vector similarity search for embeddings and AI/ML applications (recommended first)
+- **pg_cron**: Job scheduling for automated pipeline (critical for automation) - [docs/POSTGRESQL_EXTENSIONS_RESEARCH.md](docs/POSTGRESQL_EXTENSIONS_RESEARCH.md)
+- **pg_stat_statements**: Query performance monitoring - [docs/POSTGRESQL_EXTENSIONS_RESEARCH.md](docs/POSTGRESQL_EXTENSIONS_RESEARCH.md)
+- **pl/python3u**: Python integration for advanced ML - [docs/POSTGRESQL_EXTENSIONS_RESEARCH.md](docs/POSTGRESQL_EXTENSIONS_RESEARCH.md)
+- **pgvector**: Vector similarity search for embeddings and AI/ML applications (recommended first) - [docs/POSTGRESQL_EXTENSIONS_RESEARCH.md](docs/POSTGRESQL_EXTENSIONS_RESEARCH.md)
 - **MADlib**: Open-source library for scalable in-database analytics and traditional ML
 - **PostgresML**: In-database ML/AI with GPU acceleration and LLM integration
 - **TimescaleDB**: Time-series data analysis for player performance over seasons
+
+### Installation Scripts
+
+SQL maintenance scripts have been created for extension installation:
+- `sql/maintenance/001_check_extensions.sql` - Check currently installed extensions
+- `sql/maintenance/002_install_pg_cron.sql` - Install pg_cron with validation
+- `sql/maintenance/003_install_pg_stat_statements.sql` - Install pg_stat_statements
+- `sql/maintenance/004_install_pl_python3u.sql` - Install PL/Python3u with test function
+- `sql/maintenance/005_install_pgvector.sql` - Install pgvector with similarity search test
+- `sql/maintenance/010_array_types.sql` - Implement array types for pitch sequences
+- `sql/maintenance/011_custom_types.sql` - Implement domain types for data validation
+- `sql/maintenance/012_partial_indexes.sql` - Implement partial indexes for optimization
+- `sql/maintenance/999_master_installation.sql` - Master orchestrator for all installations
+
+### Advanced PostgreSQL Features
+
+- **Array Types**: For multi-value features (pitch sequences, injury history, recent performance)
+- **Custom Types (Domains)**: For baseball-specific data validation (pitch types, event types, hand types)
+- **Partial Indexes**: For conditional query optimization (recent games, active players, high-leverage situations)
+- **Expression Indexes**: For computed columns (OPS, wOBA, derived features)
+
+See [docs/POSTGRESQL_EXTENSIONS_RESEARCH.md](docs/POSTGRESQL_EXTENSIONS_RESEARCH.md) for detailed research and implementation plan.
 
 ## Required Agent References
 
@@ -55,7 +109,116 @@ Use these docs as the project map:
 - `docs/agents/PROCEDURES.md`: canonical workflows for warehouse rebuilds, target creation, feature marts, model training, simulation, live bridge work, interface changes, and GitHub issues.
 - `docs/agents/MODELING_WORKFLOWS.md`: target/model inventory, evaluation priorities, Moneyball-style modeling goals, leakage checklist, and promotion rules.
 
+### Knowledge Base Documents
+
+Research-backed knowledge base for sabermetrics, modeling, and PostgreSQL features:
+- `docs/KNOWLEDGE_BASE_SABERMETRICS.md`: Research findings on sabermetrics, baseball modeling, and prediction approaches
+- `docs/KNOWLEDGE_BASE_MODELS_REPOS.md`: Research on useful baseball models and GitHub repositories for ML and sabermetrics
+- `docs/TABLE_ASSESSMENT_SABERMETRICS.md`: Assessment of current table structure for sabermetrics and baseball modeling requirements
+- `docs/POSTGRESQL_EXTENSIONS_RESEARCH.md`: Research-backed recommendations for PostgreSQL extensions and features for baseball analytics
+- `docs/LIVE_BETTING_PIPELINE_STATUS.md`: Comprehensive status assessment for live betting and prediction infrastructure
+- `docs/BRIDGE_TABLE_RESEARCH.md`: Research on authoritative baseball ID mapping sources and bridge table schema details
+
 If a file is not listed there and you make it important, update the inventory in the same change.
+
+## GitHub Organization
+
+### Project Board
+Main project board for tracking retrosheet warehouse development work:
+- **URL**: https://github.com/users/cbwinslow/projects/22
+- **Title**: Retrosheet Warehouse Roadmap
+- **Owner**: cbwinslow (user-level project)
+
+### Project Items
+The project board contains items tracking key work areas:
+- PostgreSQL Extensions Installation
+- Sabermetrics Integration
+- Maintenance Schema Implementation
+- Issue #60: PostgreSQL Maintenance Schema
+- Issue #61: PostgreSQL Extensions Installation
+- Issue #62: Sabermetrics Integration
+- Issue #31: Live PA Outcome Scoring
+- Issue #59: ESPN MLB Data Integration
+- Issue #30: Live PA Feature Parity
+
+### Labels
+The repository uses 50 labels for organizing work by type, domain, and priority:
+
+**Work Type Labels:**
+- enhancement (default)
+- bug
+- documentation
+- duplicate
+- good first issue
+- help wanted
+- invalid
+- question
+- wontfix
+
+**Domain Labels:**
+- warehouse - Database warehouse and schema work
+- ml - Machine learning models and features
+- live-data - MLB live feed ingestion and bridging
+- data-quality - Data validation, identity resolution, and quality checks
+- data - Data-related tasks
+- agents - AI agent and chat workflows
+- docs - Documentation and reproducibility
+- markets - Prediction market ingestion and edge analysis
+- ci - Continuous integration and reproducibility automation
+- automation - Automation tasks
+- bridge-tables - Bridge table work
+- data-ingestion - Data ingestion tasks
+- statcast - Statcast-specific work
+
+**Status Labels:**
+- completed - Completed work records
+
+**Priority Labels:**
+- priority:high - High priority items
+- priority:medium - Medium priority items
+
+**Other Labels:**
+- infrastructure - Infrastructure and setup tasks
+- repo-admin - Repository setup and governance
+- security - Security-related tasks
+- validation - Validation tasks
+- audit - Audit tasks
+- real-time - Real-time processing tasks
+- orchestration - Orchestration tasks
+- tools - Tool-related tasks
+- ai - AI-related tasks
+- llm - LLM-related tasks
+- core - Core functionality
+- monitoring - Monitoring tasks
+- ui - UI-related tasks
+- analytics - Analytics tasks
+- feature-mart - Feature mart work
+- predictions - Prediction-related tasks
+- model-activation - Model activation work
+- mcp - MCP-related tasks
+- research - Research tasks
+- milestone - Milestone markers
+- size:XS, size:XXL - PR size indicators
+
+### Issue Organization
+Issues are organized using:
+- Labels for categorization by domain, type, and priority
+- Project board for tracking work items
+- Comments linking related issues and documentation
+- Parent/child issue relationships for large tasks
+
+### Milestones
+Milestone creation via GitHub API is currently blocked by 404 errors. Milestones should be created via the GitHub web interface or investigated for API access issues.
+
+### GitHub Issue Linking Policy
+When creating or updating GitHub issues:
+- Link to relevant documentation in docs/agents/
+- Link to related GitHub issues using #issue-number format
+- Link to relevant SQL files, scripts, and code
+- Add comments to track decisions and rationale
+- Use labels consistently with existing conventions
+- Add items to the project board for tracking
+- Reference knowledge base documents when applicable
 
 ## Chadwick Procedure
 

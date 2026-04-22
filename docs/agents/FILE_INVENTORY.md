@@ -41,6 +41,7 @@ This inventory tells agents what each important file does and which workflows ow
 | `docs/DATA_MODELS.md` | Comprehensive data model documentation for Retrosheet, MLB Stats API, ESPN MLB API, Statcast, Lahman database, Baseball Reference, and Chadwick Bureau. | Data source reference |
 | `docs/ESPN_BRIDGE_REQUIREMENTS.md` | Requirements for ESPN bridge table integration, including dependencies, implementation status, and validation. | ESPN bridge reference |
 | `docs/CONFIDENCE_SCORING.md` | Confidence scoring framework documentation for bridge table mappings, including score levels, usage, and monitoring. | Bridge data quality reference |
+| `docs/agents/ZSH_SQL_MANGLING_FIX.md` | Documentation of the zsh globsubst bug that was silently corrupting SQL commands and the fix applied (removing /etc/zsh/zshenv). | Shell configuration reference |
 | `CHATBOT_INTERFACE_DESIGN.md` | Current/future web command-center design notes. | Interface, agents |
 
 ## Configuration
@@ -76,6 +77,8 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 - Baseball Databank data (same as Lahman - already loaded in lahman schema)
 - Statcast data (raw_mlb.statcast: 7,797,034 rows, 118 fields, seasons 2015-2025, 24,079+ games, 4,229+ batters, 3,251+ pitchers)
 - ESPN MLB data (game_snapshots: 71,739, plays_snapshots: 1,271, schedule_snapshots: 5,212; seasons 2000-2025; play-by-play data only available for 2024-2026; 21 failures out of 71,739 games, 0.03% failure rate)
+- Bridge table population via SQL procedures (game_xref: 59,191, team_xref: 294, park_xref: 656, coach_xref: 1,903, umpire_xref: 2,368, player_xref: 128,925)
+- Confidence scoring framework applied to all bridge tables
 
 **Outstanding:**
 - ESPN player_stats_snapshots and team_stats_snapshots (0 rows - not yet loaded)
@@ -107,10 +110,37 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `sql/bridge/940_coach_umpire_xref_procedures.sql` | SQL procedures `bridge.populate_coach_xref()` and `bridge.populate_umpire_xref()` for populating coach and umpire cross-references with biofile_legacy name resolution. | Coach/umpire bridge table population. |
 | `sql/bridge/950_park_xref_procedure.sql` | SQL procedure `bridge.populate_park_xref()` for populating park cross-reference using static MLB venue ID to Retrosheet park ID mappings. | Park cross-reference population. |
 | `sql/bridge/960_player_xref_procedure.sql` | SQL procedure `bridge.populate_player_xref()` for populating player cross-reference from temp_table.chadwick_player_data (hybrid: Python downloads Chadwick data, SQL inserts). | Player cross-reference population. |
-| `sql/bridge/999_master_bridge_population_procedure.sql` | Master orchestrator `bridge.populate_all_bridge_tables()` that calls all bridge population procedures in correct dependency order. | Complete bridge table population. |
+| `sql/bridge/970_bridge_validation_functions.sql` | SQL validation functions that return boolean true/false for use in scripting: validate_bridge_tables_have_data(), validate_no_duplicate_ids(), validate_no_orphaned_external_ids(), validate_cross_reference_consistency(), validate_no_season_coverage_gaps(), validate_player_id_coverage(), validate_team_id_coverage(), validate_park_id_coverage(), validate_data_quality(), validate_all_bridge_tables(), validate_bridge_tables_quick(). | Bridge table validation and health checks. |
+| `sql/bridge/980_player_xref_schema_enhancement.sql` | Schema enhancement for bridge.player_xref to add bbref_id, fangraphs_id, mlb_played_first, birth_year columns from Chadwick Bureau Register. | Player cross-reference schema enhancement. |
+| `sql/bridge/985_player_xref_population_procedure.sql` | SQL procedure `bridge.populate_player_xref_from_chadwick()` and `bridge.populate_player_xref_full()` for populating player cross-reference from Chadwick CSV files using COPY command (pure SQL approach). | Player cross-reference population (SQL-based). |
+| `sql/bridge/999_master_bridge_population_procedure.sql` | Master orchestrator `bridge.populate_all_bridge_tables()` that calls all bridge population procedures in correct dependency order. Now uses SQL-based player_xref population by default. | Complete bridge table population. |
 | `sql/200_external_data.sql` | Defines schemas and tables for supplemental free data sources (Statcast, Baseball‑Data.com, Gameday XML) and bridge tables. | External data marts. |
 | `sql/220_espn_schema.sql` | Defines `raw_espn` schema and tables for ESPN API data (game snapshots, schedule snapshots, player stats, team stats). | ESPN external data ingestion. |
 | `sql/225_ingest_run_tracking.sql` | Expands `raw_retrosheet.ingest_runs` table with script metadata, adds helper functions for run logging, triggers for auto-timestamps, and monitoring views. | Ingest run tracking and reproducibility. |
+
+## Maintenance SQL
+
+| File | Purpose | Canonical Position |
+|---|---|---|
+| `sql/maintenance/001_check_extensions.sql` | Check currently installed PostgreSQL extensions. | Extension monitoring. |
+| `sql/maintenance/002_install_pg_cron.sql` | Install pg_cron extension for job scheduling (critical for automation). | Automation infrastructure. |
+| `sql/maintenance/003_install_pg_stat_statements.sql` | Install pg_stat_statements extension for query performance monitoring. | Performance monitoring. |
+| `sql/maintenance/004_install_pl_python3u.sql` | Install PL/Python3u extension for Python integration within PostgreSQL. | Advanced ML integration. |
+| `sql/maintenance/005_install_pgvector.sql` | Install pgvector extension for vector similarity search and embeddings. | Player similarity search. |
+| `sql/maintenance/010_array_types.sql` | Implement PostgreSQL array types for multi-value features (pitch sequences, injury history). | Advanced data structures. |
+| `sql/maintenance/011_custom_types.sql` | Implement PostgreSQL custom types (domains) for baseball-specific data validation. | Data integrity. |
+| `sql/maintenance/012_partial_indexes.sql` | Implement PostgreSQL partial indexes for conditional query optimization. | Query performance. |
+| `sql/maintenance/999_master_installation.sql` | Master orchestrator for installing all PostgreSQL extensions and advanced features. | Complete extension installation. |
+
+## Knowledge Base Documents
+
+| File | Purpose | Canonical Position |
+|---|---|---|
+| `docs/KNOWLEDGE_BASE_SABERMETRICS.md` | Research findings on sabermetrics, baseball modeling, and prediction approaches. | Modeling reference. |
+| `docs/KNOWLEDGE_BASE_MODELS_REPOS.md` | Research on useful baseball models and GitHub repositories for ML and sabermetrics. | Model research. |
+| `docs/TABLE_ASSESSMENT_SABERMETRICS.md` | Assessment of current table structure for sabermetrics and baseball modeling requirements. | Schema assessment. |
+| `docs/POSTGRESQL_EXTENSIONS_RESEARCH.md` | Research-backed recommendations for PostgreSQL extensions and features for baseball analytics. | Extension reference. |
+| `docs/LIVE_BETTING_PIPELINE_STATUS.md` | Comprehensive status assessment for live betting and prediction infrastructure. | Live betting reference. |
 
 | File | Purpose | Canonical Position |
 |---|---|---|
@@ -180,6 +210,15 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/bridge/investigate_umpire_ids.py` | Investigates umpire MLB ID mapping options using available data sources. | Umpire ID mapping research. |
 | `scripts/download_statcast_pitch_level.py` | Downloads Statcast pitch-level data using pybaseball.statcast() for date ranges or seasons. | Statcast pitch-level data download. |
 | `scripts/ingest_espn_plays.py` | Ingests ESPN play-by-play data into `raw_espn.plays` table. | ESPN external data ingestion |
+
+## Diagnostic and Workaround Scripts
+
+| File | Purpose | Notes |
+|---|---|---|
+| `tmp/diagnose_sql_mangling.sh` | Diagnostic script to identify zsh globsubst SQL mangling issues and configuration sources. | Shell configuration debugging |
+| `tmp/bash_tool_sql_mangling_issue_prompt.md` | Comprehensive prompt documenting bash tool SQL mangling issue for other AI agents. | Shell configuration reference |
+| `tmp/apply_confidence_scoring.sh` | Bash script to apply confidence scoring migration (works around SQL mangling in bash tool). | Bridge table setup |
+| `tmp/run_coach_umpire_procedures.sh` | Bash script to run coach_xref and umpire_xref procedures (works around SQL mangling in bash tool). | Bridge table population |
 
 ## Modeling Scripts
 
