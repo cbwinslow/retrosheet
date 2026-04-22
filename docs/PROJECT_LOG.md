@@ -1302,3 +1302,5 @@
   - post-hoc isotonic calibration improves held-out probability quality without materially harming classification behavior
   - this is the first concrete result supporting a calibration layer for `pa_outcome_distribution`
   - next work should turn this experimental calibration pass into a repeatable report and decide whether calibrated outputs should be stored separately from raw model probabilities
+### Completed ✅
+2026-04-22: Feature engineering phases 1, 2, and 3 fully implemented. 135 total features across 4.78M training rows. All feature marts materialized, indexed, and committed.
