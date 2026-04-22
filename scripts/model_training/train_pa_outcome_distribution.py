@@ -19,6 +19,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, log_loss, top_k_accuracy_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+import xgboost as xgb
+import lightgbm as lgb
+import catboost as cb
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -153,9 +156,7 @@ def load_examples(
         if target_taxonomy == "grouped"
         else "features.plate_appearance_outcome_examples"
     )
-    target_column = (
-        "grouped_outcome_class" if target_taxonomy == "grouped" else "outcome_class"
-    )
+    target_column = "grouped_outcome_class" if target_taxonomy == "grouped" else "outcome_class"
 
     if feature_set in {"advanced", "advanced_count"}:
         advanced_relation = (
@@ -163,10 +164,13 @@ def load_examples(
             if feature_set == "advanced_count"
             else "features.plate_appearance_advanced_examples"
         )
-        sql = """
+        sql = (
+            """
             SELECT
                 outcome.season,
-                outcome.""" + target_column + """ AS target,
+                outcome."""
+            + target_column
+            + """ AS target,
                 outcome.season_era,
                 outcome.rules_context_era,
                 advanced.inning,
@@ -213,7 +217,8 @@ def load_examples(
                 advanced.fielding_team_rolling_30_games,
                 advanced.fielding_team_rolling_30_win_rate,
                 advanced.fielding_team_rolling_30_runs_scored_per_game,
-                advanced.fielding_team_rolling_30_runs_allowed_per_game""" + (
+                advanced.fielding_team_rolling_30_runs_allowed_per_game"""
+            + (
                 """
                 ,
                 advanced.batter_count_state_prior_pa,
@@ -237,20 +242,31 @@ def load_examples(
                 advanced.count_state_context_prior_home_run_rate,
                 advanced.count_state_context_prior_reach_base_rate,
                 advanced.count_state_context_prior_extra_base_hit_rate
-                """ if feature_set == "advanced_count" else ""
-            ) + """
-            FROM """ + source_relation + """ outcome
-            JOIN """ + advanced_relation + """ advanced
+                """
+                if feature_set == "advanced_count"
+                else ""
+            )
+            + """
+            FROM """
+            + source_relation
+            + """ outcome
+            JOIN """
+            + advanced_relation
+            + """ advanced
               ON advanced.game_id = outcome.game_id
              AND advanced.plate_appearance_id = outcome.plate_appearance_id
             WHERE outcome.season BETWEEN :min_season AND :max_season
               AND mod(abs(hashtext(outcome.game_id || ':' || outcome.plate_appearance_id::text)), 1000000) < :sample_ppm
         """
+        )
     else:
-        sql = """
+        sql = (
+            """
             SELECT
                 season,
-                """ + target_column + """ AS target,
+                """
+            + target_column
+            + """ AS target,
                 season_era,
                 rules_context_era,
                 inning,
@@ -262,10 +278,13 @@ def load_examples(
                 home_score_diff,
                 COALESCE(batter_hand::text, 'U') AS batter_hand,
                 COALESCE(pitcher_hand::text, 'U') AS pitcher_hand
-            FROM """ + source_relation + """
+            FROM """
+            + source_relation
+            + """
             WHERE season BETWEEN :min_season AND :max_season
               AND mod(abs(hashtext(game_id || ':' || plate_appearance_id::text)), 1000000) < :sample_ppm
         """
+        )
 
     return pd.read_sql_query(
         text(sql),
@@ -284,7 +303,9 @@ def filter_sparse_classes(frame: pd.DataFrame, min_class_rows: int) -> pd.DataFr
     return frame[frame["target"].isin(keep)].copy()
 
 
-def apply_recent_window(frame: pd.DataFrame, *, train_through: int, recent_window: int | None) -> pd.DataFrame:
+def apply_recent_window(
+    frame: pd.DataFrame, *, train_through: int, recent_window: int | None
+) -> pd.DataFrame:
     if recent_window is None:
         return frame
     min_included_season = train_through - recent_window + 1
@@ -351,7 +372,7 @@ def preprocessor(
 
 
 def build_models(
-    *, numeric_features: list[str], categorical_features: list[str]
+    *, numeric_features: list[str], categorical_features: list[str], args
 ) -> dict[str, Pipeline]:
     return {
         "multinomial_logistic_regression": Pipeline(
@@ -385,10 +406,30 @@ def build_models(
                 ),
                 (
                     "model",
-                    HistGradientBoostingClassifier(
-                        max_iter=250,
-                        learning_rate=0.05,
-                        random_state=42,
+                    (
+                        HistGradientBoostingClassifier(
+                            max_iter=250,
+                            learning_rate=0.05,
+                            random_state=42,
+                        )
+                        if args.model_type == "hist_gradient_boosting"
+                        else xgb.XGBClassifier(
+                            n_estimators=250,
+                            learning_rate=0.05,
+                            random_state=42,
+                            use_label_encoder=False,
+                            eval_metric="mlogloss",
+                        )
+                        if args.model_type == "xgboost"
+                        else lgb.LGBMClassifier(
+                            n_estimators=250, learning_rate=0.05, random_state=42, verbose=-1
+                        )
+                        if args.model_type == "lightgbm"
+                        else cb.CatBoostClassifier(
+                            iterations=250, learning_rate=0.05, random_state=42, verbose=False
+                        )
+                        if args.model_type == "catboost"
+                        else LogisticRegression(max_iter=1000, random_state=42)
                     ),
                 ),
             ]
@@ -396,7 +437,9 @@ def build_models(
     }
 
 
-def multiclass_brier_score(classes: np.ndarray, target: pd.Series, probabilities: np.ndarray) -> float:
+def multiclass_brier_score(
+    classes: np.ndarray, target: pd.Series, probabilities: np.ndarray
+) -> float:
     class_to_index = {label: index for index, label in enumerate(classes)}
     actual = np.zeros_like(probabilities)
     for row_index, label in enumerate(target):
@@ -542,6 +585,7 @@ def train(args: argparse.Namespace) -> None:
         for model_name, model in build_models(
             numeric_features=numeric_features,
             categorical_features=categorical_features,
+            args=args,
         ).items():
             model.fit(
                 train_frame[numeric_features + categorical_features],
@@ -640,6 +684,19 @@ def main() -> None:
         type=int,
         default=100,
         help="Drop classes with fewer sampled rows before training.",
+    )
+    parser.add_argument(
+        "--model-type",
+        type=str,
+        default="hist_gradient_boosting",
+        choices=[
+            "hist_gradient_boosting",
+            "xgboost",
+            "lightgbm",
+            "catboost",
+            "logistic_regression",
+        ],
+        help="Model type to train",
     )
     parser.add_argument(
         "--no-activate",
