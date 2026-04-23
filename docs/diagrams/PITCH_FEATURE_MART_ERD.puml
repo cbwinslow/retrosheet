@@ -1,0 +1,171 @@
+@startuml Pitch Feature Mart ERD
+!define table(x) class x << (T,#FFAAAA) >>
+!define view(x) class x << (V,#AAAAFF) >>
+!define pk <color:red><&key></color>
+!define fk <color:green><&link></color>
+
+skinparam class {
+    BackgroundColor<<T>> #FFEFEF
+    BackgroundColor<<V>> #EFEFEF
+    ArrowColor #666666
+    BorderColor #333333
+}
+
+title Pitch-Level Feature Mart - Entity Relationship Diagram
+
+package "Raw Sources" #E8F4FD {
+    table(raw_mlb.statcast) {
+        + 118 Statcast fields
+        + source-preserved
+    }
+    
+    table(bridge.player_xref) {
+        + player_id: INTEGER pk
+        + mlb_id: INTEGER
+        + retro_id: VARCHAR
+    }
+}
+
+package "features_pitch Schema" #E8FDE8 {
+    
+    table(base_features) {
+        + pitch_id: BIGINT pk
+        + game_pk: INTEGER fk
+        + batter_id: INTEGER fk
+        + pitcher_id: INTEGER fk
+        --
+        + All 118 Statcast fields
+        + quality_flag: VARCHAR
+        + location: GEOMETRY
+        + created_at: TIMESTAMP
+    }
+    
+    table(feature_registry) {
+        + feature_id: SERIAL pk
+        + schema_name: VARCHAR
+        + table_name: VARCHAR
+        + column_name: VARCHAR
+        --
+        + feature_category: VARCHAR
+        + feature_type: VARCHAR
+        + is_default: BOOLEAN
+        + is_engineered: BOOLEAN
+        + model_usage: VARCHAR[]
+        + data_quality: JSONB
+    }
+    
+    table(engineered_features) {
+        + pitch_id: BIGINT pk,fk
+        --
+        + velocity_category: VARCHAR
+        + zone_region: VARCHAR
+        + is_strike: BOOLEAN
+        + is_swing: BOOLEAN
+        + is_whiff: BOOLEAN
+        + is_ball_in_play: BOOLEAN
+        + outcome_tier1: VARCHAR
+        + outcome_tier2: VARCHAR
+        + swing_decision: VARCHAR
+        + pa_pitch_count: SMALLINT
+        + prev_pitch_type: VARCHAR
+        + count_code: VARCHAR
+        + score_diff: INTEGER
+        + engineered_at: TIMESTAMP
+    }
+    
+    table(sequential_features) {
+        + sequence_id: BIGSERIAL pk
+        + pa_id: BIGINT
+        + game_pk: INTEGER
+        + at_bat_number: INTEGER
+        + pitch_id: BIGINT fk
+        --
+        + sequence_position: SMALLINT
+        + window_3pitch: JSONB
+        + window_5pitch: JSONB
+        + full_pa_sequence: JSONB
+        + pitch_type_sequence: VARCHAR[]
+        + velocity_sequence: REAL[]
+        + location_pattern: VARCHAR
+    }
+    
+    table(player_context) {
+        + player_id: INTEGER pk,fk
+        + season: SMALLINT pk
+        + game_date: DATE pk
+        + role: VARCHAR pk
+        + window_type: VARCHAR pk
+        --
+        + pa_count: INTEGER
+        + k_rate: REAL
+        + bb_rate: REAL
+        + avg_estimated_woba: REAL
+        + pitch_mix: JSONB
+        + calculated_at: TIMESTAMP
+    }
+    
+    table(model_training_set) {
+        + training_id: BIGSERIAL pk
+        + model_name: VARCHAR
+        + model_version: VARCHAR
+        + pitch_id: BIGINT fk
+        --
+        + feature_names: TEXT[]
+        + feature_vector: REAL[]
+        + target_type: VARCHAR
+        + target_label: VARCHAR
+        + target_value: REAL
+        + split_set: VARCHAR
+        + data_hash: VARCHAR
+        + created_at: TIMESTAMP
+    }
+    
+    table(pitch_sequences) {
+        + sequence_id: BIGSERIAL pk
+        + pa_id: BIGINT
+        + game_pk: INTEGER
+        + at_bat_number: INTEGER
+        --
+        + pitch_sequence: INTEGER[]
+        + pitches_in_pa: SMALLINT
+        + sequence_outcome: VARCHAR
+        + sequence_details: JSONB
+        + created_at: TIMESTAMP
+    }
+    
+    view(vw_xgboost_base) {
+        + Complete joined feature set
+        + Base + Engineered + Player Context
+    }
+}
+
+package "Model Outputs" #FDE8F4 {
+    table(models.trained_models) {
+        + model_id: SERIAL pk
+        + model_name: VARCHAR
+        + model_version: VARCHAR
+        + accuracy: REAL
+        + log_loss: REAL
+    }
+}
+
+' Relationships
+raw_mlb.statcast --> base_features : "ETL load"
+bridge.player_xref --> base_features : "canonical IDs"
+
+base_features --> feature_registry : "metadata catalog"
+base_features --> engineered_features : "pitch_id 1:1"
+base_features --> sequential_features : "pitch_id 1:N"
+base_features --> model_training_set : "pitch_id 1:N"
+base_features --> pitch_sequences : "pitch_sequence[]"
+
+engineered_features --> player_context : "player_id lookup"
+sequential_features --> model_training_set : "sequence training"
+
+base_features --> vw_xgboost_base : "joined view"
+engineered_features --> vw_xgboost_base : "joined view"
+player_context --> vw_xgboost_base : "joined view"
+
+model_training_set --> models.trained_models : "produces"
+
+@enduml

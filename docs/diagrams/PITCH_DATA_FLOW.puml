@@ -1,0 +1,115 @@
+@startuml Pitch Data Flow Architecture
+title Pitch-Level ML Pipeline - Data Flow Architecture
+
+!define PRIMARY_COLOR #4A90E2
+!define SECONDARY_COLOR #7ED321
+!define TERTIARY_COLOR #F5A623
+!define QUATERNARY_COLOR #BD10E0
+!define ACCENT_COLOR #50E3C2
+
+skinparam component {
+    BackgroundColor<<Source>> #E3F2FD
+    BackgroundColor<<Storage>> #E8F5E9
+    BackgroundColor<<Processing>> #FFF3E0
+    BackgroundColor<<Model>> #F3E5F5
+    BackgroundColor<<Output>> #FCE4EC
+    BorderColor #333
+}
+
+skinparam database {
+    BackgroundColor #E8F5E9
+    BorderColor #2E7D32
+}
+
+skinparam cloud {
+    BackgroundColor #E3F2FD
+    BorderColor #1565C0
+}
+
+package "Data Sources" <<Source>> {
+    cloud "Baseball Savant" as Savant
+    database "raw_mlb.statcast" as RawStatcast
+    database "bridge.player_xref" as PlayerXref
+}
+
+package "Feature Mart" <<Storage>> {
+    database "features_pitch.base_features" as BaseFeatures #LightBlue
+    database "features_pitch.feature_registry" as Registry #LightYellow
+    database "features_pitch.engineered_features" as Engineered #LightGreen
+    database "features_pitch.sequential_features" as Sequential #LightCoral
+    database "features_pitch.player_context" as PlayerContext #LightPink
+}
+
+package "Training Data" <<Storage>> {
+    database "features_pitch.model_training_set" as TrainingSet #LightGoldenRodYellow
+    database "features_pitch.pitch_sequences" as Sequences #LightSalmon
+}
+
+package "Processing Layer" <<Processing>> {
+    [Statcast Loader] as Loader #LightBlue
+    [Feature Engineering] as FeatureEng #LightGreen
+    [Sequence Builder] as SeqBuilder #LightCoral
+    [Context Calculator] as ContextCalc #LightPink
+    [Training Materializer] as Trainer #LightGoldenRodYellow
+}
+
+package "Model Layer" <<Model>> {
+    [Two-Tier XGBoost] as XGBoost #LightSkyBlue
+    [LSTM Sequencer] as LSTM #LightCoral
+    [Multi-Task NN] as MultiTask #LightPink
+    [Swing Probability] as SwingProb #LightGreen
+}
+
+package "Output & Registry" <<Output>> {
+    database "models.trained_models" as ModelRegistry #LightGray
+    [Inference API] as API #LightSteelBlue
+    [Evaluation Dashboard] as Dashboard #LightSalmon
+}
+
+' Data Flow Connections
+Savant --> Loader : "CSV/JSON API"
+Loader --> RawStatcast : "source-preserved"
+Loader --> BaseFeatures : "118 fields"
+PlayerXref --> BaseFeatures : "canonical IDs"
+
+BaseFeatures --> Registry : "metadata extraction"
+BaseFeatures --> FeatureEng : "engineer features"
+BaseFeatures --> SeqBuilder : "build sequences"
+BaseFeatures --> ContextCalc : "calc context"
+
+FeatureEng --> Engineered : "derived metrics"
+SeqBuilder --> Sequential : "LSTM windows"
+SeqBuilder --> Sequences : "PA sequences"
+ContextCalc --> PlayerContext : "rolling stats"
+
+BaseFeatures --> Trainer : "raw features"
+Engineered --> Trainer : "derived features"
+Sequential --> Trainer : "sequence features"
+PlayerContext --> Trainer : "player context"
+
+Trainer --> TrainingSet : "materialized sets"
+
+TrainingSet --> XGBoost : "Tier 1/2 data"
+TrainingSet --> LSTM : "sequence data"
+TrainingSet --> MultiTask : "multi-output data"
+TrainingSet --> SwingProb : "binary data"
+
+XGBoost --> ModelRegistry : "model artifacts"
+LSTM --> ModelRegistry : "model artifacts"
+MultiTask --> ModelRegistry : "model artifacts"
+SwingProb --> ModelRegistry : "model artifacts"
+
+ModelRegistry --> API : "serve models"
+ModelRegistry --> Dashboard : "metrics & eval"
+
+' CRISP-DM Phase Labels
+rectangle "CRISP-DM\nPhase 2: Data Understanding" as Phase2 #E8F4FD
+rectangle "CRISP-DM\nPhase 3: Data Preparation" as Phase3 #E8FDE8
+rectangle "CRISP-DM\nPhase 4: Modeling" as Phase4 #FFF3E0
+
+' Position labels
+Phase2 -[hidden]> RawStatcast
+Phase3 -[hidden]> BaseFeatures
+Phase4 -[hidden]> XGBoost
+
+@enduml

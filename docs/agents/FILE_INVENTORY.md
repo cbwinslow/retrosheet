@@ -11,6 +11,8 @@
 - Issue #8: ESPN MLB Data Integration – completed. See [#59](https://github.com/cbwinslow/retrosheet/issues/59)
 - Issue #9: Comprehensive Retrosheet Data Acquisition – completed. See [#57](https://github.com/cbwinslow/retrosheet/issues/57)
 - Issue #10: Statcast Pitch-Level Data Ingestion – completed. See [#58](https://github.com/cbwinslow/retrosheet/issues/58)
+- Issue #11: Pitch-Level Model Pipeline (Epic #78) – **in progress**. See [#78](https://github.com/cbwinslow/retrosheet/issues/78)
+- Issue #11.1: Flexible Feature Mart Schema (Sub-Issue #79) – **in progress**. See [#79](https://github.com/cbwinslow/retrosheet/issues/79)
 
 This inventory tells agents what each important file does and which workflows own it. Files may appear in multiple sections when they serve multiple goals.
 
@@ -132,6 +134,7 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `sql/maintenance/012_partial_indexes.sql` | Implement PostgreSQL partial indexes for conditional query optimization. | Query performance. |
 | `sql/maintenance/020_game_hours_scheduler.sql` | Game-hours-aware polling scheduler functions (is_mlb_season, is_game_hours, should_poll_games). | Smart live data polling. |
 | `sql/maintenance/021_update_cron_game_hours.sql` | Updates cron jobs to use conditional polling wrappers. | Cron job optimization. |
+| `sql/maintenance/030_kb_vector_schema.sql` | KB vector schema: `kb.document_chunks` with pgvector embeddings, indexes, semantic search functions, ingestion tracking. | RAG infrastructure. Run after pgvector is installed. |
 | `sql/maintenance/999_master_installation.sql` | Master orchestrator for installing all PostgreSQL extensions and advanced features. | Complete extension installation. |
 
 ## Knowledge Base Documents
@@ -146,7 +149,13 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `docs/KNOWLEDGE_BASE_MARKOV_CHAIN.md` | Research synthesis: Markov chain models, RE matrix, Stanford/UT Austin papers, implementation approaches. | Markov chain reference. |
 | `docs/KNOWLEDGE_BASE_FRAMEWORK.md` | Modular prediction framework architecture: Strategy/Registry pattern, target/model contracts, implementation status. | Framework design reference. |
 | `docs/KNOWLEDGE_BASE_GIS_PITCH.md` | Research: PostGIS pitch location mapping, strike zone coordinates, visualization approaches. | GIS mapping reference. |
+| `docs/SABERMETRICS_LINK_INVENTORY.md` | Comprehensive inventory of 40+ sabermetrics research links with ingestion tracking. | Knowledge base reference. |
 | `docs/MODEL_SELECTION_GUIDE.md` | Research-backed model selection by target type with decision tree and feature requirements. | Model choice reference. |
+| `docs/kb/AGENTS.md` | RAG setup guide: directory structure, chunking strategy, LlamaIndex recommendation, agent usage patterns. | KB agent operations. |
+| `docs/kb/sources/` | Organized extracted sources: books/, papers/, articles/, reference/ (9 files, ~2.7MB text). | RAG source corpus. |
+| `docs/kb/chunks/` | Chunked documents for RAG ingestion (by_source/ and by_topic/). | RAG chunk storage. |
+| `docs/kb/indices/` | Vector index metadata and configs. | RAG index config. |
+| `docs/kb/metadata/` | Source tracking, ingestion logs. | KB metadata. |
 
 | File | Purpose | Canonical Position |
 |---|---|---|
@@ -216,6 +225,52 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/bridge/investigate_umpire_ids.py` | Investigates umpire MLB ID mapping options using available data sources. | Umpire ID mapping research. |
 | `scripts/download_statcast_pitch_level.py` | Downloads Statcast pitch-level data using pybaseball.statcast() for date ranges or seasons. | Statcast pitch-level data download. |
 | `scripts/ingest_espn_plays.py` | Ingests ESPN play-by-play data into `raw_espn.plays` table. | ESPN external data ingestion |
+| `scripts/kb/chunk_sources.py` | Chunks sabermetrics source documents into JSONL files with metadata for RAG ingestion. Organizes by source and by topic. | KB chunking pipeline. |
+
+## Pitch Data Scripts (Statcast Complete Loader)
+
+| File | Purpose | Notes |
+|---|---|---|
+| `scripts/pitch_data/README.md` | Comprehensive documentation for Statcast pitch data loading. | Required reading before loading pitch data. |
+| `scripts/pitch_data/load_all_statcast_full.py` | **PRIMARY LOADER** - Loads ALL 118 Statcast fields into `features_pitch.locations`. Includes verification, supports --all, --seasons, --force, --dry-run, --verify flags. | Always use this for complete pitch data loads. Never use partial loaders for production work. |
+| `scripts/pitch_data/bulk_load_all_pitches.py` | Simplified bulk loader with basic fields only. | Use only for quick tests, not production. |
+| `scripts/pitch_data/load_all_pitch_seasons.py` | Original batch loader with cursor. | Legacy - use load_all_statcast_full.py instead. |
+| `sql/eda/030_gis_pitch_views.sql` | PostGIS analysis views for pitch location data: strike zone classification, heatmaps, batter zones, movement analysis, density maps, matchup patterns. | Run after pitch data load for analysis capabilities. |
+| `sql/maintenance/022_migrate_full_statcast.sql` | Migration script to add missing columns to `features_pitch.locations`. | Run if schema needs updating. |
+
+## Pitch-Level Feature Mart (Epic #78)
+
+**CRISP-DM Phase 3: Data Preparation** | **GitHub Issues: #78 (Epic), #79 (Schema)** | **Branch: `feature/pitch-mart-schema`**
+
+| File | Purpose | Status |
+|---|---|---|
+| `sql/features/003_pitch_flexible_mart.sql` | **PRIMARY SCHEMA** - Flexible feature mart with ALL 118 Statcast fields preserved. Creates 7 tables: base_features, feature_registry, engineered_features, sequential_features, player_context, model_training_set, pitch_sequences. Includes vw_xgboost_base view and dynamic feature selection functions. | Created, ready to execute |
+| `docs/PITCH_FEATURE_MART_SCHEMA.md` | Comprehensive schema documentation. Table reference, usage patterns, design principles, data lineage, performance considerations. | Complete |
+| `docs/diagrams/PITCH_FEATURE_MART_ERD.puml` | Entity relationship diagram showing all 7 tables and relationships. | Complete |
+| `docs/diagrams/PITCH_DATA_FLOW.puml` | Data flow architecture diagram from sources through processing to models with CRISP-DM labels. | Complete |
+| `sql/features/001_pitch_data_quality.sql` | Data quality flags and clean/strict views for pitch data. | Existing |
+| `sql/features/002_player_profile_mart.sql` | Player profile mart schema for pitcher arsenals and batter zones. | Existing |
+| `docs/PITCH_PLAYER_ANALYSIS_ARCHITECTURE.md` | Architecture document for pitch-to-player attribution and feature engineering. | Existing |
+| `docs/STATCAST_MODELS_RESEARCH_REPORT.md` | Research on external Statcast pitch modeling repositories and architectures. | Existing |
+
+### Feature Mart Schema Design
+
+The flexible feature mart follows the principle: **"All fields available, selective inclusion"**
+
+**Tables:**
+- `features_pitch.base_features` - All 118 Statcast fields preserved
+- `features_pitch.feature_registry` - Metadata catalog for dynamic feature selection
+- `features_pitch.engineered_features` - Derived metrics (NULL-free storage)
+- `features_pitch.sequential_features` - LSTM/Transformer sequences with JSONB windows
+- `features_pitch.player_context` - Rolling statistics (30day/season/career windows)
+- `features_pitch.model_training_set` - Versioned training data with SHA-256 data_hash
+- `features_pitch.pitch_sequences` - PA-level aggregation with full pitch arrays
+
+**Key Capabilities:**
+- Metadata-driven queries: `SELECT features WHERE 'xgboost' = ANY(model_usage)`
+- Versioned training data with exact reproducibility via data_hash
+- Additive schema - new features without migrations
+- JSONB for variable-length LSTM sequences
 
 ## Diagnostic and Workaround Scripts
 
