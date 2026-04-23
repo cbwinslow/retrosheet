@@ -172,6 +172,55 @@
 - Zone contact and chase rates
 - Barrel rates and hard-hit rates
 
+## Steroid Era Research
+
+### Key Papers and Findings
+
+#### 1. "The Effect of the Steroid Era on Major League Baseball Hitters"
+- **URL:** https://www.hilarispublisher.com/open-access/the-effect-of-the-steroid-era-on-major-league-baseball-hitters-2161-0673-1000161.pdf
+- **Key Findings:**
+  - Steroid era defined as 1993-2002
+  - Average HR/season during steroid era: 4,782 +/- 767
+  - Post-steroid era (2003-2012): 4,549 +/- 296
+  - Pre-steroid era (1983-1992): 3,443 +/- 425
+  - Players hitting 40+ HR significantly increased (p<0.002)
+  - No significant change in overall batting average
+
+#### 2. "The Possible Effect of Steroids on Home-Run Production" (Roger Tobin, Physics)
+- **URL:** https://sabr.org/journal/article/the-possible-effect-of-steroids-on-home-run-production
+- **URL:** https://baseball.physics.illinois.edu/Tobin_AJP_Jan08.pdf
+- **Key Findings:**
+  - HRBiP (home runs per balls in play) increased 50% in steroid era
+  - Pre-steroid elite HR hitters: ~0.10 HRBiP
+  - Steroid era hitters (Bonds, Sosa, McGwire): ~0.15 HRBiP
+  - 10% muscle mass increase -> 50% increase in HRBiP
+  - 4% increase in ball speed -> 50-100% increase in HR production
+
+#### 3. "Did Performance-Enhancing Drugs Prolong Careers?" (SABR)
+- **URL:** https://sabr.org/journal/article/stats-and-studies-did-performance-enhancing-drugs-prolong-careers/
+- **Key Findings:**
+  - 50 HR threshold: 17 times in first 70 years (1920-1989)
+  - 50 HR threshold: 29 times in 30 years (1990-2019)
+  - Barry Bonds production spike in late 30s due to PEDs
+  - Performance declined in 40s similar to non-PED players
+
+### Steroid Era Timeline
+- **1988-1992:** Pre-steroid baseline
+- **1993-2002:** Height of steroid era (no testing)
+- **2003:** MLB begins testing (first survey testing)
+- **2005:** HGH testing added
+- **2006+:** Stricter penalties
+
+### Implementation Recommendations
+1. **Add era indicator:** Create `is_steroid_era` feature (1993-2002)
+2. **Exclusion list:** Create table of known/suspected users to exclude or flag
+3. **Adjust HR rates:** Consider 10-20% reduction for steroid-era HR predictions
+4. **Separate models:** Train steroid-era data separately from modern data
+
+### Known Suspected Players (Partial List)
+- Barry Bonds, Mark McGwire, Sammy Sosa, Alex Rodriguez, Manny Ramirez
+- See Mitchell Report (2007) for complete list
+
 ## Next Research Areas
 
 1. **Pitching Data Integration:** How to best integrate Statcast pitch-level data

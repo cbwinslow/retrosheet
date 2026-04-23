@@ -1304,3 +1304,54 @@
   - next work should turn this experimental calibration pass into a repeatable report and decide whether calibrated outputs should be stored separately from raw model probabilities
 ### Completed ✅
 2026-04-22: Feature engineering phases 1, 2, and 3 fully implemented. 135 total features across 4.78M training rows. All feature marts materialized, indexed, and committed.
+
+## 2026-04-23 (KB Organization + Modular Framework Research)
+
+### Built
+
+- Created `docs/KNOWLEDGE_BASE_MARKOV_CHAIN.md`:
+  - Research synthesis: Stanford CS229 softmax, UT Austin Markov, KCL expected runs
+  - mlb-win-probability repo: Ensemble Brier 0.1605, Bayesian 90% CI
+  - Run expectancy matrix (24 base-out states) with era tables
+  - Implementation approaches: uninformed, informed, hybrid, softmax
+  - Model selection guidance by target type
+
+- Created `docs/KNOWLEDGE_BASE_FRAMEWORK.md`:
+  - Strategy/Registry pattern for flexible predictions
+  - Target contract: target_id, features, supported_models
+  - Model contract: fit, predict, predict_proba
+  - Current targets: PA outcome, inning runs, next state, pitcher K rate, no-hit inning
+  - Model families: Markov, HGB, Softmax, baseline
+
+- Created `docs/MODEL_SELECTION_GUIDE.md`:
+  - Decision tree for model selection
+  - Model family details with research backing
+  - Feature requirements by model type
+  - Validation requirements (per model type)
+
+- Updated `docs/agents/FILE_INVENTORY.md`:
+  - Added KB entries for new knowledge base documents
+
+- Updated `docs/agents/CURRENT_SNAPSHOT.md`:
+  - Added Markov chain workstream to "Best Move Right Now"
+  - Links to new KB documents
+
+### Created Issues
+
+- #63: Build Modular Prediction Framework: Strategy/Registry Pattern + Markov Chain
+- #64: Add Run Expectancy Matrix Feature Mart For Markov Chain Models
+- #65: Update Knowledge Base: Add Markov Chain Research and Framework Documentation
+
+### Research Sources Added
+
+- Stanford CS229: Softmax regression for transitions (beat Vegas over/under)
+- UT Austin (2016): Markov chain for run/win probability
+- KCL Expected Runs: RE matrix from 700+ at-bats
+- mlb-win-probability: Ensemble with 165 features
+- Korean paper (2025): Deep learning + Markov, 64.48% accuracy
+
+### Decision
+
+- The modular framework approach is research-backed and provides the flexibility needed for granular predictions
+- Markov chain models are well-established in sabermetrics (UT Austin, Stanford, KCL)
+- Next work is to build the framework structure and add run expectancy matrix feature mart

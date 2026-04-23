@@ -232,18 +232,32 @@ Important limitation:
 
 ## Best Move Right Now
 
+The KB is now expanded with Markov chain research and framework documentation. The new prediction framework is the next workstream.
+
 Do this next:
 
-1. decide whether the count-state-enhanced calibrated scorer should become the default served path for this target
-2. persist the full bootstrap-backed report set for the new model version
-3. use `scripts/replay_live_bridge_backfill.py` on a bounded regular-season slice and measure how many live parity rows pick up park/team priors
-4. complete `game_xref` and season-aware team reconciliation after the replay path exists
-5. add durable live prediction logging on top of the new live scorer
+1. Build the modular prediction framework structure (Strategy/Registry pattern)
+   - Create `predictions/registry.py` (base registry)
+   - Create `predictions/base.py` (target/model base classes)
+   - Port `pa_outcome_distribution` into new framework
+2. Add run expectancy matrix feature mart (`sql/features/080_run_expectancy_matrix.sql`)
+3. Add Markov chain model as first new model family
+4. Add `next_state_distribution` target as second concrete target
+
+Research new docs:
+- [docs/KNOWLEDGE_BASE_MARKOV_CHAIN.md](docs/KNOWLEDGE_BASE_MARKOV_CHAIN.md) — Markov research
+- [docs/KNOWLEDGE_BASE_FRAMEWORK.md](docs/KNOWLEDGE_BASE_FRAMEWORK.md) — Architecture
+- [docs/MODEL_SELECTION_GUIDE.md](docs/MODEL_SELECTION_GUIDE.md) — Model selection
+
+Legacy PA model (still valid):
+- HGB + advanced_count (log loss 1.5089)
+- Calibration artifact registered
+- Count-state priors fix two-strike overconfidence
 
 Do not do this yet:
 
 - GPU migration
-- new model-family churn
+- new model-family churn beyond Markov chain exploration
 - EdgeForge prototype integration
 - broad interface expansion before probability/reporting layers settle
 

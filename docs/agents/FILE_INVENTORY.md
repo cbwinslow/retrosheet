@@ -130,6 +130,8 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `sql/maintenance/010_array_types.sql` | Implement PostgreSQL array types for multi-value features (pitch sequences, injury history). | Advanced data structures. |
 | `sql/maintenance/011_custom_types.sql` | Implement PostgreSQL custom types (domains) for baseball-specific data validation. | Data integrity. |
 | `sql/maintenance/012_partial_indexes.sql` | Implement PostgreSQL partial indexes for conditional query optimization. | Query performance. |
+| `sql/maintenance/020_game_hours_scheduler.sql` | Game-hours-aware polling scheduler functions (is_mlb_season, is_game_hours, should_poll_games). | Smart live data polling. |
+| `sql/maintenance/021_update_cron_game_hours.sql` | Updates cron jobs to use conditional polling wrappers. | Cron job optimization. |
 | `sql/maintenance/999_master_installation.sql` | Master orchestrator for installing all PostgreSQL extensions and advanced features. | Complete extension installation. |
 
 ## Knowledge Base Documents
@@ -141,6 +143,10 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `docs/TABLE_ASSESSMENT_SABERMETRICS.md` | Assessment of current table structure for sabermetrics and baseball modeling requirements. | Schema assessment. |
 | `docs/POSTGRESQL_EXTENSIONS_RESEARCH.md` | Research-backed recommendations for PostgreSQL extensions and features for baseball analytics. | Extension reference. |
 | `docs/LIVE_BETTING_PIPELINE_STATUS.md` | Comprehensive status assessment for live betting and prediction infrastructure. | Live betting reference. |
+| `docs/KNOWLEDGE_BASE_MARKOV_CHAIN.md` | Research synthesis: Markov chain models, RE matrix, Stanford/UT Austin papers, implementation approaches. | Markov chain reference. |
+| `docs/KNOWLEDGE_BASE_FRAMEWORK.md` | Modular prediction framework architecture: Strategy/Registry pattern, target/model contracts, implementation status. | Framework design reference. |
+| `docs/KNOWLEDGE_BASE_GIS_PITCH.md` | Research: PostGIS pitch location mapping, strike zone coordinates, visualization approaches. | GIS mapping reference. |
+| `docs/MODEL_SELECTION_GUIDE.md` | Research-backed model selection by target type with decision tree and feature requirements. | Model choice reference. |
 
 | File | Purpose | Canonical Position |
 |---|---|---|

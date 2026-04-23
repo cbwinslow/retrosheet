@@ -58,11 +58,44 @@ All project scripts, CI, and environments use Python 3.10. Legacy `requirements.
 
 - `raw_retrosheet`: source-preserved Chadwick extracts and Retrosheet reference tables.
 - `raw_mlb`: source-preserved MLB Stats API / GUMBO schedules, live game feeds, reference endpoint snapshots, and Statcast pitch-level tracking data.
+  - `raw_mlb.statcast`: 7.8M pitch-level Statcast records (2015-2025) with plate_x/plate_z coordinates, launch_speed, spin_rate
 - `raw_espn`: source-preserved ESPN API data for MLB games, schedules, and statistics.
 - `bridge`: cross-reference tables between Retrosheet IDs, MLB IDs, Lahman IDs, ESPN IDs, and other public IDs. Includes player_xref, team_xref, game_xref, park_xref, coach_xref, umpire_xref, external_player_xref, external_team_xref.
 - `core`: canonical baseball entities, typed MLB reference views, and game-state views shared by historical and live sources.
+  - `core.games`: 62,598 historical games
+  - `core.events`: 4.9M play-level events
+  - `core.plate_appearances`: 4.8M plate appearance outcomes
 - `features`: ML-ready training and inference tables.
+  - `features_pitch.locations`: PostGIS-enabled pitch location table with geometry column
 - `predictions`: model outputs, backtests, and live prediction snapshots.
+
+### Pitch-Level Data Access
+
+**Raw Source Data:**
+- `raw_mlb.statcast`: Source-preserved Statcast data from Baseball Savant
+  - Columns: pitch_type, plate_x, plate_z, sz_top, sz_bot, pfx_x, pfx_z, release_speed, spin_rate, launch_speed, launch_angle, hit_distance_sc
+  - Count: ~7.8M pitches (2015-2025 seasons)
+
+**Normalized Tables:**
+- `mlb.pitches`: 19.7M normalized pitch records with batter_id, pitcher_id, game_pk
+- `features_pitch.locations`: PostGIS-enabled table with geometry(Point, 4326) column for spatial queries
+
+**Key Fields for GIS Mapping:**
+- `plate_x`: Horizontal position (-17 to +17 inches, 0 = center)
+- `plate_z`: Vertical position (feet from ground)
+- `sz_top`: Top of strike zone for batter
+- `sz_bot`: Bottom of strike zone for batter
+- `location`: PostGIS geometry column (ST_MakePoint(plate_x, plate_z))
+
+**Linking to Plate Appearances:**
+```sql
+-- Link pitches to retrosheet games via bridge
+SELECT p.*, gx.retrosheet_game_id, e.event_id
+FROM mlb.pitches p
+JOIN bridge.game_xref gx ON p.game_pk::text = gx.mlb_game_pk::text
+JOIN core.events e ON gx.retrosheet_game_id = e.game_id
+WHERE p.game_pk = <GAME_PK>;
+```
 
 ## PostgreSQL Extensions and Features
 
@@ -384,6 +417,39 @@ For fast iteration, pass a smaller year range or selected outputs.
 - Historical play-by-play data (2000-2015) not available via ESPN API
 - For historical play-by-play data, use Retrosheet/Chadwick or MLB Stats API
 - ESPN data is supplemental to Retrosheet and MLB Stats API data sources
+
+## Prediction Framework
+
+The project uses a modular Strategy pattern for predictions:
+
+### Files
+- `scripts/prediction_framework/base.py` - Base classes (Predictor, PredictionTarget, ModelMetadata, PredictorRegistry)
+- `scripts/prediction_framework/pa_predictor.py` - PAOutcomeDistributionPredictor implementation
+- `scripts/prediction_framework/__init__.py` - PredictionEngine unified interface
+- `scripts/prediction_framework/db.py` - Database configuration
+
+### Usage
+```python
+from prediction_framework import PredictionEngine
+
+engine = PredictionEngine()
+predictor = engine.get_predictor('pa_outcome_distribution')
+result = predictor.predict(features_df)
+```
+
+### Database Functions
+- `models.register_model()` - Register trained model
+- `models.register_calibration()` - Register calibration artifact
+- `models.promote_model(id)` - Set active model
+- `models.get_active_model(target_id)` - Get active model
+
+### Active Models (2026-04-23)
+| Target | Model | Version |
+|--------|-------|---------|
+| pa_outcome_distribution | hist_gradient_boosting_multiclass | 20260412T045759Z |
+| game_home_win | hist_gradient_boosting | 20260416T085327Z |
+| half_inning_any_run | hist_gradient_boosting | 20260410T090317Z |
+| half_inning_lhb_any_hit | hist_gradient_boosting | 20260410T090325Z |
 
 ## Modeling Direction
 
