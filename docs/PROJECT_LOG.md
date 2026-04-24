@@ -225,6 +225,50 @@ if result.val_residuals:
 
 ---
 
+### ✅ Phase 2.2 Complete - Plugin Registry
+
+**Status**: COMPLETE ✅  
+**Issue**: #85  
+**Hours**: 2 hours (as planned)  
+**Closed**: April 24, 2026
+
+**Files Created**:
+- ✅ `mlb_predict/core/plugin.py` (450+ lines) - Plugin system
+- ✅ `mlb_predict/core/__init__.py` - Updated exports
+- ✅ `mlb_predict/__init__.py` - Main package exports
+
+**Classes Implemented**:
+- `BasePluginModel` - Abstract base class for custom models
+- `SklearnPluginModel` - Generic sklearn wrapper
+- `PluginRegistry` - Central registry with metadata
+
+**Features**:
+- ✅ Standard interface (fit, predict, predict_proba, save, load)
+- ✅ Metadata tracking (description, author, version)
+- ✅ Global registry with convenience functions
+- ✅ Auto-discovery from modules
+
+**Example**:
+```python
+from mlb_predict import BasePluginModel, PluginRegistry
+
+class MyModel(BasePluginModel):
+    def fit(self, X, y, X_val=None, y_val=None): ...
+    def predict(self, X): ...
+    def predict_proba(self, X): ...
+    def save(self, path): ...
+    @classmethod
+    def load(cls, path): ...
+
+registry = PluginRegistry()
+registry.register('my_model', MyModel)
+model = registry.create('my_model', config)
+```
+
+**Next**: Phase 2.3 (#86) - FeatureLoader
+
+---
+
 ## 2026-04-24 (Workflow Validation & Documentation Overhaul)
 
 ### Critical Finding: Framework Schema Redundancy
