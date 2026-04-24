@@ -12,7 +12,7 @@ try:
 except Exception:
     pass
 
-# Import DB helper functions – ensure repository root is on sys.path
+# Import DB helper functions - ensure repository root is on sys.path
 repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 print('DEBUG: repo_root =', repo_root)
 if repo_root not in sys.path:

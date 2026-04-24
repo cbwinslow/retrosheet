@@ -76,7 +76,7 @@ def psql_base_args() -> list[str]:
 
 
 def run_psql_file(path: Path) -> None:
-    run(psql_base_args() + ['-f', str(path)])
+    run([*psql_base_args(), '-f', str(path)])
 
 
 def run_psql_sql(sql: str) -> None:
@@ -150,7 +150,7 @@ def init_db(_: argparse.Namespace) -> None:
     """Initialize the database schema if it hasn't been set up already.
 
     The original implementation always executed the full init script, which
-    re‑creates tables and can be time‑consuming.  To avoid unnecessary work we
+    re-creates tables and can be time-consuming.  To avoid unnecessary work we
     first check for the presence of a core table that is created by the
     ``001_init.sql`` migration (e.g., ``core.games``).  If the table exists we
     assume the database has already been initialized and skip the heavy
@@ -161,11 +161,11 @@ def init_db(_: argparse.Namespace) -> None:
     # (e.g., table does not exist) we fall back to running the full init.
     try:
         run_psql_sql('SELECT 1 FROM core.games LIMIT 1;')
-        # Table exists – skip re‑initialization but still ensure the labeled
+        # Table exists - skip re-initialization but still ensure the labeled
         # events table is present (it may be added in later revisions).
         ensure_labeled_events_table()
     except Exception:
-        # Table missing – run the full init script.
+        # Table missing - run the full init script.
         run_psql_file(ROOT / 'sql' / '001_init.sql')
         ensure_labeled_events_table()
 

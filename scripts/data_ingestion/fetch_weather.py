@@ -25,7 +25,7 @@ def get_conn():
 
 
 def fetch_weather(date: str, venue_id: str):
-    # NOAA API endpoint (example – replace with actual public endpoint if needed)
+    # NOAA API endpoint (example - replace with actual public endpoint if needed)
     base_url = 'https://www.ncei.noaa.gov/access/services/data/v1'
     params = {
         'dataset': 'daily-summaries',
@@ -78,7 +78,7 @@ def fetch_weather(date: str, venue_id: str):
 
 def main():
     parser = argparse.ArgumentParser(description='Fetch NOAA weather')
-    parser.add_argument('--date', type=str, required=True, help='Observation date (YYYY‑MM‑DD)')
+    parser.add_argument('--date', type=str, required=True, help='Observation date (YYYY-MM-DD)')
     parser.add_argument(
         '--venue-id',
         type=str,

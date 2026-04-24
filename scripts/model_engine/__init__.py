@@ -1,7 +1,7 @@
 """Factory for selecting a model engine.
 
-The project already has a pure‑CPU logistic‑regression trainer.  This module
-adds a thin abstraction layer so that we can optionally use a GPU‑accelerated
+The project already has a pure-CPU logistic-regression trainer.  This module
+adds a thin abstraction layer so that we can optionally use a GPU-accelerated
 implementation (XGBoost, PyTorch, etc.) without changing the rest of the code
 base.
 
@@ -12,8 +12,8 @@ Usage::
     engine.fit(X_train, y_train)
     preds = engine.predict_proba(X_val)
 
-The factory prefers XGBoost‑GPU if CUDA is available, then a PyTorch NN, and
-finally falls back to the original logistic‑regression implementation.
+The factory prefers XGBoost-GPU if CUDA is available, then a PyTorch NN, and
+finally falls back to the original logistic-regression implementation.
 """
 
 import torch
@@ -29,10 +29,10 @@ def get_engine(preferred: str = 'auto'):
     Parameters
     ----------
     preferred: str, optional
-        "auto" (default) – pick the fastest available implementation.
-        "xgboost" – force XGBoost GPU (will raise if CUDA not present).
-        "pytorch" – force PyTorch NN (uses CPU if no CUDA).
-        "logreg" – force the original logistic‑regression engine.
+        "auto" (default) - pick the fastest available implementation.
+        "xgboost" - force XGBoost GPU (will raise if CUDA not present).
+        "pytorch" - force PyTorch NN (uses CPU if no CUDA).
+        "logreg" - force the original logistic-regression engine.
     """
 
     if preferred == 'auto':

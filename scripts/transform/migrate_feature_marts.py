@@ -3,7 +3,7 @@
 
 This script executes all ``*.sql`` files in the ``sql`` directory that are
 related to feature marts (files starting with ``05`` or ``06`` or ``08``).
-It can be run in a dry‑run mode to preview the commands without applying
+It can be run in a dry-run mode to preview the commands without applying
 them.
 
 Usage:
@@ -21,7 +21,7 @@ from pathlib import Path
 
 DRY_RUN = '--dry-run' in sys.argv
 
-# Resolve the database URL – fallback to a local default
+# Resolve the database URL - fallback to a local default
 DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://localhost/retrosheet')
 
 
@@ -38,7 +38,7 @@ def run_sql_file(sql_path: Path) -> None:
         str(sql_path),
     ]
     if DRY_RUN:
-        print(f"[dry‑run] Would execute: {' '.join(cmd)}")
+        print(f"[dry-run] Would execute: {' '.join(cmd)}")
         return
     print(f'Executing {sql_path.name} …')
     subprocess.check_call(cmd)
@@ -50,23 +50,17 @@ def main() -> None:
         print(f'SQL directory not found: {sql_dir}')
         sys.exit(1)
 
-    # Select files that are part of the feature‑mart pipeline
+    # Select files that are part of the feature-mart pipeline
     pattern = '[05][0-9]*_*.sql'
     sql_files = sorted(sql_dir.glob(pattern))
     if not sql_files:
-        print('No feature‑mart SQL files found.')
+        print('No feature-mart SQL files found.')
         return
 
     for sql_file in sql_files:
         run_sql_file(sql_file)
 
     # Refresh materialized views if any were created
-    refresh_cmd = [
-        'psql',
-        DATABASE_URL,
-        '-c',
-        'SELECT pg_catalog.pg_reload_conf();',
-    ]
     if not DRY_RUN:
         # Refresh all materialized views concurrently
         refresh_sql = (

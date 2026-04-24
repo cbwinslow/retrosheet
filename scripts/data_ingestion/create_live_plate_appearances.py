@@ -130,7 +130,7 @@ def create_live_plate_appearances(conn):
                     end_bases,
                     mlb_game_pk,
                     snapshot_id,
-                    raw_play,
+                    _raw_play,
                 ) = event
 
                 game_pa_counter += 1
@@ -248,7 +248,7 @@ def main():
     )
     parser.add_argument('--game-id', help='Specific game ID to process (optional)')
 
-    args = parser.parse_args()
+    parser.parse_args()
 
     conn = psycopg2.connect(**database_kwargs())
 

@@ -1,4 +1,4 @@
-"""Ingest MLB play‑by‑play CSV files into the PostgreSQL warehouse.
+"""Ingest MLB play-by-play CSV files into the PostgreSQL warehouse.
 
 The collector scripts (mlb_pbp_collector.py / queries.py) generate a CSV with the
 column order defined in ``COLUMN_ORDER``. This script reads the CSV and copies the

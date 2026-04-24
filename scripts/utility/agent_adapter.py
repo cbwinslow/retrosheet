@@ -2,7 +2,7 @@
 
 This module provides a thin wrapper that allows the codebase to switch between
 the legacy custom baseball agent (`scripts/baseball_chatbot.py`) and a new
-LangChain‑based agent implementation. The decision is driven by an environment
+LangChain-based agent implementation. The decision is driven by an environment
 variable ``AGENT_BACKEND`` which can be set to ``legacy`` or ``langchain``.
 
 The adapter exposes a single public class ``BaseballAgent`` with the same
@@ -19,7 +19,7 @@ import os
 from typing import Any
 
 
-# Lazy import placeholders – the actual modules are imported only when needed.
+# Lazy import placeholders - the actual modules are imported only when needed.
 _legacy_agent = None
 _langchain_agent = None
 
@@ -70,7 +70,7 @@ class BaseballAgent:
         Parameters
         ----------
         user_query: str
-            The natural‑language query from the user.
+            The natural-language query from the user.
 
         Returns
         -------

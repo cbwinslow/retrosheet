@@ -48,36 +48,7 @@ PA_NUMERIC_FEATURES = [
     'home_score_diff',
 ]
 PA_CATEGORICAL_FEATURES = ['batter_hand', 'pitcher_hand']
-PA_ENRICHED_NUMERIC_FEATURES = PA_NUMERIC_FEATURES + [
-    'batter_prior_pa',
-    'batter_prior_hit_rate',
-    'batter_prior_walk_rate',
-    'batter_prior_strikeout_rate',
-    'batter_prior_home_run_rate',
-    'batter_prior_reach_base_rate',
-    'batter_prior_extra_base_hit_rate',
-    'pitcher_prior_batters_faced',
-    'pitcher_prior_hit_allowed_rate',
-    'pitcher_prior_walk_allowed_rate',
-    'pitcher_prior_strikeout_rate',
-    'pitcher_prior_home_run_allowed_rate',
-    'pitcher_prior_reach_base_allowed_rate',
-    'pitcher_prior_extra_base_hit_allowed_rate',
-    'batting_team_prior_win_rate',
-    'batting_team_prior_runs_scored_per_game',
-    'batting_team_prior_runs_allowed_per_game',
-    'fielding_team_prior_win_rate',
-    'fielding_team_prior_runs_scored_per_game',
-    'fielding_team_prior_runs_allowed_per_game',
-    'context_prior_pa',
-    'context_prior_hit_rate',
-    'context_prior_walk_rate',
-    'context_prior_strikeout_rate',
-    'context_prior_home_run_rate',
-    'context_prior_reach_base_rate',
-    'context_prior_extra_base_hit_rate',
-    'context_prior_batting_team_win_rate',
-]
+PA_ENRICHED_NUMERIC_FEATURES = [*PA_NUMERIC_FEATURES, 'batter_prior_pa', 'batter_prior_hit_rate', 'batter_prior_walk_rate', 'batter_prior_strikeout_rate', 'batter_prior_home_run_rate', 'batter_prior_reach_base_rate', 'batter_prior_extra_base_hit_rate', 'pitcher_prior_batters_faced', 'pitcher_prior_hit_allowed_rate', 'pitcher_prior_walk_allowed_rate', 'pitcher_prior_strikeout_rate', 'pitcher_prior_home_run_allowed_rate', 'pitcher_prior_reach_base_allowed_rate', 'pitcher_prior_extra_base_hit_allowed_rate', 'batting_team_prior_win_rate', 'batting_team_prior_runs_scored_per_game', 'batting_team_prior_runs_allowed_per_game', 'fielding_team_prior_win_rate', 'fielding_team_prior_runs_scored_per_game', 'fielding_team_prior_runs_allowed_per_game', 'context_prior_pa', 'context_prior_hit_rate', 'context_prior_walk_rate', 'context_prior_strikeout_rate', 'context_prior_home_run_rate', 'context_prior_reach_base_rate', 'context_prior_extra_base_hit_rate', 'context_prior_batting_team_win_rate']
 PA_ENRICHED_CATEGORICAL_FEATURES = PA_CATEGORICAL_FEATURES
 
 GAME_ENRICHED_NUMERIC_FEATURES = GAME_NUMERIC_FEATURES + [
@@ -109,7 +80,7 @@ GAME_ENRICHED_NUMERIC_FEATURES = GAME_NUMERIC_FEATURES + [
     'context_prior_reach_base_rate',
     'context_prior_extra_base_hit_rate',
     'context_prior_batting_team_win_rate',
-    # Team game‑context features from features.team_game_context
+    # Team game-context features from features.team_game_context
     'days_since_previous_game',
     'played_yesterday',
     'doubleheader_same_day',
@@ -118,83 +89,11 @@ GAME_ENRICHED_NUMERIC_FEATURES = GAME_NUMERIC_FEATURES + [
     'same_opponent_as_previous_game',
 ]
 GAME_ENRICHED_CATEGORICAL_FEATURES = GAME_CATEGORICAL_FEATURES
-PA_ADVANCED_NUMERIC_FEATURES = PA_NUMERIC_FEATURES + [
-    'batter_career_prior_pa',
-    'batter_career_prior_hit_rate',
-    'batter_career_prior_walk_rate',
-    'batter_career_prior_strikeout_rate',
-    'batter_career_prior_home_run_rate',
-    'batter_career_prior_reach_base_rate',
-    'pitcher_career_prior_batters_faced',
-    'pitcher_career_prior_hit_allowed_rate',
-    'pitcher_career_prior_walk_allowed_rate',
-    'pitcher_career_prior_strikeout_rate',
-    'pitcher_career_prior_home_run_allowed_rate',
-    'pitcher_career_prior_reach_base_allowed_rate',
-    'prior_matchup_pa',
-    'prior_matchup_hit_rate',
-    'prior_matchup_walk_rate',
-    'prior_matchup_strikeout_rate',
-    'prior_matchup_home_run_rate',
-    'prior_matchup_reach_base_rate',
-    'coarse_context_prior_pa',
-    'coarse_context_prior_hit_rate',
-    'coarse_context_prior_walk_rate',
-    'coarse_context_prior_strikeout_rate',
-    'coarse_context_prior_home_run_rate',
-    'coarse_context_prior_reach_base_rate',
-    'coarse_context_prior_extra_base_hit_rate',
-    'park_prior_total_runs_per_game',
-    'park_prior_home_win_rate',
-    'batting_team_rolling_30_games',
-    'batting_team_rolling_30_win_rate',
-    'batting_team_rolling_30_runs_scored_per_game',
-    'batting_team_rolling_30_runs_allowed_per_game',
-    'fielding_team_rolling_30_games',
-    'fielding_team_rolling_30_win_rate',
-    'fielding_team_rolling_30_runs_scored_per_game',
-    'fielding_team_rolling_30_runs_allowed_per_game',
-]
-PA_ADVANCED_CATEGORICAL_FEATURES = PA_CATEGORICAL_FEATURES + ['park_id']
+PA_ADVANCED_NUMERIC_FEATURES = [*PA_NUMERIC_FEATURES, 'batter_career_prior_pa', 'batter_career_prior_hit_rate', 'batter_career_prior_walk_rate', 'batter_career_prior_strikeout_rate', 'batter_career_prior_home_run_rate', 'batter_career_prior_reach_base_rate', 'pitcher_career_prior_batters_faced', 'pitcher_career_prior_hit_allowed_rate', 'pitcher_career_prior_walk_allowed_rate', 'pitcher_career_prior_strikeout_rate', 'pitcher_career_prior_home_run_allowed_rate', 'pitcher_career_prior_reach_base_allowed_rate', 'prior_matchup_pa', 'prior_matchup_hit_rate', 'prior_matchup_walk_rate', 'prior_matchup_strikeout_rate', 'prior_matchup_home_run_rate', 'prior_matchup_reach_base_rate', 'coarse_context_prior_pa', 'coarse_context_prior_hit_rate', 'coarse_context_prior_walk_rate', 'coarse_context_prior_strikeout_rate', 'coarse_context_prior_home_run_rate', 'coarse_context_prior_reach_base_rate', 'coarse_context_prior_extra_base_hit_rate', 'park_prior_total_runs_per_game', 'park_prior_home_win_rate', 'batting_team_rolling_30_games', 'batting_team_rolling_30_win_rate', 'batting_team_rolling_30_runs_scored_per_game', 'batting_team_rolling_30_runs_allowed_per_game', 'fielding_team_rolling_30_games', 'fielding_team_rolling_30_win_rate', 'fielding_team_rolling_30_runs_scored_per_game', 'fielding_team_rolling_30_runs_allowed_per_game']
+PA_ADVANCED_CATEGORICAL_FEATURES = [*PA_CATEGORICAL_FEATURES, 'park_id']
 
-GAME_ADVANCED_NUMERIC_FEATURES = GAME_NUMERIC_FEATURES + [
-    'batter_career_prior_pa',
-    'batter_career_prior_hit_rate',
-    'batter_career_prior_walk_rate',
-    'batter_career_prior_strikeout_rate',
-    'batter_career_prior_home_run_rate',
-    'batter_career_prior_reach_base_rate',
-    'pitcher_career_prior_batters_faced',
-    'pitcher_career_prior_hit_allowed_rate',
-    'pitcher_career_prior_walk_allowed_rate',
-    'pitcher_career_prior_strikeout_rate',
-    'pitcher_career_prior_home_run_allowed_rate',
-    'pitcher_career_prior_reach_base_allowed_rate',
-    'prior_matchup_pa',
-    'prior_matchup_hit_rate',
-    'prior_matchup_walk_rate',
-    'prior_matchup_strikeout_rate',
-    'prior_matchup_home_run_rate',
-    'prior_matchup_reach_base_rate',
-    'coarse_context_prior_pa',
-    'coarse_context_prior_hit_rate',
-    'coarse_context_prior_walk_rate',
-    'coarse_context_prior_strikeout_rate',
-    'coarse_context_prior_home_run_rate',
-    'coarse_context_prior_reach_base_rate',
-    'coarse_context_prior_extra_base_hit_rate',
-    'park_prior_total_runs_per_game',
-    'park_prior_home_win_rate',
-    'home_team_rolling_30_games',
-    'home_team_rolling_30_win_rate',
-    'home_team_rolling_30_runs_scored_per_game',
-    'home_team_rolling_30_runs_allowed_per_game',
-    'away_team_rolling_30_games',
-    'away_team_rolling_30_win_rate',
-    'away_team_rolling_30_runs_scored_per_game',
-    'away_team_rolling_30_runs_allowed_per_game',
-]
-GAME_ADVANCED_CATEGORICAL_FEATURES = GAME_CATEGORICAL_FEATURES + ['park_id']
+GAME_ADVANCED_NUMERIC_FEATURES = [*GAME_NUMERIC_FEATURES, 'batter_career_prior_pa', 'batter_career_prior_hit_rate', 'batter_career_prior_walk_rate', 'batter_career_prior_strikeout_rate', 'batter_career_prior_home_run_rate', 'batter_career_prior_reach_base_rate', 'pitcher_career_prior_batters_faced', 'pitcher_career_prior_hit_allowed_rate', 'pitcher_career_prior_walk_allowed_rate', 'pitcher_career_prior_strikeout_rate', 'pitcher_career_prior_home_run_allowed_rate', 'pitcher_career_prior_reach_base_allowed_rate', 'prior_matchup_pa', 'prior_matchup_hit_rate', 'prior_matchup_walk_rate', 'prior_matchup_strikeout_rate', 'prior_matchup_home_run_rate', 'prior_matchup_reach_base_rate', 'coarse_context_prior_pa', 'coarse_context_prior_hit_rate', 'coarse_context_prior_walk_rate', 'coarse_context_prior_strikeout_rate', 'coarse_context_prior_home_run_rate', 'coarse_context_prior_reach_base_rate', 'coarse_context_prior_extra_base_hit_rate', 'park_prior_total_runs_per_game', 'park_prior_home_win_rate', 'home_team_rolling_30_games', 'home_team_rolling_30_win_rate', 'home_team_rolling_30_runs_scored_per_game', 'home_team_rolling_30_runs_allowed_per_game', 'away_team_rolling_30_games', 'away_team_rolling_30_win_rate', 'away_team_rolling_30_runs_scored_per_game', 'away_team_rolling_30_runs_allowed_per_game']
+GAME_ADVANCED_CATEGORICAL_FEATURES = [*GAME_CATEGORICAL_FEATURES, 'park_id']
 PA_TARGETS = {
     'pa_batter_hit': 'is_hit',
     'pa_batter_walk': 'is_walk',

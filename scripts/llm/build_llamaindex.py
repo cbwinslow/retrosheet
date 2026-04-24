@@ -3,7 +3,7 @@
 The script indexes the project's documentation (default ``docs/agents``) using
 LlamaIndex's ``SimpleDirectoryReader`` and persists the resulting index to
 ``data/llama_index.json``.  The CI workflow runs this script and then performs a
-sanity‑check query via the ``BaseballAgent``.  To keep existing tests passing,
+sanity-check query via the ``BaseballAgent``.  To keep existing tests passing,
 the script prints a placeholder confirmation line that the tests assert on.
 """
 
@@ -12,11 +12,11 @@ import sys
 from pathlib import Path
 
 
-# Import LlamaIndex lazily – CI will fail with a clear error if the library is
+# Import LlamaIndex lazily - CI will fail with a clear error if the library is
 # missing, which is preferable to a silent import failure.
 try:
     from llama_index import SimpleDirectoryReader, VectorStoreIndex
-except Exception as exc:  # pragma: no cover – defensive import guard
+except Exception as exc:  # pragma: no cover - defensive import guard
     print(f'[error] LlamaIndex import failed: {exc}')
     sys.exit(1)
 
@@ -27,7 +27,7 @@ def _build_index(source_dir: Path) -> VectorStoreIndex:
     Parameters
     ----------
     source_dir:
-        Directory containing the source markdown files. Sub‑directories are
+        Directory containing the source markdown files. Sub-directories are
         traversed recursively.
     """
     documents = SimpleDirectoryReader(input_dir=str(source_dir)).load_data()
@@ -38,7 +38,7 @@ def main() -> None:
     """Entry point for the script.
 
     The function builds the index and writes it to ``data/llama_index.json``.
-    A short confirmation line is printed so that the existing end‑to‑end test
+    A short confirmation line is printed so that the existing end-to-end test
     can verify the behaviour.
     """
     # Allow the source directory to be overridden via an environment variable.

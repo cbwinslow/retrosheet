@@ -24,7 +24,7 @@ def run_validation(limit_hours: int = None) -> int:
 
     If ``limit_hours`` is provided, the procedure is called with a temporary
     view that filters ``core.live_games`` to recent rows.  The stored procedure
-    itself does not accept parameters, so we create a session‑local view that
+    itself does not accept parameters, so we create a session-local view that
     the procedure will read.
     """
     conn = psycopg2.connect(**database_kwargs())

@@ -7,14 +7,13 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": [
-      "**/node_modules/**",
-      "**/.next/**",
-      "**/.venv/**",
-      "**/.*/**",
-      "**/*.min.js",
-      "**/dist/**",
-      "**/build/**"
+    "includes": [
+      "**",
+      "!**/node_modules/**",
+      "!**/.next/**",
+      "!**/.venv/**",
+      "!**/dist/**",
+      "!**/build/**"
     ]
   },
   "formatter": {

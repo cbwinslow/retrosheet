@@ -96,7 +96,7 @@ def psql_base_args() -> list[str]:
 
 
 def run_psql(sql: str) -> None:
-    subprocess.run(psql_base_args() + ['-c', sql], check=True)
+    subprocess.run([*psql_base_args(), '-c', sql], check=True)
 
 
 def normalize_csv(source: Path, columns: list[str]) -> Path:
@@ -159,7 +159,7 @@ def main() -> None:
         for _, path, _ in normalized_files:
             path.unlink(missing_ok=True)
 
-    subprocess.run(psql_base_args() + ['-f', str(SQL_PATH)], check=True)
+    subprocess.run([*psql_base_args(), '-f', str(SQL_PATH)], check=True)
 
 
 if __name__ == '__main__':

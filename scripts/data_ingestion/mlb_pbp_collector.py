@@ -474,7 +474,7 @@ def _merge_statcast(pbp_df: pd.DataFrame, sc_df: pd.DataFrame) -> pd.DataFrame:
             .groupby(
                 ['game_pk', 'batter', 'inning', 'inning_topbot', 'at_bat_number'], as_index=False,
             )
-            .last()[[c for c in wanted_sc + ['at_bat_number'] if c in sc_df.columns]]
+            .last()[[c for c in [*wanted_sc, 'at_bat_number'] if c in sc_df.columns]]
         )
 
     sc = sc.rename(

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Ingest the knowledge‑base (kb) into a LlamaIndex vector store.
+"""Ingest the knowledge-base (kb) into a LlamaIndex vector store.
 
-The script walks the ``kb`` directory, reads PDFs and plain‑text files, splits
+The script walks the ``kb`` directory, reads PDFs and plain-text files, splits
 them into manageable chunks, and builds a persistent index under ``kb/index``.
 
 Prerequisites (install once):
@@ -36,7 +36,7 @@ def build_index():
     for doc in tqdm(reader.load_data(), desc='Loading documents'):
         documents.append(doc)
 
-    # Configure the LLM predictor – using OpenAI gpt‑4 by default
+    # Configure the LLM predictor - using OpenAI gpt-4 by default
     llm = OpenAI(model='gpt-4', temperature=0.0)
     predictor = LLMPredictor(llm=llm)
     service_context = ServiceContext.from_defaults(llm_predictor=predictor)
@@ -58,7 +58,7 @@ def query_index(query: str, top_k: int = 5):
 
 def main():
     if len(sys.argv) == 1:
-        # No arguments – build the index
+        # No arguments - build the index
         build_index()
     else:
         # Treat the rest of the command line as a query

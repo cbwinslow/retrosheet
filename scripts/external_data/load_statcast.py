@@ -2,9 +2,9 @@
 """
 Load a Statcast CSV file (full season) into raw_statcast.events.
 
-Because a full‑season Statcast file can be > 1 GB, the script supports
+Because a full-season Statcast file can be > 1 GB, the script supports
 optional chunked loading. If the file size exceeds 500 MB, it is split
-into 5 M‑row chunks before being copied.
+into 5 M-row chunks before being copied.
 
 The loader uses a staging table (all TEXT) and then upserts into the
 final `raw_statcast.events` table with proper numeric casts.
@@ -423,7 +423,7 @@ def upsert(cur):
 def split_file(csv_path: Path):
     """Split a large CSV into smaller files with a header line preserved."""
     prefix = f'{csv_path}_part_'
-    # Use GNU split – keep header in each part
+    # Use GNU split - keep header in each part
     subprocess.run(
         f'head -n 1 {csv_path} > {prefix}header && tail -n +2 {csv_path} | split -l {CHUNK_ROWS} - {prefix}',
         shell=True,
@@ -450,7 +450,7 @@ def main():
 
     # If file > 500 MB, split into chunks
     if args.file.stat().st_size > 500 * 1024 * 1024:
-        print('⚠️  Large Statcast file detected – splitting into chunks...')
+        print('⚠️  Large Statcast file detected - splitting into chunks...')
         parts = split_file(args.file)
     else:
         parts = [args.file]

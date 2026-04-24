@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Perform a broad web search for baseball‑ML literature and store results.
+"""Perform a broad web search for baseball-ML literature and store results.
 
 The script uses the SerpAPI (https://serpapi.com) if the environment variable
 ``SERPAPI_KEY`` is present.  If no key is available, it falls back to a simple
@@ -7,7 +7,7 @@ Bing HTML scrape (limited and may be blocked).  Results are saved as JSON lines
 in ``kb/search_results.json`` and any downloadable PDFs are fetched into the
 ``kb/articles`` directory.
 
-The list of queries is defined in ``QUERIES`` – it covers the topics you asked
+The list of queries is defined in ``QUERIES`` - it covers the topics you asked
 for (Moneyball, Markov chains, Bayesian inference, WAR, betting markets, etc.).
 """
 
@@ -82,7 +82,7 @@ def serpapi_search(query: str, api_key: str):
 
 
 def bing_html_search(query: str):
-    # Very simple Bing search – may be throttled.
+    # Very simple Bing search - may be throttled.
     url = f'https://www.bing.com/search?q={requests.utils.quote(query)}'
     page = requests.get(url, timeout=30)
     page.raise_for_status()

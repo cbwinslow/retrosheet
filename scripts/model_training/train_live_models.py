@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Train simple logistic‑regression models for live‑play odds.
+"""Train simple logistic-regression models for live-play odds.
 
 The live ingestion populates ``features.play_snapshot`` with two binary flags:
-* ``is_hit`` – true when the play resulted in a hit (single, double, triple, HR).
-* ``is_strikeout`` – true when the pitcher recorded a strikeout.
+* ``is_hit`` - true when the play resulted in a hit (single, double, triple, HR).
+* ``is_strikeout`` - true when the pitcher recorded a strikeout.
 
 We train two independent models (one per target) and store them under
 ``data/models/``.  The models are registered in the existing ``models.model_registry``
@@ -19,7 +19,7 @@ from sklearn.metrics import roc_auc_score
 
 log = structlog.get_logger(__name__)
 
-# Re‑use the warehouse helper to obtain a DB connection
+# Re-use the warehouse helper to obtain a DB connection
 from scripts.warehouse import get_connection
 
 
@@ -68,7 +68,7 @@ def main():
     df = load_features(conn)
     conn.close()
     if df.empty:
-        log.warning('no_features', msg='features.play_snapshot empty – abort training')
+        log.warning('no_features', msg='features.play_snapshot empty - abort training')
         return
     train_and_save(df, target='is_hit', model_name='live_hit_odds')
     train_and_save(df, target='is_strikeout', model_name='live_so_odds')

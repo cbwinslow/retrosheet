@@ -174,7 +174,7 @@ def main():
 
     # Estimate workload
     estimated_games = len(missing_seasons) * 2500  # ~2500 games per season
-    estimated_time_hours = estimated_games * 0.0005  # Rough estimate per game
+    estimated_games * 0.0005  # Rough estimate per game
     print('\n📊 WORKLOAD ESTIMATE:')
     print(f'   • Seasons to download: {len(missing_seasons)}')
     print(f'   • Estimated games: ~{estimated_games:,}')

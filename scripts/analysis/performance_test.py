@@ -9,7 +9,7 @@ import os
 import time
 
 
-# ``psycopg2`` is optional for the CI environment – the performance scripts are
+# ``psycopg2`` is optional for the CI environment - the performance scripts are
 # not executed during unit testing. Import lazily and tolerate its absence.
 try:
     import psycopg2
@@ -173,7 +173,7 @@ def test_query_performance():
     print(f'✅ Simulation workload: {old_sim_time:.1f}s → {new_sim_time:.1f}s (×{sim_speedup:.1f})')
     print('✅ Total improvement: Massive reduction in database load')
     print('✅ Memory efficiency: Pre-computed features reduce computation')
-    print('✅ Scalability: Optimized for high‑throughput simulation')
+    print('✅ Scalability: Optimized for high-throughput simulation')
 
     conn.close()
 

@@ -2,10 +2,11 @@ from argparse import ArgumentParser
 
 from retrosheet import Retrosheet
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument("-s", "--start", dest="year_start", help="Start year", type=int)
-    parser.add_argument("-e", "--end", dest="year_end", help="End year for the parser", type=int)
+    parser.add_argument('-s', '--start', dest='year_start', help='Start year', type=int)
+    parser.add_argument('-e', '--end', dest='year_end', help='End year for the parser', type=int)
 
     args = parser.parse_args()
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Loader for Baseball‑Data.com play‑by‑play CSV files.
+Loader for Baseball-Data.com play-by-play CSV files.
 
-The CSV format from Baseball‑Data.com is fairly flat; this script maps the
+The CSV format from Baseball-Data.com is fairly flat; this script maps the
 columns to the `raw_external.baseball_data_com` table defined in
 `sql/200_external_data.sql`.  It also populates the bridge table
 `bridge.external_player_xref` so that downstream joins can resolve player IDs
@@ -65,7 +65,7 @@ def load_pbp(csv_path: Path):
     conn = get_connection()
     try:
         with conn.cursor() as cur:
-            # Insert raw play‑by‑play rows
+            # Insert raw play-by-play rows
             sql_pbp = """
                 INSERT INTO raw_external.baseball_data_com (
                     event_id, game_id, inning, half,
@@ -93,14 +93,14 @@ def load_pbp(csv_path: Path):
 
         conn.commit()
         print(
-            f'✅ Loaded {len(rows)} Baseball‑Data.com rows and {len(player_links)} player placeholders.',
+            f'✅ Loaded {len(rows)} Baseball-Data.com rows and {len(player_links)} player placeholders.',
         )
     finally:
         conn.close()
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Load Baseball‑Data.com PBP CSV')
+    parser = argparse.ArgumentParser(description='Load Baseball-Data.com PBP CSV')
     parser.add_argument('--file', type=Path, required=True, help='Path to the CSV file')
     args = parser.parse_args()
     load_pbp(args.file)

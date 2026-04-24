@@ -192,7 +192,7 @@ def create_enhanced_features():
             print('Model         | Features | AUC   | Samples')
             print('-' * 40)
             for row in cur.fetchall():
-                auc_str = '.3f' if row[2] else 'TBD'
+                '.3f' if row[2] else 'TBD'
                 print('14')
 
         conn.commit()

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Run the knowledge‑base creation steps in parallel.
+"""Run the knowledge-base creation steps in parallel.
 
 The script launches the following tasks concurrently using a ``ProcessPoolExecutor``:
-    1. ``scrape_retrosheet_kb.py`` – download Retrosheet publications.
-    2. ``download_moneyball.py`` – fetch a public copy of *Moneyball*.
-    3. ``web_search_kb.py`` – perform a broad web search for baseball‑ML resources.
-    4. ``ingest_kb_llamaindex.py`` – optional LlamaIndex ingestion (runs after the
+    1. ``scrape_retrosheet_kb.py`` - download Retrosheet publications.
+    2. ``download_moneyball.py`` - fetch a public copy of *Moneyball*.
+    3. ``web_search_kb.py`` - perform a broad web search for baseball-ML resources.
+    4. ``ingest_kb_llamaindex.py`` - optional LlamaIndex ingestion (runs after the
        other three have completed because it depends on the files being present).
 
 Usage::
@@ -13,7 +13,7 @@ Usage::
     python3 scripts/run_kb_parallel.py
 
 The script prints a summary of each task's exit code.  It is safe to run multiple
-times – existing files are overwritten only if the source download succeeds.
+times - existing files are overwritten only if the source download succeeds.
 """
 
 import subprocess

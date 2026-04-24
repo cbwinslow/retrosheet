@@ -1,8 +1,8 @@
 """LangChain Baseball Agent (placeholder)
 
-This module provides a minimal stub for the future LangChain‑based baseball
+This module provides a minimal stub for the future LangChain-based baseball
 agent. The implementation will eventually replace the legacy custom agent and
-will integrate LangChain tools, prompts, and retrieval‑augmented generation.
+will integrate LangChain tools, prompts, and retrieval-augmented generation.
 
 For now the class implements the same public ``process_query`` method used by
 the legacy agent so that ``scripts/agent_adapter.py`` can import it without
@@ -17,9 +17,9 @@ from typing import Any
 # Optional Prometheus metrics integration. The project already uses OpenTelemetry
 # elsewhere; this addition provides a simple counter for the number of queries
 # processed by the LangChain agent. If the ``prometheus_client`` package is not
-# installed, the import is ignored and the metric becomes a no‑op.
+# installed, the import is ignored and the metric becomes a no-op.
 # Attempt to import Prometheus Counter. If the library is unavailable we fall
-# back to a no‑op implementation so that the module can be imported without
+# back to a no-op implementation so that the module can be imported without
 # additional dependencies during development or testing.
 try:
     from prometheus_client import Counter as PrometheusCounter
@@ -30,7 +30,7 @@ except Exception:  # pragma: no cover
             pass
 
         def inc(self, *_, **__):
-            # No operation – placeholder for environments without prometheus_client.
+            # No operation - placeholder for environments without prometheus_client.
             return None
 
     PrometheusCounter = _NoOpCounter  # type: ignore
@@ -48,14 +48,14 @@ class LangChainBaseballAgent:
     def __init__(self) -> None:
         # Future initialization (LLM client, tool registry, etc.) will go here.
         # Initialise Prometheus counter if the real client is available; otherwise
-        # use the no‑op fallback defined above.
+        # use the no-op fallback defined above.
         self._query_counter = PrometheusCounter(
             'langchain_agent_queries_total',
             'Total number of queries processed by the LangChain baseball agent',
         )
 
     def process_query(self, user_query: str) -> dict[str, Any]:
-        """Process a query using a minimal LlamaIndex‑backed LangChain agent.
+        """Process a query using a minimal LlamaIndex-backed LangChain agent.
 
         The implementation attempts to load the vector store built by
         ``scripts/build_llamaindex.py`` and runs a simple similarity query.  If the
@@ -82,7 +82,7 @@ class LangChainBaseballAgent:
                     'query': user_query,
                     'answer': str(response),
                 }
-        except Exception:  # pragma: no cover – any load/query failure falls back
+        except Exception:  # pragma: no cover - any load/query failure falls back
             pass
 
         # Fallback placeholder response.

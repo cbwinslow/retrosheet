@@ -281,7 +281,7 @@ def simulate_half_inning(
             continue
 
     # Get actual lineup for context (we'll simulate a generic lineup)
-    actual_lineup = get_lineup_for_half_inning(game_id, inning, is_bottom_inning)
+    get_lineup_for_half_inning(game_id, inning, is_bottom_inning)
 
     # Run simulations
     simulation_results = []

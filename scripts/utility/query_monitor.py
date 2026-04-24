@@ -1,8 +1,8 @@
-"""FastAPI endpoint for real‑time query progress monitoring.
+"""FastAPI endpoint for real-time query progress monitoring.
 
-The endpoint queries ``pg_stat_activity`` to return all non‑idle queries
+The endpoint queries ``pg_stat_activity`` to return all non-idle queries
 running against the warehouse database.  It is used by the UI dashboard
-to display a progress bar for long‑running ingestion or model‑training
+to display a progress bar for long-running ingestion or model-training
 steps.
 
 Environment variables ``PGHOST``, ``PGPORT``, ``PGDATABASE`` and ``PGUSER``

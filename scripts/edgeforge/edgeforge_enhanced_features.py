@@ -191,7 +191,7 @@ def build_matchup_features():
             """)
 
             print('Top batter-pitcher matchups:')
-            for row in cur.fetchall():
+            for _row in cur.fetchall():
                 print('.3f')
 
         conn.commit()

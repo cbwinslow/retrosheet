@@ -59,13 +59,13 @@ def fetch_and_store(snapshot_date: str):
 
 def main():
     parser = argparse.ArgumentParser(description='Fetch MLB rosters')
-    parser.add_argument('--date', type=str, required=True, help='Snapshot date (YYYY‑MM‑DD)')
+    parser.add_argument('--date', type=str, required=True, help='Snapshot date (YYYY-MM-DD)')
     args = parser.parse_args()
     # Validate date format
     try:
         datetime.strptime(args.date, '%Y-%m-%d')
     except ValueError:
-        print('❌ Invalid date format, use YYYY‑MM‑DD', file=sys.stderr)
+        print('❌ Invalid date format, use YYYY-MM-DD', file=sys.stderr)
         sys.exit(1)
 
     fetch_and_store(args.date)

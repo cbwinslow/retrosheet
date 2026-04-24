@@ -2,7 +2,7 @@
 """
 Load Lahman CSV files into the raw_lahman schema.
 
-The script follows a robust staging‑then‑upsert pattern:
+The script follows a robust staging-then-upsert pattern:
 1. Create a temporary staging table (all columns TEXT).
 2. COPY the CSV into the staging table.
 3. INSERT … SELECT with explicit casts into the final table,
@@ -260,7 +260,7 @@ def upsert(cur, table, columns):
         else:
             cast_expressions.append(f'{c}::TEXT')
 
-    # Determine primary‑key columns for each table
+    # Determine primary-key columns for each table
     if table == 'people':
         pk_cols = ['playerID']
     elif table == 'teams':
@@ -272,7 +272,7 @@ def upsert(cur, table, columns):
     else:
         pk_cols = [columns[0]]  # fallback
 
-    # Build SET clause for all non‑PK columns
+    # Build SET clause for all non-PK columns
     set_clause = ', '.join([f'{c}=EXCLUDED.{c}' for c in columns if c not in pk_cols])
 
     # Use ON CONFLICT ON CONSTRAINT <table>_pkey for safety

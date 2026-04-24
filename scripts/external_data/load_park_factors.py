@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Loader for the public Statcast park‑factors CSV.
+Loader for the public Statcast park-factors CSV.
 
 Usage:
     python scripts/external_data/load_park_factors.py --file park_factors.csv
@@ -25,7 +25,7 @@ def get_conn():
 def main():
     parser = argparse.ArgumentParser(description='Load Statcast park factors')
     parser.add_argument(
-        '--file', type=Path, required=True, help='CSV file downloaded from Baseball‑Savant',
+        '--file', type=Path, required=True, help='CSV file downloaded from Baseball-Savant',
     )
     args = parser.parse_args()
 
@@ -61,7 +61,7 @@ def main():
         with conn.cursor() as cur:
             execute_values(cur, sql, rows, page_size=500)
         conn.commit()
-        print(f'✅ Loaded {len(rows)} park‑factor rows')
+        print(f'✅ Loaded {len(rows)} park-factor rows')
     finally:
         conn.close()
 

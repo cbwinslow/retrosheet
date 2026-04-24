@@ -8,152 +8,153 @@ and verified for accuracy by subagents.
 
 from pathlib import Path
 
-PROJECT_ROOT = Path("/home/cbwinslow/workspace/retrosheet")
+
+PROJECT_ROOT = Path('/home/cbwinslow/workspace/retrosheet')
 
 # Accurate purposes derived from actual SQL file content
 ACCURATE_PURPOSES = {
     # Core schema
-    "sql/core/001_init.sql": "Initialize core database schemas and raw landing tables",
-    "sql/core/010_core_games_events.sql": "Create core games, events, teams, players tables and model registry",
-    "sql/core/020_plate_appearances.sql": "Create plate_appearances table, indexes, examples MV, prediction targets",
-    "sql/core/030_reference_metadata.sql": "Load reference tables, enrich players/teams/parks, create bridge xref",
-    "sql/core/040_auxiliary_retrosheet.sql": "Load auxiliary tables, create roster/allstar/ejection/umpire/coach views",
-    "sql/core/040_coach_umpire_bridge_tables.sql": "Create cross-reference tables for coaches and umpires across sources",
-    "sql/core/046_panel_data_views.sql": "Create player-season batting, pitching, and game-level panel data MVs",
-    "sql/core/050_feature_marts.sql": "Create prior-season rate feature marts for batters, pitchers, teams, PA",
-    "sql/core/060_advanced_feature_marts.sql": "Create career, matchup, park, rolling form, and coarse context MVs",
-    "sql/core/070_temporal_and_production_marts.sql": "Create team schedule context, player/pitcher production, temporal views",
-    "sql/core/075_interface_workflows.sql": "Create interface workflow tables, views, and chatbot context schema",
-    "sql/core/076_plate_appearance_outcome_model.sql": "Create PA outcome model tables, views, and prediction targets",
-    "sql/core/077_pitch_sequence_model.sql": "Create pitch sequence model tables, views, and Markov state features",
-    "sql/core/078_plate_appearance_outcome_grouped.sql": "Create grouped PA outcome model views and evaluation tables",
-    "sql/core/079_probability_evaluation_reports.sql": "Create probability evaluation report tables and model comparison views",
-    "sql/core/080_backtest_results.sql": "Create backtest results table and historical performance views",
-    "sql/core/080_half_inning_examples.sql": "Create half-inning run expectancy examples and feature views",
-    "sql/core/080_mlb_pbp.sql": "Create MLB play-by-play tables and live feed integration views",
-    "sql/core/081_probability_calibration_artifacts.sql": "Create calibration artifact tables and model reliability views",
-    "sql/core/082_count_state_feature_marts.sql": "Create count-state feature marts and ball-strike transition views",
-    "sql/core/mlb_win_probability_features.sql": "Create MLB win probability features tables and in-game state views",
+    'sql/core/001_init.sql': 'Initialize core database schemas and raw landing tables',
+    'sql/core/010_core_games_events.sql': 'Create core games, events, teams, players tables and model registry',
+    'sql/core/020_plate_appearances.sql': 'Create plate_appearances table, indexes, examples MV, prediction targets',
+    'sql/core/030_reference_metadata.sql': 'Load reference tables, enrich players/teams/parks, create bridge xref',
+    'sql/core/040_auxiliary_retrosheet.sql': 'Load auxiliary tables, create roster/allstar/ejection/umpire/coach views',
+    'sql/core/040_coach_umpire_bridge_tables.sql': 'Create cross-reference tables for coaches and umpires across sources',
+    'sql/core/046_panel_data_views.sql': 'Create player-season batting, pitching, and game-level panel data MVs',
+    'sql/core/050_feature_marts.sql': 'Create prior-season rate feature marts for batters, pitchers, teams, PA',
+    'sql/core/060_advanced_feature_marts.sql': 'Create career, matchup, park, rolling form, and coarse context MVs',
+    'sql/core/070_temporal_and_production_marts.sql': 'Create team schedule context, player/pitcher production, temporal views',
+    'sql/core/075_interface_workflows.sql': 'Create interface workflow tables, views, and chatbot context schema',
+    'sql/core/076_plate_appearance_outcome_model.sql': 'Create PA outcome model tables, views, and prediction targets',
+    'sql/core/077_pitch_sequence_model.sql': 'Create pitch sequence model tables, views, and Markov state features',
+    'sql/core/078_plate_appearance_outcome_grouped.sql': 'Create grouped PA outcome model views and evaluation tables',
+    'sql/core/079_probability_evaluation_reports.sql': 'Create probability evaluation report tables and model comparison views',
+    'sql/core/080_backtest_results.sql': 'Create backtest results table and historical performance views',
+    'sql/core/080_half_inning_examples.sql': 'Create half-inning run expectancy examples and feature views',
+    'sql/core/080_mlb_pbp.sql': 'Create MLB play-by-play tables and live feed integration views',
+    'sql/core/081_probability_calibration_artifacts.sql': 'Create calibration artifact tables and model reliability views',
+    'sql/core/082_count_state_feature_marts.sql': 'Create count-state feature marts and ball-strike transition views',
+    'sql/core/mlb_win_probability_features.sql': 'Create MLB win probability features tables and in-game state views',
 
     # Bridge tables
-    "sql/bridge/900_bridge_monitoring_views.sql": "Monitoring views for bridge table counts, coverage, quality, duplicates",
-    "sql/bridge/910_confidence_scoring.sql": "Add confidence scoring columns and views to all bridge mapping tables",
-    "sql/bridge/920_game_xref_procedure.sql": "Match Retrosheet games to MLB games by date, teams, and game number",
-    "sql/bridge/930_season_aware_team_xref_procedure.sql": "Populate team season ranges and handle franchise moves in team_xref",
-    "sql/bridge/940_coach_umpire_xref_procedures.sql": "Populate coach and umpire cross-reference tables from Retrosheet",
-    "sql/bridge/950_park_xref_procedure.sql": "Populate park cross-reference mapping Retrosheet to MLB venues",
-    "sql/bridge/960_player_xref_procedure.sql": "Populate player cross-reference from Chadwick Bureau Register",
-    "sql/bridge/970_bridge_validation_functions.sql": "Validation functions to check bridge table health and coverage",
-    "sql/bridge/980_player_xref_schema_enhancement.sql": "Enhance player_xref with Baseball Reference IDs and indexes",
-    "sql/bridge/985_player_xref_population_procedure.sql": "Populate player_xref from Chadwick Register with full ID mapping",
-    "sql/bridge/999_master_bridge_population_procedure.sql": "Master procedure to populate all bridge tables in sequence",
+    'sql/bridge/900_bridge_monitoring_views.sql': 'Monitoring views for bridge table counts, coverage, quality, duplicates',
+    'sql/bridge/910_confidence_scoring.sql': 'Add confidence scoring columns and views to all bridge mapping tables',
+    'sql/bridge/920_game_xref_procedure.sql': 'Match Retrosheet games to MLB games by date, teams, and game number',
+    'sql/bridge/930_season_aware_team_xref_procedure.sql': 'Populate team season ranges and handle franchise moves in team_xref',
+    'sql/bridge/940_coach_umpire_xref_procedures.sql': 'Populate coach and umpire cross-reference tables from Retrosheet',
+    'sql/bridge/950_park_xref_procedure.sql': 'Populate park cross-reference mapping Retrosheet to MLB venues',
+    'sql/bridge/960_player_xref_procedure.sql': 'Populate player cross-reference from Chadwick Bureau Register',
+    'sql/bridge/970_bridge_validation_functions.sql': 'Validation functions to check bridge table health and coverage',
+    'sql/bridge/980_player_xref_schema_enhancement.sql': 'Enhance player_xref with Baseball Reference IDs and indexes',
+    'sql/bridge/985_player_xref_population_procedure.sql': 'Populate player_xref from Chadwick Register with full ID mapping',
+    'sql/bridge/999_master_bridge_population_procedure.sql': 'Master procedure to populate all bridge tables in sequence',
 
     # EDA
-    "sql/eda/030_gis_pitch_views.sql": "GIS views classifying pitch locations relative to strike zone",
+    'sql/eda/030_gis_pitch_views.sql': 'GIS views classifying pitch locations relative to strike zone',
 
     # External data
-    "sql/external/200_external_data.sql": "Create schemas and tables for Statcast, play-by-play, and ID bridges",
-    "sql/external/200_utility_functions.sql": "Create utility functions for view refresh, health checks, and backups",
-    "sql/external/210_lahman_raw.sql": "Create Lahman raw tables for players, teams, salaries, pitching, batting",
-    "sql/external/211_baseball_reference_raw.sql": "Create Baseball-Reference raw game log table",
-    "sql/external/212_fangraphs_raw.sql": "Create Fangraphs raw tables for player and team season statistics",
-    "sql/external/213_park_factors_raw.sql": "Create park factors raw table from Baseball Savant",
-    "sql/external/214_mlb_rosters_raw.sql": "Create MLB roster snapshots raw table with JSON payloads",
-    "sql/external/215_weather_raw.sql": "Create weather raw table for daily conditions by venue",
-    "sql/external/216_statcast_raw.sql": "Create Statcast raw events table with pitch physics data",
-    "sql/external/220_espn_schema.sql": "Create ESPN schema and tables for game snapshots and schedules",
-    "sql/external/225_ingest_run_tracking.sql": "Track data ingestion runs with metadata, progress, and errors",
-    "sql/external/230_data_validation_views.sql": "Row count and maintenance statistics for all warehouse tables",
+    'sql/external/200_external_data.sql': 'Create schemas and tables for Statcast, play-by-play, and ID bridges',
+    'sql/external/200_utility_functions.sql': 'Create utility functions for view refresh, health checks, and backups',
+    'sql/external/210_lahman_raw.sql': 'Create Lahman raw tables for players, teams, salaries, pitching, batting',
+    'sql/external/211_baseball_reference_raw.sql': 'Create Baseball-Reference raw game log table',
+    'sql/external/212_fangraphs_raw.sql': 'Create Fangraphs raw tables for player and team season statistics',
+    'sql/external/213_park_factors_raw.sql': 'Create park factors raw table from Baseball Savant',
+    'sql/external/214_mlb_rosters_raw.sql': 'Create MLB roster snapshots raw table with JSON payloads',
+    'sql/external/215_weather_raw.sql': 'Create weather raw table for daily conditions by venue',
+    'sql/external/216_statcast_raw.sql': 'Create Statcast raw events table with pitch physics data',
+    'sql/external/220_espn_schema.sql': 'Create ESPN schema and tables for game snapshots and schedules',
+    'sql/external/225_ingest_run_tracking.sql': 'Track data ingestion runs with metadata, progress, and errors',
+    'sql/external/230_data_validation_views.sql': 'Row count and maintenance statistics for all warehouse tables',
 
     # Features
-    "sql/features/001_pitch_data_quality.sql": "Create pitch quality views and indexes for location data",
-    "sql/features/002_player_profile_mart.sql": "Pitcher arsenal composition and rolling statistics by game",
-    "sql/features/003_pitch_flexible_mart.sql": "Create flexible feature mart schema for pitch-level data",
-    "sql/features/004_alter_base_features_types.sql": "Alter base features column types for proper statistical analysis",
-    "sql/features/005_build_engineered_features.sql": "Populate engineered features with research-backed derived metrics",
-    "sql/features/006_additional_engineered_features.sql": "Additional engineered features for pitch sequence and context",
-    "sql/features/010_pitcher_arsenal_features.sql": "Create pitcher arsenal features materialized view",
-    "sql/features/020_attendance_weather_features.sql": "Create attendance and weather features materialized view",
-    "sql/features/030_momentum_features.sql": "Create team momentum features materialized view",
-    "sql/features/040_umpire_features.sql": "Create umpire strike zone features materialized view",
-    "sql/features/040_umpire_features_retrosheet.sql": "Create umpire tendency features from Retrosheet data",
-    "sql/features/050_postseason_clutch_features.sql": "Flag postseason, high-leverage, weekend, and doubleheader games",
-    "sql/features/060_batter_pitcher_matchup_features.sql": "Batter-pitcher matchup rates and contact quality features",
-    "sql/features/070_stadium_physics_features.sql": "Park factors and per-stadium scoring averages",
-    "sql/features/099_enhanced_feature_view.sql": "Join plate appearances with pitcher arsenal and weather features",
-    "sql/features/099_phase2_enhanced_feature_view.sql": "Add team momentum and postseason flags to plate appearances",
-    "sql/features/099_phase3_final_enhanced_view.sql": "Add matchup stats and stadium physics to feature set",
+    'sql/features/001_pitch_data_quality.sql': 'Create pitch quality views and indexes for location data',
+    'sql/features/002_player_profile_mart.sql': 'Pitcher arsenal composition and rolling statistics by game',
+    'sql/features/003_pitch_flexible_mart.sql': 'Create flexible feature mart schema for pitch-level data',
+    'sql/features/004_alter_base_features_types.sql': 'Alter base features column types for proper statistical analysis',
+    'sql/features/005_build_engineered_features.sql': 'Populate engineered features with research-backed derived metrics',
+    'sql/features/006_additional_engineered_features.sql': 'Additional engineered features for pitch sequence and context',
+    'sql/features/010_pitcher_arsenal_features.sql': 'Create pitcher arsenal features materialized view',
+    'sql/features/020_attendance_weather_features.sql': 'Create attendance and weather features materialized view',
+    'sql/features/030_momentum_features.sql': 'Create team momentum features materialized view',
+    'sql/features/040_umpire_features.sql': 'Create umpire strike zone features materialized view',
+    'sql/features/040_umpire_features_retrosheet.sql': 'Create umpire tendency features from Retrosheet data',
+    'sql/features/050_postseason_clutch_features.sql': 'Flag postseason, high-leverage, weekend, and doubleheader games',
+    'sql/features/060_batter_pitcher_matchup_features.sql': 'Batter-pitcher matchup rates and contact quality features',
+    'sql/features/070_stadium_physics_features.sql': 'Park factors and per-stadium scoring averages',
+    'sql/features/099_enhanced_feature_view.sql': 'Join plate appearances with pitcher arsenal and weather features',
+    'sql/features/099_phase2_enhanced_feature_view.sql': 'Add team momentum and postseason flags to plate appearances',
+    'sql/features/099_phase3_final_enhanced_view.sql': 'Add matchup stats and stadium physics to feature set',
 
     # Live data
-    "sql/live/001_raw_sportradar_schema.sql": "Schema and tables for Sportradar push events and snapshots",
-    "sql/live/002_ingest_functions.sql": "Functions to fetch schedule, ingest live games, and poll actives",
-    "sql/live/003_schedule_jobs.sql": "pg_cron jobs for polling active games and endpoints",
-    "sql/live/004_additional_endpoints_schema.sql": "Tables for additional MLB API endpoints (boxscore, plays, etc)",
-    "sql/live/005_additional_endpoint_functions.sql": "Functions to ingest additional MLB API endpoints per game",
+    'sql/live/001_raw_sportradar_schema.sql': 'Schema and tables for Sportradar push events and snapshots',
+    'sql/live/002_ingest_functions.sql': 'Functions to fetch schedule, ingest live games, and poll actives',
+    'sql/live/003_schedule_jobs.sql': 'pg_cron jobs for polling active games and endpoints',
+    'sql/live/004_additional_endpoints_schema.sql': 'Tables for additional MLB API endpoints (boxscore, plays, etc)',
+    'sql/live/005_additional_endpoint_functions.sql': 'Functions to ingest additional MLB API endpoints per game',
 
     # Maintenance
-    "sql/maintenance/001_check_extensions.sql": "List installed and available PostgreSQL extensions",
-    "sql/maintenance/002_install_pg_cron.sql": "Install pg_cron extension for scheduled database jobs",
-    "sql/maintenance/003_install_pg_stat_statements.sql": "Install pg_stat_statements for query performance monitoring",
-    "sql/maintenance/004_install_pl_python3u.sql": "Install PL/Python3u extension with test function",
-    "sql/maintenance/005_install_pgvector.sql": "Install pgvector extension with similarity search test",
-    "sql/maintenance/010_array_types.sql": "Add array type columns for multi-value features",
-    "sql/maintenance/011_custom_types.sql": "Create domain types for baseball-specific data validation",
-    "sql/maintenance/012_partial_indexes.sql": "Create partial indexes for conditional query optimization",
-    "sql/maintenance/020_data_dictionary.sql": "Create data dictionary schema for table and column documentation",
-    "sql/maintenance/020_game_hours_scheduler.sql": "Functions to conditionally poll MLB data during season hours",
-    "sql/maintenance/021_update_cron_game_hours.sql": "Update cron jobs for season-aware MLB polling schedule",
-    "sql/maintenance/022_migrate_full_statcast.sql": "Backfill Statcast pitch data into locations table",
-    "sql/maintenance/030_kb_vector_schema.sql": "Vector-enabled knowledge base schema for semantic search",
-    "sql/maintenance/999_master_installation.sql": "Orchestrate installation of all PostgreSQL extensions",
+    'sql/maintenance/001_check_extensions.sql': 'List installed and available PostgreSQL extensions',
+    'sql/maintenance/002_install_pg_cron.sql': 'Install pg_cron extension for scheduled database jobs',
+    'sql/maintenance/003_install_pg_stat_statements.sql': 'Install pg_stat_statements for query performance monitoring',
+    'sql/maintenance/004_install_pl_python3u.sql': 'Install PL/Python3u extension with test function',
+    'sql/maintenance/005_install_pgvector.sql': 'Install pgvector extension with similarity search test',
+    'sql/maintenance/010_array_types.sql': 'Add array type columns for multi-value features',
+    'sql/maintenance/011_custom_types.sql': 'Create domain types for baseball-specific data validation',
+    'sql/maintenance/012_partial_indexes.sql': 'Create partial indexes for conditional query optimization',
+    'sql/maintenance/020_data_dictionary.sql': 'Create data dictionary schema for table and column documentation',
+    'sql/maintenance/020_game_hours_scheduler.sql': 'Functions to conditionally poll MLB data during season hours',
+    'sql/maintenance/021_update_cron_game_hours.sql': 'Update cron jobs for season-aware MLB polling schedule',
+    'sql/maintenance/022_migrate_full_statcast.sql': 'Backfill Statcast pitch data into locations table',
+    'sql/maintenance/030_kb_vector_schema.sql': 'Vector-enabled knowledge base schema for semantic search',
+    'sql/maintenance/999_master_installation.sql': 'Orchestrate installation of all PostgreSQL extensions',
 
     # MLB
-    "sql/mlb/090_mlb_live_data.sql": "Tables for raw MLB API schedule and live feed snapshots",
-    "sql/mlb/091_mlb_reference_raw.sql": "Tables for raw MLB API reference endpoint snapshots",
-    "sql/mlb/092_live_odds_views.sql": "Hit and strikeout probability materialized views",
-    "sql/mlb/095_mlb_reference_views.sql": "Parse MLB API reference snapshots into relational views",
-    "sql/mlb/100_bridge_tables.sql": "ID cross-reference tables connecting Retrosheet and MLB",
-    "sql/mlb/110_live_core_tables.sql": "Live MLB game data transformed into core schema",
-    "sql/mlb/120_inference_optimization.sql": "Optimized tables and indexes for model inference",
-    "sql/mlb/121_inference_functions.sql": "Functions for model inference and prediction scoring",
-    "sql/mlb/122_live_pa_feature_parity.sql": "Live plate appearance features matching historical schema",
-    "sql/mlb/130_analysis_views.sql": "Analysis views combining historical and live game data",
-    "sql/mlb/145_mlb_historical_schema.sql": "MLB historical data tables complementing Retrosheet",
-    "sql/mlb/150_mlb_data_completeness.sql": "Views and functions for MLB data completeness monitoring",
-    "sql/mlb/150_model_registry.sql": "Central registry for ML model artifacts and versions",
-    "sql/mlb/151_register_model.sql": "Register a trained model artifact in the model registry",
+    'sql/mlb/090_mlb_live_data.sql': 'Tables for raw MLB API schedule and live feed snapshots',
+    'sql/mlb/091_mlb_reference_raw.sql': 'Tables for raw MLB API reference endpoint snapshots',
+    'sql/mlb/092_live_odds_views.sql': 'Hit and strikeout probability materialized views',
+    'sql/mlb/095_mlb_reference_views.sql': 'Parse MLB API reference snapshots into relational views',
+    'sql/mlb/100_bridge_tables.sql': 'ID cross-reference tables connecting Retrosheet and MLB',
+    'sql/mlb/110_live_core_tables.sql': 'Live MLB game data transformed into core schema',
+    'sql/mlb/120_inference_optimization.sql': 'Optimized tables and indexes for model inference',
+    'sql/mlb/121_inference_functions.sql': 'Functions for model inference and prediction scoring',
+    'sql/mlb/122_live_pa_feature_parity.sql': 'Live plate appearance features matching historical schema',
+    'sql/mlb/130_analysis_views.sql': 'Analysis views combining historical and live game data',
+    'sql/mlb/145_mlb_historical_schema.sql': 'MLB historical data tables complementing Retrosheet',
+    'sql/mlb/150_mlb_data_completeness.sql': 'Views and functions for MLB data completeness monitoring',
+    'sql/mlb/150_model_registry.sql': 'Central registry for ML model artifacts and versions',
+    'sql/mlb/151_register_model.sql': 'Register a trained model artifact in the model registry',
 
     # Optimization
-    "sql/optimization/140_database_optimization.sql": "Database optimization functions, indexes, and views",
-    "sql/optimization/141_performance_indexes.sql": "Performance indexes on core events, games, players, teams",
-    "sql/optimization/142_optimized_functions.sql": "Optimized SQL functions for stats, lookups, and summaries",
-    "sql/optimization/143_advanced_optimizations.sql": "Advanced optimizations: partitioning, clustering, monitoring",
-    "sql/optimization/144_live_plate_appearances.sql": "Live plate appearances table with indexes for MLB data",
+    'sql/optimization/140_database_optimization.sql': 'Database optimization functions, indexes, and views',
+    'sql/optimization/141_performance_indexes.sql': 'Performance indexes on core events, games, players, teams',
+    'sql/optimization/142_optimized_functions.sql': 'Optimized SQL functions for stats, lookups, and summaries',
+    'sql/optimization/143_advanced_optimizations.sql': 'Advanced optimizations: partitioning, clustering, monitoring',
+    'sql/optimization/144_live_plate_appearances.sql': 'Live plate appearances table with indexes for MLB data',
 
     # Scripts
-    "scripts/trace_deps.sql": "List database objects that depend on a given relation",
+    'scripts/trace_deps.sql': 'List database objects that depend on a given relation',
 
     # Test
-    "sql/test/001_create_test_schema.sql": "Create isolated test schema with core table structure",
-    "sql/test/002_test_fixtures.sql": "Load test fixture data for E2E validation",
+    'sql/test/001_create_test_schema.sql': 'Create isolated test schema with core table structure',
+    'sql/test/002_test_fixtures.sql': 'Load test fixture data for E2E validation',
 }
 
 
 def update_file(filepath: Path, purpose: str) -> bool:
     """Update the Purpose line in a SQL file header."""
-    content = filepath.read_text(encoding="utf-8")
-    lines = content.split("\n")
+    content = filepath.read_text(encoding='utf-8')
+    lines = content.split('\n')
 
-    if len(lines) < 2 or not lines[0].startswith("-- File:"):
+    if len(lines) < 2 or not lines[0].startswith('-- File:'):
         return False
 
-    current_purpose = lines[1].replace("-- Purpose: ", "") if lines[1].startswith("-- Purpose:") else ""
+    current_purpose = lines[1].replace('-- Purpose: ', '') if lines[1].startswith('-- Purpose:') else ''
     if current_purpose == purpose:
         return False
 
-    lines[1] = f"-- Purpose: {purpose}"
-    new_content = "\n".join(lines)
-    filepath.write_text(new_content, encoding="utf-8")
+    lines[1] = f'-- Purpose: {purpose}'
+    new_content = '\n'.join(lines)
+    filepath.write_text(new_content, encoding='utf-8')
     return True
 
 
@@ -165,19 +166,19 @@ def main():
     for rel_path, purpose in ACCURATE_PURPOSES.items():
         filepath = PROJECT_ROOT / rel_path
         if not filepath.exists():
-            print(f"  [MISSING] {rel_path}")
+            print(f'  [MISSING] {rel_path}')
             missing += 1
             continue
 
         if update_file(filepath, purpose):
-            print(f"  [FIXED] {rel_path}")
-            print(f"          -> {purpose}")
+            print(f'  [FIXED] {rel_path}')
+            print(f'          -> {purpose}')
             modified += 1
         else:
             unchanged += 1
 
-    print(f"\nFixed: {modified}, Unchanged: {unchanged}, Missing: {missing}")
+    print(f'\nFixed: {modified}, Unchanged: {unchanged}, Missing: {missing}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

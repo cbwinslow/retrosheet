@@ -127,7 +127,7 @@ def evaluate_model_cv(
 
     results = {}
 
-    for metric_name, metric_func in scoring_metrics.items():
+    for metric_name in scoring_metrics:
         try:
             if metric_name == 'roc_auc':
                 # For ROC AUC, we need predicted probabilities
@@ -211,8 +211,8 @@ def print_summary(results: dict) -> None:
             if 'error' in metric_data:
                 print(f"  {metric_name}: ERROR - {metric_data['error']}")
             else:
-                mean_val = metric_data['mean']
-                std_val = metric_data['std']
+                metric_data['mean']
+                metric_data['std']
                 if (
                     metric_name in ['roc_auc', 'accuracy']
                     or metric_name in ['neg_log_loss']

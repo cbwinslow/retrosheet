@@ -112,18 +112,7 @@ def train_and_compare_models(df):
     ]
 
     # Enhanced features (all available)
-    enhanced_features = basic_features + [
-        'pitch_velocity',
-        'pitch_spin_rate',
-        'pitch_distance_from_center',
-        'matchup_pa',
-        'matchup_avg',
-        'matchup_slg',
-        'batter_exit_velocity',
-        'batter_launch_angle',
-        'batter_sprint_speed',
-        'pitcher_k_per_9',
-    ]
+    enhanced_features = [*basic_features, 'pitch_velocity', 'pitch_spin_rate', 'pitch_distance_from_center', 'matchup_pa', 'matchup_avg', 'matchup_slg', 'batter_exit_velocity', 'batter_launch_angle', 'batter_sprint_speed', 'pitcher_k_per_9']
 
     X_basic = df[basic_features]
     X_enhanced = df[enhanced_features]
@@ -200,7 +189,7 @@ def analyze_feature_importance(df):
     ).sort_values('importance', ascending=False)
 
     print('🔝 Top 10 most important features:')
-    for i, row in importance.head(10).iterrows():
+    for _i, _row in importance.head(10).iterrows():
         print('.3f')
 
     return importance
@@ -217,10 +206,10 @@ def main():
     df = simulate_enhanced_features(df)
 
     # Train and compare models
-    basic_auc, enhanced_auc, improvement = train_and_compare_models(df)
+    _basic_auc, _enhanced_auc, _improvement = train_and_compare_models(df)
 
     # Analyze feature importance
-    importance = analyze_feature_importance(df)
+    analyze_feature_importance(df)
 
     print('\n' + '=' * 50)
     print('📊 ENHANCED MODEL SUMMARY')

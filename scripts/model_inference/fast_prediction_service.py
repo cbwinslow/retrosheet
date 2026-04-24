@@ -225,7 +225,7 @@ class PredictionService:
         features_df = pd.DataFrame([features])
 
         predictions = {}
-        for target_id in self.models.keys():
+        for target_id in self.models:
             try:
                 prob = self.predict_single(target_id, features_df)
                 predictions[target_id] = prob
@@ -349,7 +349,7 @@ def main():
 
     # Initialize service
     service = PredictionService(max_connections=args.workers)
-    async_service = AsyncPredictionService(service)
+    AsyncPredictionService(service)
 
     print(f'Prediction service started with {len(service.models)} cached models')
     print(f'Available targets: {list(service.models.keys())}')
@@ -382,7 +382,7 @@ def main():
                 }
                 start_time = time.time()
                 result = service.simulate_half_inning_fast(game_state, 50)
-                elapsed = time.time() - start_time
+                time.time() - start_time
                 print('.2f')
                 print(json.dumps(result, indent=2))
             else:

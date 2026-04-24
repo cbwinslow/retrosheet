@@ -238,7 +238,7 @@ def load_statcast_data(
         # Read in chunks
         chunks = pd.read_sql(query, engine, chunksize=batch_size)
 
-        for i, chunk in enumerate(chunks):
+        for _i, chunk in enumerate(chunks):
             # Add geometry columns
             if 'plate_x' in chunk.columns and 'plate_z' in chunk.columns:
                 chunk['location_point'] = chunk.apply(

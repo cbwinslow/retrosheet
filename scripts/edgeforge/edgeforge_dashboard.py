@@ -100,8 +100,8 @@ def get_ingestion_status():
 def calculate_progress_metrics(status):
     """Calculate betting intelligence progress metrics."""
     (
-        raw_feeds,
-        processed_games,
+        _raw_feeds,
+        _processed_games,
         processed_events,
         seasons_downloaded,
         statcast_pitches,
@@ -147,19 +147,19 @@ def display_header():
 def display_overall_progress(status, metrics):
     """Display overall ingestion progress."""
     (
-        raw_feeds,
-        processed_games,
-        processed_events,
-        seasons_downloaded,
-        statcast_pitches,
-        betting_samples,
+        _raw_feeds,
+        _processed_games,
+        _processed_events,
+        _seasons_downloaded,
+        _statcast_pitches,
+        _betting_samples,
     ) = status['overall']
 
     print('\n📈 OVERALL PROGRESS')
     print('-' * 50)
 
     # Progress bar
-    progress_bar = '█' * int(metrics['percent_complete'] / 5) + '░' * int(
+    '█' * int(metrics['percent_complete'] / 5) + '░' * int(
         (100 - metrics['percent_complete']) / 5,
     )
     print('.1f')
@@ -185,18 +185,18 @@ def display_season_breakdown(status):
     print('Season | Games | Date Range')
     print('-' * 35)
 
-    for season, game_feeds, earliest, latest in status['seasons'][:10]:
+    for _season, _game_feeds, earliest, latest in status['seasons'][:10]:
         # Handle date formatting for string dates from PostgreSQL
         try:
             if earliest and latest:
                 # Convert string dates to date objects for formatting
                 earliest_date = datetime.strptime(str(earliest)[:10], '%Y-%m-%d').date()
                 latest_date = datetime.strptime(str(latest)[:10], '%Y-%m-%d').date()
-                date_range = f"{earliest_date.strftime('%m/%d')}-{latest_date.strftime('%m/%d')}"
+                f"{earliest_date.strftime('%m/%d')}-{latest_date.strftime('%m/%d')}"
             else:
-                date_range = 'N/A'
+                pass
         except:
-            date_range = 'N/A'
+            pass
 
         print('6')
 
@@ -217,13 +217,13 @@ def display_missing_seasons(status):
 
         # Estimated completion
         avg_season_time = 1.5  # hours per season
-        estimated_hours = len(missing) * avg_season_time
+        len(missing) * avg_season_time
         print('.1f')
 
 
 def display_model_status(status):
     """Display EdgeForge model training status."""
-    model_status, basic_samples, enhanced_samples = status['model_status']
+    model_status, _basic_samples, enhanced_samples = status['model_status']
 
     print('\n🤖 EdgeForge MODEL STATUS')
     print('-' * 50)

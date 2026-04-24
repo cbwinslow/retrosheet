@@ -165,15 +165,15 @@ def train_edgeforge_model(X, y):
     test_pred = model.predict_proba(X_test)[:, 1]
 
     # Standard metrics
-    train_auc = roc_auc_score(y_train, train_pred)
-    test_auc = roc_auc_score(y_test, test_pred)
+    roc_auc_score(y_train, train_pred)
+    roc_auc_score(y_test, test_pred)
 
     # Betting-specific metrics
-    train_brier = brier_score_loss(y_train, train_pred)
-    test_brier = brier_score_loss(y_test, test_pred)
+    brier_score_loss(y_train, train_pred)
+    brier_score_loss(y_test, test_pred)
 
     # Calibration analysis
-    prob_true, prob_pred = calibration_curve(y_test, test_pred, n_bins=10)
+    _prob_true, _prob_pred = calibration_curve(y_test, test_pred, n_bins=10)
 
     print('✅ EdgeForge model trained!')
     print('📊 Performance Metrics:')
@@ -210,8 +210,8 @@ def train_edgeforge_model(X, y):
     print('\n🎲 Confidence Bucket Analysis:')
     print('Bucket           | Pred | Actual | Samples | Edge')
     print('-' * 50)
-    for idx, row in bucket_analysis.iterrows():
-        edge = row['actual'] - row['prediction']
+    for _idx, row in bucket_analysis.iterrows():
+        row['actual'] - row['prediction']
         print('15')
 
     return model, X_test, y_test, test_pred
@@ -226,7 +226,7 @@ def analyze_feature_importance(model, feature_cols):
     ).sort_values('importance', ascending=False)
 
     print('🔝 Top 10 features driving betting edges:')
-    for i, row in importance_df.head(10).iterrows():
+    for _i, _row in importance_df.head(10).iterrows():
         print('.3f')
 
     # Categorize features
@@ -243,14 +243,14 @@ def analyze_feature_importance(model, feature_cols):
         if f not in statcast_features + matchup_features + situational_features
     ]
 
-    statcast_imp = importance_df[importance_df['feature'].isin(statcast_features)][
+    importance_df[importance_df['feature'].isin(statcast_features)][
         'importance'
     ].sum()
-    matchup_imp = importance_df[importance_df['feature'].isin(matchup_features)]['importance'].sum()
-    situational_imp = importance_df[importance_df['feature'].isin(situational_features)][
+    importance_df[importance_df['feature'].isin(matchup_features)]['importance'].sum()
+    importance_df[importance_df['feature'].isin(situational_features)][
         'importance'
     ].sum()
-    basic_imp = importance_df[importance_df['feature'].isin(basic_features)]['importance'].sum()
+    importance_df[importance_df['feature'].isin(basic_features)]['importance'].sum()
 
     print('\n📊 Feature Category Importance:')
     print('.1%')
@@ -318,10 +318,10 @@ def main():
     X, y, feature_cols = prepare_betting_features(df)
 
     # Train EdgeForge model
-    model, X_test, y_test, test_pred = train_edgeforge_model(X, y)
+    model, _X_test, _y_test, _test_pred = train_edgeforge_model(X, y)
 
     # Analyze feature importance
-    importance = analyze_feature_importance(model, feature_cols)
+    analyze_feature_importance(model, feature_cols)
 
     # Save model
     save_edgeforge_model(model, feature_cols)

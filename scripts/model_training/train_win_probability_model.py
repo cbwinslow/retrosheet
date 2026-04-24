@@ -172,7 +172,7 @@ def main():
     X, y, feature_cols = prepare_features(df)
 
     # Train model
-    model, X_test, y_test = train_model(X, y)
+    model, _X_test, _y_test = train_model(X, y)
 
     # Save model
     save_model(model, feature_cols)

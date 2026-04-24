@@ -44,7 +44,6 @@ def complete_game_xref(
         with conn.cursor() as cur:
             # Build WHERE clause
             where_conditions = []
-            params: dict[str, any] = {}
 
             if season is not None:
                 where_conditions.append(f'season = {season}')

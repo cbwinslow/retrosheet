@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Load Fangraphs player‑season and team‑season CSVs into the raw_fangraphs schema.
+Load Fangraphs player-season and team-season CSVs into the raw_fangraphs schema.
 
 Both CSVs are loaded via a staging table (all TEXT) and then upserted with
 proper type casts. The primary keys are (player_id, season) and (team_id, season).
@@ -40,7 +40,7 @@ def copy_to_staging(cur, csv_path, name):
         # Reset to start and filter empty lines
         raw_f.seek(0)
         lines = [line for line in raw_f if line.strip()]
-    # Use a temporary in‑memory file-like object for COPY
+    # Use a temporary in-memory file-like object for COPY
     from io import StringIO
 
     filtered = StringIO(''.join(lines))
@@ -205,7 +205,7 @@ def main():
             if copy_to_staging(cur, args.player, 'player_season'):
                 upsert_player(cur)
         else:
-            print(f'Skipping non‑CSV player file: {args.player}')
+            print(f'Skipping non-CSV player file: {args.player}')
 
         # Team season
         create_staging(cur, 'team_season', team_cols)
@@ -213,7 +213,7 @@ def main():
             if copy_to_staging(cur, args.team, 'team_season'):
                 upsert_team(cur)
         else:
-            print(f'Skipping non‑CSV team file: {args.team}')
+            print(f'Skipping non-CSV team file: {args.team}')
 
         conn.commit()
         print('✅ Loaded Fangraphs player and team season data')

@@ -110,7 +110,7 @@ def display_status_report(status):
     print(f'   Matchup History:     {matchup_history:,}')
 
     print('\n📅 SEASON STATUS')
-    for season, games in status['seasons']:
+    for _season, games in status['seasons']:
         status_icon = '✅' if games > 2000 else '⚠️' if games > 1000 else '🔄'
         print('6')
 

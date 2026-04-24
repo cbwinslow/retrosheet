@@ -466,13 +466,7 @@ Be helpful, accurate, and engaging in your responses."""
             if results:
                 # Include tool results in context
                 tool_context = f'Tool results: {results}'
-                final_messages = messages + [
-                    {'role': 'assistant', 'content': llm_response},
-                    {
-                        'role': 'user',
-                        'content': f'Based on the tool results, provide a comprehensive answer: {tool_context}',
-                    },
-                ]
+                final_messages = [*messages, {'role': 'assistant', 'content': llm_response}, {'role': 'user', 'content': f'Based on the tool results, provide a comprehensive answer: {tool_context}'}]
                 final_response = self.llm_client.chat(final_messages)
             else:
                 final_response = llm_response

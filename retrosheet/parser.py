@@ -1,4 +1,3 @@
-# encoding: utf-8
 
 import logging
 
@@ -18,15 +17,15 @@ class Retrosheet(event, parse_files):
 
     def batch_parse(self, yearFrom=None, yearTo=None, batchsize=10, append=True):
         """ """
-        yearTo = yearTo if yearTo else "2017"
+        yearTo = yearTo if yearTo else '2017'
         yearFrom = yearFrom if yearFrom else yearTo
 
         if yearFrom < 1921 or yearTo > 2017 or yearTo < yearFrom:
-            raise InvalidYearError("Invalid Years", (yearFrom, yearTo))
+            raise InvalidYearError('Invalid Years', (yearFrom, yearTo))
 
         batches = int((yearTo - yearFrom + 1) / batchsize) + 1
 
-        for loop, batch in enumerate(range(batches)):
+        for loop, _batch in enumerate(range(batches)):
             start_year = yearFrom if loop == 0 else end_year + 1
 
             end_year = (
@@ -35,8 +34,8 @@ class Retrosheet(event, parse_files):
 
             self.get_data(yearFrom=start_year, yearTo=end_year)
             self.to_df()
-            self.save_csv(path_str="", append=False) if loop == 0 else self.save_csv(
-                path_str="", append=True
+            self.save_csv(path_str='', append=False) if loop == 0 else self.save_csv(
+                path_str='', append=True,
             )
 
             # empty datasets for free-up memory
@@ -61,5 +60,5 @@ class InvalidYearError(Exception):
 
     def __init__(self, error, years):
         self.log = logging.getLogger(__name__)
-        self.log.debug("Invalid Year Passed: {0}-{1}".format(years[0], years[1]))
-        super(InvalidYearError, self).__init__(years)
+        self.log.debug(f'Invalid Year Passed: {years[0]}-{years[1]}')
+        super().__init__(years)

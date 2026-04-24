@@ -158,8 +158,6 @@ ignore = [
     "D407",     # Section name underlines
     "D413",     # Missing blank line after last section
     # Annotations - gradual adoption
-    "ANN101",   # Missing type annotation for self
-    "ANN102",   # Missing type annotation for cls
     "ANN401",   # Dynamically typed expressions (Any) disallowed
     # Security - SQL in this project is parameterized via SQLAlchemy
     "S608",     # Hardcoded SQL (we use SQLAlchemy/SQL files)
@@ -169,7 +167,7 @@ ignore = [
     # Print statements allowed in scripts
     "T201",     # Print found
     # Allow broad except in certain cases (retry logic)
-    "W0718",    # Broad except clause
+    "BLE001",   # Blind except
     "TRY002",   # Raise vanilla class
     "TRY003",   # Avoid specifying long messages outside exception class
     # Allow commented out code during development
@@ -208,10 +206,6 @@ max-complexity = 12
 inline-quotes = "single"
 multiline-quotes = "double"
 docstring-quotes = "double"
-
-[tool.ruff.lint.flake8-todos]
-# Allow TODOs without issue numbers during development
-task-tags = ["TODO", "FIXME", "XXX", "HACK", "BUG", "NOTE", "WARNING"]
 
 [tool.ruff.lint.per-file-ignores]
 # Scripts can have certain patterns
@@ -255,10 +249,6 @@ task-tags = ["TODO", "FIXME", "XXX", "HACK", "BUG", "NOTE", "WARNING"]
 "baseball-chatbot-ui/app/api/**/*.py" = [
     "D",
 ]
-
-[tool.ruff.lint.flake8-bandit]
-# Skip security checks that don't apply to this project
-exclude_dirs = ["tests", "scripts/test"]
 
 [tool.mypy]
 python_version = "3.10"

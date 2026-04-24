@@ -6,7 +6,6 @@ The current implementation in [`scripts/llm/langchain_baseball_agent.py`](script
 2. The method can be called without the ``prometheus_client`` package being installed (the fallback ``_NoOpCounter`` should not raise).
 """
 
-from typing import Dict
 
 from scripts.llm.langchain_baseball_agent import LangChainBaseballAgent
 
@@ -17,15 +16,15 @@ def test_process_query_returns_expected_structure() -> None:
     The agent should echo the backend name, status, the original query and a placeholder message.
     """
     agent = LangChainBaseballAgent()
-    query = "What is the win probability?"
-    result: Dict = agent.process_query(query)
+    query = 'What is the win probability?'
+    result: dict = agent.process_query(query)
 
     # Basic sanity checks on the result structure
     assert isinstance(result, dict)
-    assert result["backend"] == "langchain"
-    assert result["status"] == "placeholder"
-    assert result["query"] == query
-    assert "LangChain agent not yet implemented" in result["message"]
+    assert result['backend'] == 'langchain'
+    assert result['status'] == 'placeholder'
+    assert result['query'] == query
+    assert 'LangChain agent not yet implemented' in result['message']
 
 
 def test_prometheus_counter_fallback_is_noop(monkeypatch) -> None:
@@ -44,14 +43,14 @@ def test_prometheus_counter_fallback_is_noop(monkeypatch) -> None:
 
     # Patch the counter used inside the agent module
     monkeypatch.setattr(
-        "scripts.llm.langchain_baseball_agent.PrometheusCounter", DummyCounter, raising=False
+        'scripts.llm.langchain_baseball_agent.PrometheusCounter', DummyCounter, raising=False,
     )
 
     agent = LangChainBaseballAgent()
     # The agent should have a ``_query_counter`` attribute of type ``DummyCounter``
-    assert hasattr(agent, "_query_counter")
+    assert hasattr(agent, '_query_counter')
     assert isinstance(agent._query_counter, DummyCounter)
 
     # Call ``process_query`` and verify that ``inc`` was invoked
-    agent.process_query("test")
+    agent.process_query('test')
     assert agent._query_counter.called is True

@@ -402,7 +402,7 @@ def run_data_integrity_tests(tester: BaseballTester) -> None:
     ]
 
     for check in integrity_checks:
-        result = tester.run_test(
+        tester.run_test(
             f"integrity_{check['name']}",
             tester.test_data_integrity,
             'core.games',

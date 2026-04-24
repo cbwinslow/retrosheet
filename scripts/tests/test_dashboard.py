@@ -50,7 +50,7 @@ def main():
 
         # Progress calculation
         total_target = 27  # 2000-2026
-        percent_complete = (seasons / total_target) * 100
+        (seasons / total_target) * 100
         print('.1f')
 
         print('\n✅ Dashboard test successful!')

@@ -208,7 +208,7 @@ def main():
     if rate_limited > 0:
         print(f'   🚦 Rate limited: {rate_limited}')
     print(f'   📊 Total processed: {len(games)}')
-    success_rate = successful / len(games) * 100 if games else 0
+    successful / len(games) * 100 if games else 0
     print('.1f')
 
 

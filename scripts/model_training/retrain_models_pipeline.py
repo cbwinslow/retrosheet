@@ -140,7 +140,6 @@ def main() -> None:
         sys.exit(1)
 
     # Execute pipeline steps
-    steps = []
     results = {}
 
     # Step 1: Refresh feature marts

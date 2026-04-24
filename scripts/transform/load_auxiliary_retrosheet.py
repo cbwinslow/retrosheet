@@ -168,11 +168,11 @@ def psql_base_args() -> list[str]:
 
 def run_psql(sql: str | None = None, file_path: Path | None = None) -> None:
     if file_path:
-        subprocess.run(psql_base_args() + ['-f', str(file_path)], check=True)
+        subprocess.run([*psql_base_args(), '-f', str(file_path)], check=True)
         return
     if sql is None:
         raise ValueError('sql or file_path is required')
-    subprocess.run(psql_base_args() + ['-c', sql], check=True)
+    subprocess.run([*psql_base_args(), '-c', sql], check=True)
 
 
 def season_from_path(path: Path) -> int:

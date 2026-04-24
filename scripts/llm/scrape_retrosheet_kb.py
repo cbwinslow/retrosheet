@@ -9,7 +9,7 @@ Usage::
 
     python3 scripts/scrape_retrosheet_kb.py
 
-The script is deliberately lightweight – it uses only the standard library and
+The script is deliberately lightweight - it uses only the standard library and
 ``requests``/``beautifulsoup4`` which are already declared in ``requirements.txt``.
 It writes a JSON log (``kb/download_log.json``) that records the source URL,
 local path, HTTP status and any error messages.

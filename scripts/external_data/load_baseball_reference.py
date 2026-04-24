@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Load Baseball‑Reference game‑log CSVs into the raw_baseball_reference schema.
+Load Baseball-Reference game-log CSVs into the raw_baseball_reference schema.
 
 The loader expects one or more CSV files in a directory. Each file is
 processed with a staging table (all TEXT) and then upserted into the final
@@ -27,7 +27,7 @@ def get_conn():
 
 def create_staging(cur):
     cur.execute('DROP TABLE IF EXISTS raw_baseball_reference.stg_game_logs')
-    # All columns as TEXT – we will cast later
+    # All columns as TEXT - we will cast later
     cur.execute("""
         CREATE TABLE raw_baseball_reference.stg_game_logs (
             game_id TEXT,
@@ -189,7 +189,7 @@ def upsert(cur):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Load Baseball‑Reference game logs')
+    parser = argparse.ArgumentParser(description='Load Baseball-Reference game logs')
     parser.add_argument('--dir', type=Path, required=True, help='Directory with CSV files')
     args = parser.parse_args()
     csv_files = list(Path(args.dir).glob('*.csv'))
@@ -205,7 +205,7 @@ def main():
             copy_to_staging(cur, csv_path)
         upsert(cur)
         conn.commit()
-        print(f'✅ Loaded {len(csv_files)} Baseball‑Reference game‑log files')
+        print(f'✅ Loaded {len(csv_files)} Baseball-Reference game-log files')
     finally:
         cur.close()
         conn.close()

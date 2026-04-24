@@ -47,10 +47,7 @@ def download_season_data(season: int) -> bool:
         f'python3 scripts/download_mlb_bulk.py --start-season {season} --end-season {season} --mode games --workers 8 --delay 0.5',
         f'Download {season} game feeds',
     )
-    if not success:
-        return False
-
-    return True
+    return success
 
 
 def transform_season_data(season: int) -> bool:
