@@ -1,3 +1,7 @@
+-- File: sql/core/040_auxiliary_retrosheet.sql
+-- Purpose: Load auxiliary tables, create roster/allstar/ejection/umpire/coach views
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS raw_retrosheet;
 CREATE SCHEMA IF NOT EXISTS core;
 CREATE SCHEMA IF NOT EXISTS bridge;
@@ -145,30 +149,30 @@ CREATE TABLE IF NOT EXISTS raw_retrosheet.special_gamelog_lines (
 );
 
 CREATE INDEX IF NOT EXISTS season_rosters_player_idx
-    ON raw_retrosheet.season_rosters (player_id, season);
+ON raw_retrosheet.season_rosters (player_id, season);
 CREATE INDEX IF NOT EXISTS season_rosters_team_idx
-    ON raw_retrosheet.season_rosters (roster_team_id, season);
+ON raw_retrosheet.season_rosters (roster_team_id, season);
 CREATE INDEX IF NOT EXISTS season_rosters_allstar_idx
-    ON raw_retrosheet.season_rosters (season, is_allstar);
+ON raw_retrosheet.season_rosters (season, is_allstar);
 CREATE INDEX IF NOT EXISTS season_teams_team_idx
-    ON raw_retrosheet.season_teams (team_id, season);
+ON raw_retrosheet.season_teams (team_id, season);
 CREATE INDEX IF NOT EXISTS season_schedules_date_idx
-    ON raw_retrosheet.season_schedules (season, game_date);
+ON raw_retrosheet.season_schedules (season, game_date);
 CREATE INDEX IF NOT EXISTS ejections_game_idx
-    ON raw_retrosheet.ejections (game_id);
+ON raw_retrosheet.ejections (game_id);
 CREATE INDEX IF NOT EXISTS coaches_coach_idx
-    ON raw_retrosheet.coaches (coach_id, season);
+ON raw_retrosheet.coaches (coach_id, season);
 
 ALTER TABLE core.players
-    ADD COLUMN IF NOT EXISTS name_first text,
-    ADD COLUMN IF NOT EXISTS name_last text,
-    ADD COLUMN IF NOT EXISTS nickname text;
+ADD COLUMN IF NOT EXISTS name_first text,
+ADD COLUMN IF NOT EXISTS name_last text,
+ADD COLUMN IF NOT EXISTS nickname text;
 
 ALTER TABLE core.teams
-    ADD COLUMN IF NOT EXISTS league text,
-    ADD COLUMN IF NOT EXISTS city text,
-    ADD COLUMN IF NOT EXISTS nickname text,
-    ADD COLUMN IF NOT EXISTS team_name text;
+ADD COLUMN IF NOT EXISTS league text,
+ADD COLUMN IF NOT EXISTS city text,
+ADD COLUMN IF NOT EXISTS nickname text,
+ADD COLUMN IF NOT EXISTS team_name text;
 
 INSERT INTO core.teams (
     retrosheet_team_id,
@@ -182,10 +186,10 @@ INSERT INTO core.teams (
 )
 SELECT
     team_id,
-    max(NULLIF(league, '')),
-    max(NULLIF(city, '')),
-    max(NULLIF(nickname, '')),
-    max(NULLIF(trim(COALESCE(city, '') || ' ' || COALESCE(nickname, '')), '')),
+    max(nullif(league, '')),
+    max(nullif(city, '')),
+    max(nullif(nickname, '')),
+    max(nullif(trim(coalesce(city, '') || ' ' || coalesce(nickname, '')), '')),
     min(season),
     max(season),
     now()
@@ -193,13 +197,14 @@ FROM raw_retrosheet.season_teams
 WHERE team_id <> ''
 GROUP BY team_id
 ON CONFLICT (retrosheet_team_id) DO UPDATE
-SET league = COALESCE(core.teams.league, EXCLUDED.league),
-    city = COALESCE(core.teams.city, EXCLUDED.city),
-    nickname = COALESCE(core.teams.nickname, EXCLUDED.nickname),
-    team_name = COALESCE(core.teams.team_name, EXCLUDED.team_name),
-    first_season = LEAST(COALESCE(core.teams.first_season, EXCLUDED.first_season), EXCLUDED.first_season),
-    last_season = GREATEST(COALESCE(core.teams.last_season, EXCLUDED.last_season), EXCLUDED.last_season),
-    updated_at = now();
+    SET
+        league = coalesce(core.teams.league, excluded.league),
+        city = coalesce(core.teams.city, excluded.city),
+        nickname = coalesce(core.teams.nickname, excluded.nickname),
+        team_name = coalesce(core.teams.team_name, excluded.team_name),
+        first_season = least(coalesce(core.teams.first_season, excluded.first_season), excluded.first_season),
+        last_season = greatest(coalesce(core.teams.last_season, excluded.last_season), excluded.last_season),
+        updated_at = now();
 
 INSERT INTO core.players (
     retrosheet_player_id,
@@ -214,11 +219,11 @@ INSERT INTO core.players (
 )
 SELECT
     player_id,
-    max(NULLIF(trim(COALESCE(first_name, '') || ' ' || COALESCE(last_name, '')), '')),
-    max(NULLIF(first_name, '')),
-    max(NULLIF(last_name, '')),
-    CASE WHEN max(NULLIF(bats, '')) IN ('L', 'R', 'B') THEN max(NULLIF(bats, ''))::char(1) END,
-    CASE WHEN max(NULLIF(throws, '')) IN ('L', 'R') THEN max(NULLIF(throws, ''))::char(1) END,
+    max(nullif(trim(coalesce(first_name, '') || ' ' || coalesce(last_name, '')), '')),
+    max(nullif(first_name, '')),
+    max(nullif(last_name, '')),
+    CASE WHEN max(nullif(bats, '')) IN ('L', 'R', 'B') THEN max(nullif(bats, ''))::char(1) END,
+    CASE WHEN max(nullif(throws, '')) IN ('L', 'R') THEN max(nullif(throws, ''))::char(1) END,
     min(season),
     max(season),
     now()
@@ -226,14 +231,15 @@ FROM raw_retrosheet.season_rosters
 WHERE player_id <> ''
 GROUP BY player_id
 ON CONFLICT (retrosheet_player_id) DO UPDATE
-SET player_name = COALESCE(core.players.player_name, EXCLUDED.player_name),
-    name_first = COALESCE(core.players.name_first, EXCLUDED.name_first),
-    name_last = COALESCE(core.players.name_last, EXCLUDED.name_last),
-    bats = COALESCE(core.players.bats, EXCLUDED.bats),
-    throws = COALESCE(core.players.throws, EXCLUDED.throws),
-    first_season = LEAST(COALESCE(core.players.first_season, EXCLUDED.first_season), EXCLUDED.first_season),
-    last_season = GREATEST(COALESCE(core.players.last_season, EXCLUDED.last_season), EXCLUDED.last_season),
-    updated_at = now();
+    SET
+        player_name = coalesce(core.players.player_name, excluded.player_name),
+        name_first = coalesce(core.players.name_first, excluded.name_first),
+        name_last = coalesce(core.players.name_last, excluded.name_last),
+        bats = coalesce(core.players.bats, excluded.bats),
+        throws = coalesce(core.players.throws, excluded.throws),
+        first_season = least(coalesce(core.players.first_season, excluded.first_season), excluded.first_season),
+        last_season = greatest(coalesce(core.players.last_season, excluded.last_season), excluded.last_season),
+        updated_at = now();
 
 INSERT INTO bridge.player_xref (
     retrosheet_id,
@@ -244,23 +250,24 @@ INSERT INTO bridge.player_xref (
 )
 SELECT
     player_id,
-    max(NULLIF(first_name, '')),
-    max(NULLIF(last_name, '')),
+    max(nullif(first_name, '')),
+    max(nullif(last_name, '')),
     jsonb_build_object(
         'source', 'retrosheet.season_rosters',
         'first_season', min(season),
         'last_season', max(season),
-        'positions', jsonb_agg(DISTINCT NULLIF(position, '')) FILTER (WHERE NULLIF(position, '') IS NOT NULL)
+        'positions', jsonb_agg(DISTINCT nullif(position, '')) FILTER (WHERE nullif(position, '') IS NOT null)
     ),
     now()
 FROM raw_retrosheet.season_rosters
 WHERE player_id <> ''
 GROUP BY player_id
 ON CONFLICT (retrosheet_id) DO UPDATE
-SET name_first = COALESCE(bridge.player_xref.name_first, EXCLUDED.name_first),
-    name_last = COALESCE(bridge.player_xref.name_last, EXCLUDED.name_last),
-    source_notes = bridge.player_xref.source_notes || EXCLUDED.source_notes,
-    updated_at = now();
+    SET
+        name_first = coalesce(bridge.player_xref.name_first, excluded.name_first),
+        name_last = coalesce(bridge.player_xref.name_last, excluded.name_last),
+        source_notes = bridge.player_xref.source_notes || excluded.source_notes,
+        updated_at = now();
 
 CREATE OR REPLACE VIEW core.roster_entries AS
 SELECT
@@ -278,11 +285,11 @@ SELECT
     teams.city AS team_city,
     teams.nickname AS team_nickname,
     rosters.source_file
-FROM raw_retrosheet.season_rosters rosters
-LEFT JOIN core.players players
-    ON players.retrosheet_player_id = rosters.player_id
-LEFT JOIN core.teams teams
-    ON teams.retrosheet_team_id = rosters.roster_team_id;
+FROM raw_retrosheet.season_rosters AS rosters
+LEFT JOIN core.players AS players
+    ON rosters.player_id = players.retrosheet_player_id
+LEFT JOIN core.teams AS teams
+    ON rosters.roster_team_id = teams.retrosheet_team_id;
 
 CREATE OR REPLACE VIEW core.allstar_roster_entries AS
 SELECT *
@@ -297,27 +304,27 @@ WHERE source_type = 'allstar';
 CREATE OR REPLACE VIEW core.scheduled_games AS
 SELECT
     season,
-    core.safe_date_yyyymmdd(game_date) AS game_date,
-    core.safe_int(game_number) AS game_number,
     day_of_week,
     visitor_team_id AS away_team_id,
     visitor_league AS away_league,
-    core.safe_int(visitor_game_number) AS away_game_number,
     home_team_id,
     home_league,
-    core.safe_int(home_game_number) AS home_game_number,
     day_night,
     park_id,
-    NULLIF(postponed, '') AS postponed,
-    NULLIF(makeup, '') AS makeup,
-    source_file
+    source_file,
+    core.safe_date_yyyymmdd(game_date) AS game_date,
+    core.safe_int(game_number) AS game_number,
+    core.safe_int(visitor_game_number) AS away_game_number,
+    core.safe_int(home_game_number) AS home_game_number,
+    nullif(postponed, '') AS postponed,
+    nullif(makeup, '') AS makeup
 FROM raw_retrosheet.season_schedules;
 
 CREATE OR REPLACE VIEW core.umpires AS
 SELECT
     umpire_id,
-    max(NULLIF(first_name, '')) AS first_name,
-    max(NULLIF(last_name, '')) AS last_name,
+    max(nullif(first_name, '')) AS first_name,
+    max(nullif(last_name, '')) AS last_name,
     min(season) AS first_season,
     max(season) AS last_season
 FROM raw_retrosheet.season_umpires
@@ -332,14 +339,13 @@ SELECT
     coaches.role,
     core.safe_date_mmddyyyy(coaches.start_date) AS start_date,
     core.safe_date_mmddyyyy(coaches.end_date) AS end_date
-FROM raw_retrosheet.coaches coaches
-LEFT JOIN core.players players
-    ON players.retrosheet_player_id = coaches.coach_id;
+FROM raw_retrosheet.coaches AS coaches
+LEFT JOIN core.players AS players
+    ON coaches.coach_id = players.retrosheet_player_id;
 
 CREATE OR REPLACE VIEW core.ejections AS
 SELECT
     game_id,
-    core.safe_date_yyyymmdd(game_date) AS game_date,
     doubleheader_flag,
     ejectee_id,
     ejectee_name,
@@ -347,8 +353,9 @@ SELECT
     job,
     umpire_id,
     umpire_name,
-    core.safe_int(inning) AS inning,
-    reason
+    reason,
+    core.safe_date_yyyymmdd(game_date) AS game_date,
+    core.safe_int(inning) AS inning
 FROM raw_retrosheet.ejections;
 
 CREATE OR REPLACE VIEW core.player_relatives AS
@@ -358,22 +365,81 @@ SELECT
     relatives.relationship,
     relatives.player_id_2,
     player_2.player_name AS player_2_name
-FROM raw_retrosheet.relatives relatives
-LEFT JOIN core.players player_1
-    ON player_1.retrosheet_player_id = relatives.player_id_1
-LEFT JOIN core.players player_2
-    ON player_2.retrosheet_player_id = relatives.player_id_2;
+FROM raw_retrosheet.relatives AS relatives
+LEFT JOIN core.players AS player_1
+    ON relatives.player_id_1 = player_1.retrosheet_player_id
+LEFT JOIN core.players AS player_2
+    ON relatives.player_id_2 = player_2.retrosheet_player_id;
 
 CREATE OR REPLACE VIEW core.auxiliary_validation_summary AS
-SELECT 'raw_retrosheet.biofile_legacy' AS object_name, count(*) AS row_count FROM raw_retrosheet.biofile_legacy
-UNION ALL SELECT 'raw_retrosheet.coaches', count(*) FROM raw_retrosheet.coaches
-UNION ALL SELECT 'raw_retrosheet.ejections', count(*) FROM raw_retrosheet.ejections
-UNION ALL SELECT 'raw_retrosheet.relatives', count(*) FROM raw_retrosheet.relatives
-UNION ALL SELECT 'raw_retrosheet.season_rosters', count(*) FROM raw_retrosheet.season_rosters
-UNION ALL SELECT 'raw_retrosheet.allstar_rosters', count(*) FROM raw_retrosheet.season_rosters WHERE is_allstar
-UNION ALL SELECT 'raw_retrosheet.season_teams', count(*) FROM raw_retrosheet.season_teams
-UNION ALL SELECT 'raw_retrosheet.season_schedules', count(*) FROM raw_retrosheet.season_schedules
-UNION ALL SELECT 'raw_retrosheet.season_umpires', count(*) FROM raw_retrosheet.season_umpires
-UNION ALL SELECT 'raw_retrosheet.special_gamelog_lines', count(*) FROM raw_retrosheet.special_gamelog_lines
-UNION ALL SELECT 'core.roster_entries', count(*) FROM core.roster_entries
-UNION ALL SELECT 'core.allstar_games', count(*) FROM core.allstar_games;
+SELECT
+    'raw_retrosheet.biofile_legacy' AS object_name,
+    count(*) AS row_count
+FROM raw_retrosheet.biofile_legacy
+UNION ALL
+SELECT
+    'raw_retrosheet.coaches',
+    count(*)
+FROM raw_retrosheet.coaches
+UNION ALL
+SELECT
+    'raw_retrosheet.ejections',
+    count(*)
+FROM raw_retrosheet.ejections
+UNION ALL
+SELECT
+    'raw_retrosheet.relatives',
+    count(*)
+FROM raw_retrosheet.relatives
+UNION ALL
+SELECT
+    'raw_retrosheet.season_rosters',
+    count(*)
+FROM raw_retrosheet.season_rosters
+UNION ALL
+SELECT
+    'raw_retrosheet.allstar_rosters',
+    count(*)
+FROM raw_retrosheet.season_rosters
+WHERE is_allstar
+UNION ALL
+SELECT
+    'raw_retrosheet.season_teams',
+    count(*)
+FROM raw_retrosheet.season_teams
+UNION ALL
+SELECT
+    'raw_retrosheet.season_schedules',
+    count(*)
+FROM raw_retrosheet.season_schedules
+UNION ALL
+SELECT
+    'raw_retrosheet.season_umpires',
+    count(*)
+FROM raw_retrosheet.season_umpires
+UNION ALL
+SELECT
+    'raw_retrosheet.special_gamelog_lines',
+    count(*)
+FROM raw_retrosheet.special_gamelog_lines
+UNION ALL
+SELECT
+    'core.roster_entries',
+    count(*)
+FROM core.roster_entries
+UNION ALL
+SELECT
+    'core.allstar_games',
+    count(*)
+FROM core.allstar_games;
+
+-- Table comments
+COMMENT ON TABLE raw_retrosheet.biofile_legacy IS 'Legacy-format player biographical data from Retrosheet';
+COMMENT ON TABLE raw_retrosheet.coaches IS 'Coaching assignments by season, team, and role';
+COMMENT ON TABLE raw_retrosheet.ejections IS 'Game ejection records with ejectee, umpire, and reason';
+COMMENT ON TABLE raw_retrosheet.relatives IS 'Player relationship records';
+COMMENT ON TABLE raw_retrosheet.season_rosters IS 'season rosters data table';
+COMMENT ON TABLE raw_retrosheet.season_teams IS 'season teams data table';
+COMMENT ON TABLE raw_retrosheet.season_schedules IS 'season schedules data table';
+COMMENT ON TABLE raw_retrosheet.season_umpires IS 'season umpires data table';
+COMMENT ON TABLE raw_retrosheet.special_gamelog_lines IS 'special gamelog lines data table';

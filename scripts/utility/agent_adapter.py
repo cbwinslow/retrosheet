@@ -2,7 +2,7 @@
 
 This module provides a thin wrapper that allows the codebase to switch between
 the legacy custom baseball agent (`scripts/baseball_chatbot.py`) and a new
-LangChain‑based agent implementation. The decision is driven by an environment
+LangChain-based agent implementation. The decision is driven by an environment
 variable ``AGENT_BACKEND`` which can be set to ``legacy`` or ``langchain``.
 
 The adapter exposes a single public class ``BaseballAgent`` with the same
@@ -16,9 +16,10 @@ error handling.
 """
 
 import os
-from typing import Any, Dict
+from typing import Any
 
-# Lazy import placeholders – the actual modules are imported only when needed.
+
+# Lazy import placeholders - the actual modules are imported only when needed.
 _legacy_agent = None
 _langchain_agent = None
 
@@ -41,7 +42,7 @@ def _load_langchain_agent():
             from scripts.llm.langchain_baseball_agent import LangChainBaseballAgent as LCAgent
         except ImportError as exc:
             raise RuntimeError(
-                "LangChain agent module not found. Ensure 'scripts/llm/langchain_baseball_agent.py' exists."
+                "LangChain agent module not found. Ensure 'scripts/llm/langchain_baseball_agent.py' exists.",
             ) from exc
         _langchain_agent = LCAgent()
     return _langchain_agent
@@ -56,20 +57,20 @@ class BaseballAgent:
     """
 
     def __init__(self) -> None:
-        backend = os.getenv("AGENT_BACKEND", "legacy").lower()
-        if backend == "langchain":
+        backend = os.getenv('AGENT_BACKEND', 'legacy').lower()
+        if backend == 'langchain':
             self._agent = _load_langchain_agent()
         else:
             # Fallback to legacy implementation.
             self._agent = _load_legacy_agent()
 
-    def process_query(self, user_query: str) -> Dict[str, Any]:
+    def process_query(self, user_query: str) -> dict[str, Any]:
         """Process a user query using the selected backend.
 
         Parameters
         ----------
         user_query: str
-            The natural‑language query from the user.
+            The natural-language query from the user.
 
         Returns
         -------
@@ -81,7 +82,7 @@ class BaseballAgent:
 
 
 # When executed as a script, demonstrate a simple interactive loop.
-if __name__ == "__main__":
+if __name__ == '__main__':
     import sys
 
     agent = BaseballAgent()

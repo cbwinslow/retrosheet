@@ -1,0 +1,253 @@
+{
+  "timestamp": "20260424_145837",
+  "n_features": 40,
+  "full_model_performance": {
+    "n_features": 40,
+    "sample_size": 100000,
+    "accuracy": 0.70125,
+    "log_loss": 0.6473555395436857,
+    "auc": 0.7698251420336254
+  },
+  "feature_importance": [
+    {
+      "feature": "distance_from_zone_center",
+      "importance": 0.29693496227264404,
+      "rank": 1,
+      "cumulative_pct": 29.69
+    },
+    {
+      "feature": "vertical_break",
+      "importance": 0.10114119946956635,
+      "rank": 2,
+      "cumulative_pct": 39.81
+    },
+    {
+      "feature": "approach_angle",
+      "importance": 0.07786642014980316,
+      "rank": 3,
+      "cumulative_pct": 47.59
+    },
+    {
+      "feature": "induced_vertical_break",
+      "importance": 0.07593841105699539,
+      "rank": 4,
+      "cumulative_pct": 55.19
+    },
+    {
+      "feature": "velocity_diff_from_avg",
+      "importance": 0.07200608402490616,
+      "rank": 5,
+      "cumulative_pct": 62.39
+    },
+    {
+      "feature": "velocity_percentile",
+      "importance": 0.07021684944629669,
+      "rank": 6,
+      "cumulative_pct": 69.41
+    },
+    {
+      "feature": "spin_efficiency",
+      "importance": 0.07002364099025726,
+      "rank": 7,
+      "cumulative_pct": 76.41
+    },
+    {
+      "feature": "horizontal_release_deviation",
+      "importance": 0.06585290282964706,
+      "rank": 8,
+      "cumulative_pct": 83.0
+    },
+    {
+      "feature": "horizontal_break",
+      "importance": 0.06245088577270508,
+      "rank": 9,
+      "cumulative_pct": 89.24
+    },
+    {
+      "feature": "release_velocity_diff",
+      "importance": 0.054840922355651855,
+      "rank": 10,
+      "cumulative_pct": 94.73
+    },
+    {
+      "feature": "score_diff",
+      "importance": 0.05272764340043068,
+      "rank": 11,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "pitches_remaining_pa",
+      "importance": 0.0,
+      "rank": 12,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "prev_plate_x",
+      "importance": 0.0,
+      "rank": 13,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "prev_plate_z",
+      "importance": 0.0,
+      "rank": 14,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "prev_velocity",
+      "importance": 0.0,
+      "rank": 15,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "prev_break_x",
+      "importance": 0.0,
+      "rank": 16,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "prev_break_z",
+      "importance": 0.0,
+      "rank": 17,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "time_since_prev_pitch",
+      "importance": 0.0,
+      "rank": 18,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "pitcher_arsenal_index",
+      "importance": 0.0,
+      "rank": 19,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "pitcher_repertoire_depth",
+      "importance": 0.0,
+      "rank": 20,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "game_pitch_count",
+      "importance": 0.0,
+      "rank": 21,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "pitch_usage_pct_this_game",
+      "importance": 0.0,
+      "rank": 22,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "batter_performance_vs_type",
+      "importance": 0.0,
+      "rank": 23,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "batter_swing_rate_vs_type",
+      "importance": 0.0,
+      "rank": 24,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "batter_whiff_rate_vs_type",
+      "importance": 0.0,
+      "rank": 25,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "times_faced_this_game",
+      "importance": 0.0,
+      "rank": 26,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "total_pitches_in_matchup",
+      "importance": 0.0,
+      "rank": 27,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "engineer_version",
+      "importance": 0.0,
+      "rank": 28,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "velocity_change_from_prev",
+      "importance": 0.0,
+      "rank": 29,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "spin_rate_percentile",
+      "importance": 0.0,
+      "rank": 30,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "spin_rate_vs_pitchtype_avg",
+      "importance": 0.0,
+      "rank": 31,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "pitcher_fatigue_score",
+      "importance": 0.0,
+      "rank": 32,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "inning_normalized",
+      "importance": 0.0,
+      "rank": 33,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "score_pressure_ratio",
+      "importance": 0.0,
+      "rank": 34,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "pa_pressure_index",
+      "importance": 0.0,
+      "rank": 35,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "release_point_consistency_5pitch",
+      "importance": 0.0,
+      "rank": 36,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "plate_appearance_importance",
+      "importance": 0.0,
+      "rank": 37,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "month_of_season",
+      "importance": 0.0,
+      "rank": 38,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "pitch_shape_consistency",
+      "importance": 0.0,
+      "rank": 39,
+      "cumulative_pct": 100.0
+    },
+    {
+      "feature": "lineup_position_estimated",
+      "importance": 0.0,
+      "rank": 40,
+      "cumulative_pct": 100.0
+    }
+  ]
+}

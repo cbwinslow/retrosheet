@@ -1,8 +1,7 @@
--- ESPN MLB Data Schema
--- Purpose: Store source-preserved ESPN API data for MLB games, schedules, and statistics
--- Integration: Part of external data layer alongside raw_retrosheet and raw_mlb
--- Data Flow: raw_espn -> bridge -> core (if needed for canonical shapes)
-
+-- File: sql/external/220_espn_schema.sql
+-- Purpose: Create ESPN schema and tables for game snapshots and schedules
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS raw_espn;
 
 -- ESPN Game Snapshots
@@ -85,18 +84,18 @@ CREATE TABLE IF NOT EXISTS raw_espn.plays_snapshots (
 );
 
 -- Create indexes for common queries
-CREATE INDEX IF NOT EXISTS idx_raw_espn_game_snapshots_game_id ON raw_espn.game_snapshots(game_id);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_game_snapshots_game_date ON raw_espn.game_snapshots(game_date);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_game_snapshots_season ON raw_espn.game_snapshots(season);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_schedule_snapshots_date ON raw_espn.schedule_snapshots(date);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_schedule_snapshots_season ON raw_espn.schedule_snapshots(season);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_player_stats_snapshots_player_id ON raw_espn.player_stats_snapshots(player_id);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_player_stats_snapshots_season ON raw_espn.player_stats_snapshots(season);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_team_stats_snapshots_team_id ON raw_espn.team_stats_snapshots(team_id);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_team_stats_snapshots_season ON raw_espn.team_stats_snapshots(season);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_plays_snapshots_game_id ON raw_espn.plays_snapshots(game_id);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_plays_snapshots_game_date ON raw_espn.plays_snapshots(game_date);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_plays_snapshots_season ON raw_espn.plays_snapshots(season);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_game_snapshots_game_id ON raw_espn.game_snapshots (game_id);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_game_snapshots_game_date ON raw_espn.game_snapshots (game_date);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_game_snapshots_season ON raw_espn.game_snapshots (season);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_schedule_snapshots_date ON raw_espn.schedule_snapshots (date);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_schedule_snapshots_season ON raw_espn.schedule_snapshots (season);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_player_stats_snapshots_player_id ON raw_espn.player_stats_snapshots (player_id);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_player_stats_snapshots_season ON raw_espn.player_stats_snapshots (season);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_team_stats_snapshots_team_id ON raw_espn.team_stats_snapshots (team_id);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_team_stats_snapshots_season ON raw_espn.team_stats_snapshots (season);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_plays_snapshots_game_id ON raw_espn.plays_snapshots (game_id);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_plays_snapshots_game_date ON raw_espn.plays_snapshots (game_date);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_plays_snapshots_season ON raw_espn.plays_snapshots (season);
 
 -- Add comments
 COMMENT ON SCHEMA raw_espn IS 'Source-preserved ESPN API data for MLB games, schedules, and statistics';
@@ -105,3 +104,4 @@ COMMENT ON TABLE raw_espn.schedule_snapshots IS 'Raw ESPN schedule data with fet
 COMMENT ON TABLE raw_espn.player_stats_snapshots IS 'Raw ESPN player statistics with fetch provenance';
 COMMENT ON TABLE raw_espn.team_stats_snapshots IS 'Raw ESPN team statistics with fetch provenance';
 COMMENT ON TABLE raw_espn.plays_snapshots IS 'Raw ESPN play-by-play data with fetch provenance';
+

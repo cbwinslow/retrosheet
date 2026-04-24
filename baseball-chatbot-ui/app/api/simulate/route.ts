@@ -1,4 +1,11 @@
-import { apiError, executeOne, jsonLiteral, queryJson, queryOne, sqlLiteral } from '../_lib/warehouse'
+import {
+  apiError,
+  executeOne,
+  jsonLiteral,
+  queryJson,
+  queryOne,
+  sqlLiteral,
+} from '../_lib/warehouse'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,8 +29,10 @@ export async function POST(request: Request) {
     if (typeof body.is_bottom_inning === 'boolean') {
       filters.push(`is_bottom_inning = ${body.is_bottom_inning ? 'true' : 'false'}`)
     }
-    if (body.batting_team_id) filters.push(`batting_team_id = ${sqlLiteral(body.batting_team_id.toUpperCase())}`)
-    if (body.fielding_team_id) filters.push(`fielding_team_id = ${sqlLiteral(body.fielding_team_id.toUpperCase())}`)
+    if (body.batting_team_id)
+      filters.push(`batting_team_id = ${sqlLiteral(body.batting_team_id.toUpperCase())}`)
+    if (body.fielding_team_id)
+      filters.push(`fielding_team_id = ${sqlLiteral(body.fielding_team_id.toUpperCase())}`)
     if (body.left_handed_only) filters.push(`left_handed_pa > 0`)
 
     const whereClause = filters.join(' AND ')

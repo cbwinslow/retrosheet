@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Load Baseball‑Reference game‑log CSVs into the raw_baseball_reference schema.
+Load Baseball-Reference game-log CSVs into the raw_baseball_reference schema.
 
 The loader expects one or more CSV files in a directory. Each file is
 processed with a staging table (all TEXT) and then upserted into the final
@@ -17,14 +17,17 @@ from pathlib import Path
 
 import psycopg2
 
-DB_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
+
+DB_URL = os.getenv('DATABASE_URL', 'postgresql://localhost/retrosheet')
+
 
 def get_conn():
     return psycopg2.connect(DB_URL)
 
+
 def create_staging(cur):
-    cur.execute("DROP TABLE IF EXISTS raw_baseball_reference.stg_game_logs")
-    # All columns as TEXT – we will cast later
+    cur.execute('DROP TABLE IF EXISTS raw_baseball_reference.stg_game_logs')
+    # All columns as TEXT - we will cast later
     cur.execute("""
         CREATE TABLE raw_baseball_reference.stg_game_logs (
             game_id TEXT,
@@ -62,11 +65,11 @@ def create_staging(cur):
         )
     """)
 
+
 def copy_to_staging(cur, csv_path):
-    with open(csv_path, "r", newline="") as f:
-        cur.copy_expert(
-            "COPY raw_baseball_reference.stg_game_logs FROM STDIN WITH CSV HEADER", f
-        )
+    with open(csv_path, newline='') as f:
+        cur.copy_expert('COPY raw_baseball_reference.stg_game_logs FROM STDIN WITH CSV HEADER', f)
+
 
 def upsert(cur):
     # Ensure target table exists
@@ -184,13 +187,14 @@ def upsert(cur):
             gidp = EXCLUDED.gidp;
     """)
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Load Baseball‑Reference game logs")
-    parser.add_argument("--dir", type=Path, required=True, help="Directory with CSV files")
+    parser = argparse.ArgumentParser(description='Load Baseball-Reference game logs')
+    parser.add_argument('--dir', type=Path, required=True, help='Directory with CSV files')
     args = parser.parse_args()
-    csv_files = list(Path(args.dir).glob("*.csv"))
+    csv_files = list(Path(args.dir).glob('*.csv'))
     if not csv_files:
-        print("⚠️  No CSV files found in the directory.", file=sys.stderr)
+        print('⚠️  No CSV files found in the directory.', file=sys.stderr)
         sys.exit(1)
 
     conn = get_conn()
@@ -201,10 +205,11 @@ def main():
             copy_to_staging(cur, csv_path)
         upsert(cur)
         conn.commit()
-        print(f"✅ Loaded {len(csv_files)} Baseball‑Reference game‑log files")
+        print(f'✅ Loaded {len(csv_files)} Baseball-Reference game-log files')
     finally:
         cur.close()
         conn.close()
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()

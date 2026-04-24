@@ -1,3 +1,7 @@
+-- File: sql/mlb/122_live_pa_feature_parity.sql
+-- Purpose: Live plate appearance features matching historical schema
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS features;
 
 DROP VIEW IF EXISTS features.live_plate_appearance_advanced_count_examples;
@@ -7,7 +11,6 @@ WITH live_pa AS (
     SELECT
         ev.game_id,
         ev.event_id AS plate_appearance_id,
-        COALESCE(gm.season_int, NULLIF(ev.season, '')::integer) AS season,
         gm.game_date_parsed AS game_date,
         ev.inning::integer AS inning,
         ev.is_bottom_inning,
@@ -20,21 +23,10 @@ WITH live_pa AS (
             -
             (COALESCE(ev.away_score_after, 0) - CASE WHEN ev.is_bottom_inning THEN 0 ELSE COALESCE(ev.runs_on_play, 0) END)
         )::integer AS home_score_diff,
-        CASE
-            WHEN ev.is_bottom_inning THEN gm.home_team_id
-            ELSE gm.away_team_id
-        END AS batting_team_id,
-        CASE
-            WHEN ev.is_bottom_inning THEN gm.away_team_id
-            ELSE gm.home_team_id
-        END AS fielding_team_id,
         gm.home_team_id,
         gm.away_team_id,
         ev.batter_id,
-        COALESCE(ev.batter_hand::text, 'U') AS batter_hand,
         ev.pitcher_id,
-        COALESCE(ev.pitcher_hand::text, 'U') AS pitcher_hand,
-        COALESCE(gm.park_id, 'UNK') AS park_id,
         ev.mlb_game_pk,
         ev.snapshot_id,
         ev.plate_appearance_index,
@@ -49,6 +41,18 @@ WITH live_pa AS (
         ev.is_home_run,
         ev.runs_on_play,
         ev.rbi,
+        COALESCE(gm.season_int, NULLIF(ev.season, '')::integer) AS season,
+        CASE
+            WHEN ev.is_bottom_inning THEN gm.home_team_id
+            ELSE gm.away_team_id
+        END AS batting_team_id,
+        CASE
+            WHEN ev.is_bottom_inning THEN gm.away_team_id
+            ELSE gm.home_team_id
+        END AS fielding_team_id,
+        COALESCE(ev.batter_hand::text, 'U') AS batter_hand,
+        COALESCE(ev.pitcher_hand::text, 'U') AS pitcher_hand,
+        COALESCE(gm.park_id, 'UNK') AS park_id,
         CASE
             WHEN COALESCE(gm.season_int, NULLIF(ev.season, '')::integer) BETWEEN 2000 AND 2009 THEN '2000_2009'
             WHEN COALESCE(gm.season_int, NULLIF(ev.season, '')::integer) BETWEEN 2010 AND 2014 THEN '2010_2014'
@@ -63,11 +67,12 @@ WITH live_pa AS (
             WHEN COALESCE(gm.season_int, NULLIF(ev.season, '')::integer) >= 2023 THEN 'post_2023_rules'
             ELSE 'pre_2020_rules'
         END AS rules_context_era
-    FROM core.live_events ev
-    JOIN core.live_games gm
-      ON gm.game_id = ev.game_id
+    FROM core.live_events AS ev
+    INNER JOIN core.live_games AS gm
+        ON ev.game_id = gm.game_id
     WHERE ev.is_plate_appearance = true
 )
+
 SELECT
     live_pa.*,
     batter_career.career_prior_pa AS batter_career_prior_pa,
@@ -127,46 +132,57 @@ SELECT
     context_count.prior_reach_base_rate AS count_state_context_prior_reach_base_rate,
     context_count.prior_extra_base_hit_rate AS count_state_context_prior_extra_base_hit_rate
 FROM live_pa
-LEFT JOIN features.batter_career_prior_pa_summary batter_career
-  ON batter_career.feature_season = live_pa.season
- AND batter_career.batter_id = live_pa.batter_id
-LEFT JOIN features.pitcher_career_prior_pa_summary pitcher_career
-  ON pitcher_career.feature_season = live_pa.season
- AND pitcher_career.pitcher_id = live_pa.pitcher_id
-LEFT JOIN features.batter_pitcher_prior_matchup_summary matchup
-  ON matchup.feature_season = live_pa.season
- AND matchup.batter_id = live_pa.batter_id
- AND matchup.pitcher_id = live_pa.pitcher_id
-LEFT JOIN features.pa_context_coarse_prior_season_rates coarse_context
-  ON coarse_context.feature_season = live_pa.season
- AND coarse_context.batter_hand = live_pa.batter_hand
- AND coarse_context.pitcher_hand = live_pa.pitcher_hand
- AND coarse_context.outs_before = live_pa.outs_before
- AND coarse_context.start_bases = live_pa.start_bases
-LEFT JOIN features.park_prior_season_run_environment park
-  ON park.feature_season = live_pa.season
- AND park.park_id = live_pa.park_id
-LEFT JOIN features.team_rolling_30_game_summary batting_form
-  ON batting_form.game_id = live_pa.game_id
- AND batting_form.team_id = live_pa.batting_team_id
-LEFT JOIN features.team_rolling_30_game_summary fielding_form
-  ON fielding_form.game_id = live_pa.game_id
- AND fielding_form.team_id = live_pa.fielding_team_id
-LEFT JOIN features.batter_count_state_prior_pa_summary batter_count
-  ON batter_count.feature_season = live_pa.season
- AND batter_count.batter_id = live_pa.batter_id
- AND batter_count.balls = live_pa.balls
- AND batter_count.strikes = live_pa.strikes
-LEFT JOIN features.pitcher_count_state_prior_pa_summary pitcher_count
-  ON pitcher_count.feature_season = live_pa.season
- AND pitcher_count.pitcher_id = live_pa.pitcher_id
- AND pitcher_count.balls = live_pa.balls
- AND pitcher_count.strikes = live_pa.strikes
-LEFT JOIN features.pa_count_state_context_prior_season_rates context_count
-  ON context_count.feature_season = live_pa.season
- AND context_count.batter_hand = live_pa.batter_hand
- AND context_count.pitcher_hand = live_pa.pitcher_hand
- AND context_count.outs_before = live_pa.outs_before
- AND context_count.start_bases = live_pa.start_bases
- AND context_count.balls = live_pa.balls
- AND context_count.strikes = live_pa.strikes;
+LEFT JOIN features.batter_career_prior_pa_summary AS batter_career
+    ON
+        live_pa.season = batter_career.feature_season
+        AND live_pa.batter_id = batter_career.batter_id
+LEFT JOIN features.pitcher_career_prior_pa_summary AS pitcher_career
+    ON
+        live_pa.season = pitcher_career.feature_season
+        AND live_pa.pitcher_id = pitcher_career.pitcher_id
+LEFT JOIN features.batter_pitcher_prior_matchup_summary AS matchup
+    ON
+        live_pa.season = matchup.feature_season
+        AND live_pa.batter_id = matchup.batter_id
+        AND live_pa.pitcher_id = matchup.pitcher_id
+LEFT JOIN features.pa_context_coarse_prior_season_rates AS coarse_context
+    ON
+        live_pa.season = coarse_context.feature_season
+        AND live_pa.batter_hand = coarse_context.batter_hand
+        AND live_pa.pitcher_hand = coarse_context.pitcher_hand
+        AND live_pa.outs_before = coarse_context.outs_before
+        AND live_pa.start_bases = coarse_context.start_bases
+LEFT JOIN features.park_prior_season_run_environment AS park
+    ON
+        live_pa.season = park.feature_season
+        AND live_pa.park_id = park.park_id
+LEFT JOIN features.team_rolling_30_game_summary AS batting_form
+    ON
+        live_pa.game_id = batting_form.game_id
+        AND live_pa.batting_team_id = batting_form.team_id
+LEFT JOIN features.team_rolling_30_game_summary AS fielding_form
+    ON
+        live_pa.game_id = fielding_form.game_id
+        AND live_pa.fielding_team_id = fielding_form.team_id
+LEFT JOIN features.batter_count_state_prior_pa_summary AS batter_count
+    ON
+        live_pa.season = batter_count.feature_season
+        AND live_pa.batter_id = batter_count.batter_id
+        AND live_pa.balls = batter_count.balls
+        AND live_pa.strikes = batter_count.strikes
+LEFT JOIN features.pitcher_count_state_prior_pa_summary AS pitcher_count
+    ON
+        live_pa.season = pitcher_count.feature_season
+        AND live_pa.pitcher_id = pitcher_count.pitcher_id
+        AND live_pa.balls = pitcher_count.balls
+        AND live_pa.strikes = pitcher_count.strikes
+LEFT JOIN features.pa_count_state_context_prior_season_rates AS context_count
+    ON
+        live_pa.season = context_count.feature_season
+        AND live_pa.batter_hand = context_count.batter_hand
+        AND live_pa.pitcher_hand = context_count.pitcher_hand
+        AND live_pa.outs_before = context_count.outs_before
+        AND live_pa.start_bases = context_count.start_bases
+        AND live_pa.balls = context_count.balls
+        AND live_pa.strikes = context_count.strikes;
+

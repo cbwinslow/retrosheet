@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 from typing import Any
 
 import joblib
@@ -11,7 +10,6 @@ import numpy as np
 import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine, text
-
 from train_pa_outcome_distribution import (
     ROOT,
     TARGET_ID,
@@ -20,7 +18,7 @@ from train_pa_outcome_distribution import (
 )
 
 
-DEFAULT_MODEL_NAME = "hist_gradient_boosting_multiclass"
+DEFAULT_MODEL_NAME = 'hist_gradient_boosting_multiclass'
 
 
 def load_registered_model(
@@ -59,26 +57,26 @@ def load_registered_model(
             row = cur.fetchone()
             if not row:
                 raise ValueError(
-                    f"No registered {TARGET_ID} model found for {model_name}"
-                    + (f" version {model_version}" if model_version else "")
+                    f'No registered {TARGET_ID} model found for {model_name}'
+                    + (f' version {model_version}' if model_version else ''),
                 )
 
     finally:
         conn.close()
 
     metadata = {
-        "model_name": row[0],
-        "model_version": row[1],
-        "artifact_uri": row[2],
-        "feature_spec": row[3],
-        "metrics": row[4],
-        "is_active": row[5],
-        "model_id": row[6],
+        'model_name': row[0],
+        'model_version': row[1],
+        'artifact_uri': row[2],
+        'feature_spec': row[3],
+        'metrics': row[4],
+        'is_active': row[5],
+        'model_id': row[6],
     }
-    artifact_path = ROOT / metadata["artifact_uri"]
+    artifact_path = ROOT / metadata['artifact_uri']
     if not artifact_path.exists():
-        raise FileNotFoundError(f"Model artifact not found: {artifact_path}")
-    return joblib.load(artifact_path), metadata["feature_spec"], metadata
+        raise FileNotFoundError(f'Model artifact not found: {artifact_path}')
+    return joblib.load(artifact_path), metadata['feature_spec'], metadata
 
 
 def normalize_rows(probabilities: np.ndarray) -> np.ndarray:
@@ -133,34 +131,35 @@ def load_calibration_artifact(
             row = cur.fetchone()
             if not row:
                 raise ValueError(
-                    "No calibration artifact found for model_id "
-                    f"{model_id}"
-                    + (f" and report {calibration_report_name}" if calibration_report_name else "")
+                    'No calibration artifact found for model_id '
+                    f'{model_id}'
+                    + (f' and report {calibration_report_name}' if calibration_report_name else ''),
                 )
     finally:
         conn.close()
 
     metadata = {
-        "calibration_report_id": row[0],
-        "report_name": row[1],
-        "calibration_method": row[2],
-        "artifact_uri": row[3],
-        "summary": row[4],
+        'calibration_report_id': row[0],
+        'report_name': row[1],
+        'calibration_method': row[2],
+        'artifact_uri': row[3],
+        'summary': row[4],
     }
-    artifact_path = ROOT / metadata["artifact_uri"]
+    artifact_path = ROOT / metadata['artifact_uri']
     if not artifact_path.exists():
-        raise FileNotFoundError(f"Calibration artifact not found: {artifact_path}")
+        raise FileNotFoundError(f'Calibration artifact not found: {artifact_path}')
     return joblib.load(artifact_path), metadata
 
 
 def feature_query(feature_set: str) -> str:
-    if feature_set in {"advanced", "advanced_count"}:
+    if feature_set in {'advanced', 'advanced_count'}:
         advanced_relation = (
-            "features.plate_appearance_count_state_advanced_examples"
-            if feature_set == "advanced_count"
-            else "features.plate_appearance_advanced_examples"
+            'features.plate_appearance_count_state_advanced_examples'
+            if feature_set == 'advanced_count'
+            else 'features.plate_appearance_advanced_examples'
         )
-        return """
+        return (
+            """
             SELECT
                 outcome.game_id,
                 outcome.plate_appearance_id,
@@ -212,7 +211,8 @@ def feature_query(feature_set: str) -> str:
                 advanced.fielding_team_rolling_30_games,
                 advanced.fielding_team_rolling_30_win_rate,
                 advanced.fielding_team_rolling_30_runs_scored_per_game,
-                advanced.fielding_team_rolling_30_runs_allowed_per_game""" + (
+                advanced.fielding_team_rolling_30_runs_allowed_per_game"""
+            + (
                 """
                 ,
                 advanced.batter_count_state_prior_pa,
@@ -236,15 +236,21 @@ def feature_query(feature_set: str) -> str:
                 advanced.count_state_context_prior_home_run_rate,
                 advanced.count_state_context_prior_reach_base_rate,
                 advanced.count_state_context_prior_extra_base_hit_rate
-                """ if feature_set == "advanced_count" else ""
-            ) + """
+                """
+                if feature_set == 'advanced_count'
+                else ''
+            )
+            + """
             FROM features.plate_appearance_outcome_examples outcome
-            JOIN """ + advanced_relation + """ advanced
+            JOIN """
+            + advanced_relation
+            + """ advanced
               ON advanced.game_id = outcome.game_id
              AND advanced.plate_appearance_id = outcome.plate_appearance_id
             WHERE outcome.game_id = :game_id
               AND outcome.plate_appearance_id = :plate_appearance_id
         """
+        )
     return """
         SELECT
             game_id,
@@ -273,49 +279,51 @@ def probability(probabilities: dict[str, float], *classes: str) -> float:
 
 
 def derived_probabilities(probabilities: dict[str, float]) -> dict[str, float]:
-    p_hit = probability(probabilities, "single", "double", "triple", "home_run")
-    p_extra_base_hit = probability(probabilities, "double", "triple", "home_run")
+    p_hit = probability(probabilities, 'single', 'double', 'triple', 'home_run')
+    p_extra_base_hit = probability(probabilities, 'double', 'triple', 'home_run')
     p_on_base_traditional = probability(
         probabilities,
-        "single",
-        "double",
-        "triple",
-        "home_run",
-        "walk",
-        "intentional_walk",
-        "hit_by_pitch",
+        'single',
+        'double',
+        'triple',
+        'home_run',
+        'walk',
+        'intentional_walk',
+        'hit_by_pitch',
     )
     p_reach_base_any = p_on_base_traditional + probability(
-        probabilities, "error_on_batter", "interference"
+        probabilities,
+        'error_on_batter',
+        'interference',
     )
     p_ball_in_play = probability(
         probabilities,
-        "single",
-        "double",
-        "triple",
-        "home_run",
-        "ground_out",
-        "fly_out",
-        "line_out",
-        "pop_out",
-        "error_on_batter",
-        "fielders_choice",
-        "sacrifice_fly",
-        "sacrifice_hit",
+        'single',
+        'double',
+        'triple',
+        'home_run',
+        'ground_out',
+        'fly_out',
+        'line_out',
+        'pop_out',
+        'error_on_batter',
+        'fielders_choice',
+        'sacrifice_fly',
+        'sacrifice_hit',
     )
     expected_total_bases = (
-        probabilities.get("single", 0.0)
-        + 2.0 * probabilities.get("double", 0.0)
-        + 3.0 * probabilities.get("triple", 0.0)
-        + 4.0 * probabilities.get("home_run", 0.0)
+        probabilities.get('single', 0.0)
+        + 2.0 * probabilities.get('double', 0.0)
+        + 3.0 * probabilities.get('triple', 0.0)
+        + 4.0 * probabilities.get('home_run', 0.0)
     )
     return {
-        "p_hit": float(p_hit),
-        "p_extra_base_hit": float(p_extra_base_hit),
-        "p_on_base_traditional": float(p_on_base_traditional),
-        "p_reach_base_any": float(p_reach_base_any),
-        "p_ball_in_play": float(p_ball_in_play),
-        "expected_total_bases": float(expected_total_bases),
+        'p_hit': float(p_hit),
+        'p_extra_base_hit': float(p_extra_base_hit),
+        'p_on_base_traditional': float(p_on_base_traditional),
+        'p_reach_base_any': float(p_reach_base_any),
+        'p_ball_in_play': float(p_ball_in_play),
+        'expected_total_bases': float(expected_total_bases),
     }
 
 
@@ -332,96 +340,96 @@ def predict_pa_outcome_distribution(
         model_name=model_name,
         model_version=model_version,
     )
-    numeric_features = feature_spec["numeric_features"]
-    categorical_features = feature_spec["categorical_features"]
-    feature_set = feature_spec.get("feature_set", "basic")
+    numeric_features = feature_spec['numeric_features']
+    categorical_features = feature_spec['categorical_features']
+    feature_set = feature_spec.get('feature_set', 'basic')
 
     engine = create_engine(database_url())
     try:
         frame = pd.read_sql_query(
             text(feature_query(feature_set)),
             engine,
-            params={"game_id": game_id, "plate_appearance_id": plate_appearance_id},
+            params={'game_id': game_id, 'plate_appearance_id': plate_appearance_id},
         )
     finally:
         engine.dispose()
 
     if frame.empty:
-        raise ValueError(f"Plate appearance not found: {game_id}:{plate_appearance_id}")
+        raise ValueError(f'Plate appearance not found: {game_id}:{plate_appearance_id}')
 
     missing_features = [
         column for column in numeric_features + categorical_features if column not in frame
     ]
     if missing_features:
-        raise ValueError(f"Missing model features: {', '.join(missing_features)}")
+        raise ValueError(f'Missing model features: {", ".join(missing_features)}')
 
     feature_frame = frame[numeric_features + categorical_features]
     raw_probabilities = model.predict_proba(feature_frame)[0]
-    classes = list(model.named_steps["model"].classes_)
+    classes = list(model.named_steps['model'].classes_)
     probability_vector = raw_probabilities
     calibration_metadata = None
     raw_probability_map = None
     if apply_calibration:
         calibration_artifact, calibration_metadata = load_calibration_artifact(
-            model_id=int(metadata["model_id"]),
+            model_id=int(metadata['model_id']),
             calibration_report_name=calibration_report_name,
         )
-        artifact_classes = [str(label) for label in calibration_artifact["classes"]]
+        artifact_classes = [str(label) for label in calibration_artifact['classes']]
         if artifact_classes != classes:
-            raise ValueError("Calibration artifact classes do not match model classes.")
+            raise ValueError('Calibration artifact classes do not match model classes.')
         raw_probability_map = {
             label: float(raw_probabilities[index]) for index, label in enumerate(classes)
         }
         probability_vector = apply_calibrators(
             raw_probabilities.reshape(1, -1),
-            calibration_artifact["calibrators"],
+            calibration_artifact['calibrators'],
         )[0]
 
     probabilities = {label: float(probability_vector[index]) for index, label in enumerate(classes)}
     probability_sum = float(sum(probabilities.values()))
 
     result = {
-        "target_id": TARGET_ID,
-        "game_id": game_id,
-        "plate_appearance_id": plate_appearance_id,
-        "actual_outcome_class": frame.iloc[0].get("actual_outcome_class"),
-        "model": {
-            "model_name": metadata["model_name"],
-            "model_version": metadata["model_version"],
-            "artifact_uri": metadata["artifact_uri"],
-            "feature_set": feature_set,
-            "is_active": bool(metadata["is_active"]),
+        'target_id': TARGET_ID,
+        'game_id': game_id,
+        'plate_appearance_id': plate_appearance_id,
+        'actual_outcome_class': frame.iloc[0].get('actual_outcome_class'),
+        'model': {
+            'model_name': metadata['model_name'],
+            'model_version': metadata['model_version'],
+            'artifact_uri': metadata['artifact_uri'],
+            'feature_set': feature_set,
+            'is_active': bool(metadata['is_active']),
         },
-        "probability_sum": probability_sum,
-        "class_probabilities": probabilities,
-        "derived_probabilities": derived_probabilities(probabilities),
-        "input_features": frame.iloc[0][numeric_features + categorical_features].to_dict(),
+        'probability_sum': probability_sum,
+        'class_probabilities': probabilities,
+        'derived_probabilities': derived_probabilities(probabilities),
+        'input_features': frame.iloc[0][numeric_features + categorical_features].to_dict(),
     }
     if calibration_metadata is not None:
-        result["calibration"] = {
-            "applied": True,
-            "calibration_report_id": calibration_metadata["calibration_report_id"],
-            "report_name": calibration_metadata["report_name"],
-            "calibration_method": calibration_metadata["calibration_method"],
-            "artifact_uri": calibration_metadata["artifact_uri"],
+        result['calibration'] = {
+            'applied': True,
+            'calibration_report_id': calibration_metadata['calibration_report_id'],
+            'report_name': calibration_metadata['report_name'],
+            'calibration_method': calibration_metadata['calibration_method'],
+            'artifact_uri': calibration_metadata['artifact_uri'],
         }
-        result["raw_class_probabilities"] = raw_probability_map
-        result["raw_derived_probabilities"] = derived_probabilities(raw_probability_map)
+        result['raw_class_probabilities'] = raw_probability_map
+        result['raw_derived_probabilities'] = derived_probabilities(raw_probability_map)
     else:
-        result["calibration"] = {"applied": False}
+        result['calibration'] = {'applied': False}
     return result
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Score a historical plate appearance with the multiclass PA outcome model."
+        description='Score a historical plate appearance with the multiclass PA outcome model.',
     )
-    parser.add_argument("--game-id", required=True)
-    parser.add_argument("--plate-appearance-id", required=True, type=int)
-    parser.add_argument("--model-name", default=DEFAULT_MODEL_NAME)
-    parser.add_argument("--model-version")
-    parser.add_argument("--apply-calibration", action="store_true")
-    parser.add_argument("--calibration-report-name")
+    parser.add_argument('--game-id', required=True)
+    parser.add_argument('--plate-appearance-id', required=True, type=int)
+    parser.add_argument('--model-name', default=DEFAULT_MODEL_NAME)
+    parser.add_argument('--model-version')
+    parser.add_argument('--apply-calibration', action='store_true')
+    parser.add_argument('--calibration-report-name')
     args = parser.parse_args()
 
     result = predict_pa_outcome_distribution(
@@ -435,5 +443,5 @@ def main() -> None:
     print(json.dumps(result, indent=2, default=str))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

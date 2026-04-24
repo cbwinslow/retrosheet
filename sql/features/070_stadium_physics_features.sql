@@ -1,6 +1,7 @@
--- Phase 3 Feature Mart: Stadium Physics & Park Factor Features
--- Park specific effects, elevation, dimensions, and run environment
-
+-- File: sql/features/070_stadium_physics_features.sql
+-- Purpose: Park factors and per-stadium scoring averages
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE MATERIALIZED VIEW features.stadium_physics_features AS
 WITH park_stats AS (
     SELECT
@@ -13,17 +14,23 @@ WITH park_stats AS (
         AVG(away_hits + home_hits) AS avg_total_hits,
         AVG(away_errors + home_errors) AS avg_total_errors,
         -- Park factors
-        (AVG(home_score + away_score) / (SELECT AVG(home_score + away_score) FROM core.games WHERE season = g.season)) AS park_run_factor
-    FROM core.games g
-    WHERE park_id IS NOT NULL
-    AND season IS NOT NULL
+        (AVG(
+            home_score + away_score) / (
+            SELECT AVG(home_score + away_score) FROM core.games
+            WHERE season = g.season
+        )) AS park_run_factor
+    FROM core.games AS g
+    WHERE
+        park_id IS NOT NULL
+        AND season IS NOT NULL
     GROUP BY park_id, season
 )
+
 SELECT
     park_id,
     season,
-    season + 1 AS feature_season,
     total_games,
+    season + 1 AS feature_season,
     ROUND(avg_total_runs_per_game::numeric, 2) AS avg_total_runs_per_game,
     ROUND(park_run_factor::numeric, 4) AS park_run_factor,
     -- Park effect flags
@@ -37,3 +44,4 @@ CREATE UNIQUE INDEX idx_stadium_park_season ON features.stadium_physics_features
 CREATE INDEX idx_stadium_season ON features.stadium_physics_features (feature_season);
 
 ANALYZE features.stadium_physics_features;
+

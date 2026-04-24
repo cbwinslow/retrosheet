@@ -1,3 +1,7 @@
+-- File: sql/mlb/100_bridge_tables.sql
+-- Purpose: ID cross-reference tables connecting Retrosheet and MLB
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS bridge;
 
 -- Player ID cross-references between Retrosheet and MLB
@@ -56,3 +60,4 @@ COMMENT ON TABLE bridge.player_xref IS 'Player ID mapping between Retrosheet, ML
 COMMENT ON TABLE bridge.team_xref IS 'Team ID mapping between Retrosheet and MLB';
 COMMENT ON TABLE bridge.park_xref IS 'Park/venue ID mapping between Retrosheet and MLB';
 COMMENT ON TABLE bridge.game_xref IS 'Game ID mapping between Retrosheet and MLB';
+

@@ -1,7 +1,7 @@
--- Utility functions for the Retrosheet warehouse
--- These functions encapsulate common repeatable queries and maintenance tasks.
-
--- 1. Refresh all materialized views in the features schema
+-- File: sql/external/200_utility_functions.sql
+-- Purpose: Create utility functions for view refresh, health checks, and backups
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE FUNCTION features.refresh_all_materialized_views()
 RETURNS void LANGUAGE plpgsql AS $$
 DECLARE
@@ -16,7 +16,7 @@ $$;
 
 -- 2. Get the loaded season range from core.games
 CREATE OR REPLACE FUNCTION core.season_range()
-RETURNS TABLE(min_season int, max_season int) LANGUAGE sql AS $$
+RETURNS TABLE (min_season int, max_season int) LANGUAGE sql AS $$
     SELECT MIN(season) AS min_season, MAX(season) AS max_season FROM core.games;
 $$;
 
@@ -36,7 +36,7 @@ $$;
 CREATE SCHEMA IF NOT EXISTS warehouse;
 
 CREATE OR REPLACE FUNCTION warehouse.health_check()
-RETURNS TABLE(
+RETURNS TABLE (
     min_season int,
     max_season int,
     games_count bigint,
@@ -53,15 +53,15 @@ END;
 $$;
 
 -- Grant execute rights to the public role for convenience (adjust as needed)
-GRANT EXECUTE ON FUNCTION features.refresh_all_materialized_views() TO PUBLIC;
-GRANT EXECUTE ON FUNCTION core.season_range() TO PUBLIC;
-GRANT EXECUTE ON FUNCTION core.count_rows(regclass) TO PUBLIC;
-GRANT EXECUTE ON FUNCTION warehouse.health_check() TO PUBLIC;
+GRANT EXECUTE ON FUNCTION features.refresh_all_materialized_views() TO public;
+GRANT EXECUTE ON FUNCTION core.season_range() TO public;
+GRANT EXECUTE ON FUNCTION core.count_rows(regclass) TO public;
+GRANT EXECUTE ON FUNCTION warehouse.health_check() TO public;
 
 -- 5. Generate SQL statements for backing up schema objects.
 --    If exclude_raw is true, objects in schemas that start with 'raw_' are omitted.
 CREATE OR REPLACE FUNCTION warehouse.generate_backup_sql(exclude_raw boolean DEFAULT true)
-RETURNS TABLE(object_type text, object_name text, definition text) LANGUAGE plpgsql AS $$
+RETURNS TABLE (object_type text, object_name text, definition text) LANGUAGE plpgsql AS $$
 DECLARE
     rec RECORD;
     schema_name text;
@@ -112,4 +112,7 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION warehouse.generate_backup_sql(boolean) TO PUBLIC;
+GRANT EXECUTE ON FUNCTION warehouse.generate_backup_sql(boolean) TO public;
+
+-- Table comments
+COMMENT ON TABLE IF IS 'IF data table';

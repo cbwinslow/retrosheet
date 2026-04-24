@@ -11,6 +11,19 @@
 - Issue #8: ESPN MLB Data Integration – completed. See [#59](https://github.com/cbwinslow/retrosheet/issues/59)
 - Issue #9: Comprehensive Retrosheet Data Acquisition – completed. See [#57](https://github.com/cbwinslow/retrosheet/issues/57)
 - Issue #10: Statcast Pitch-Level Data Ingestion – completed. See [#58](https://github.com/cbwinslow/retrosheet/issues/58)
+- Issue #11: Pitch-Level Model Pipeline (Epic #78) – **in progress**. See [#78](https://github.com/cbwinslow/retrosheet/issues/78)
+- Issue #11.1: Flexible Feature Mart Schema (Sub-Issue #79) – **in progress**. See [#79](https://github.com/cbwinslow/retrosheet/issues/79)
+- Issue #12: Extensible MLB Prediction Framework (Epic #80) – **ready to implement**. See [#80](https://github.com/cbwinslow/retrosheet/issues/80)
+  - #81: Phase 1.1 - Pydantic Configuration Schemas
+  - #82: Phase 1.2 - Rich Result Classes
+  - #83: Phase 1.3 - Test Infrastructure
+  - #84: Phase 2.1 - ModelTrainer Class
+  - #85: Phase 2.2 - Plugin Registry
+  - #86: Phase 2.3 - FeatureLoader
+  - #87: Phase 2.4 - Experiment Runner
+  - #88: Phase 3.1 - Unified CLI
+  - #89: Phase 3.2 - Database Triggers
+  - #90: Phase 3.3 - Documentation
 
 This inventory tells agents what each important file does and which workflows own it. Files may appear in multiple sections when they serve multiple goals.
 
@@ -42,7 +55,17 @@ This inventory tells agents what each important file does and which workflows ow
 | `docs/ESPN_BRIDGE_REQUIREMENTS.md` | Requirements for ESPN bridge table integration, including dependencies, implementation status, and validation. | ESPN bridge reference |
 | `docs/CONFIDENCE_SCORING.md` | Confidence scoring framework documentation for bridge table mappings, including score levels, usage, and monitoring. | Bridge data quality reference |
 | `docs/agents/ZSH_SQL_MANGLING_FIX.md` | Documentation of the zsh globsubst bug that was silently corrupting SQL commands and the fix applied (removing /etc/zsh/zshenv). | Shell configuration reference |
+| `docs/agents/REPRODUCIBILITY_AUDIT_PROMPT.md` | **CRITICAL** - Comprehensive prompt for another agent to audit and fill all documentation gaps to make project reproducible. | All agents must follow |
 | `CHATBOT_INTERFACE_DESIGN.md` | Current/future web command-center design notes. | Interface, agents |
+| `docs/WORKFLOW_VALIDATION_REPORT.md` | Complete infrastructure audit, redundancy analysis, architecture diagrams. | Framework planning |
+| `docs/USER_MANUAL.md` | Comprehensive user guide with all features, procedures, and examples. | User onboarding |
+| `docs/PROCEDURES_DETAILED.md` | 25 detailed step-by-step procedures for all operations. | Operations reference |
+| `docs/MASTER_INDEX.md` | Master documentation index and navigation guide. | Documentation hub |
+| `docs/EXTENSIBLE_FRAMEWORK_DESIGN.md` | Pydantic schemas, result classes, plugin architecture, examples. | Framework implementation |
+| `docs/FRAMEWORK_CONFIRMATION.md` | Proof architecture will work, risk analysis, success criteria. | Architecture validation |
+| `docs/IMPLEMENTATION_ROADMAP.md` | 22-hour implementation plan with phases and deliverables. | Implementation tracking |
+| `docs/DEPLOYMENT_PLAN.md` | Complete deployment guide for agents, handoff checklist, rollback plan. | Agent handoff |
+| `docs/GITHUB_PROJECT_GUIDE.md` | GitHub Project board setup, workflow, tracking for issues #80-#90. | GitHub project management |
 
 ## Configuration
 
@@ -132,7 +155,43 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `sql/maintenance/012_partial_indexes.sql` | Implement PostgreSQL partial indexes for conditional query optimization. | Query performance. |
 | `sql/maintenance/020_game_hours_scheduler.sql` | Game-hours-aware polling scheduler functions (is_mlb_season, is_game_hours, should_poll_games). | Smart live data polling. |
 | `sql/maintenance/021_update_cron_game_hours.sql` | Updates cron jobs to use conditional polling wrappers. | Cron job optimization. |
+| `sql/maintenance/030_kb_vector_schema.sql` | KB vector schema: `kb.document_chunks` with pgvector embeddings, indexes, semantic search functions, ingestion tracking. | RAG infrastructure. Run after pgvector is installed. |
 | `sql/maintenance/999_master_installation.sql` | Master orchestrator for installing all PostgreSQL extensions and advanced features. | Complete extension installation. |
+
+## Warehouse Orchestration SQL
+
+| File | Purpose | Canonical Position |
+|---|---|---|
+| `sql/warehouse/001_warehouse_schema.sql` | Warehouse rebuild orchestration schema: `warehouse.rebuild_runs`, `warehouse.rebuild_log`, helper functions. | Master rebuild infrastructure. |
+| `sql/warehouse/002_phase_procedures.sql` | Phase-level procedures: `phase_raw_load()`, `phase_core_build()`, `phase_bridge_sync()`, `phase_feature_build()`, `phase_model_prep()`. | Individual rebuild phases. |
+| `sql/warehouse/003_rebuild_orchestrator.sql` | Main orchestrator: `warehouse.rebuild(mode, seasons)` procedure with per-phase commit and resume capability. | Master rebuild entry point. |
+| `sql/warehouse/004_batch_operations.sql` | Resume-capable batch processing: `warehouse.batch_operations` table with progress tracking and resume functions. | Long-running operation tracking. |
+| `sql/warehouse/005_feature_population_procedures.sql` | **FEATURE POPULATION ORCHESTRATION** - SQL procedures: `populate_features_phase()`, `verify_features_populated()`, `get_feature_stats()`, `estimate_batch_completion()`. | Feature population automation with warehouse integration. |
+| `sql/analysis/001_feature_importance.sql` | Feature importance storage: `analysis.feature_importance` table for XGBoost/SHAP scores, with top features view. | Feature selection and interaction analysis. |
+| `sql/framework/001_framework_schema_DEPRECATED.sql` | **DEPRECATED** - Redundant with existing warehouse/models/features_pitch schemas. Do not apply. | [DEPRECATED] |
+
+## Test SQL (E2E Testing Infrastructure)
+
+| File | Purpose | Canonical Position |
+|---|---|---|
+| `sql/test/001_create_test_schema.sql` | Creates isolated `test` schema with test tracking tables. | E2E test setup. Run first before tests. |
+| `sql/test/002_test_fixtures.sql` | Creates small test datasets (100 games) from real data for fast testing. | E2E test data setup. Run after test schema. |
+
+## Test Scripts (E2E Validation)
+
+| File | Purpose | Notes |
+|---|---|---|
+| `scripts/test/e2e_test_runner.sh` | Main E2E test runner. Validates SQL headers, table comments, row counts. | Executable. Usage: `./scripts/test/e2e_test_runner.sh --quick` |
+| `scripts/test/validate_sql_files.sh` | Validates all SQL files have proper headers. | Executable. Fast check (5 minutes). |
+| `scripts/test/verify_rebuild.sh` | Validates warehouse rebuild procedures work correctly. | Executable. Full check (30 minutes). |
+| `scripts/rebuild_warehouse.sh` | **Master rebuild orchestrator** using PostgreSQL procedures. | New approach: calls `warehouse.rebuild()`. Usage: `./scripts/rebuild_warehouse.sh --mode full`. Legacy mode: `--legacy` flag. |
+
+**Test Infrastructure Notes:**
+- Free local setup - uses existing PostgreSQL (no Docker, no cloud)
+- Test schema `test` is isolated from production data
+- Small test fixtures (100 games vs 62,000) for fast execution
+- AI Agent Gap-Fill Loop: Run tests → find gaps → create missing files → re-run
+- All scripts must be executable: `chmod +x scripts/test/*.sh`
 
 ## Knowledge Base Documents
 
@@ -146,7 +205,13 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `docs/KNOWLEDGE_BASE_MARKOV_CHAIN.md` | Research synthesis: Markov chain models, RE matrix, Stanford/UT Austin papers, implementation approaches. | Markov chain reference. |
 | `docs/KNOWLEDGE_BASE_FRAMEWORK.md` | Modular prediction framework architecture: Strategy/Registry pattern, target/model contracts, implementation status. | Framework design reference. |
 | `docs/KNOWLEDGE_BASE_GIS_PITCH.md` | Research: PostGIS pitch location mapping, strike zone coordinates, visualization approaches. | GIS mapping reference. |
+| `docs/SABERMETRICS_LINK_INVENTORY.md` | Comprehensive inventory of 40+ sabermetrics research links with ingestion tracking. | Knowledge base reference. |
 | `docs/MODEL_SELECTION_GUIDE.md` | Research-backed model selection by target type with decision tree and feature requirements. | Model choice reference. |
+| `docs/kb/AGENTS.md` | RAG setup guide: directory structure, chunking strategy, LlamaIndex recommendation, agent usage patterns. | KB agent operations. |
+| `docs/kb/sources/` | Organized extracted sources: books/, papers/, articles/, reference/ (9 files, ~2.7MB text). | RAG source corpus. |
+| `docs/kb/chunks/` | Chunked documents for RAG ingestion (by_source/ and by_topic/). | RAG chunk storage. |
+| `docs/kb/indices/` | Vector index metadata and configs. | RAG index config. |
+| `docs/kb/metadata/` | Source tracking, ingestion logs. | KB metadata. |
 
 | File | Purpose | Canonical Position |
 |---|---|---|
@@ -216,6 +281,104 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/bridge/investigate_umpire_ids.py` | Investigates umpire MLB ID mapping options using available data sources. | Umpire ID mapping research. |
 | `scripts/download_statcast_pitch_level.py` | Downloads Statcast pitch-level data using pybaseball.statcast() for date ranges or seasons. | Statcast pitch-level data download. |
 | `scripts/ingest_espn_plays.py` | Ingests ESPN play-by-play data into `raw_espn.plays` table. | ESPN external data ingestion |
+| `scripts/kb/chunk_sources.py` | Chunks sabermetrics source documents into JSONL files with metadata for RAG ingestion. Organizes by source and by topic. | KB chunking pipeline. |
+
+## Pitch Data Scripts (Statcast Complete Loader)
+
+| File | Purpose | Notes |
+|---|---|---|
+| `scripts/pitch_data/README.md` | Comprehensive documentation for Statcast pitch data loading. | Required reading before loading pitch data. |
+| `scripts/pitch_data/load_all_statcast_full.py` | **PRIMARY LOADER** - Loads ALL 118 Statcast fields into `features_pitch.locations`. Includes verification, supports --all, --seasons, --force, --dry-run, --verify flags. | Always use this for complete pitch data loads. Never use partial loaders for production work. |
+| `scripts/pitch_data/bulk_load_all_pitches.py` | Simplified bulk loader with basic fields only. | Use only for quick tests, not production. |
+| `scripts/pitch_data/load_all_pitch_seasons.py` | Original batch loader with cursor. | Legacy - use load_all_statcast_full.py instead. |
+| `sql/eda/030_gis_pitch_views.sql` | PostGIS analysis views for pitch location data: strike zone classification, heatmaps, batter zones, movement analysis, density maps, matchup patterns. | Run after pitch data load for analysis capabilities. |
+| `sql/maintenance/022_migrate_full_statcast.sql` | Migration script to add missing columns to `features_pitch.locations`. | Run if schema needs updating. |
+
+## Pitch-Level Feature Mart (Epic #78)
+
+**CRISP-DM Phase 3: Data Preparation** | **GitHub Issues: #78 (Epic), #79 (Schema)** | **Branch: `feature/pitch-mart-schema`**
+
+| File | Purpose | Status |
+|---|---|---|
+| `sql/features/003_pitch_flexible_mart.sql` | **PRIMARY SCHEMA** - Flexible feature mart with ALL 118 Statcast fields preserved. Creates 7 tables: base_features, feature_registry, engineered_features, sequential_features, player_context, model_training_set, pitch_sequences. Includes vw_xgboost_base view and dynamic feature selection functions. | ✅ Complete - All tables created |
+| `sql/features/004_alter_base_features_types.sql` | Schema fix: Extend of_fielding_alignment to varchar(50) to prevent truncation errors. | ✅ Complete |
+| `sql/features/005_build_engineered_features.sql` | **FEATURE ENGINE** - Populates engineered_features with ALL research-backed derived features. 22KB script with velocity percentiles, strike zone regions, pitch movement, game context, count features, two-tier outcome labels. | ✅ Complete - 7.66M rows populated |
+| `sql/features/006_additional_engineered_features.sql` | **ADDITIONAL FEATURES SCHEMA** - Adds 25+ advanced engineered features including pitch tunneling, spin characteristics, platoon indicators, fatigue metrics, pressure metrics, timing features, situational indicators. | ✅ Schema added |
+| `sql/features/007_populate_additional_features.sql` | Single-pass population script for additional features. | Ready (use 008 for batching) |
+| `sql/features/008_populate_additional_features_batch.sql` | **BATCHED POPULATION** - Processes additional features in 100k row batches for 7.66M rows. Run multiple times until complete. | 🔄 In Progress |
+| `sql/features/009_more_engineered_features.sql` | **MORE FEATURES SCHEMA** - Adds 40+ research-backed features from KB analysis: pitch quality score, count leverage, TTOP (times through order), RE24, WPA, payoff pitch, game situation, environmental. | ✅ Schema added |
+| `sql/features/010_populate_more_features.sql` | Single-pass population for more features (RE24, WPA, TTOP, pitch quality). | Ready |
+| `sql/features/011_populate_more_features_batch.sql` | **BATCHED POPULATION** - Processes more features in 100k row batches. | 🔄 Ready |
+| `sql/features/012_context_features_schema.sql` | **CONTEXT FEATURES SCHEMA** - Adds 60+ weather, momentum, umpire, attendance, park factors, fatigue features from FEATURE_ENGINEERING_PLAN.md Categories 2,3,4,7,8. | ✅ Schema added |
+| `sql/features/013_populate_context_features.sql` | Population script for context features with game/park/umpire joins. | Ready |
+| `sql/features/014_populate_context_features_batch.sql` | **BATCHED POPULATION** - Processes context features in batches. | 🔄 Ready |
+| `sql/features/015_final_features_schema.sql` | **FINAL FEATURES SCHEMA** - Adds 50+ Markov chains, matchup history, postseason, sequence patterns, platoon splits, rookie/veteran classification. Completes FEATURE_ENGINEERING_PLAN.md. | ✅ Schema added |
+| `sql/features/016_populate_final_features.sql` | Population script for final features with Markov calculations. | Ready |
+| `sql/features/017_populate_final_features_batch.sql` | **BATCHED POPULATION** - Processes final features in batches. | 🔄 Ready |
+| `sql/features/018_swing_model_schema.sql` | **SWING MODEL SCHEMA** - Tables for swing probability predictions, performance tracking, calibration curves. | ✅ Ready |
+| `scripts/pitch_models/train_swing_probability.py` | **SWING PROBABILITY MODEL** - Binary classifier for P(swing). Research-backed features. | 🔄 Ready to train |
+| `scripts/pitch_models/feature_ablation_study.py` | **FEATURE ABLATION STUDY** - Tests which feature groups actually improve predictions (Option A). | 🔄 Ready to run |
+| `scripts/analysis/post_hoc_feature_selection.py` | **POST-HOC FEATURE SELECTION** - 3-phase workflow: 1) Train full model, 2) Test feature subsets (20-200 features), 3) Retrain optimal. Tests PAST 50 features with `--subset-sizes`. | Feature optimization |
+| `sql/framework/002_feature_discovery_schema.sql` | **FEATURE DISCOVERY FRAMEWORK** - Schema for PCA, stepwise selection, correlations, optimal feature subsets. | ✅ Ready |
+| `scripts/analysis/pca_feature_analysis.py` | **PCA ANALYSIS** - Dimensionality reduction, variance explained, component interpretation. | 🔄 Ready |
+| `scripts/analysis/stepwise_feature_selection.py` | **STEPWISE SELECTION** - Forward/backward feature selection with performance tracking. | 🔄 Ready |
+| `scripts/analysis/feature_discovery_master.py` | **FEATURE DISCOVERY ORCHESTRATOR** - Coordinates PCA, correlations, stepwise selection. | 🔄 Ready |
+| `scripts/analysis/pitch_clustering_analysis.py` | **PITCH CLUSTERING** - K-Means/GMM unsupervised learning to discover natural pitch groupings. | 🔄 Ready |
+| `scripts/analysis/feature_interaction_explorer.py` | **FEATURE INTERACTIONS** - Discover non-linear feature pairs that predict outcomes better together. | 🔄 Ready |
+| `docs/PITCH_FEATURE_MART_SCHEMA.md` | Comprehensive schema documentation. Table reference, usage patterns, design principles, data lineage, performance considerations. | Complete |
+| `docs/diagrams/PITCH_FEATURE_MART_ERD.puml` | Entity relationship diagram showing all 7 tables and relationships. | Complete |
+| `docs/diagrams/PITCH_DATA_FLOW.puml` | Data flow architecture diagram from sources through processing to models with CRISP-DM labels. | Complete |
+| `sql/features/001_pitch_data_quality.sql` | Data quality flags and clean/strict views for pitch data. | Existing |
+| `sql/features/002_player_profile_mart.sql` | Player profile mart schema for pitcher arsenals and batter zones. | Existing |
+| `docs/PITCH_PLAYER_ANALYSIS_ARCHITECTURE.md` | Architecture document for pitch-to-player attribution and feature engineering. | Existing |
+| `docs/STATCAST_MODELS_RESEARCH_REPORT.md` | Research on external Statcast pitch modeling repositories and architectures. | Existing |
+| `docs/research_paper.md` | **PRIMARY RESEARCH DOC** - Mathematical formulations for pitch-level models. Includes equations for Two-Tier, LSTM, Multi-Task, and Swing Probability models. Loss functions, evaluation metrics, research alignment. | **NEW - April 2026** |
+| `docs/CRISP_DM_IMPLEMENTATION_PLAN.md` | Updated with Phase 3 completion (100%) and pitch-level milestones. Phase progress, next actions, milestones. | **Updated April 2026** |
+| `docs/agents/CURRENT_SNAPSHOT.md` | Updated with pitch-level data state and current objectives. | **Updated April 2026** |
+| `AGENTS.md` | Added AI Agent Documentation Update Protocol section. Instructions for maintaining CRISP-DM docs, research paper, and GitHub issue updates. | **Updated April 2026** |
+
+### Status: Epic #78 Phase 4 In Progress 🔄
+
+**Completed April 24, 2026 (Sub-Issue #79):**
+- ✅ Schema created: 7 tables in database
+- ✅ Base features: 7,661,992 rows populated (2015-2025, 118 Statcast fields)
+- ✅ Engineered features: 7,661,992 rows with **46+** (original) + **25** + **40** + **60+** + **50+ final** = **220+ total features**
+- ✅ Feature registry: 220+ features documented across 17 SQL files
+- ✅ Outcome labels: Tier 1 {S,B,X}, Tier 2 {12 classes}
+- ✅ Documentation: AGENTS.md, PITCH_MODEL_PROGRESS.md updated
+- ✅ GitHub: Epic #78 and Sub-Issue #79 updated with progress
+- ✅ Validation: SQL headers fixed, tests passing
+- CRISP-DM Phase 3: 100% Complete
+
+**Phase 4: Modeling (In Progress):**
+- Tier-1 XGBoost baseline training
+- Tier-2 XGBoost fine-grained outcomes
+- Model evaluation and calibration
+
+**Scripts:**
+- `scripts/pitch_data/populate_base_features.py` - Data migration from locations to base_features with column mapping. | Population |
+- `scripts/pitch_data/orchestrate_feature_population.py` - **MASTER ORCHESTRATOR** - Runs all 13 phases of feature population in correct order. Phase 0-12 with verification and resume capability. Usage: `--all`, `--phase N`, `--verify`. | Feature population orchestration |
+- `scripts/pitch_data/batch_feature_runner.sh` - **BATCH RUNNER** - Runs batch SQL files in a loop until complete. Progress tracking, resume capability, stall detection. Usage: `--sql-file <path>`, `--max-iterations N`. | Repeatable batch population |
+- `scripts/train_models.py` - Tier-1 model training
+
+### Feature Mart Schema Design
+
+The flexible feature mart follows the principle: **"All fields available, selective inclusion"**
+
+**Tables:**
+- `features_pitch.base_features` - All 118 Statcast fields preserved
+- `features_pitch.feature_registry` - Metadata catalog for dynamic feature selection
+- `features_pitch.engineered_features` - Derived metrics (NULL-free storage)
+- `features_pitch.sequential_features` - LSTM/Transformer sequences with JSONB windows
+- `features_pitch.player_context` - Rolling statistics (30day/season/career windows)
+- `features_pitch.model_training_set` - Versioned training data with SHA-256 data_hash
+- `features_pitch.pitch_sequences` - PA-level aggregation with full pitch arrays
+
+**Key Capabilities:**
+- Metadata-driven queries: `SELECT features WHERE 'xgboost' = ANY(model_usage)`
+- Versioned training data with exact reproducibility via data_hash
+- Additive schema - new features without migrations
+- JSONB for variable-length LSTM sequences
 
 ## Diagnostic and Workaround Scripts
 

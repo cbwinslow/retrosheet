@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, Clock, Target, Users, MapPin, RefreshCw } from 'lucide-react'
+import { Clock, MapPin, RefreshCw, Target, Users } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface GameOdds {
   game_id: string
@@ -33,7 +33,7 @@ export function LiveOddsDashboard() {
   const [filter, setFilter] = useState<'all' | 'live' | 'today'>('all')
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
-  const fetchLiveOdds = async () => {
+  const fetchLiveOdds = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/live-odds')
@@ -47,7 +47,7 @@ export function LiveOddsDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchLiveOdds()
@@ -55,16 +55,16 @@ export function LiveOddsDashboard() {
     // Auto-refresh every 30 seconds
     const interval = setInterval(fetchLiveOdds, 30000)
     return () => clearInterval(interval)
-  }, [])
+  }, [fetchLiveOdds])
 
-  const filteredGames = games.filter(game => {
+  const filteredGames = games.filter((game) => {
     if (filter === 'live') return game.status === 'in_progress'
     if (filter === 'today') return game.status !== 'completed'
     return true
   })
 
   const formatProbability = (prob: number) => `${(prob * 100).toFixed(1)}%`
-  const formatSpread = (spread: number) => spread > 0 ? `+${spread}` : spread.toString()
+  const formatSpread = (spread: number) => (spread > 0 ? `+${spread}` : spread.toString())
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -81,9 +81,10 @@ export function LiveOddsDashboard() {
             {[
               { id: 'all', label: 'All Games' },
               { id: 'live', label: 'Live' },
-              { id: 'today', label: 'Today' }
+              { id: 'today', label: 'Today' },
             ].map(({ id, label }) => (
               <button
+                type="button"
                 key={id}
                 onClick={() => setFilter(id as typeof filter)}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
@@ -99,6 +100,7 @@ export function LiveOddsDashboard() {
 
           {/* Refresh button */}
           <button
+            type="button"
             onClick={fetchLiveOdds}
             disabled={loading}
             className="p-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 rounded-lg transition-colors"
@@ -148,13 +150,15 @@ export function LiveOddsDashboard() {
                   <MapPin className="w-4 h-4 text-blue-100" />
                   <span className="text-sm text-blue-100">{game.venue}</span>
                 </div>
-                <div className={`px-2 py-1 rounded text-xs font-medium ${
-                  game.status === 'in_progress'
-                    ? 'bg-green-600 text-white'
-                    : game.status === 'completed'
-                    ? 'bg-gray-600 text-white'
-                    : 'bg-slate-700 text-slate-300'
-                }`}>
+                <div
+                  className={`px-2 py-1 rounded text-xs font-medium ${
+                    game.status === 'in_progress'
+                      ? 'bg-green-600 text-white'
+                      : game.status === 'completed'
+                        ? 'bg-gray-600 text-white'
+                        : 'bg-slate-700 text-slate-300'
+                  }`}
+                >
                   {game.status === 'in_progress' ? 'LIVE' : game.status.toUpperCase()}
                 </div>
               </div>
@@ -176,7 +180,8 @@ export function LiveOddsDashboard() {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-slate-300">Score</span>
                     <span className="text-xs text-slate-400">
-                      {game.current_score.top_bottom === 'top' ? '▲' : '▼'} {game.current_score.inning}
+                      {game.current_score.top_bottom === 'top' ? '▲' : '▼'}{' '}
+                      {game.current_score.inning}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -239,15 +244,11 @@ export function LiveOddsDashboard() {
               <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-700">
                 <div className="text-center">
                   <div className="text-xs text-slate-500 mb-1">Spread</div>
-                  <div className="text-sm font-medium text-white">
-                    {formatSpread(game.spread)}
-                  </div>
+                  <div className="text-sm font-medium text-white">{formatSpread(game.spread)}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xs text-slate-500 mb-1">O/U</div>
-                  <div className="text-sm font-medium text-white">
-                    {game.over_under.toFixed(1)}
-                  </div>
+                  <div className="text-sm font-medium text-white">{game.over_under.toFixed(1)}</div>
                 </div>
               </div>
 
@@ -278,7 +279,9 @@ export function LiveOddsDashboard() {
         <div className="text-center py-12">
           <Target className="w-12 h-12 text-slate-600 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-400 mb-2">No games found</h3>
-          <p className="text-slate-500">Try changing your filter or check back later for live games.</p>
+          <p className="text-slate-500">
+            Try changing your filter or check back later for live games.
+          </p>
         </div>
       )}
     </div>

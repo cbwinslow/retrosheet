@@ -1,6 +1,7 @@
--- Phase 2 Feature Mart: Postseason & Clutch Metrics
--- Postseason, elimination game, and high leverage situation flags
-
+-- File: sql/features/050_postseason_clutch_features.sql
+-- Purpose: Flag postseason, high-leverage, weekend, and doubleheader games
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE MATERIALIZED VIEW features.postseason_clutch_features AS
 SELECT
     game_id,
@@ -11,9 +12,9 @@ SELECT
     CASE WHEN source_type = 'postseason' THEN 1 ELSE 0 END AS is_postseason,
     CASE WHEN source_type = 'spring' THEN 1 ELSE 0 END AS is_spring_training,
     -- In-game leverage context
-    CASE 
-        WHEN innings >= 7 AND ABS(home_score - away_score) <= 3 THEN 1 
-        ELSE 0 
+    CASE
+        WHEN innings >= 7 AND ABS(home_score - away_score) <= 3 THEN 1
+        ELSE 0
     END AS is_high_leverage_situation,
     -- Game context flags
     CASE WHEN day_of_week IN ('5', '6', '7') THEN 1 ELSE 0 END AS is_weekend_game,
@@ -24,3 +25,4 @@ WITH DATA;
 CREATE UNIQUE INDEX idx_postseason_game ON features.postseason_clutch_features (game_id);
 
 ANALYZE features.postseason_clutch_features;
+

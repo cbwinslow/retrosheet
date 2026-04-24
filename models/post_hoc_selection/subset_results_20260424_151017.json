@@ -1,0 +1,34 @@
+{
+  "timestamp": "20260424_151017",
+  "full_model_auc": 0.7698251420336254,
+  "results": [
+    {
+      "n_features": 30,
+      "accuracy": 0.7139,
+      "log_loss": 0.6392668628398263,
+      "auc": 0.7699098251877174,
+      "auc_vs_full": 0.0001,
+      "features": [
+        "distance_from_zone_center",
+        "vertical_break",
+        "approach_angle",
+        "induced_vertical_break",
+        "velocity_diff_from_avg"
+      ]
+    },
+    {
+      "n_features": 20,
+      "accuracy": 0.7139,
+      "log_loss": 0.6388130304865505,
+      "auc": 0.7697608215682088,
+      "auc_vs_full": -0.0001,
+      "features": [
+        "distance_from_zone_center",
+        "vertical_break",
+        "approach_angle",
+        "induced_vertical_break",
+        "velocity_diff_from_avg"
+      ]
+    }
+  ]
+}

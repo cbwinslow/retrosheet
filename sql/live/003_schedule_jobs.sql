@@ -1,7 +1,7 @@
--- pg_cron Scheduled Jobs
--- Run automatically inside PostgreSQL
-
--- Poll all active games EVERY 10 SECONDS
+-- File: sql/live/003_schedule_jobs.sql
+-- Purpose: pg_cron jobs for polling active games and endpoints
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 SELECT cron.schedule(
     'live-game-poll-10s',
     '*/10 * * * * *',
@@ -16,6 +16,12 @@ SELECT cron.schedule(
 );
 
 -- Verify scheduled jobs
-SELECT jobid, schedule, command, nodename, nodeport
+SELECT
+    jobid,
+    schedule,
+    command,
+    nodename,
+    nodeport
 FROM cron.job
 ORDER BY jobid;
+

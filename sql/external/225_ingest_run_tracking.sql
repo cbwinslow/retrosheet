@@ -1,24 +1,23 @@
--- Ingest Run Tracking Enhancement
--- Purpose: Add comprehensive run tracking for data ingestion scripts
--- Enables reproducibility, debugging, and audit trail for all data loads
-
--- Expand ingest_runs table with additional tracking fields
+-- File: sql/external/225_ingest_run_tracking.sql
+-- Purpose: Track data ingestion runs with metadata, progress, and errors
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 ALTER TABLE raw_retrosheet.ingest_runs
-    ADD COLUMN IF NOT EXISTS script_name text,
-    ADD COLUMN IF NOT EXISTS script_version text,
-    ADD COLUMN IF NOT EXISTS git_commit text,
-    ADD COLUMN IF NOT EXISTS command_args jsonb,
-    ADD COLUMN IF NOT EXISTS records_downloaded int DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS records_ingested int DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS records_failed int DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS error_message text,
-    ADD COLUMN IF NOT EXISTS user_name text DEFAULT current_user,
-    ADD COLUMN IF NOT EXISTS hostname text DEFAULT inet_server_addr();
+ADD COLUMN IF NOT EXISTS script_name text,
+ADD COLUMN IF NOT EXISTS script_version text,
+ADD COLUMN IF NOT EXISTS git_commit text,
+ADD COLUMN IF NOT EXISTS command_args jsonb,
+ADD COLUMN IF NOT EXISTS records_downloaded int DEFAULT 0,
+ADD COLUMN IF NOT EXISTS records_ingested int DEFAULT 0,
+ADD COLUMN IF NOT EXISTS records_failed int DEFAULT 0,
+ADD COLUMN IF NOT EXISTS error_message text,
+ADD COLUMN IF NOT EXISTS user_name text DEFAULT current_user,
+ADD COLUMN IF NOT EXISTS hostname text DEFAULT inet_server_addr();
 
 -- Add indexes for common queries
-CREATE INDEX IF NOT EXISTS idx_ingest_runs_script_name ON raw_retrosheet.ingest_runs(script_name);
-CREATE INDEX IF NOT EXISTS idx_ingest_runs_status ON raw_retrosheet.ingest_runs(status);
-CREATE INDEX IF NOT EXISTS idx_ingest_runs_started_at ON raw_retrosheet.ingest_runs(started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ingest_runs_script_name ON raw_retrosheet.ingest_runs (script_name);
+CREATE INDEX IF NOT EXISTS idx_ingest_runs_status ON raw_retrosheet.ingest_runs (status);
+CREATE INDEX IF NOT EXISTS idx_ingest_runs_started_at ON raw_retrosheet.ingest_runs (started_at DESC);
 
 -- ============================================
 -- Helper Functions for Run Logging
@@ -161,20 +160,20 @@ $$ LANGUAGE plpgsql;
 
 -- Apply updated_at trigger to bridge tables
 CREATE TRIGGER bridge_player_xref_updated_at
-    BEFORE UPDATE ON bridge.player_xref
-    FOR EACH ROW EXECUTE FUNCTION raw_retrosheet.update_updated_at();
+BEFORE UPDATE ON bridge.player_xref
+FOR EACH ROW EXECUTE FUNCTION raw_retrosheet.update_updated_at();
 
 CREATE TRIGGER bridge_team_xref_updated_at
-    BEFORE UPDATE ON bridge.team_xref
-    FOR EACH ROW EXECUTE FUNCTION raw_retrosheet.update_updated_at();
+BEFORE UPDATE ON bridge.team_xref
+FOR EACH ROW EXECUTE FUNCTION raw_retrosheet.update_updated_at();
 
 CREATE TRIGGER bridge_park_xref_updated_at
-    BEFORE UPDATE ON bridge.park_xref
-    FOR EACH ROW EXECUTE FUNCTION raw_retrosheet.update_updated_at();
+BEFORE UPDATE ON bridge.park_xref
+FOR EACH ROW EXECUTE FUNCTION raw_retrosheet.update_updated_at();
 
 CREATE TRIGGER bridge_game_xref_updated_at
-    BEFORE UPDATE ON bridge.game_xref
-    FOR EACH ROW EXECUTE FUNCTION raw_retrosheet.update_updated_at();
+BEFORE UPDATE ON bridge.game_xref
+FOR EACH ROW EXECUTE FUNCTION raw_retrosheet.update_updated_at();
 
 -- ============================================
 -- Views for Run Monitoring
@@ -182,32 +181,32 @@ CREATE TRIGGER bridge_game_xref_updated_at
 
 -- Recent ingest runs summary
 CREATE OR REPLACE VIEW raw_retrosheet.recent_ingest_runs AS
-SELECT 
+SELECT
     ingest_run_id,
     source_name,
     script_name,
     status,
     started_at,
     finished_at,
-    EXTRACT(EPOCH FROM (COALESCE(finished_at, now()) - started_at)) AS duration_seconds,
     records_downloaded,
     records_ingested,
     records_failed,
-    error_message
+    error_message,
+    extract(EPOCH FROM (coalesce(finished_at, now()) - started_at)) AS duration_seconds
 FROM raw_retrosheet.ingest_runs
 ORDER BY started_at DESC
 LIMIT 100;
 
 -- Run statistics by script
 CREATE OR REPLACE VIEW raw_retrosheet.ingest_run_stats_by_script AS
-SELECT 
+SELECT
     script_name,
-    COUNT(*) AS total_runs,
-    COUNT(*) FILTER (WHERE status = 'completed') AS successful_runs,
-    COUNT(*) FILTER (WHERE status = 'failed') AS failed_runs,
-    SUM(records_downloaded) AS total_records_downloaded,
-    SUM(records_ingested) AS total_records_ingested,
-    AVG(EXTRACT(EPOCH FROM (COALESCE(finished_at, now()) - started_at))) FILTER (WHERE finished_at IS NOT NULL) AS avg_duration_seconds
+    count(*) AS total_runs,
+    count(*) FILTER (WHERE status = 'completed') AS successful_runs,
+    count(*) FILTER (WHERE status = 'failed') AS failed_runs,
+    sum(records_downloaded) AS total_records_downloaded,
+    sum(records_ingested) AS total_records_ingested,
+    avg(extract(EPOCH FROM (coalesce(finished_at, now()) - started_at))) FILTER (WHERE finished_at IS NOT NULL) AS avg_duration_seconds
 FROM raw_retrosheet.ingest_runs
 WHERE script_name IS NOT NULL
 GROUP BY script_name
@@ -222,3 +221,4 @@ COMMENT ON FUNCTION raw_retrosheet.fail_ingest_run IS 'Mark an ingest run as fai
 COMMENT ON FUNCTION raw_retrosheet.compute_checksum IS 'Compute SHA256 checksum for JSON data';
 COMMENT ON VIEW raw_retrosheet.recent_ingest_runs IS 'Summary of recent 100 ingest runs';
 COMMENT ON VIEW raw_retrosheet.ingest_run_stats_by_script IS 'Statistics grouped by script name';
+

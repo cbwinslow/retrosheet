@@ -1,8 +1,7 @@
--- Install PL/Python3u extension for Python integration within PostgreSQL
--- This is critical for advanced ML models and external API calls
--- Research-backed: Standard extension for Python integration in PostgreSQL
-
--- Create extension
+-- File: sql/maintenance/004_install_pl_python3u.sql
+-- Purpose: Install PL/Python3u extension with test function
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE EXTENSION IF NOT EXISTS plpython3u;
 
 -- Validate installation: Create test function
@@ -19,4 +18,9 @@ SELECT test_python_function();
 -- DROP FUNCTION test_python_function();
 
 -- Verify extension is installed
-SELECT extname, extversion FROM pg_extension WHERE extname = 'plpython3u';
+SELECT
+    extname,
+    extversion
+FROM pg_extension
+WHERE extname = 'plpython3u';
+

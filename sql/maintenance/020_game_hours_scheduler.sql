@@ -1,8 +1,7 @@
--- Game Hours-Aware Polling Schedule
--- Limits polling to MLB season and typical game hours
--- References: MLB schedule data from raw_mlb.schedule_snapshots
-
--- First, create a function to check if today has scheduled games
+-- File: sql/maintenance/020_game_hours_scheduler.sql
+-- Purpose: Functions to conditionally poll MLB data during season hours
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE FUNCTION metadata.has_scheduled_games_today()
 RETURNS boolean AS $$
 DECLARE
@@ -118,3 +117,4 @@ $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION metadata.is_mlb_season() IS 'Returns true during MLB season (Feb-Oct)';
 COMMENT ON FUNCTION metadata.is_game_hours() IS 'Returns true during typical game hours (11am-1am ET)';
 COMMENT ON FUNCTION metadata.should_poll_games() IS 'Returns true if season + game hours conditions are met';
+

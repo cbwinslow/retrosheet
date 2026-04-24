@@ -1,16 +1,17 @@
--- 150_model_registry.sql
--- Migration to create a central model registry table for tracking ML model artifacts.
-
+-- File: sql/mlb/150_model_registry.sql
+-- Purpose: Central registry for ML model artifacts and versions
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE TABLE IF NOT EXISTS models.model_registry (
-    model_id          SERIAL PRIMARY KEY,
-    model_name        TEXT NOT NULL,
-    model_version     TEXT NOT NULL,
-    is_active         BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    description       TEXT,
-    artifact_path     TEXT,
-    metrics_json      JSONB,
+    model_id SERIAL PRIMARY KEY,
+    model_name TEXT NOT NULL,
+    model_version TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    description TEXT,
+    artifact_path TEXT,
+    metrics_json JSONB,
     CONSTRAINT uq_model_name_version UNIQUE (model_name, model_version)
 );
 
@@ -32,3 +33,4 @@ BEFORE UPDATE ON models.model_registry
 FOR EACH ROW EXECUTE FUNCTION models.update_timestamp();
 
 COMMENT ON TABLE models.model_registry IS 'Central registry for ML model artifacts, versions, and metadata.';
+

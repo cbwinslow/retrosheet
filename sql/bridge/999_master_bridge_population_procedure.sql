@@ -1,12 +1,7 @@
--- ============================================================================
--- Bridge: Master Bridge Population Orchestrator Procedure
--- ============================================================================
--- Purpose: Orchestrate all bridge table population procedures in the correct order
--- Dependencies: All individual bridge population procedures (920-960)
--- Created: 2026-04-21
--- ============================================================================
-
--- Drop procedure if exists
+-- File: sql/bridge/999_master_bridge_population_procedure.sql
+-- Purpose: Master procedure to populate all bridge tables in sequence
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 DROP PROCEDURE IF EXISTS bridge.populate_all_bridge_tables();
 
 -- ============================================================================
@@ -113,10 +108,11 @@ $$;
 -- ============================================================================
 -- Comment on procedure
 -- ============================================================================
-COMMENT ON PROCEDURE bridge.populate_all_bridge_tables(BOOLEAN) IS 
+COMMENT ON PROCEDURE bridge.populate_all_bridge_tables (BOOLEAN) IS
 'Master orchestrator that calls all bridge table population procedures in the correct dependency order.';
 
 -- ============================================================================
 -- Grant execute permission
 -- ============================================================================
 GRANT EXECUTE ON PROCEDURE bridge.populate_all_bridge_tables(BOOLEAN) TO postgres;
+

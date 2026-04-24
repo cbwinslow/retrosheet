@@ -17,7 +17,7 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 - Prefer additive migrations and views over destructive schema changes.
 - Keep `README.md` current when commands, setup, or workflow changes.
 - Keep this `AGENTS.md` current when project conventions change.
- - Add and maintain backup procedures for database objects. See `scripts/utility/backup_procedures.sh`.
+- Add and maintain backup procedures for database objects. See `scripts/utility/backup_procedures.sh`.
 - Keep `docs/agents/` current when file purposes, modeling goals, or canonical procedures change.
 - Keep `docs/PROJECT_LOG.md` current with significant completed work, validation counts, and next-step decisions.
 - Treat unintegrated `EdgeForge` / `mlb_features` / `mlb_models` / `mlb_enhanced` files as experimental until they are explicitly merged into the canonical warehouse layers and documented in `docs/agents/FILE_INVENTORY.md`. See `docs/EDGEFORGE_TRIAGE.md`.
@@ -26,6 +26,155 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 - Maintain reproducibility: scripts should run from a clean checkout with documented dependencies.
 - Default database target is the local PostgreSQL database named `retrosheet` on port `5432`, unless `DATABASE_URL` or `PG*` environment variables override it.
 - Do not require Git LFS. Keep generated data and model binaries out of git; scripts and database metadata must be enough to regenerate artifacts.
+
+## REPRODUCIBILITY MANDATE (CRITICAL)
+
+**Every action must leave a paper trail. This is not optional.**
+
+### SQL-First Development Rule
+
+**ALL database operations must be stored in .sql files under version control.**
+
+- **NEVER execute ad-hoc SQL against the database without saving it first.**
+- **NEVER use database GUI tools or CLI to make schema changes.**
+- **ALWAYS write SQL to a file, commit it, then execute the file.**
+
+**Workflow:**
+```
+1. Create/edit .sql file in appropriate sql/ subdirectory
+2. Add header comment with purpose, date, author
+3. Test the SQL file: psql -f sql/path/to/file.sql
+4. Commit the SQL file with descriptive message
+5. Update docs/agents/FILE_INVENTORY.md with the new file
+6. Update docs/agents/PROCEDURES.md if it creates a canonical workflow
+```
+
+### Script Wrapper Requirement
+
+**All data pipelines must have wrapper scripts that call more granular procedures.**
+
+- Create orchestrator scripts like `update_all_pitch_data.sh` that call:
+  - `load_statcast_season_2025.sql`
+  - `refresh_pitch_features.sql`
+  - `update_pitcher_arsenals.sql`
+- Each granular script must be independently runnable
+- Wrapper scripts must log what they call and in what order
+
+### Documentation Requirements
+
+**Every SQL file must include at the top:**
+```sql
+/*
+File: sql/features/010_pitcher_arsenal_features.sql
+Purpose: Build pitcher arsenal features from Statcast pitch data
+Author: Agent [identifier]
+Date: 2026-04-24
+Depends On: features_pitch.locations, features_pitch.base_features
+Called By: scripts/pitch_data/update_all_pitch_features.sh
+
+Tables Created:
+- features.pitcher_arsenals (pitcher-level aggregated metrics)
+- features.pitcher_repertoire (pitch-type breakdowns)
+
+Notes:
+- Uses 30-day rolling windows
+- Excludes pitches with null release_speed
+*/
+```
+
+**Every table must have COMMENT ON statements:**
+```sql
+COMMENT ON TABLE features.pitcher_arsenals IS 'Aggregated pitcher arsenal metrics by season';
+COMMENT ON COLUMN features.pitcher_arsenals.fastball_pct IS 'Percentage of fastballs thrown (FF, FT, FC, SI)';
+```
+
+### The Paper Trail Checklist
+
+Before completing ANY task, verify:
+
+- [ ] All SQL saved in version-controlled .sql files
+- [ ] All scripts saved in version-controlled files
+- [ ] Table/column comments added for new schema objects
+- [ ] FILE_INVENTORY.md updated with new files
+- [ ] PROCEDURES.md updated with new workflows
+- [ ] PROJECT_LOG.md updated with what was accomplished
+- [ ] Row counts/validation metrics recorded
+- [ ] Git commit made with descriptive message
+- [ ] E2E tests pass (`scripts/test/e2e_test_runner.sh` or similar)
+
+### Scientific Reproducibility Standard
+
+This project must be reproducible by other researchers. Every number we report must be traceable to:
+
+1. **Source data**: Which raw table and fetch date
+2. **Transformation**: Which SQL file performed the transformation
+3. **Model training**: Which script, with what hyperparameters
+4. **Evaluation**: Which validation set, what metrics
+
+**When publishing results, we must show our work.**
+
+### E2E Testing Environment (Free Local Setup)
+
+**Yes, you can run E2E tests for free on your PC.** No Docker, no cloud, no additional cost.
+
+#### Test Infrastructure
+
+- **Test Schema**: `test` schema in existing PostgreSQL database - isolated from production
+- **Test Fixtures**: Small, fast datasets (100 games instead of 62,000)
+- **Test Scripts**: Bash scripts in `scripts/test/` that validate everything works
+- **Validation**: Automated checks for headers, comments, row counts
+
+#### Running Tests
+
+```bash
+# Quick validation (5 minutes)
+./scripts/test/validate_sql_files.sh
+
+# Run E2E test suite
+./scripts/test/e2e_test_runner.sh --quick
+
+# Full rebuild verification (30+ minutes)
+./scripts/test/verify_rebuild.sh
+```
+
+#### AI Agent Gap-Fill Loop
+
+When another agent fills documentation gaps, they use this loop:
+
+1. **RUN** `validate_sql_files.sh` to find missing headers
+2. **CREATE** missing SQL files/scripts to close gaps
+3. **ADD** headers, comments, documentation
+4. **TEST** with `e2e_test_runner.sh`
+5. **COMMIT** when tests pass
+6. **REPEAT** until all tests pass
+
+#### Test Files (Created by Audit Agent)
+
+- `sql/test/001_create_test_schema.sql` - Test schema setup
+- `sql/test/002_test_fixtures.sql` - Test data fixtures
+- `scripts/test/e2e_test_runner.sh` - Main test runner
+- `scripts/test/validate_sql_files.sh` - SQL validation
+- `scripts/test/verify_rebuild.sh` - Rebuild verification
+
+### Never Again List
+
+**NEVER do these things:**
+- Execute SQL in psql/pgAdmin/DBeaver without saving to a file first
+- Make "quick fixes" directly to the database
+- Create scripts that aren't committed
+- Leave tables without documentation
+- Assume "I'll document it later" (document NOW)
+- Use hardcoded values without explanation
+- Skip validation/verification steps
+
+### For Live Data Operations
+
+When updating models with live data:
+1. Save the query that extracts features as .sql
+2. Save the model scoring script
+3. Save the results validation query
+4. Create a wrapper procedure that runs the full pipeline
+5. Document the expected inputs/outputs
 
 ## Python Environment Standard
 
@@ -54,6 +203,50 @@ uv lock
 
 All project scripts, CI, and environments use Python 3.10. Legacy `requirements.txt` is archived and no longer maintained.
 
+## LLM Sub-Agent System (NEW)
+
+Automated linting and code fixing using local multi-GPU inference.
+
+### Hardware
+- **GPU 0**: NVIDIA Tesla K80 (12GB VRAM, CC 3.7)
+- **GPU 1**: NVIDIA Tesla K80 (12GB VRAM, CC 3.7)
+- **GPU 2**: NVIDIA Tesla K40 (11GB VRAM, CC 3.5)
+- **Total VRAM**: 35GB
+
+### LLM Infrastructure (External to Repo)
+Located at `~/llama.cpp` (not in git):
+- **Model**: CodeLlama-34B-Instruct-Q6_K (26GB)
+- **Inference Engine**: llama.cpp with CUDA 11.8
+- **CUDA Architectures**: sm_35 (K40) + sm_37 (K80)
+- **Optimizations**: Flash Attention, CUDA Graphs, NCCL
+
+### Sub-Agent Scripts
+- `scripts/utility/llm_subagent.py` - Main sub-agent with batch processing
+- `scripts/utility/run_llm_linter_fixes.sh` - Interactive orchestration
+
+### Usage
+```bash
+# Analyze current Ruff errors
+python scripts/utility/llm_subagent.py analyze
+
+# Fix specific rule (dry-run first)
+python scripts/utility/llm_subagent.py fix Q000
+
+# Fix and apply
+python scripts/utility/llm_subagent.py fix-apply Q000
+
+# Interactive mode
+./scripts/utility/run_llm_linter_fixes.sh
+```
+
+### Current Status
+- **Ruff Errors**: 1,950 (down from 1,487)
+- **SQLFluff Errors**: 0
+- **Target Rules**: Q000 (bad quotes), W293 (trailing ws), COM812 (missing commas)
+
+### Documentation
+- `docs/LLM_GPU_OPTIMIZATION_REPORT.md` - Performance analysis
+
 ## Data Layers
 
 - `raw_retrosheet`: source-preserved Chadwick extracts and Retrosheet reference tables.
@@ -73,29 +266,137 @@ All project scripts, CI, and environments use Python 3.10. Legacy `requirements.
 
 **Raw Source Data:**
 - `raw_mlb.statcast`: Source-preserved Statcast data from Baseball Savant
-  - Columns: pitch_type, plate_x, plate_z, sz_top, sz_bot, pfx_x, pfx_z, release_speed, spin_rate, launch_speed, launch_angle, hit_distance_sc
-  - Count: ~7.8M pitches (2015-2025 seasons)
+  - **Count**: 7,797,034 pitch-level records (2015-2025 seasons)
+  - **Fields**: 118 Statcast columns including pitch metrics, physics, expected stats, win probability
 
-**Normalized Tables:**
-- `mlb.pitches`: 19.7M normalized pitch records with batter_id, pitcher_id, game_pk
-- `features_pitch.locations`: PostGIS-enabled table with geometry(Point, 4326) column for spatial queries
+**Feature Table (Complete Load):**
+- `features_pitch.locations`: 7,661,992 pitches (2015-2025) with ALL Statcast fields
+  - **Core**: game_year, game_pk, game_date, batter_id, pitcher_id, player_name
+  - **Pitch**: pitch_type, pitch_name, pitch_number, pitch_result, description, events
+  - **Count/State**: balls, strikes, outs_when_up, inning, on_1b, on_2b, on_3b
+  - **Release/Physics**: start_speed, effective_speed, release_spin_rate, spin_axis, release_pos_x/y/z, release_extension
+  - **Movement/Location**: pfx_x, pfx_z, plate_x, plate_z, zone, sz_top, sz_bot, **PostGIS geometry**
+  - **Physics Components**: vx0, vy0, vz0, ax, ay, az
+  - **Hit Data**: hc_x, hc_y, hit_location, bb_type, launch_speed, launch_angle, hit_distance
+  - **Expected Stats**: estimated_ba, estimated_woba, estimated_slg, woba_value, woba_denom
+  - **Scoring**: home_score, away_score, bat_score, fld_score, post_* variants
+  - **Win Probability**: delta_home_win_exp, delta_run_exp, home_win_exp, bat_win_exp
+  - **Fielding**: fielder_2-9, if_fielding_alignment, of_fielding_alignment
 
 **Key Fields for GIS Mapping:**
-- `plate_x`: Horizontal position (-17 to +17 inches, 0 = center)
+- `plate_x`: Horizontal position (-17 to +17 inches, 0 = center of plate)
 - `plate_z`: Vertical position (feet from ground)
 - `sz_top`: Top of strike zone for batter
 - `sz_bot`: Bottom of strike zone for batter
-- `location`: PostGIS geometry column (ST_MakePoint(plate_x, plate_z))
+- `location`: PostGIS geometry column (ST_SetSRID(ST_MakePoint(plate_x, plate_z), 4326))
+
+**Verification Status**: ✅ All 11 seasons loaded (2015-2025), 7.66M pitches, 90 columns, row counts verified against raw_mlb.statcast
+
+**Loading Script:**
+```bash
+# Load all seasons with verification
+python scripts/pitch_data/load_all_statcast_full.py --all
+
+# Verify existing data
+python scripts/pitch_data/load_all_statcast_full.py --verify
+
+# Load specific season
+python scripts/pitch_data/load_all_statcast_full.py --seasons 2025
+```
 
 **Linking to Plate Appearances:**
 ```sql
 -- Link pitches to retrosheet games via bridge
 SELECT p.*, gx.retrosheet_game_id, e.event_id
-FROM mlb.pitches p
+FROM features_pitch.locations p
 JOIN bridge.game_xref gx ON p.game_pk::text = gx.mlb_game_pk::text
 JOIN core.events e ON gx.retrosheet_game_id = e.game_id
 WHERE p.game_pk = <GAME_PK>;
 ```
+
+### Pitch-Level Feature Engineering (Epic #78)
+
+**Feature Mart Tables:**
+| Table | Rows | Purpose | Status |
+|-------|------|---------|--------|
+| `features_pitch.base_features` | 7,661,992 | 118 Statcast fields preserved | ✅ Populated |
+| `features_pitch.engineered_features` | 7,661,992 | Derived ML features | ✅ Built |
+| `features_pitch.player_context` | - | Rolling player statistics | 🔄 Schema ready |
+
+**Engineered Features (ALL Research-Backed, No Dropping):**
+
+| Category | Features | Research Source |
+|----------|----------|-----------------|
+| **Velocity** | `velocity_percentile`, `velocity_diff_from_avg`, `velocity_bucket`, `velocity_change_from_prev` | SMU/CMU pitch papers |
+| **Strike Zone** | `distance_from_center`, `zone_region`, `is_in_zone`, `is_shadow`, `is_chase`, `pitch_distance_from_heart` | Zone judgment models |
+| **Movement** | `horizontal_break`, `vertical_break`, `approach_angle`, `spin_efficiency`, `induced_vertical_break`, `spin_axis_quadrant`, `is_backspin`, `is_topspin`, `is_gyro_spin` | Pitch physics |
+| **Game Context** | `score_diff`, `is_late_game`, `is_high_leverage`, `base_state_code`, `run_expectancy_24`, `win_probability_added`, `inning_phase`, `is_save_situation` | Win probability |
+| **Count** | `is_full_count`, `is_two_strike`, `is_three_ball`, `count_leverage_index`, `is_payoff_pitch`, `is_pitcher_ahead`, `is_hitter_ahead` | Count dynamics |
+| **Sequential** | `prev_pitch_type`, `prev_pitch_result`, `consecutive_same_type`, `pitches_since_last_swing` | Pitch sequencing research |
+| **TTOP** | `times_through_order_detailed`, `is_first_time_seeing_pitcher`, `ttop_penalty_applies` | Times Through Order Penalty |
+| **Matchup** | `is_same_handed_matchup`, `is_platoon_advantage_pitcher`, `prior_matchup_count` | Platoon advantage |
+| **Pitch Quality** | `pitch_quality_score`, `is_primary_pitch_type`, `pitch_type_family` | Pitch quality models |
+| **Environmental** | `is_day_game`, `game_month`, `is_opening_series`, `temp_extreme_flag`, `wind_effect_score`, `altitude_factor`, `is_shadow_game` | Environmental effects |
+| **Pressure** | `pa_pressure_index`, `is_high_pressure_pa`, `is_walk_off_situation`, `leverage_index_bracket` | High-leverage performance |
+| **Weather** | `temp_extreme_flag`, `wind_effect_score`, `humidity_proxy`, `altitude_factor` | Weather effects on ball flight |
+| **Momentum** | `batting_team_last_5_win_rate`, `batting_team_last_10_win_rate`, `team_momentum_delta`, `pitcher_last_3_era`, `pitcher_last_3_strikeout_rate` | Team and player streaks |
+| **Umpire** | `umpire_strike_zone_size`, `umpire_strike_calls_pct`, `umpire_k_friendly`, `umpire_walk_friendly`, `umpire_hitter_favored`, `umpire_pitcher_favored`, `umpire_consistency_score` | Umpire tendencies |
+| **Attendance** | `attendance_vs_capacity_pct`, `is_sellout`, `crowd_noise_proxy`, `home_field_advantage_score`, `is_rivalry_game` | Crowd effects |
+| **Park Factors** | `park_elevation_feet`, `park_hr_factor_lf`, `park_hr_factor_cf`, `park_hr_factor_rf`, `park_overall_hr_factor`, `park_grass_turf`, `park_is_dome` | Stadium physics |
+| **Fatigue** | `pitcher_days_rest`, `is_short_rest_start`, `pitcher_season_workload`, `pitcher_inning_velocity_decline` | Pitcher rest and workload |
+| **Markov Chains** | `strike_accumulation_rate`, `ball_accumulation_rate`, `expected_pitches_remaining`, `is_absorbing_state`, `count_pressure_index` | Count state transitions (FanGraphs/Retrosheet research) |
+| **Matchup History** | `matchup_prior_pa_count`, `matchup_prior_ba`, `matchup_prior_hr_count`, `matchup_first_time_facing`, `matchup_success_trend` | Batter-pitcher historical data |
+| **Postseason** | `is_postseason`, `month_of_season`, `is_season_opener`, `is_elimination_game` | Playoff and seasonal context |
+| **Sequence** | `prev_2_pitch_types`, `is_repeated_pitch`, `is_alternating_pattern`, `pitch_sequence_category` | Pitch sequencing patterns |
+| **Platoon** | `is_platoon_advantage_batter`, `platoon_advantage_direction` | Handedness matchups |
+| **Experience** | `is_rookie_batter`, `is_veteran_batter`, `batter_experience_level`, `pitcher_experience_level` | Career stage classification |
+
+**Outcome Labels (Two-Tier Hierarchy):
+- **Tier 1** (Coarse): S (Strike, 69.9%), X (Ball-in-Play, 26.9%), B (Ball, 3.2%)
+- **Tier 2** (Fine): Strikeout, Walk, Single, Double, Triple, HR, Out, HBP, Foul, Ball, Strike, Other
+
+**Training Data:**
+- Valid Pitches: 5,072,278 (excludes 'U' unknown outcomes)
+- Stratified sampling for balanced class representation
+- **220+ engineered features** across 24 categories, all research-backed
+- **118 raw Statcast fields** preserved in base_features
+- **Total feature space: 340+ columns** for maximum model coverage
+
+**Scripts:**
+```bash
+# Populate base features from locations
+python scripts/pitch_data/populate_base_features.py
+
+# Build engineered features (run in order)
+psql -f sql/features/005_build_engineered_features.sql
+
+# Populate additional features (run batches until complete)
+for i in {1..80}; do
+    psql -f sql/features/008_populate_additional_features_batch.sql
+done
+
+# Populate more features from KB research (run batches until complete)
+for i in {1..80}; do
+    psql -f sql/features/011_populate_more_features_batch.sql
+done
+
+# Populate context features: weather, momentum, umpire, attendance, park, fatigue
+for i in {1..80}; do
+    psql -f sql/features/014_populate_context_features_batch.sql
+done
+
+# Populate final features: Markov chains, matchup history, postseason, sequence
+for i in {1..80}; do
+    psql -f sql/features/017_populate_final_features_batch.sql
+done
+
+# Train Tier-1 XGBoost model
+python scripts/pitch_models/train_tier1_xgboost.py
+```
+
+**GitHub Issues:**
+- Epic #78: Pitch-Level Model Pipeline (Phase 4 In Progress)
+- Sub-Issue #79: Flexible Feature Mart Schema (✅ Complete)
 
 ## PostgreSQL Extensions and Features
 
@@ -252,6 +553,111 @@ When creating or updating GitHub issues:
 - Use labels consistently with existing conventions
 - Add items to the project board for tracking
 - Reference knowledge base documents when applicable
+
+## AI Agent Documentation Update Protocol
+
+**CRITICAL: After every significant conversation, AI agents MUST update documentation to maintain project continuity.**
+
+### Required Documentation Updates
+
+After completing work, AI agents must update:
+
+1. **CRISP-DM Implementation Plan** (`docs/CRISP_DM_IMPLEMENTATION_PLAN.md`)
+   - Update phase completion percentages
+   - Add milestone achievements with dates
+   - Update "Next Phase Actions" with completed items
+   - Link to relevant GitHub issues
+
+2. **Research Paper** (`docs/research_paper.md`)
+   - Add experimental results from model training
+   - Document mathematical formulations for new models
+   - Include equations, loss functions, and evaluation metrics
+   - Reference external research papers
+
+3. **Current Snapshot** (`docs/agents/CURRENT_SNAPSHOT.md`)
+   - Update "Current Objective" section
+   - Refresh "Current Data State" with row counts
+   - Update "Best Move Right Now" recommendations
+   - Document any blockers or dependencies
+
+4. **Agent Operating Guide** (this file, `AGENTS.md`)
+   - Update data layer descriptions when schema changes
+   - Add new procedures for completed work
+   - Document pitch-level features and table structures
+   - Update "Non-Negotiables" if conventions change
+
+5. **File Inventory** (`docs/agents/FILE_INVENTORY.md`)
+   - Add new SQL files, scripts, and documentation
+   - Update ownership and status for modified files
+   - Link to related GitHub issues
+   - Document deprecated or experimental files
+
+6. **GitHub Issues and Comments**
+   - Add progress comments to epics and sub-issues
+   - Include specific details: row counts, metrics, file paths
+   - Update issue status (open → in progress → closed)
+   - Link commits and PRs to issues
+
+### Documentation Update Template
+
+When updating documentation, include:
+
+```markdown
+**Date:** YYYY-MM-DD  
+**CRISP-DM Phase:** [Current Phase]  
+**Epic/Issue:** #[number]  
+**Agent:** [AI agent identifier]
+
+### Changes Made
+- [Specific change 1]
+- [Specific change 2]
+
+### Metrics/Results
+- Rows affected: [count]
+- Performance: [metrics]
+- Accuracy: [if applicable]
+
+### Next Steps
+1. [Action item 1]
+2. [Action item 2]
+```
+
+### Paper Trail Requirements
+
+Every significant work session must leave:
+
+1. **Commit messages** with detailed descriptions
+2. **GitHub issue comments** with technical details
+3. **Documentation updates** showing what changed and why
+4. **Research paper updates** for model/math work
+5. **CRISP-DM plan updates** showing phase progress
+
+### Examples of "Significant Work"
+
+**MUST document:**
+- Schema changes (new tables, columns, indexes)
+- Model training runs (accuracies, loss values, metrics)
+- Feature engineering (new derived features, rolling averages)
+- Data migrations (row counts, data quality issues)
+- Research findings (equations, literature review)
+- Bug fixes (root cause, solution, prevention)
+
+**MAY skip:**
+- Typo fixes
+- Minor formatting changes
+- Configuration tweaks without data impact
+- Read-only queries for exploration
+
+### Documentation Quality Standards
+
+All documentation must include:
+
+- **Specific numbers:** Row counts, percentages, timestamps
+- **File paths:** Absolute paths to relevant files
+- **Equations:** LaTeX formatting for mathematical concepts
+- **Code snippets:** SQL queries, Python functions
+- **Research citations:** Author, year, paper/repo links
+- **Decision rationale:** Why this approach was chosen
 
 ## Chadwick Procedure
 

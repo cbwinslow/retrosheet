@@ -1,7 +1,7 @@
--- Bridge Table Monitoring Views
--- These views provide health checks and coverage statistics for bridge tables
-
--- View: Bridge table row counts
+-- File: sql/bridge/900_bridge_monitoring_views.sql
+-- Purpose: Monitoring views for bridge table counts, coverage, quality, duplicates
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE VIEW bridge.bridge_table_counts AS
 SELECT 
     'player_xref' as table_name,
@@ -323,3 +323,4 @@ FROM bridge.park_xref
 WHERE retrosheet_park_id IS NOT NULL;
 
 COMMENT ON VIEW bridge.mapping_completeness IS 'Overall mapping completeness statistics by entity type';
+

@@ -2,6 +2,7 @@
 """
 Shared database configuration.
 """
+
 import os
 
 
@@ -20,8 +21,8 @@ def database_url() -> str:
     """Get database URL."""
     kwargs = database_kwargs()
     return (
-        f"postgresql://{kwargs['user']}:{kwargs['password']}@"
-        f"{kwargs['host']}:{kwargs['port']}/{kwargs['database']}"
+        f'postgresql://{kwargs["user"]}:{kwargs["password"]}@'
+        f'{kwargs["host"]}:{kwargs["port"]}/{kwargs["database"]}'
     )
 
 

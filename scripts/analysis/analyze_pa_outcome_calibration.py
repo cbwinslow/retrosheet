@@ -7,9 +7,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sqlalchemy import create_engine, text
-
 from predict_pa_outcome_distribution import load_registered_model
+from sqlalchemy import create_engine, text
 from train_pa_outcome_distribution import (
     database_url,
     feature_columns,
@@ -17,7 +16,8 @@ from train_pa_outcome_distribution import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_MODEL_NAME = "hist_gradient_boosting_multiclass"
+DEFAULT_MODEL_NAME = 'hist_gradient_boosting_multiclass'
+
 
 def load_validation_frame(
     *,
@@ -29,19 +29,17 @@ def load_validation_frame(
     max_season: int,
 ) -> pd.DataFrame:
     source_relation = (
-        "features.plate_appearance_outcome_grouped_examples"
-        if target_taxonomy == "grouped"
-        else "features.plate_appearance_outcome_examples"
+        'features.plate_appearance_outcome_grouped_examples'
+        if target_taxonomy == 'grouped'
+        else 'features.plate_appearance_outcome_examples'
     )
-    target_column = (
-        "grouped_outcome_class" if target_taxonomy == "grouped" else "outcome_class"
-    )
+    target_column = 'grouped_outcome_class' if target_taxonomy == 'grouped' else 'outcome_class'
 
-    if feature_set in {"advanced", "advanced_count"}:
+    if feature_set in {'advanced', 'advanced_count'}:
         advanced_relation = (
-            "features.plate_appearance_count_state_advanced_examples"
-            if feature_set == "advanced_count"
-            else "features.plate_appearance_advanced_examples"
+            'features.plate_appearance_count_state_advanced_examples'
+            if feature_set == 'advanced_count'
+            else 'features.plate_appearance_advanced_examples'
         )
         sql = f"""
             SELECT
@@ -96,28 +94,28 @@ def load_validation_frame(
                 advanced.fielding_team_rolling_30_win_rate,
                 advanced.fielding_team_rolling_30_runs_scored_per_game,
                 advanced.fielding_team_rolling_30_runs_allowed_per_game
-                {"," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_pa," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_hit_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_walk_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_strikeout_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_home_run_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_reach_base_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_extra_base_hit_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_batters_faced," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_hit_allowed_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_walk_allowed_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_strikeout_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_home_run_allowed_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_reach_base_allowed_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_extra_base_hit_allowed_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_pa," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_hit_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_walk_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_strikeout_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_home_run_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_reach_base_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_extra_base_hit_rate" if feature_set == "advanced_count" else ""}
+                {',' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_pa,' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_hit_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_walk_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_strikeout_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_home_run_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_reach_base_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_extra_base_hit_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_batters_faced,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_hit_allowed_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_walk_allowed_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_strikeout_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_home_run_allowed_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_reach_base_allowed_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_extra_base_hit_allowed_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_pa,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_hit_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_walk_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_strikeout_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_home_run_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_reach_base_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_extra_base_hit_rate' if feature_set == 'advanced_count' else ''}
             FROM {source_relation} outcome
             JOIN {advanced_relation} advanced
               ON advanced.game_id = outcome.game_id
@@ -152,9 +150,9 @@ def load_validation_frame(
         text(sql),
         engine,
         params={
-            "train_through": train_through,
-            "min_season": min_season,
-            "max_season": max_season,
+            'train_through': train_through,
+            'min_season': min_season,
+            'max_season': max_season,
         },
     )
 
@@ -195,15 +193,15 @@ def class_calibration_table(
             continue
         rows.append(
             {
-                "class_name": class_name,
-                "bin_index": index,
-                "bin_left": float(left),
-                "bin_right": float(right),
-                "count": count,
-                "mean_predicted": float(predicted[mask].mean()),
-                "observed_rate": float(actual[mask].mean()),
-                "absolute_gap": float(abs(predicted[mask].mean() - actual[mask].mean())),
-            }
+                'class_name': class_name,
+                'bin_index': index,
+                'bin_left': float(left),
+                'bin_right': float(right),
+                'count': count,
+                'mean_predicted': float(predicted[mask].mean()),
+                'observed_rate': float(actual[mask].mean()),
+                'absolute_gap': float(abs(predicted[mask].mean() - actual[mask].mean())),
+            },
         )
     return rows
 
@@ -216,62 +214,64 @@ def subgroup_rows(
     classes: list[str],
 ) -> list[dict]:
     top_probability = probabilities.max(axis=1)
-    top_correct = (predicted_class == frame["target"].to_numpy()).astype(int)
+    top_correct = (predicted_class == frame['target'].to_numpy()).astype(int)
     subgroup_specs = {
-        "balls_strikes": frame["balls"].astype(str) + "-" + frame["strikes"].astype(str),
-        "outs_before": frame["outs_before"].astype(str),
-        "start_bases": frame["start_bases"].astype(str),
-        "handedness_matchup": frame["batter_hand"].astype(str) + "v" + frame["pitcher_hand"].astype(str),
-        "season": frame["season"].astype(str),
+        'balls_strikes': frame['balls'].astype(str) + '-' + frame['strikes'].astype(str),
+        'outs_before': frame['outs_before'].astype(str),
+        'start_bases': frame['start_bases'].astype(str),
+        'handedness_matchup': frame['batter_hand'].astype(str)
+        + 'v'
+        + frame['pitcher_hand'].astype(str),
+        'season': frame['season'].astype(str),
     }
 
     results: list[dict] = []
     for subgroup_name, series in subgroup_specs.items():
         temp = pd.DataFrame(
             {
-                "subgroup_value": series,
-                "target": frame["target"],
-                "predicted_class": predicted_class,
-                "top_probability": top_probability,
-                "top_correct": top_correct,
-            }
+                'subgroup_value': series,
+                'target': frame['target'],
+                'predicted_class': predicted_class,
+                'top_probability': top_probability,
+                'top_correct': top_correct,
+            },
         )
-        grouped = temp.groupby("subgroup_value", dropna=False)
+        grouped = temp.groupby('subgroup_value', dropna=False)
         for subgroup_value, group in grouped:
-            actual = group["top_correct"].to_numpy(dtype=float)
-            predicted = group["top_probability"].to_numpy(dtype=float)
+            actual = group['top_correct'].to_numpy(dtype=float)
+            predicted = group['top_probability'].to_numpy(dtype=float)
             results.append(
                 {
-                    "subgroup_name": subgroup_name,
-                    "subgroup_value": str(subgroup_value),
-                    "rows": int(len(group)),
-                    "accuracy": float(actual.mean()),
-                    "mean_top_probability": float(predicted.mean()),
-                    "top_probability_gap": float(abs(predicted.mean() - actual.mean())),
-                }
+                    'subgroup_name': subgroup_name,
+                    'subgroup_value': str(subgroup_value),
+                    'rows': len(group),
+                    'accuracy': float(actual.mean()),
+                    'mean_top_probability': float(predicted.mean()),
+                    'top_probability_gap': float(abs(predicted.mean() - actual.mean())),
+                },
             )
     return results
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Evaluate calibration and subgroup reliability for a registered PA outcome model."
+        description='Evaluate calibration and subgroup reliability for a registered PA outcome model.',
     )
-    parser.add_argument("--model-name", default=DEFAULT_MODEL_NAME)
-    parser.add_argument("--model-version", default=None)
-    parser.add_argument("--bins", type=int, default=10)
-    parser.add_argument("--output-json", default=None)
+    parser.add_argument('--model-name', default=DEFAULT_MODEL_NAME)
+    parser.add_argument('--model-version', default=None)
+    parser.add_argument('--bins', type=int, default=10)
+    parser.add_argument('--output-json', default=None)
     args = parser.parse_args()
 
     model, feature_spec, metadata = load_registered_model(
         model_name=args.model_name,
         model_version=args.model_version,
     )
-    feature_set = feature_spec["feature_set"]
-    target_taxonomy = feature_spec.get("target_taxonomy", "granular")
-    train_through = int(metadata["metrics"]["train_through"])
-    min_season = int(metadata["metrics"]["min_season"])
-    max_season = int(metadata["metrics"]["max_season"])
+    feature_set = feature_spec['feature_set']
+    target_taxonomy = feature_spec.get('target_taxonomy', 'granular')
+    train_through = int(metadata['metrics']['train_through'])
+    min_season = int(metadata['metrics']['min_season'])
+    max_season = int(metadata['metrics']['max_season'])
     numeric_features, categorical_features = feature_columns(feature_set)
 
     engine = create_engine(database_url())
@@ -290,12 +290,12 @@ def main() -> None:
     features = frame[numeric_features + categorical_features]
     probabilities = model.predict_proba(features)
     predicted_class = model.predict(features)
-    classes = [str(label) for label in model.named_steps["model"].classes_]
+    classes = [str(label) for label in model.named_steps['model'].classes_]
 
     per_class_summary: list[dict] = []
     calibration_bins: list[dict] = []
     class_to_index = {label: index for index, label in enumerate(classes)}
-    target_array = frame["target"].to_numpy()
+    target_array = frame['target'].to_numpy()
 
     for class_name in classes:
         index = class_to_index[class_name]
@@ -309,17 +309,17 @@ def main() -> None:
                 predicted=predicted,
                 bins=args.bins,
                 class_name=class_name,
-            )
+            ),
         )
         per_class_summary.append(
             {
-                "class_name": class_name,
-                "support": support,
-                "mean_predicted_probability": float(predicted.mean()),
-                "observed_rate": float(actual.mean()),
-                "absolute_gap": float(abs(predicted.mean() - actual.mean())),
-                "ece": class_ece,
-            }
+                'class_name': class_name,
+                'support': support,
+                'mean_predicted_probability': float(predicted.mean()),
+                'observed_rate': float(actual.mean()),
+                'absolute_gap': float(abs(predicted.mean() - actual.mean())),
+                'ece': class_ece,
+            },
         )
 
     subgroup_summary = subgroup_rows(
@@ -330,18 +330,18 @@ def main() -> None:
     )
 
     report = {
-        "model_name": metadata["model_name"],
-        "model_version": metadata["model_version"],
-        "feature_set": feature_set,
-        "target_taxonomy": target_taxonomy,
-        "train_through": train_through,
-        "validation_seasons": [train_through + 1, max_season],
-        "rows": int(len(frame)),
-        "classes": classes,
-        "registered_validation_metrics": metadata["metrics"]["validation"],
-        "per_class_summary": per_class_summary,
-        "calibration_bins": calibration_bins,
-        "subgroup_summary": subgroup_summary,
+        'model_name': metadata['model_name'],
+        'model_version': metadata['model_version'],
+        'feature_set': feature_set,
+        'target_taxonomy': target_taxonomy,
+        'train_through': train_through,
+        'validation_seasons': [train_through + 1, max_season],
+        'rows': len(frame),
+        'classes': classes,
+        'registered_validation_metrics': metadata['metrics']['validation'],
+        'per_class_summary': per_class_summary,
+        'calibration_bins': calibration_bins,
+        'subgroup_summary': subgroup_summary,
     }
 
     if args.output_json:
@@ -349,10 +349,13 @@ def main() -> None:
         if not output_path.is_absolute():
             output_path = ROOT / output_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        output_path.write_text(
+            json.dumps(report, indent=2, sort_keys=True) + '\n',
+            encoding='utf-8',
+        )
 
     print(json.dumps(report, indent=2, sort_keys=True))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

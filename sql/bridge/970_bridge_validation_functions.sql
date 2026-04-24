@@ -1,7 +1,7 @@
--- Bridge Table Validation Functions
--- These functions return boolean true/false for use in scripting and validation
-
--- Function: Check if bridge tables have data
+-- File: sql/bridge/970_bridge_validation_functions.sql
+-- Purpose: Validation functions to check bridge table health and coverage
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE FUNCTION bridge.validate_bridge_tables_have_data()
 RETURNS BOOLEAN
 LANGUAGE plpgsql
@@ -169,7 +169,7 @@ COMMENT ON FUNCTION bridge.validate_data_quality() IS 'Returns true if no data q
 
 -- Function: Master validation function (runs all checks)
 CREATE OR REPLACE FUNCTION bridge.validate_all_bridge_tables()
-RETURNS TABLE(
+RETURNS TABLE (
     check_name TEXT,
     passed BOOLEAN,
     details TEXT
@@ -291,3 +291,4 @@ END;
 $$;
 
 COMMENT ON FUNCTION bridge.validate_bridge_tables_quick() IS 'Returns true if all bridge table validation checks pass';
+

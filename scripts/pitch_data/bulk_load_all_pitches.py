@@ -8,13 +8,13 @@ Usage:
     python scripts/pitch_data/bulk_load_all_pitches.py --all
     python scripts/pitch_data/bulk_load_all_pitches.py --dry-run
 """
+
 import argparse
 import logging
 import os
-import sys
-from typing import List, Tuple
 
 import psycopg2
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -25,17 +25,17 @@ def get_connection():
         host=os.getenv('PGHOST', 'localhost'),
         port=int(os.getenv('PGPORT', 5432)),
         database=os.getenv('PGDATABASE', 'retrosheet'),
-        user=os.getenv('PGUSER', os.getenv('USER', 'postgres'))
+        user=os.getenv('PGUSER', os.getenv('USER', 'postgres')),
     )
 
 
-def get_season_counts(conn) -> List[Tuple[int, int]]:
+def get_season_counts(conn) -> list[tuple[int, int]]:
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT game_year::int, COUNT(*) 
-            FROM raw_mlb.statcast 
+            SELECT game_year::int, COUNT(*)
+            FROM raw_mlb.statcast
             WHERE game_year IS NOT NULL AND plate_x IS NOT NULL
-            GROUP BY game_year::int 
+            GROUP BY game_year::int
             ORDER BY game_year::int DESC
         """)
         return cur.fetchall()
@@ -43,23 +43,24 @@ def get_season_counts(conn) -> List[Tuple[int, int]]:
 
 def get_loaded_counts(conn) -> dict:
     with conn.cursor() as cur:
-        cur.execute("SELECT game_year, COUNT(*) FROM features_pitch.locations GROUP BY game_year")
+        cur.execute('SELECT game_year, COUNT(*) FROM features_pitch.locations GROUP BY game_year')
         return {row[0]: row[1] for row in cur.fetchall()}
 
 
 def load_season_bulk(conn, season: int) -> int:
     """Load entire season using single INSERT...SELECT (fastest for PostgreSQL)."""
-    logger.info(f"BULK loading season {season}...")
-    
+    logger.info(f'BULK loading season {season}...')  # noqa: G004
+
     with conn.cursor() as cur:
         # Check if already loaded
-        cur.execute("SELECT COUNT(*) FROM features_pitch.locations WHERE game_year = %s", (season,))
+        cur.execute('SELECT COUNT(*) FROM features_pitch.locations WHERE game_year = %s', (season,))
         if cur.fetchone()[0] > 0:
-            logger.warning(f"Season {season} already loaded. Use --force to reload.")
+            logger.warning(f'Season {season} already loaded. Use --force to reload.')  # noqa: G004
             return 0
-        
+
         # Single bulk insert - let PostgreSQL handle it efficiently
-        cur.execute("""
+        cur.execute(
+            """
             INSERT INTO features_pitch.locations (
                 game_year, game_pk, batter_id, pitcher_id, pitch_type,
                 plate_x, plate_z, sz_top, sz_bot, pfx_x, pfx_z,
@@ -67,7 +68,7 @@ def load_season_bulk(conn, season: int) -> int:
                 inning, inning_topbot, hc_x, hc_y, hit_location, bb_type,
                 launch_speed, launch_angle, hit_distance
             )
-            SELECT 
+            SELECT
                 s.game_year::integer,
                 s.game_pk::integer,
                 s.batter::integer,
@@ -98,36 +99,41 @@ def load_season_bulk(conn, season: int) -> int:
             WHERE s.game_year = %s
               AND s.plate_x IS NOT NULL
               AND s.plate_z IS NOT NULL
-        """, (season,))
-        
+        """,
+            (season,),
+        )
+
         inserted = cur.rowcount
         conn.commit()
-        
-        logger.info(f"Inserted {inserted:,} pitches for season {season}")
-        
+
+        logger.info(f'Inserted {inserted:,} pitches for season {season}')  # noqa: G004
+
         # Update geometry
-        logger.info(f"Updating PostGIS geometry for {inserted:,} pitches...")
-        cur.execute("""
-            UPDATE features_pitch.locations 
+        logger.info(f'Updating PostGIS geometry for {inserted:,} pitches...')  # noqa: G004
+        cur.execute(
+            """
+            UPDATE features_pitch.locations
             SET location = ST_SetSRID(ST_MakePoint(plate_x, plate_z), 4326)
             WHERE game_year = %s
-              AND plate_x IS NOT NULL 
+              AND plate_x IS NOT NULL
               AND plate_z IS NOT NULL
-        """, (season,))
-        
+        """,
+            (season,),
+        )
+
         conn.commit()
-        logger.info(f"✓ Season {season} complete: {inserted:,} pitches with geometry")
+        logger.info(f'✓ Season {season} complete: {inserted:,} pitches with geometry')  # noqa: G004
         return inserted
 
 
 def clear_season(conn, season: int):
     """Clear existing data for a season."""
     with conn.cursor() as cur:
-        cur.execute("DELETE FROM features_pitch.locations WHERE game_year = %s", (season,))
+        cur.execute('DELETE FROM features_pitch.locations WHERE game_year = %s', (season,))
         deleted = cur.rowcount
         conn.commit()
         if deleted > 0:
-            logger.info(f"Cleared {deleted:,} existing rows for season {season}")
+            logger.info(f'Cleared {deleted:,} existing rows for season {season}')  # noqa: G004
 
 
 def main():
@@ -136,29 +142,29 @@ def main():
     parser.add_argument('--all', action='store_true', help='Load all seasons')
     parser.add_argument('--force', action='store_true', help='Force reload')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be loaded')
-    
+
     args = parser.parse_args()
-    
+
     conn = get_connection()
-    
+
     try:
         available = get_season_counts(conn)
         loaded = get_loaded_counts(conn)
-        
-        logger.info("="*70)
-        logger.info("BULK STATCAST PITCH LOADER")
-        logger.info("="*70)
-        
-        logger.info("\nAvailable vs Loaded:")
+
+        logger.info('=' * 70)
+        logger.info('BULK STATCAST PITCH LOADER')
+        logger.info('=' * 70)
+
+        logger.info('\nAvailable vs Loaded:')
         for year, count in available:
             loaded_count = loaded.get(year, 0)
-            status = "✅" if loaded_count == count else f"⚠️  ({loaded_count:,}/{count:,})"
-            logger.info(f"  {year}: {count:,} available, {loaded_count:,} loaded {status}")
-        
+            status = '✅' if loaded_count == count else f'⚠️  ({loaded_count:,}/{count:,})'
+            logger.info(f'  {year}: {count:,} available, {loaded_count:,} loaded {status}')  # noqa: G004
+
         if args.dry_run:
-            logger.info("\nDry run complete.")
+            logger.info('\nDry run complete.')
             return
-        
+
         # Parse seasons
         seasons_to_load = []
         if args.all:
@@ -170,28 +176,28 @@ def main():
                     seasons_to_load.extend(range(start, end + 1))
                 else:
                     seasons_to_load.append(int(part))
-        
+
         available_years = {year for year, _ in available}
         seasons_to_load = [s for s in seasons_to_load if s in available_years]
-        
+
         if not seasons_to_load:
-            logger.error("No valid seasons to load")
+            logger.error('No valid seasons to load')
             return
-        
-        logger.info(f"\nLoading {len(seasons_to_load)} season(s): {seasons_to_load}")
-        logger.info("-"*70)
-        
+
+        logger.info(f'\nLoading {len(seasons_to_load)} season(s): {seasons_to_load}')  # noqa: G004
+        logger.info('-' * 70)
+
         total = 0
         for season in seasons_to_load:
             if args.force:
                 clear_season(conn, season)
             count = load_season_bulk(conn, season)
             total += count
-        
-        logger.info("-"*70)
-        logger.info(f"TOTAL PITCHES LOADED: {total:,}")
-        logger.info("="*70)
-        
+
+        logger.info('-' * 70)
+        logger.info(f'TOTAL PITCHES LOADED: {total:,}')  # noqa: G004
+        logger.info('=' * 70)
+
     finally:
         conn.close()
 

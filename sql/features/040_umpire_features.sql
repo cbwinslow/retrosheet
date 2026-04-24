@@ -1,6 +1,7 @@
--- Phase 2 Feature Mart: Umpire Strike Zone Tendency Features
--- Umpire specific strike zone characteristics and consistency metrics
-
+-- File: sql/features/040_umpire_features.sql
+-- Purpose: Create umpire strike zone features materialized view
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE MATERIALIZED VIEW features.umpire_strike_zone_features AS
 WITH umpire_stats AS (
     SELECT
@@ -25,24 +26,26 @@ WITH umpire_stats AS (
         ROUND(COUNT(CASE WHEN events = 'strikeout' THEN 1 END)::numeric / NULLIF(COUNT(DISTINCT game_pk), 0)::numeric, 2) AS strikeouts_per_game,
         ROUND(COUNT(CASE WHEN events = 'walk' THEN 1 END)::numeric / NULLIF(COUNT(DISTINCT game_pk), 0)::numeric, 2) AS walks_per_game
     FROM raw_mlb.statcast
-    WHERE umpire IS NOT NULL
-    AND description IS NOT NULL
-    AND game_year IS NOT NULL
+    WHERE
+        umpire IS NOT NULL
+        AND description IS NOT NULL
+        AND game_year IS NOT NULL
     GROUP BY umpire, game_year
 )
+
 SELECT
     umpire AS umpire_id,
     season,
-    season + 1 AS feature_season,
     total_pitches,
     called_strike_rate,
     avg_strike_zone_top,
     avg_strike_zone_bottom,
     strike_zone_variance_top,
     strike_zone_variance_bottom,
-    ROUND(umpire_consistency_score::numeric, 4) AS umpire_consistency_score,
     strikeouts_per_game,
     walks_per_game,
+    season + 1 AS feature_season,
+    ROUND(umpire_consistency_score::numeric, 4) AS umpire_consistency_score,
     -- Umpire bias flags
     CASE WHEN strikeouts_per_game > 6.5 THEN 1 ELSE 0 END AS umpire_k_friendly,
     CASE WHEN walks_per_game > 3.5 THEN 1 ELSE 0 END AS umpire_walk_friendly,
@@ -56,3 +59,4 @@ CREATE UNIQUE INDEX idx_umpire_features_season ON features.umpire_strike_zone_fe
 CREATE INDEX idx_umpire_features_season ON features.umpire_strike_zone_features (feature_season);
 
 ANALYZE features.umpire_strike_zone_features;
+

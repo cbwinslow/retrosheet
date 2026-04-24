@@ -1,6 +1,7 @@
--- Enhanced Feature View
--- Combines all new Phase 1 features into the existing training set
-
+-- File: sql/features/099_enhanced_feature_view.sql
+-- Purpose: Join plate appearances with pitcher arsenal and weather features
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE VIEW features.plate_appearance_enhanced_examples AS
 SELECT
     pa.*,
@@ -23,9 +24,11 @@ SELECT
     att.field_dry_flag,
     att.sky_clear_flag,
     att.sky_cloudy_flag
-FROM features.plate_appearance_advanced_examples pa
-LEFT JOIN features.pitcher_arsenal_features ars
-    ON pa.pitcher_id::bigint = ars.pitcher_id
-    AND pa.season = ars.feature_season
-LEFT JOIN features.game_attendance_features att
+FROM features.plate_appearance_advanced_examples AS pa
+LEFT JOIN features.pitcher_arsenal_features AS ars
+    ON
+        pa.pitcher_id::bigint = ars.pitcher_id
+        AND pa.season = ars.feature_season
+LEFT JOIN features.game_attendance_features AS att
     ON pa.game_id = att.game_pk;
+

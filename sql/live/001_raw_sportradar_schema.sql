@@ -1,7 +1,7 @@
--- Sportradar Raw Ingestion Schema
--- Permanent immutable storage for all live push events
--- Never modify these tables once written
-
+-- File: sql/live/001_raw_sportradar_schema.sql
+-- Purpose: Schema and tables for Sportradar push events and snapshots
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS raw_sportradar;
 
 CREATE TABLE IF NOT EXISTS raw_sportradar.push_events (
@@ -34,3 +34,7 @@ CREATE TABLE IF NOT EXISTS raw_sportradar.game_snapshots (
 
 CREATE INDEX IF NOT EXISTS idx_sportradar_game_pk ON raw_sportradar.game_snapshots (game_pk);
 CREATE INDEX IF NOT EXISTS idx_sportradar_game_fetched_at ON raw_sportradar.game_snapshots (fetched_at);
+
+-- Table comments
+COMMENT ON TABLE raw_sportradar.push_events IS 'Sportradar push event ingestion with payloads';
+COMMENT ON TABLE raw_sportradar.game_snapshots IS 'Sportradar game snapshot JSON payloads';

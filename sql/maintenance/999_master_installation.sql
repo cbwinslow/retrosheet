@@ -1,10 +1,7 @@
--- Master PostgreSQL Extensions and Features Installation Script
--- Research-backed implementation of PostgreSQL extensions and advanced features
--- This script orchestrates the installation of all recommended extensions and features
-
--- ============================================================================
--- PHASE 1: Check Current State
--- ============================================================================
+-- File: sql/maintenance/999_master_installation.sql
+-- Purpose: Orchestrate installation of all PostgreSQL extensions
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 \echo 'Checking current PostgreSQL extensions...'
 \i sql/maintenance/001_check_extensions.sql
 
@@ -42,16 +39,17 @@
 -- PHASE 5: Final Validation
 -- ============================================================================
 \echo 'Final validation: Checking installed extensions...'
-SELECT 
+SELECT
     name,
     default_version,
     installed_version,
-    CASE 
+    CASE
         WHEN installed_version IS NOT NULL THEN 'INSTALLED'
         ELSE 'AVAILABLE'
-    END as status
+    END AS status
 FROM pg_available_extensions
 WHERE name IN ('cron', 'pg_stat_statements', 'plpython3u', 'vector')
 ORDER BY name;
 
 \echo 'Installation complete!'
+

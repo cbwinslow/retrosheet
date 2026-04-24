@@ -1,3 +1,8 @@
+-- File: sql/core/010_core_games_events.sql
+-- Purpose: Create core baseball entities (games, events, teams, players) and prediction infrastructure
+-- Author: Agent Cascade
+-- Date: 2026-04-24
+
 CREATE SCHEMA IF NOT EXISTS core;
 CREATE SCHEMA IF NOT EXISTS features;
 CREATE SCHEMA IF NOT EXISTS models;
@@ -694,3 +699,70 @@ FROM core.events
 UNION ALL
 SELECT 'features.game_outcome_examples', count(*), count(DISTINCT game_id)
 FROM features.game_outcome_examples;
+
+-- =============================================================================
+-- TABLE AND COLUMN COMMENTS
+-- =============================================================================
+
+-- core.teams
+COMMENT ON TABLE core.teams IS 'Team reference data from Retrosheet with league/division assignments';
+COMMENT ON COLUMN core.teams.retrosheet_team_id IS 'Primary key - Retrosheet 3-character team code (e.g., NYA, BOS)';
+COMMENT ON COLUMN core.teams.name IS 'Team name (e.g., New York Yankees)';
+COMMENT ON COLUMN core.teams.league IS 'League code: AL (American) or NL (National)';
+COMMENT ON COLUMN core.teams.division IS 'Division name within league';
+
+-- core.parks
+COMMENT ON TABLE core.parks IS 'Park/Venue reference data with location information';
+COMMENT ON COLUMN core.parks.retrosheet_park_id IS 'Primary key - Retrosheet park identifier';
+COMMENT ON COLUMN core.parks.name IS 'Park name (e.g., Yankee Stadium)';
+COMMENT ON COLUMN core.parks.city IS 'City where park is located';
+
+-- core.players
+COMMENT ON TABLE core.players IS 'Player reference data with batting/throwing handedness';
+COMMENT ON COLUMN core.players.retrosheet_player_id IS 'Primary key - Retrosheet player ID (e.g., ruthb101)';
+COMMENT ON COLUMN core.players.player_name IS 'Full player name';
+COMMENT ON COLUMN core.players.bats IS 'Batting hand: L (left), R (right), S (switch)';
+COMMENT ON COLUMN core.players.throws IS 'Throwing hand: L (left) or R (right)';
+
+-- core.games
+COMMENT ON TABLE core.games IS 'Canonical game-level records with typed columns from Retrosheet events';
+COMMENT ON COLUMN core.games.game_id IS 'Primary key - Retrosheet game ID (format: TEAYYYYMMDD)';
+COMMENT ON COLUMN core.games.season IS 'Baseball season (year)';
+COMMENT ON COLUMN core.games.game_date IS 'Game date';
+COMMENT ON COLUMN core.games.home_team_id IS 'Home team Retrosheet ID (FK to core.teams)';
+COMMENT ON COLUMN core.games.away_team_id IS 'Away team Retrosheet ID (FK to core.teams)';
+COMMENT ON COLUMN core.games.home_score IS 'Final home team score';
+COMMENT ON COLUMN core.games.away_score IS 'Final away team score';
+COMMENT ON COLUMN core.games.park_id IS 'Park where game was played (FK to core.parks)';
+
+-- core.events
+COMMENT ON TABLE core.events IS 'Play-by-play event records with game-state tracking';
+COMMENT ON COLUMN core.events.event_id IS 'Unique event ID (bigserial)';
+COMMENT ON COLUMN core.events.game_id IS 'FK to core.games';
+COMMENT ON COLUMN core.events.event_sequence IS 'Event order within game';
+COMMENT ON COLUMN core.events.inning IS 'Inning number';
+COMMENT ON COLUMN core.events.is_bottom_inning IS 'True if bottom of inning (away team batting)';
+COMMENT ON COLUMN core.events.outs_before IS 'Outs before this play (0-2)';
+COMMENT ON COLUMN core.events.batter_id IS 'Batter Retrosheet ID (FK to core.players)';
+COMMENT ON COLUMN core.events.pitcher_id IS 'Pitcher Retrosheet ID (FK to core.players)';
+COMMENT ON COLUMN core.events.event_code IS 'Retrosheet event type code (see retrosheet_event_columns.txt)';
+COMMENT ON COLUMN core.events.is_plate_appearance IS 'True if this event counted as a plate appearance';
+COMMENT ON COLUMN core.events.start_bases IS 'Base state before play (0-7 encoding: 1=1B, 2=2B, 4=3B, sums=combinations)';
+COMMENT ON COLUMN core.events.end_bases IS 'Base state after play';
+COMMENT ON COLUMN core.events.home_score_diff IS 'Home team run differential';
+
+-- predictions.prediction_targets
+COMMENT ON TABLE predictions.prediction_targets IS 'Taxonomy of prediction targets organized by target_family';
+COMMENT ON COLUMN predictions.prediction_targets.target_id IS 'Primary key - target identifier (e.g., pa_outcome, game_winner)';
+COMMENT ON COLUMN predictions.prediction_targets.target_family IS 'Category: game_outcome, pa_outcome, pitch_outcome, prop';
+
+-- models.model_registry
+COMMENT ON TABLE models.model_registry IS 'Trained model metadata with hyperparameters and artifact paths';
+COMMENT ON COLUMN models.model_registry.model_id IS 'Primary key - auto-generated model identifier';
+COMMENT ON COLUMN models.model_registry.model_name IS 'Human-readable model name';
+COMMENT ON COLUMN models.model_registry.artifact_path IS 'Filesystem or S3 path to serialized model file';
+
+-- predictions.target_probabilities
+COMMENT ON TABLE predictions.target_probabilities IS 'Individual prediction outputs with probability distributions';
+COMMENT ON COLUMN predictions.target_probabilities.probability IS 'Predicted probability for this outcome (0-1)';
+COMMENT ON COLUMN predictions.target_probabilities.predicted_at IS 'Timestamp when prediction was generated';

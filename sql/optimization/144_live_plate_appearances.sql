@@ -1,6 +1,7 @@
--- Create comprehensive live plate appearances table matching core.plate_appearances
--- This enables live data to be used seamlessly with the same queries and models as historical data
-
+-- File: sql/optimization/144_live_plate_appearances.sql
+-- Purpose: Live plate appearances table with indexes for MLB data
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE TABLE IF NOT EXISTS core.live_plate_appearances (
     game_id text NOT NULL,
     plate_appearance_id integer NOT NULL,
@@ -84,3 +85,4 @@ COMMENT ON TABLE core.live_plate_appearances IS 'Live MLB plate appearances tran
 COMMENT ON COLUMN core.live_plate_appearances.plate_appearance_id IS 'Sequential PA ID within the game (matches event_id from live_events)';
 COMMENT ON COLUMN core.live_plate_appearances.game_pa_number IS 'Sequential PA number within the entire game';
 COMMENT ON COLUMN core.live_plate_appearances.half_inning_pa_number IS 'Sequential PA number within the half-inning';
+

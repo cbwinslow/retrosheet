@@ -6,10 +6,12 @@ Usage:
     python scripts/eda/export_view.py --view eda.handedness_matchup_outcomes
     python scripts/eda/export_view.py --view eda.era_comparison --csv
 """
+
 import argparse
+import os
+
 import pandas as pd
 import psycopg2
-import os
 
 
 def get_connection():
@@ -17,7 +19,7 @@ def get_connection():
         host=os.getenv('PGHOST', 'localhost'),
         port=int(os.getenv('PGPORT', 5432)),
         database=os.getenv('PGDATABASE', 'retrosheet'),
-        user=os.getenv('PGUSER', os.getenv('USER'))
+        user=os.getenv('PGUSER', os.getenv('USER')),
     )
 
 
@@ -40,23 +42,23 @@ def main():
     parser.add_argument('--csv', action='store_true', help='Export to CSV')
     parser.add_argument('--limit', type=int, help='Limit rows')
     args = parser.parse_args()
-    
+
     conn = get_connection()
-    query = f"SELECT * FROM {args.view}"
+    query = f'SELECT * FROM {args.view}'
     if args.limit:
-        query += f" LIMIT {args.limit}"
-    
+        query += f' LIMIT {args.limit}'
+
     df = pd.read_sql(query, conn)
     conn.close()
-    
-    print(f"# {VIEWS[args.view]}")
-    print(f"# Rows: {len(df)}, Columns: {len(df.columns)}")
-    print(f"# Columns: {list(df.columns)}")
-    
+
+    print(f'# {VIEWS[args.view]}')
+    print(f'# Rows: {len(df)}, Columns: {len(df.columns)}')
+    print(f'# Columns: {list(df.columns)}')
+
     if args.csv:
         output_file = args.view.replace('.', '_') + '.csv'
         df.to_csv(output_file, index=False)
-        print(f"# Saved to: {output_file}")
+        print(f'# Saved to: {output_file}')
     else:
         # Print as simple table
         pd.set_option('display.max_columns', None)

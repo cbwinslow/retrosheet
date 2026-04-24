@@ -1,43 +1,46 @@
 """Factory for selecting a model engine.
 
-The project already has a pure‑CPU logistic‑regression trainer.  This module
-adds a thin abstraction layer so that we can optionally use a GPU‑accelerated
+The project already has a pure-CPU logistic-regression trainer.  This module
+adds a thin abstraction layer so that we can optionally use a GPU-accelerated
 implementation (XGBoost, PyTorch, etc.) without changing the rest of the code
 base.
 
 Usage::
 
     from scripts.model_engine import get_engine
-    engine = get_engine("auto")   # picks the fastest available
+
+    engine = get_engine('auto')  # picks the fastest available
     engine.fit(X_train, y_train)
     preds = engine.predict_proba(X_val)
 
-The factory prefers XGBoost‑GPU if CUDA is available, then a PyTorch NN, and
-finally falls back to the original logistic‑regression implementation.
+The factory prefers XGBoost-GPU if CUDA is available, then a PyTorch NN, and
+finally falls back to the original logistic-regression implementation.
 """
 
-from .logistic_regression import LogisticRegressionEngine
-from .xgboost_gpu import XGBoostGPUEngine
-from .pytorch_nn import PyTorchEngine
 import torch
 
+from .logistic_regression import LogisticRegressionEngine
+from .pytorch_nn import PyTorchEngine
+from .xgboost_gpu import XGBoostGPUEngine
 
-def get_engine(preferred: str = "auto"):
+
+def get_engine(preferred: str = 'auto'):
     """Return an instantiated :class:`ModelEngine`.
 
     Parameters
     ----------
     preferred: str, optional
-        "auto" (default) – pick the fastest available implementation.
-        "xgboost" – force XGBoost GPU (will raise if CUDA not present).
-        "pytorch" – force PyTorch NN (uses CPU if no CUDA).
-        "logreg" – force the original logistic‑regression engine.
+        "auto" (default) - pick the fastest available implementation.
+        "xgboost" - force XGBoost GPU (will raise if CUDA not present).
+        "pytorch" - force PyTorch NN (uses CPU if no CUDA).
+        "logreg" - force the original logistic-regression engine.
     """
 
-    if preferred == "auto":
+    if preferred == 'auto':
         # Prefer XGBoost GPU if CUDA is present
         try:
             import xgboost as xgb  # noqa: F401
+
             if torch.cuda.is_available():
                 return XGBoostGPUEngine()
         except Exception:
@@ -50,11 +53,11 @@ def get_engine(preferred: str = "auto"):
         # Fallback to pure CPU logistic regression
         return LogisticRegressionEngine()
 
-    if preferred == "xgboost":
+    if preferred == 'xgboost':
         return XGBoostGPUEngine()
-    if preferred == "pytorch":
+    if preferred == 'pytorch':
         return PyTorchEngine()
-    if preferred == "logreg":
+    if preferred == 'logreg':
         return LogisticRegressionEngine()
 
-    raise ValueError(f"Unknown engine request: {preferred}")
+    raise ValueError(f'Unknown engine request: {preferred}')

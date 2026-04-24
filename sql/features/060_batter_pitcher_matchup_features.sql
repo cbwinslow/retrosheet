@@ -1,6 +1,7 @@
--- Phase 3 Feature Mart: Batter/Pitcher Head-to-Head Matchup Features
--- Historical performance metrics for specific batter vs pitcher matchups
-
+-- File: sql/features/060_batter_pitcher_matchup_features.sql
+-- Purpose: Batter-pitcher matchup rates and contact quality features
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE MATERIALIZED VIEW features.batter_pitcher_matchup_features AS
 WITH historical_matchups AS (
     SELECT
@@ -18,17 +19,19 @@ WITH historical_matchups AS (
         AVG(launch_angle) FILTER (WHERE launch_angle IS NOT NULL) AS avg_launch_angle,
         AVG(estimated_ba_using_speedangle) FILTER (WHERE estimated_ba_using_speedangle IS NOT NULL) AS avg_expected_ba
     FROM raw_mlb.statcast
-    WHERE batter IS NOT NULL
-    AND pitcher IS NOT NULL
-    AND game_date IS NOT NULL
+    WHERE
+        batter IS NOT NULL
+        AND pitcher IS NOT NULL
+        AND game_date IS NOT NULL
     GROUP BY batter, pitcher, EXTRACT(YEAR FROM game_date::date)
 )
+
 SELECT
     batter_id,
     pitcher_id,
     season,
-    season + 1 AS feature_season,
     total_matchup_pa,
+    season + 1 AS feature_season,
     -- Calculated rates
     ROUND((hits::numeric / NULLIF(total_matchup_pa, 0))::numeric, 4) AS matchup_hit_rate,
     ROUND((strikeouts::numeric / NULLIF(total_matchup_pa, 0))::numeric, 4) AS matchup_strikeout_rate,
@@ -47,3 +50,4 @@ CREATE INDEX idx_matchup_pitcher_season ON features.batter_pitcher_matchup_featu
 CREATE INDEX idx_matchup_batter_season ON features.batter_pitcher_matchup_features (batter_id, feature_season);
 
 ANALYZE features.batter_pitcher_matchup_features;
+

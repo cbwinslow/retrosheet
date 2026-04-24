@@ -3,17 +3,19 @@
 Store ESPN MLB Data Integration Details in Letta Archival Memory
 """
 
-import requests
 import os
+
+import requests
+
 
 # Load Letta environment
 letta_base_url = os.getenv('LETTA_BASE_URL', 'http://localhost:8283')
-letta_api_key = os.getenv('LETTA_API_KEY', 'sk-let-NzY2MDVkMWUtMGRmMy00MjExLTg1NDMtNjdhOGJjYTdiM2I0OmE3Y2I5MWM0LTdjYTctNDlmOC05N2Q0LTVk')
+letta_api_key = os.getenv(
+    'LETTA_API_KEY',
+    'sk-let-NzY2MDVkMWUtMGRmMy00MjExLTg1NDMtNjdhOGJjYTdiM2I0OmE3Y2I5MWM0LTdjYTctNDlmOC05N2Q0LTVk',
+)
 
-headers = {
-    'Authorization': f'Bearer {letta_api_key}',
-    'Content-Type': 'application/json'
-}
+headers = {'Authorization': f'Bearer {letta_api_key}', 'Content-Type': 'application/json'}
 
 # Retrosheet warehouse agent ID
 agent_id = 'agent-667bf06e-9859-4447-9141-019cc4408285'
@@ -106,7 +108,7 @@ Issue #8: ESPN MLB Data Integration - Completed
 response = requests.post(
     f'{letta_base_url}/v1/agents/{agent_id}/archival-memory',
     headers=headers,
-    json={'text': memory_text}
+    json={'text': memory_text},
 )
 
 print(f'Status: {response.status_code}')

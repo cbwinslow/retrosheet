@@ -8,26 +8,27 @@ Usage:
 """
 
 import os
+
 import psycopg2
-from psycopg2 import Error
 from dotenv import load_dotenv
+from psycopg2 import Error
+
 
 load_dotenv()
 
 
 def get_db_connection():
     """Get PostgreSQL connection from environment variables."""
-    db_url = os.getenv("DATABASE_URL")
+    db_url = os.getenv('DATABASE_URL')
     if db_url:
         return psycopg2.connect(db_url)
-    else:
-        return psycopg2.connect(
-            host=os.getenv("PGHOST", "localhost"),
-            port=os.getenv("PGPORT", 5432),
-            database=os.getenv("PGDATABASE", "retrosheet"),
-            user=os.getenv("PGUSER", os.getenv("USER")),
-            password=os.getenv("PGPASSWORD"),
-        )
+    return psycopg2.connect(
+        host=os.getenv('PGHOST', 'localhost'),
+        port=os.getenv('PGPORT', 5432),
+        database=os.getenv('PGDATABASE', 'retrosheet'),
+        user=os.getenv('PGUSER', os.getenv('USER')),
+        password=os.getenv('PGPASSWORD'),
+    )
 
 
 def populate_coach_xref():
@@ -39,7 +40,7 @@ def populate_coach_xref():
             # Join with biofile_legacy to get coach names (coach_id matches player_id)
             cur.execute("""
                 INSERT INTO bridge.coach_xref (retrosheet_coach_id, source_system, coach_name, confidence_score, confidence_source)
-                SELECT DISTINCT 
+                SELECT DISTINCT
                     c.coach_id,
                     'retrosheet' as source_system,
                     COALESCE(b.use_name, b.full_name, b.last_name, c.coach_id) as coach_name,
@@ -54,13 +55,15 @@ def populate_coach_xref():
                     confidence_source = EXCLUDED.confidence_source,
                     updated_at = NOW()
             """)
-            
+
             coach_count = cur.rowcount
             conn.commit()
-            print(f"Populated {coach_count} coaches in bridge.coach_xref with names from biofile_legacy")
+            print(
+                f'Populated {coach_count} coaches in bridge.coach_xref with names from biofile_legacy',
+            )
             return coach_count
     except Error as e:
-        print(f"Error populating coach_xref: {e}")
+        print(f'Error populating coach_xref: {e}')
         conn.rollback()
         return 0
     finally:
@@ -87,7 +90,7 @@ def populate_umpire_xref():
                     CASE WHEN b.player_id IS NOT NULL THEN 0.9 ELSE 0.7 END as confidence_score,
                     CASE WHEN b.player_id IS NOT NULL THEN 'biofile_legacy_player_match' ELSE 'retrosheet_name_only' END as confidence_source
                 FROM raw_retrosheet.season_umpires u
-                LEFT JOIN raw_retrosheet.biofile_legacy b ON 
+                LEFT JOIN raw_retrosheet.biofile_legacy b ON
                     (u.last_name = b.last_name OR u.last_name = b.use_name)
                     AND b.umpire_debut IS NOT NULL
                 WHERE u.umpire_id IS NOT NULL
@@ -98,13 +101,15 @@ def populate_umpire_xref():
                     confidence_source = EXCLUDED.confidence_source,
                     updated_at = NOW()
             """)
-            
+
             umpire_count = cur.rowcount
             conn.commit()
-            print(f"Populated {umpire_count} umpires in bridge.umpire_xref with biofile_legacy cross-reference")
+            print(
+                f'Populated {umpire_count} umpires in bridge.umpire_xref with biofile_legacy cross-reference',
+            )
             return umpire_count
     except Error as e:
-        print(f"Error populating umpire_xref: {e}")
+        print(f'Error populating umpire_xref: {e}')
         conn.rollback()
         return 0
     finally:
@@ -112,16 +117,16 @@ def populate_umpire_xref():
 
 
 def main():
-    print("Populating coach and umpire bridge tables...")
-    
+    print('Populating coach and umpire bridge tables...')
+
     coach_count = populate_coach_xref()
     umpire_count = populate_umpire_xref()
-    
-    print("\nSummary:")
-    print(f"  Coaches: {coach_count}")
-    print(f"  Umpires: {umpire_count}")
-    print(f"  Total: {coach_count + umpire_count}")
+
+    print('\nSummary:')
+    print(f'  Coaches: {coach_count}')
+    print(f'  Umpires: {umpire_count}')
+    print(f'  Total: {coach_count + umpire_count}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

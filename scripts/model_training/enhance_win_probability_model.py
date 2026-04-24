@@ -4,29 +4,29 @@ Populate MLB pitches table from raw game feeds and demonstrate enhanced features
 """
 
 import os
+
 import psycopg2
-from psycopg2.extras import execute_values
 
 
 def database_kwargs():
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
 def populate_pitches_table():
     """Populate the mlb.pitches table with Statcast data."""
-    print("⚾ Populating MLB pitches table...")
+    print('⚾ Populating MLB pitches table...')
 
     conn = psycopg2.connect(**database_kwargs())
     try:
         with conn.cursor() as cur:
             # Clear existing data
-            cur.execute("TRUNCATE TABLE mlb.pitches;")
+            cur.execute('TRUNCATE TABLE mlb.pitches;')
 
             # Insert pitch data from raw feeds
             cur.execute("""
@@ -58,10 +58,10 @@ def populate_pitches_table():
             """)
 
             # Check how many pitches we inserted
-            cur.execute("SELECT COUNT(*) FROM mlb.pitches;")
+            cur.execute('SELECT COUNT(*) FROM mlb.pitches;')
             pitch_count = cur.fetchone()[0]
 
-            print(f"✅ Inserted {pitch_count} pitches with Statcast data")
+            print(f'✅ Inserted {pitch_count} pitches with Statcast data')
 
             # Show some statistics
             cur.execute("""
@@ -77,12 +77,12 @@ def populate_pitches_table():
 
             stats = cur.fetchone()
             if stats and stats[1] is not None:
-                print(f"   Average velocity: {stats[1]} mph")
-                print(f"   Average spin rate: {stats[2]} rpm")
-                print(f"   Pitches with location: {stats[3]}")
-                print(f"   Unique pitch types: {stats[4]}")
+                print(f'   Average velocity: {stats[1]} mph')
+                print(f'   Average spin rate: {stats[2]} rpm')
+                print(f'   Pitches with location: {stats[3]}')
+                print(f'   Unique pitch types: {stats[4]}')
             else:
-                print("   No pitch data found with valid statistics")
+                print('   No pitch data found with valid statistics')
 
         conn.commit()
 
@@ -92,7 +92,7 @@ def populate_pitches_table():
 
 def create_enhanced_features():
     """Create enhanced feature set with Statcast and matchup data."""
-    print("🔬 Creating enhanced feature set...")
+    print('🔬 Creating enhanced feature set...')
 
     conn = psycopg2.connect(**database_kwargs())
     try:
@@ -167,12 +167,10 @@ def create_enhanced_features():
             """)
 
             # Check enhanced dataset size
-            cur.execute(
-                "SELECT COUNT(*) FROM mlb_models.win_probability_training_enhanced;"
-            )
+            cur.execute('SELECT COUNT(*) FROM mlb_models.win_probability_training_enhanced;')
             enhanced_count = cur.fetchone()[0]
 
-            print(f"✅ Created enhanced dataset with {enhanced_count} samples")
+            print(f'✅ Created enhanced dataset with {enhanced_count} samples')
 
             # Show feature comparison
             cur.execute("""
@@ -190,12 +188,12 @@ def create_enhanced_features():
                 FROM mlb_models.win_probability_training_enhanced;
             """)
 
-            print("\n📊 Feature Comparison:")
-            print("Model         | Features | AUC   | Samples")
-            print("-" * 40)
+            print('\n📊 Feature Comparison:')
+            print('Model         | Features | AUC   | Samples')
+            print('-' * 40)
             for row in cur.fetchall():
-                auc_str = ".3f" if row[2] else "TBD"
-                print("14")
+                '.3f' if row[2] else 'TBD'
+                print('14')
 
         conn.commit()
 
@@ -204,8 +202,8 @@ def create_enhanced_features():
 
 
 def main():
-    print("🚀 MLB Enhanced Feature Engineering")
-    print("=" * 50)
+    print('🚀 MLB Enhanced Feature Engineering')
+    print('=' * 50)
 
     # Populate pitches table
     populate_pitches_table()
@@ -213,19 +211,19 @@ def main():
     # Create enhanced features
     create_enhanced_features()
 
-    print("\n🎯 Enhanced Features Added:")
-    print("✅ Statcast: Pitch velocity, spin rate, location")
-    print("✅ Matchups: Batter vs. pitcher history")
-    print("✅ Advanced: Exit velocity, launch angle, sprint speed")
-    print("✅ Context: Pitcher K/9, quality of contact allowed")
+    print('\n🎯 Enhanced Features Added:')
+    print('✅ Statcast: Pitch velocity, spin rate, location')
+    print('✅ Matchups: Batter vs. pitcher history')
+    print('✅ Advanced: Exit velocity, launch angle, sprint speed')
+    print('✅ Context: Pitcher K/9, quality of contact allowed')
 
-    print("\n📈 Expected Performance Improvement:")
-    print("• Current AUC: 0.847")
-    print("• With Statcast: +0.03 → 0.88")
-    print("• With Matchups: +0.02 → 0.90")
-    print("• With Advanced: +0.01 → 0.91")
-    print("• Realistic Target: 0.89-0.93 AUC")
+    print('\n📈 Expected Performance Improvement:')
+    print('• Current AUC: 0.847')
+    print('• With Statcast: +0.03 → 0.88')
+    print('• With Matchups: +0.02 → 0.90')
+    print('• With Advanced: +0.01 → 0.91')
+    print('• Realistic Target: 0.89-0.93 AUC')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

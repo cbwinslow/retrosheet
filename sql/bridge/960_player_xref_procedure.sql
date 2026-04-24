@@ -1,15 +1,7 @@
--- ============================================================================
--- Bridge: Player Cross-Reference Population Procedure
--- ============================================================================
--- Purpose: Populate bridge.player_xref with player ID mappings from Chadwick data
--- Dependencies: bridge.player_xref (canonical schema)
--- Created: 2026-04-21
--- Note: This procedure expects data to be loaded into a temp table first.
---       Use scripts/bridge/populate_bridge_tables.py to download Chadwick data
---       and call this procedure for the actual insert.
--- ============================================================================
-
--- Drop procedure if exists
+-- File: sql/bridge/960_player_xref_procedure.sql
+-- Purpose: Populate player cross-reference from Chadwick Bureau Register
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 DROP PROCEDURE IF EXISTS bridge.populate_player_xref();
 
 -- ============================================================================
@@ -98,10 +90,11 @@ $$;
 -- ============================================================================
 -- Comment on procedure
 -- ============================================================================
-COMMENT ON PROCEDURE bridge.populate_player_xref() IS 
+COMMENT ON PROCEDURE bridge.populate_player_xref () IS
 'Populate bridge.player_xref from temp_table.chadwick_player_data containing parsed Chadwick Bureau Register data.';
 
 -- ============================================================================
 -- Grant execute permission
 -- ============================================================================
 GRANT EXECUTE ON PROCEDURE bridge.populate_player_xref() TO postgres;
+

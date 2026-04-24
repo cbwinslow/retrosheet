@@ -1,12 +1,7 @@
--- ============================================================================
--- Bridge: Coach and Umpire Cross-Reference Population Procedures
--- ============================================================================
--- Purpose: Populate bridge.coach_xref and bridge.umpire_xref from Retrosheet data
--- Dependencies: raw_retrosheet.coaches, raw_retrosheet.season_umpires, raw_retrosheet.biofile_legacy
--- Created: 2026-04-21
--- ============================================================================
-
--- Drop procedures if exists
+-- File: sql/bridge/940_coach_umpire_xref_procedures.sql
+-- Purpose: Populate coach and umpire cross-reference tables from Retrosheet
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 DROP PROCEDURE IF EXISTS bridge.populate_coach_xref();
 DROP PROCEDURE IF EXISTS bridge.populate_umpire_xref();
 
@@ -92,10 +87,10 @@ $$;
 -- ============================================================================
 -- Comments on procedures
 -- ============================================================================
-COMMENT ON PROCEDURE bridge.populate_coach_xref() IS 
+COMMENT ON PROCEDURE bridge.populate_coach_xref () IS
 'Populate bridge.coach_xref from raw_retrosheet.coaches with names from biofile_legacy.';
 
-COMMENT ON PROCEDURE bridge.populate_umpire_xref() IS 
+COMMENT ON PROCEDURE bridge.populate_umpire_xref () IS
 'Populate bridge.umpire_xref from raw_retrosheet.season_umpires with biofile_legacy cross-reference.';
 
 -- ============================================================================
@@ -103,3 +98,4 @@ COMMENT ON PROCEDURE bridge.populate_umpire_xref() IS
 -- ============================================================================
 GRANT EXECUTE ON PROCEDURE bridge.populate_coach_xref() TO postgres;
 GRANT EXECUTE ON PROCEDURE bridge.populate_umpire_xref() TO postgres;
+

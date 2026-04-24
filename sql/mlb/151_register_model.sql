@@ -1,6 +1,7 @@
--- 151_register_model.sql
--- Procedure to register trained model artifacts
-
+-- File: sql/mlb/151_register_model.sql
+-- Purpose: Register a trained model artifact in the model registry
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE FUNCTION models.register_model(
     p_target_id TEXT,
     p_model_name TEXT,
@@ -49,7 +50,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-COMMENT ON FUNCTION models.register_model IS 
+COMMENT ON FUNCTION models.register_model IS
 'Register a trained model artifact. Usage: SELECT models.register_model(
     target_id := ''pa_outcome_distribution'',
     model_name := ''hist_gradient_boosting_multiclass'',
@@ -79,12 +80,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-COMMENT ON FUNCTION models.promote_model IS 
+COMMENT ON FUNCTION models.promote_model IS
 'Promote a model to active status (auto-deactivates others for same target). Usage: SELECT models.promote_model(1);';
 
 -- View to see active models
 CREATE OR REPLACE VIEW models.v_active_models AS
-SELECT 
+SELECT
     mr.model_id,
     mr.target_id,
     mr.model_name,
@@ -94,11 +95,12 @@ SELECT
     mr.feature_spec,
     mr.metrics,
     mr.created_at,
-    pt.description as target_description,
+    pt.description AS target_description,
     pt.question_template
-FROM models.model_registry mr
-JOIN predictions.prediction_targets pt ON mr.target_id = pt.target_id
+FROM models.model_registry AS mr
+INNER JOIN predictions.prediction_targets AS pt ON mr.target_id = pt.target_id
 WHERE mr.is_active = TRUE
-ORDER BY pt.target_id, mr.created_at DESC;
+ORDER BY pt.target_id ASC, mr.created_at DESC;
 
 COMMENT ON VIEW models.v_active_models IS 'Currently active models with target info.';
+

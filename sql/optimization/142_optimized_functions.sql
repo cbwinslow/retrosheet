@@ -1,6 +1,7 @@
--- Optimized Query Functions for Common Analytics
-
--- Fast player season stats function
+-- File: sql/optimization/142_optimized_functions.sql
+-- Purpose: Optimized SQL functions for stats, lookups, and summaries
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE FUNCTION analysis.get_player_season_stats(
     player_id text,
     target_season text
@@ -91,3 +92,4 @@ AS $$
     FROM analysis.combined_games
     WHERE (home_team_id = $1 OR away_team_id = $1) AND season = $2;
 $$;
+

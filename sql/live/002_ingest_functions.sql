@@ -1,6 +1,7 @@
--- Native PostgreSQL Live Ingestion Functions
--- All HTTP calls happen inside the database. No external processes.
-
+-- File: sql/live/002_ingest_functions.sql
+-- Purpose: Functions to fetch schedule, ingest live games, and poll actives
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE FUNCTION raw_sportradar.fetch_live_schedule()
 RETURNS jsonb AS $$
     import httpx
@@ -59,3 +60,4 @@ BEGIN
     RETURN count;
 END;
 $$ LANGUAGE plpgsql;
+

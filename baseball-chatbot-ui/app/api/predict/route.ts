@@ -11,17 +11,12 @@ export async function POST(request: Request): Promise<Response> {
     if (!gameId || !plateAppearanceId) {
       return Response.json(
         { error: 'game_id and plate_appearance_id are required' },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
     if (body.target_id === 'pa_outcome_distribution') {
-      const args = [
-        '--game-id',
-        gameId,
-        '--plate-appearance-id',
-        String(plateAppearanceId),
-      ]
+      const args = ['--game-id', gameId, '--plate-appearance-id', String(plateAppearanceId)]
       if (body.model_name) {
         args.push('--model-name', String(body.model_name))
       }

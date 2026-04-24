@@ -1,12 +1,7 @@
--- ============================================================================
--- Bridge: Game Cross-Reference Population Procedure
--- ============================================================================
--- Purpose: Populate bridge.game_xref by matching games between Retrosheet and MLB
--- Dependencies: core.games, core.live_games, bridge.team_xref
--- Created: 2026-04-21
--- ============================================================================
-
--- Drop procedure if exists
+-- File: sql/bridge/920_game_xref_procedure.sql
+-- Purpose: Match Retrosheet games to MLB games by date, teams, and game number
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 DROP PROCEDURE IF EXISTS bridge.populate_game_xref();
 
 -- ============================================================================
@@ -89,10 +84,11 @@ $$;
 -- ============================================================================
 -- Comment on procedure
 -- ============================================================================
-COMMENT ON PROCEDURE bridge.populate_game_xref() IS 
+COMMENT ON PROCEDURE bridge.populate_game_xref () IS
 'Populate bridge.game_xref by matching games between Retrosheet and MLB using date, team IDs, and game number.';
 
 -- ============================================================================
 -- Grant execute permission
 -- ============================================================================
 GRANT EXECUTE ON PROCEDURE bridge.populate_game_xref() TO postgres;
+

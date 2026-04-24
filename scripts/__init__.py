@@ -5,4 +5,3 @@ The test suite imports modules using ``from scripts import train_models`` and
 allows those imports to resolve correctly without altering the existing module
 structure.
 """
-

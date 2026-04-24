@@ -1,3 +1,7 @@
+-- File: sql/external/211_baseball_reference_raw.sql
+-- Purpose: Create Baseball-Reference raw game log table
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 j-- =============================================================================
 -- Baseball‑Reference Game Log Raw Tables
 -- =============================================================================
@@ -35,3 +39,6 @@ CREATE TABLE IF NOT EXISTS raw_baseball_reference.game_logs (
     war              REAL,
     PRIMARY KEY (game_id, player_id)
 );
+
+-- Table comments
+COMMENT ON TABLE raw_baseball_reference.game_logs IS 'Baseball-Reference game logs with per-game stats';

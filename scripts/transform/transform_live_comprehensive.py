@@ -14,11 +14,9 @@ Creates:
 from __future__ import annotations
 
 import argparse
-import json
 import os
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Dict, List
 
 import psycopg2
 from psycopg2.extras import Json, execute_values
@@ -26,11 +24,11 @@ from psycopg2.extras import Json, execute_values
 
 def database_kwargs() -> dict[str, str]:
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
@@ -75,7 +73,7 @@ class LiveGame:
     win_pitcher_id: str = None
     loss_pitcher_id: str = None
     save_pitcher_id: str = None
-    source_type: str = "mlb_live"
+    source_type: str = 'mlb_live'
     mlb_game_pk: int = None
     snapshot_id: int = None
     snapshot_fetched_at: str = None
@@ -106,7 +104,7 @@ class LiveEvent:
     event_text: str
     is_plate_appearance: bool
     is_at_bat: bool
-    source_type: str = "mlb_live"
+    source_type: str = 'mlb_live'
     balls: int = None
     strikes: int = None
     batting_team_id: str = None
@@ -166,7 +164,7 @@ class LivePlateAppearance:
     event_code: int
     event_text: str
     is_at_bat: bool
-    source_type: str = "mlb_live"
+    source_type: str = 'mlb_live'
     balls: int = None
     strikes: int = None
     start_bases: int = 0
@@ -213,11 +211,11 @@ def lookup_retrosheet_team_id(mlb_team_id: int, conn) -> str:
 
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT retrosheet_team_id FROM bridge.team_xref WHERE mlb_team_id = %s",
+            'SELECT retrosheet_team_id FROM bridge.team_xref WHERE mlb_team_id = %s',
             (mlb_team_id,),
         )
         row = cur.fetchone()
-        return row[0] if row else f"MLB{mlb_team_id}"
+        return row[0] if row else f'MLB{mlb_team_id}'
 
 
 def lookup_retrosheet_player_id(mlb_player_id: int, conn) -> str:
@@ -227,71 +225,71 @@ def lookup_retrosheet_player_id(mlb_player_id: int, conn) -> str:
 
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT retrosheet_id FROM bridge.player_xref WHERE mlb_id = %s",
+            'SELECT retrosheet_id FROM bridge.player_xref WHERE mlb_id = %s',
             (mlb_player_id,),
         )
         row = cur.fetchone()
-        return row[0] if row else f"MLB{mlb_player_id}"
+        return row[0] if row else f'MLB{mlb_player_id}'
 
 
 def parse_live_game(feed: dict, snapshot_id: int) -> LiveGame:
     """Parse MLB live feed into LiveGame object with all Retrosheet fields."""
-    game_data = feed.get("gameData", {})
-    live_data = feed.get("liveData", {})
-    game_pk = game_data.get("game", {}).get("pk")
+    game_data = feed.get('gameData', {})
+    live_data = feed.get('liveData', {})
+    game_pk = game_data.get('game', {}).get('pk')
 
     # Basic game info
-    season = game_data.get("game", {}).get("season")
-    game_date = game_data.get("datetime", {}).get("dateTime")
+    season = game_data.get('game', {}).get('season')
+    game_date = game_data.get('datetime', {}).get('dateTime')
 
     # Team info with ID mapping
-    teams = game_data.get("teams", {})
-    home_team = teams.get("home", {})
-    away_team = teams.get("away", {})
+    teams = game_data.get('teams', {})
+    home_team = teams.get('home', {})
+    away_team = teams.get('away', {})
 
     # Use database connection for ID lookups (will be passed later)
     # For now, use placeholder IDs
-    home_team_id = f"MLB{home_team.get('id')}" if home_team.get("id") else None
-    away_team_id = f"MLB{away_team.get('id')}" if away_team.get("id") else None
+    home_team_id = f'MLB{home_team.get("id")}' if home_team.get('id') else None
+    away_team_id = f'MLB{away_team.get("id")}' if away_team.get('id') else None
 
     # Score info
-    linescore = live_data.get("linescore", {})
-    teams_score = linescore.get("teams", {})
-    home_score = teams_score.get("home", {}).get("runs", 0)
-    away_score = teams_score.get("away", {}).get("runs", 0)
+    linescore = live_data.get('linescore', {})
+    teams_score = linescore.get('teams', {})
+    home_score = teams_score.get('home', {}).get('runs', 0)
+    away_score = teams_score.get('away', {}).get('runs', 0)
 
     # Venue info
-    venue = game_data.get("venue", {})
-    park_id = f"MLB{venue.get('id')}" if venue.get("id") else None
+    venue = game_data.get('venue', {})
+    park_id = f'MLB{venue.get("id")}' if venue.get('id') else None
 
     # Weather info
-    weather = game_data.get("weather", {})
-    temperature_f = weather.get("temp")
-    wind_speed_mph = weather.get("windSpeed")
-    wind_direction = weather.get("windDirection")
-    precipitation = weather.get("precipitation")
-    sky_condition = weather.get("condition")
+    weather = game_data.get('weather', {})
+    temperature_f = weather.get('temp')
+    wind_speed_mph = weather.get('windSpeed')
+    wind_direction = weather.get('windDirection')
+    precipitation = weather.get('precipitation')
+    sky_condition = weather.get('condition')
 
     # Game status
-    status = live_data.get("gameData", {}).get("status", {})
-    detailed_state = status.get("detailedState")
-    status_code = status.get("statusCode")
+    status = live_data.get('gameData', {}).get('status', {})
+    detailed_state = status.get('detailedState')
+    status_code = status.get('statusCode')
 
     return LiveGame(
-        game_id=f"MLB{game_pk}",
+        game_id=f'MLB{game_pk}',
         season=season,
-        game_date=game_date.split("T")[0] if game_date else None,
+        game_date=game_date.split('T')[0] if game_date else None,
         away_team_id=away_team_id,
         home_team_id=home_team_id,
         park_id=park_id,
         home_score=home_score,
         away_score=away_score,
-        source_type="mlb_live",
+        source_type='mlb_live',
         mlb_game_pk=game_pk,
         snapshot_id=snapshot_id,
         status_code=status_code,
         detailed_state=detailed_state,
-        venue_name=venue.get("name"),
+        venue_name=venue.get('name'),
         temperature_f=temperature_f,
         wind_speed_mph=wind_speed_mph,
         wind_direction=wind_direction,
@@ -302,11 +300,14 @@ def parse_live_game(feed: dict, snapshot_id: int) -> LiveGame:
 
 
 def parse_live_events(
-    feed: dict, game_id: str, snapshot_id: int, conn
-) -> tuple[List[LiveEvent], List[LivePlateAppearance]]:
+    feed: dict,
+    game_id: str,
+    snapshot_id: int,
+    conn,
+) -> tuple[list[LiveEvent], list[LivePlateAppearance]]:
     """Parse MLB live feed plays into LiveEvent and LivePlateAppearance objects."""
-    live_data = feed.get("liveData", {})
-    plays = live_data.get("plays", {}).get("allPlays", [])
+    live_data = feed.get('liveData', {})
+    plays = live_data.get('plays', {}).get('allPlays', [])
 
     events = []
     plate_appearances = []
@@ -317,142 +318,139 @@ def parse_live_events(
 
     for play_idx, play in enumerate(plays):
         # Extract play information
-        result = play.get("result", {})
-        about = play.get("about", {})
-        count = play.get("count", {})
+        result = play.get('result', {})
+        about = play.get('about', {})
+        count = play.get('count', {})
 
         # Basic event info
-        inning = about.get("inning")
+        inning = about.get('inning')
         is_bottom = about.get(
-            "isTopInning", True
+            'isTopInning',
+            True,
         )  # MLB API uses isTopInning (True = top of inning)
-        event_sequence = about.get("atBatIndex", play_idx)
+        event_sequence = about.get('atBatIndex', play_idx)
 
         # Score before/after
-        away_score_before = count.get("awayScore", 0)
-        home_score_before = count.get("homeScore", 0)
+        away_score_before = count.get('awayScore', 0)
+        home_score_before = count.get('homeScore', 0)
 
         # Runners and outs
-        runners = play.get("runners", [])
-        outs_before = about.get("halfInningOuts", 0)
+        runners = play.get('runners', [])
+        outs_before = about.get('halfInningOuts', 0)
 
         # Calculate base state
         start_bases = 0
         for runner in runners:
-            if runner.get("movement", {}).get("start"):
-                base = runner.get("movement", {}).get("start")
-                if base == "1B":
+            if runner.get('movement', {}).get('start'):
+                base = runner.get('movement', {}).get('start')
+                if base == '1B':
                     start_bases |= 1
-                elif base == "2B":
+                elif base == '2B':
                     start_bases |= 2
-                elif base == "3B":
+                elif base == '3B':
                     start_bases |= 4
 
         # Calculate end base state and runs scored
         end_bases = 0
         runs_on_play = 0
         for runner in runners:
-            movement = runner.get("movement", {})
-            if movement.get("end"):
-                end_base = movement.get("end")
-                if end_base == "1B":
+            movement = runner.get('movement', {})
+            if movement.get('end'):
+                end_base = movement.get('end')
+                if end_base == '1B':
                     end_bases |= 1
-                elif end_base == "2B":
+                elif end_base == '2B':
                     end_bases |= 2
-                elif end_base == "3B":
+                elif end_base == '3B':
                     end_bases |= 4
-            if movement.get("run", {}).get("isScoringEvent"):
+            if movement.get('run', {}).get('isScoringEvent'):
                 runs_on_play += 1
 
         # Count info
-        balls = count.get("balls", 0)
-        strikes = count.get("strikes", 0)
+        balls = count.get('balls', 0)
+        strikes = count.get('strikes', 0)
 
         # Player info with ID mapping
-        matchup = play.get("matchup", {})
-        batter = matchup.get("batter", {})
-        pitcher = matchup.get("pitcher", {})
+        matchup = play.get('matchup', {})
+        batter = matchup.get('batter', {})
+        pitcher = matchup.get('pitcher', {})
 
         batter_id = (
-            lookup_retrosheet_player_id(batter.get("id"), conn)
-            if batter.get("id")
-            else None
+            lookup_retrosheet_player_id(batter.get('id'), conn) if batter.get('id') else None
         )
         pitcher_id = (
-            lookup_retrosheet_player_id(pitcher.get("id"), conn)
-            if pitcher.get("id")
-            else None
+            lookup_retrosheet_player_id(pitcher.get('id'), conn) if pitcher.get('id') else None
         )
 
         # Teams
         batting_team_id = (
-            f"MLB{matchup.get('battingTeam', {}).get('id')}"
-            if matchup.get("battingTeam", {}).get("id")
+            f'MLB{matchup.get("battingTeam", {}).get("id")}'
+            if matchup.get('battingTeam', {}).get('id')
             else None
         )
         fielding_team_id = (
-            f"MLB{matchup.get('pitchingTeam', {}).get('id')}"
-            if matchup.get("pitchingTeam", {}).get("id")
+            f'MLB{matchup.get("pitchingTeam", {}).get("id")}'
+            if matchup.get('pitchingTeam', {}).get('id')
             else None
         )
 
         # Event details
-        event_type = result.get("type", "unknown")
-        event_desc = result.get("description", "")
-        event_code = result.get("eventCode", 0)
-        rbi = result.get("rbi", 0)
+        event_type = result.get('type', 'unknown')
+        event_desc = result.get('description', '')
+        event_code = result.get('eventCode', 0)
+        rbi = result.get('rbi', 0)
 
         # Determine event outcomes
-        is_hit = event_type in ["single", "double", "triple", "home_run"]
-        is_walk = event_type == "walk"
-        is_strikeout = event_type == "strikeout"
-        is_home_run = event_type == "home_run"
-        is_hit_by_pitch = event_type == "hit_by_pitch"
-        is_interference = event_type == "catcher_interference"
+        is_hit = event_type in ['single', 'double', 'triple', 'home_run']
+        is_walk = event_type == 'walk'
+        is_strikeout = event_type == 'strikeout'
+        is_home_run = event_type == 'home_run'
+        is_hit_by_pitch = event_type == 'hit_by_pitch'
+        is_interference = event_type == 'catcher_interference'
 
         # Hit value
         hit_value = 0
-        if event_type == "single":
+        if event_type == 'single':
             hit_value = 1
-        elif event_type == "double":
+        elif event_type == 'double':
             hit_value = 2
-        elif event_type == "triple":
+        elif event_type == 'triple':
             hit_value = 3
-        elif event_type == "home_run":
+        elif event_type == 'home_run':
             hit_value = 4
 
         # Plate appearance logic
         is_at_bat = event_type in [
-            "single",
-            "double",
-            "triple",
-            "home_run",
-            "strikeout",
-            "field_out",
-            "force_out",
-            "grounded_into_double_play",
-            "field_error",
-            "fielders_choice",
+            'single',
+            'double',
+            'triple',
+            'home_run',
+            'strikeout',
+            'field_out',
+            'force_out',
+            'grounded_into_double_play',
+            'field_error',
+            'fielders_choice',
         ]
         is_plate_appearance = is_at_bat or is_walk or is_hit_by_pitch or is_interference
 
         # Outs on play
         outs_on_play = 0
         if event_type in [
-            "strikeout",
-            "field_out",
-            "force_out",
-            "grounded_into_double_play",
+            'strikeout',
+            'field_out',
+            'force_out',
+            'grounded_into_double_play',
         ]:
             outs_on_play = 1
-        elif "double_play" in event_desc.lower():
+        elif 'double_play' in event_desc.lower():
             outs_on_play = 2
 
         # Create LiveEvent
         event = LiveEvent(
             game_id=game_id,
             event_id=event_sequence + 1,
-            season=int(feed.get("gameData", {}).get("game", {}).get("season")),
+            season=int(feed.get('gameData', {}).get('game', {}).get('season')),
             event_sequence=event_sequence + 1,
             inning=inning,
             is_bottom_inning=not is_bottom,  # Convert MLB's isTopInning to is_bottom_inning
@@ -464,9 +462,9 @@ def parse_live_events(
             batting_team_id=batting_team_id,
             fielding_team_id=fielding_team_id,
             batter_id=batter_id,
-            batter_hand=batter.get("batSide", {}).get("code", "U"),
+            batter_hand=batter.get('batSide', {}).get('code', 'U'),
             pitcher_id=pitcher_id,
-            pitcher_hand=pitcher.get("pitchHand", {}).get("code", "U"),
+            pitcher_hand=pitcher.get('pitchHand', {}).get('code', 'U'),
             event_code=event_code,
             event_text=event_desc,
             is_plate_appearance=is_plate_appearance,
@@ -481,7 +479,7 @@ def parse_live_events(
             rbi=rbi,
             start_bases=start_bases,
             end_bases=end_bases,
-            mlb_game_pk=feed.get("gameData", {}).get("game", {}).get("pk"),
+            mlb_game_pk=feed.get('gameData', {}).get('game', {}).get('pk'),
             snapshot_id=snapshot_id,
             raw_play=play,
         )
@@ -490,21 +488,17 @@ def parse_live_events(
         # Create LivePlateAppearance if this is a plate appearance
         if is_plate_appearance:
             game_pa_counter += 1
-            half_inning_key = f"{inning}_{not is_bottom}"
+            half_inning_key = f'{inning}_{not is_bottom}'
             half_inning_pa_counters[half_inning_key] += 1
 
             # Get game info for PA record
-            game_data = feed.get("gameData", {})
-            teams = game_data.get("teams", {})
+            game_data = feed.get('gameData', {})
+            teams = game_data.get('teams', {})
             home_team_id = (
-                f"MLB{teams.get('home', {}).get('id')}"
-                if teams.get("home", {}).get("id")
-                else None
+                f'MLB{teams.get("home", {}).get("id")}' if teams.get('home', {}).get('id') else None
             )
             away_team_id = (
-                f"MLB{teams.get('away', {}).get('id')}"
-                if teams.get("away", {}).get("id")
-                else None
+                f'MLB{teams.get("away", {}).get("id")}' if teams.get('away', {}).get('id') else None
             )
 
             pa = LivePlateAppearance(
@@ -512,10 +506,8 @@ def parse_live_events(
                 plate_appearance_id=event_sequence + 1,
                 game_pa_number=game_pa_counter,
                 half_inning_pa_number=half_inning_pa_counters[half_inning_key],
-                season=int(feed.get("gameData", {}).get("game", {}).get("season")),
-                game_date=game_data.get("datetime", {})
-                .get("dateTime", "")
-                .split("T")[0],
+                season=int(feed.get('gameData', {}).get('game', {}).get('season')),
+                game_date=game_data.get('datetime', {}).get('dateTime', '').split('T')[0],
                 event_sequence=event_sequence + 1,
                 inning=inning,
                 is_bottom_inning=not is_bottom,
@@ -531,9 +523,9 @@ def parse_live_events(
                 batting_team_id=batting_team_id,
                 fielding_team_id=fielding_team_id,
                 batter_id=batter_id,
-                batter_hand=batter.get("batSide", {}).get("code", "U"),
+                batter_hand=batter.get('batSide', {}).get('code', 'U'),
                 pitcher_id=pitcher_id,
-                pitcher_hand=pitcher.get("pitchHand", {}).get("code", "U"),
+                pitcher_hand=pitcher.get('pitchHand', {}).get('code', 'U'),
                 event_code=event_code,
                 event_text=event_desc,
                 is_at_bat=is_at_bat,
@@ -548,7 +540,7 @@ def parse_live_events(
                 outs_on_play=outs_on_play,
                 runs_on_play=runs_on_play,
                 rbi=rbi,
-                mlb_game_pk=feed.get("gameData", {}).get("game", {}).get("pk"),
+                mlb_game_pk=feed.get('gameData', {}).get('game', {}).get('pk'),
                 snapshot_id=snapshot_id,
                 raw_play=play,
             )
@@ -559,8 +551,8 @@ def parse_live_events(
 
 def insert_live_data(
     game: LiveGame,
-    events: List[LiveEvent],
-    plate_appearances: List[LivePlateAppearance],
+    events: list[LiveEvent],
+    plate_appearances: list[LivePlateAppearance],
     conn,
 ):
     """Insert live game, events, and plate appearances into database."""
@@ -761,15 +753,13 @@ def insert_live_data(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Transform MLB live feed into complete Retrosheet-compatible tables"
+        description='Transform MLB live feed into complete Retrosheet-compatible tables',
     )
+    parser.add_argument('--game-pk', type=int, required=True, help='MLB game PK to transform')
     parser.add_argument(
-        "--game-pk", type=int, required=True, help="MLB game PK to transform"
-    )
-    parser.add_argument(
-        "--snapshot-id",
+        '--snapshot-id',
         type=int,
-        help="Specific snapshot ID to use (latest if not specified)",
+        help='Specific snapshot ID to use (latest if not specified)',
     )
 
     args = parser.parse_args()
@@ -802,7 +792,7 @@ def main():
 
             row = cur.fetchone()
             if not row:
-                print(f"No live feed data found for game_pk {args.game_pk}")
+                print(f'No live feed data found for game_pk {args.game_pk}')
                 return
 
             feed, fetched_at = row
@@ -821,7 +811,7 @@ def main():
                 )
                 snapshot_id = cur.fetchone()[0]
 
-        print(f"Transforming game {args.game_pk} (snapshot {snapshot_id})")
+        print(f'Transforming game {args.game_pk} (snapshot {snapshot_id})')
 
         # Parse game data
         game = parse_live_game(feed, snapshot_id)
@@ -830,7 +820,7 @@ def main():
         game.home_team_id = (
             lookup_retrosheet_team_id(
                 int(game.home_team_id[3:])
-                if game.home_team_id and game.home_team_id.startswith("MLB")
+                if game.home_team_id and game.home_team_id.startswith('MLB')
                 else None,
                 conn,
             )
@@ -839,7 +829,7 @@ def main():
         game.away_team_id = (
             lookup_retrosheet_team_id(
                 int(game.away_team_id[3:])
-                if game.away_team_id and game.away_team_id.startswith("MLB")
+                if game.away_team_id and game.away_team_id.startswith('MLB')
                 else None,
                 conn,
             )
@@ -847,32 +837,26 @@ def main():
         )
 
         # Parse events and plate appearances
-        events, plate_appearances = parse_live_events(
-            feed, game.game_id, snapshot_id, conn
-        )
+        events, plate_appearances = parse_live_events(feed, game.game_id, snapshot_id, conn)
 
-        print(
-            f"Parsed {len(events)} events, {len(plate_appearances)} plate appearances"
-        )
+        print(f'Parsed {len(events)} events, {len(plate_appearances)} plate appearances')
 
         # Insert all data
         insert_live_data(game, events, plate_appearances, conn)
         conn.commit()
 
-        print(
-            f"Successfully transformed MLB game {args.game_pk} into Retrosheet-compatible tables"
-        )
-        print(f"- core.live_games: 1 record")
-        print(f"- core.live_events: {len(events)} records")
-        print(f"- core.live_plate_appearances: {len(plate_appearances)} records")
+        print(f'Successfully transformed MLB game {args.game_pk} into Retrosheet-compatible tables')
+        print('- core.live_games: 1 record')
+        print(f'- core.live_events: {len(events)} records')
+        print(f'- core.live_plate_appearances: {len(plate_appearances)} records')
 
     except Exception as e:
-        print(f"Error transforming live game: {e}")
+        print(f'Error transforming live game: {e}')
         conn.rollback()
         raise
     finally:
         conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

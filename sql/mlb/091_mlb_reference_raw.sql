@@ -1,3 +1,7 @@
+-- File: sql/mlb/091_mlb_reference_raw.sql
+-- Purpose: Tables for raw MLB API reference endpoint snapshots
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS raw_mlb;
 
 CREATE TABLE IF NOT EXISTS raw_mlb.reference_snapshots (
@@ -16,19 +20,19 @@ CREATE TABLE IF NOT EXISTS raw_mlb.reference_snapshots (
 );
 
 CREATE INDEX IF NOT EXISTS reference_snapshots_family_idx
-    ON raw_mlb.reference_snapshots (endpoint_family);
+ON raw_mlb.reference_snapshots (endpoint_family);
 
 CREATE INDEX IF NOT EXISTS reference_snapshots_resource_idx
-    ON raw_mlb.reference_snapshots (resource_key);
+ON raw_mlb.reference_snapshots (resource_key);
 
 CREATE INDEX IF NOT EXISTS reference_snapshots_season_idx
-    ON raw_mlb.reference_snapshots (season);
+ON raw_mlb.reference_snapshots (season);
 
 CREATE INDEX IF NOT EXISTS reference_snapshots_fetched_at_idx
-    ON raw_mlb.reference_snapshots (fetched_at);
+ON raw_mlb.reference_snapshots (fetched_at);
 
 CREATE INDEX IF NOT EXISTS reference_snapshots_checksum_idx
-    ON raw_mlb.reference_snapshots (payload_checksum);
+ON raw_mlb.reference_snapshots (payload_checksum);
 
 COMMENT ON TABLE raw_mlb.reference_snapshots IS 'Source-preserved MLB Stats API reference endpoint snapshots such as teams, rosters, people, venues, and standings';
 COMMENT ON COLUMN raw_mlb.reference_snapshots.endpoint_family IS 'Logical endpoint family, such as teams, rosters, people, venues, or standings';
@@ -40,3 +44,4 @@ COMMENT ON COLUMN raw_mlb.reference_snapshots.request_params IS 'Normalized requ
 COMMENT ON COLUMN raw_mlb.reference_snapshots.http_status IS 'HTTP status code returned by the MLB API';
 COMMENT ON COLUMN raw_mlb.reference_snapshots.error_text IS 'Error captured during fetch when a request fails or returns unexpected content';
 COMMENT ON COLUMN raw_mlb.reference_snapshots.payload_checksum IS 'Checksum for payload-level deduping and replay audit';
+
