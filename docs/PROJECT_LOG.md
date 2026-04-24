@@ -56,14 +56,43 @@ User identified critical gap: we have NOT been following proper reproducibility 
 ./scripts/test/verify_rebuild.sh           # 30 minutes - full rebuild
 ```
 
-#### 4. Updated REPRODUCIBILITY_AUDIT_PROMPT.md
+#### 4. Warehouse Orchestration System Created (PostgreSQL Procedures)
+Following user's preference for database-native orchestration:
+
+**SQL Files Created:**
+| File | Purpose |
+|------|---------|
+| `sql/warehouse/001_warehouse_schema.sql` | Orchestration schema: `warehouse.rebuild_runs`, `warehouse.rebuild_log`, helper functions |
+| `sql/warehouse/002_phase_procedures.sql` | 5 phase procedures: raw_load, core_build, bridge_sync, feature_build, model_prep |
+| `sql/warehouse/003_rebuild_orchestrator.sql` | Main `warehouse.rebuild(mode, seasons)` procedure with per-phase commits |
+
+**Architecture:**
+- **Hybrid approach**: Bash wrapper discovers environment, PostgreSQL handles orchestration
+- **Per-phase commits**: Allows resume from failure (raw → core → bridge → features → models)
+- **Table-based logging**: `warehouse.rebuild_log` survives RAISE NOTICE for audit trail
+- **Resumable**: `warehouse.get_last_successful_phase()` for resume mode
+
+**Bash Wrapper Updated:**
+- `scripts/rebuild_warehouse.sh` now calls `warehouse.rebuild()` procedure
+- New CLI: `--mode full|resume|quick`, `--seasons YYYY,YYYY`, `--legacy` for old behavior
+- Runs E2E tests first, loads warehouse schema, executes procedure, reports results
+
+**Usage:**
+```bash
+./scripts/rebuild_warehouse.sh --mode quick                    # Skip expensive phases
+./scripts/rebuild_warehouse.sh --mode full --seasons 2024,2025  # Specific seasons
+./scripts/rebuild_warehouse.sh --resume                        # Resume from failure
+./scripts/rebuild_warehouse.sh --legacy                      # Old Python-based approach
+```
+
+#### 5. Updated REPRODUCIBILITY_AUDIT_PROMPT.md
 - Added Phase 4: E2E Testing Environment Setup (2 hours)
 - Added CRITICAL REQUIREMENT clause requiring creation of scripts/SQL files
 - Added E2E Testing Environment FAQ section
 - Added AI Agent Gap-Fill Procedure section with explicit loop
 - Updated deliverables checklist with E2E requirements
 
-#### 5. Updated AGENTS.md
+#### 6. Updated AGENTS.md
 - Added E2E testing to Paper Trail Checklist
 - Added E2E Testing Environment section with free local setup instructions
 - Documented AI Agent Gap-Fill Loop

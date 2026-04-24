@@ -138,6 +138,14 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `sql/maintenance/030_kb_vector_schema.sql` | KB vector schema: `kb.document_chunks` with pgvector embeddings, indexes, semantic search functions, ingestion tracking. | RAG infrastructure. Run after pgvector is installed. |
 | `sql/maintenance/999_master_installation.sql` | Master orchestrator for installing all PostgreSQL extensions and advanced features. | Complete extension installation. |
 
+## Warehouse Orchestration SQL
+
+| File | Purpose | Canonical Position |
+|---|---|---|
+| `sql/warehouse/001_warehouse_schema.sql` | Warehouse rebuild orchestration schema: `warehouse.rebuild_runs`, `warehouse.rebuild_log`, helper functions. | Master rebuild infrastructure. |
+| `sql/warehouse/002_phase_procedures.sql` | Phase-level procedures: `phase_raw_load()`, `phase_core_build()`, `phase_bridge_sync()`, `phase_feature_build()`, `phase_model_prep()`. | Individual rebuild phases. |
+| `sql/warehouse/003_rebuild_orchestrator.sql` | Main orchestrator: `warehouse.rebuild(mode, seasons)` procedure with per-phase commit and resume capability. | Master rebuild entry point. |
+
 ## Test SQL (E2E Testing Infrastructure)
 
 | File | Purpose | Canonical Position |
@@ -152,6 +160,7 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `scripts/test/e2e_test_runner.sh` | Main E2E test runner. Validates SQL headers, table comments, row counts. | Executable. Usage: `./scripts/test/e2e_test_runner.sh --quick` |
 | `scripts/test/validate_sql_files.sh` | Validates all SQL files have proper headers. | Executable. Fast check (5 minutes). |
 | `scripts/test/verify_rebuild.sh` | Validates warehouse rebuild procedures work correctly. | Executable. Full check (30 minutes). |
+| `scripts/rebuild_warehouse.sh` | **Master rebuild orchestrator** using PostgreSQL procedures. | New approach: calls `warehouse.rebuild()`. Usage: `./scripts/rebuild_warehouse.sh --mode full`. Legacy mode: `--legacy` flag. |
 
 **Test Infrastructure Notes:**
 - Free local setup - uses existing PostgreSQL (no Docker, no cloud)
