@@ -48,13 +48,13 @@ def get_loaded_counts(conn) -> dict:
 
 def load_season_full(conn, season: int) -> int:
     """Load entire season with ALL 118 fields."""
-    logger.info(f'FULL LOAD: Season {season} with ALL 118 Statcast fields...')
+    logger.info(f'FULL LOAD: Season {season} with ALL 118 Statcast fields...')  # noqa: G004
 
     with conn.cursor() as cur:
         # Check if already loaded
         cur.execute('SELECT COUNT(*) FROM features_pitch.locations WHERE game_year = %s', (season,))
         if cur.fetchone()[0] > 0:
-            logger.warning(f'Season {season} already loaded. Use --force to reload.')
+            logger.warning(f'Season {season} already loaded. Use --force to reload.')  # noqa: G004
             return 0
 
         # Full INSERT with ALL columns
@@ -202,7 +202,7 @@ def load_season_full(conn, season: int) -> int:
         inserted = cur.rowcount
         conn.commit()
 
-        logger.info(f'Inserted {inserted:,} pitches for season {season}')
+        logger.info(f'Inserted {inserted:,} pitches for season {season}')  # noqa: G004
 
         # Update geometry
         logger.info('Updating PostGIS geometry...')
@@ -217,7 +217,7 @@ def load_season_full(conn, season: int) -> int:
         )
         conn.commit()
 
-        logger.info(f'✓ Season {season} complete: {inserted:,} pitches with ALL fields')
+        logger.info(f'✓ Season {season} complete: {inserted:,} pitches with ALL fields')  # noqa: G004
         return inserted
 
 
@@ -227,7 +227,7 @@ def clear_season(conn, season: int):
         deleted = cur.rowcount
         conn.commit()
         if deleted > 0:
-            logger.info(f'Cleared {deleted:,} existing rows for season {season}')
+            logger.info(f'Cleared {deleted:,} existing rows for season {season}')  # noqa: G004
 
 
 def verify_load(conn) -> bool:
@@ -265,9 +265,9 @@ def verify_load(conn) -> bool:
 
         for year, raw, loaded, missing in results:
             if missing == 0:
-                logger.info(f'  {year}: {loaded:,} pitches ✅ MATCH')
+                logger.info(f'  {year}: {loaded:,} pitches ✅ MATCH')  # noqa: G004
             else:
-                logger.error(f'  {year}: {loaded:,}/{raw:,} pitches ❌ MISSING {missing:,}')
+                logger.error(f'  {year}: {loaded:,}/{raw:,} pitches ❌ MISSING {missing:,}')  # noqa: G004
                 all_match = False
 
         # Check column coverage
@@ -286,7 +286,7 @@ def verify_load(conn) -> bool:
         spin_pct = spin / total * 100 if total > 0 else 0
 
         logger.info('\nColumn Coverage:')
-        logger.info(f'  Total pitches: {total:,}')
+        logger.info(f'  Total pitches: {total:,}')  # noqa: G004
         logger.info(
             f'  Core fields (speed, physics): {speed_pct:.1f}% ✅'
             if speed_pct > 99
@@ -294,7 +294,7 @@ def verify_load(conn) -> bool:
         )
         logger.info(f'  Spin axis: {spin_pct:.1f}%' + (' ✅' if spin_pct > 85 else ' ⚠️'))
         logger.info(
-            f'  Expected stats (xBA): {xba / total * 100:.1f}% (only batted balls - correct)',
+            f'  Expected stats (xBA): {xba / total * 100:.1f}% (only batted balls - correct)',  # noqa: G004
         )
         logger.info(
             f'  PostGIS geometry: {geom / total * 100:.1f}% ✅'
@@ -369,9 +369,9 @@ Examples:
             loaded_count = loaded.get(year, 0)
             total_loaded += loaded_count
             status = '✅' if loaded_count == count else f'⚠️  ({loaded_count:,}/{count:,})'
-            logger.info(f'  {year}: {count:,} available, {loaded_count:,} loaded {status}')
+            logger.info(f'  {year}: {count:,} available, {loaded_count:,} loaded {status}')  # noqa: G004
 
-        logger.info(f'\n  TOTAL: {total_available:,} available, {total_loaded:,} loaded')
+        logger.info(f'\n  TOTAL: {total_available:,} available, {total_loaded:,} loaded')  # noqa: G004
 
         if args.dry_run:
             logger.info('\nDry run complete. Use --all to load.')
@@ -396,7 +396,7 @@ Examples:
             logger.error('No valid seasons to load')
             return
 
-        logger.info(f'\nLoading {len(seasons_to_load)} season(s): {seasons_to_load}')
+        logger.info(f'\nLoading {len(seasons_to_load)} season(s): {seasons_to_load}')  # noqa: G004
         logger.info('-' * 70)
 
         total = 0
@@ -407,7 +407,7 @@ Examples:
             total += count
 
         logger.info('-' * 70)
-        logger.info(f'TOTAL PITCHES LOADED: {total:,}')
+        logger.info(f'TOTAL PITCHES LOADED: {total:,}')  # noqa: G004
         logger.info('=' * 70)
 
         # Auto-verify after load

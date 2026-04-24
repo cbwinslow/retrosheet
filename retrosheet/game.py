@@ -340,7 +340,7 @@ class parse_files(parse_games):
 
         for loop, year in enumerate(range(yearFrom, yearTo + 1, 1)):
             progress(loop, (yearTo - yearFrom + 1), status=f'Year: {year}')
-            self.log.debug(f'Getting data for {year}...')
+            self.log.debug(f'Getting data for {year}...')  # noqa: G004
             self.filename = f'{year}eve{self.extension}'
             self.read_files()
 

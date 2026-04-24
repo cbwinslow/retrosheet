@@ -204,7 +204,7 @@ def load_training_data(conn, limit: int | None = None) -> pd.DataFrame:
         """
 
     df = pd.read_sql(query, conn)
-    logger.info(f'Loaded {len(df)} rows')
+    logger.info(f'Loaded {len(df)} rows')  # noqa: G004
 
     # Encode categorical features
     df = encode_count_code(df)
@@ -283,8 +283,8 @@ def train_model(X: np.ndarray, y: np.ndarray, feature_names: list[str]) -> dict:
     le = LabelEncoder()
     y_encoded = le.fit_transform(y)
 
-    logger.info(f'Classes: {le.classes_}')
-    logger.info(f'Class distribution: {np.bincount(y_encoded)}')
+    logger.info(f'Classes: {le.classes_}')  # noqa: G004
+    logger.info(f'Class distribution: {np.bincount(y_encoded)}')  # noqa: G004
 
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(
@@ -295,7 +295,7 @@ def train_model(X: np.ndarray, y: np.ndarray, feature_names: list[str]) -> dict:
         stratify=y_encoded,
     )
 
-    logger.info(f'Train: {len(X_train)}, Test: {len(X_test)}')
+    logger.info(f'Train: {len(X_train)}, Test: {len(X_test)}')  # noqa: G004
 
     # XGBoost parameters - optimized for speed and accuracy
     params = {
@@ -352,15 +352,15 @@ def train_model(X: np.ndarray, y: np.ndarray, feature_names: list[str]) -> dict:
         'n_test': len(X_test),
     }
 
-    logger.info(f'\n{"=" * 50}')
+    logger.info(f'\n{"=" * 50}')  # noqa: G004
     logger.info('Tier-1 XGBoost Results')
-    logger.info(f'{"=" * 50}')
-    logger.info(f'Accuracy: {accuracy:.4f} (Target: ≥0.80)')
-    logger.info(f'Log Loss: {logloss:.4f}')
-    logger.info(f'Target Met: {results["accuracy_target_met"]}')
+    logger.info(f'{"=" * 50}')  # noqa: G004
+    logger.info(f'Accuracy: {accuracy:.4f} (Target: ≥0.80)')  # noqa: G004
+    logger.info(f'Log Loss: {logloss:.4f}')  # noqa: G004
+    logger.info(f'Target Met: {results["accuracy_target_met"]}')  # noqa: G004
     logger.info('\nTop 5 Features:')
     for feat, imp in feature_importance[:5]:
-        logger.info(f'  {feat}: {imp:.4f}')
+        logger.info(f'  {feat}: {imp:.4f}')  # noqa: G004
 
     # Save model
     model_dir = Path('models/pitch_tier1')
@@ -380,14 +380,14 @@ def train_model(X: np.ndarray, y: np.ndarray, feature_names: list[str]) -> dict:
     with open(model_path, 'wb') as f:
         pickle.dump(model_data, f)
 
-    logger.info(f'\nModel saved to: {model_path}')
+    logger.info(f'\nModel saved to: {model_path}')  # noqa: G004
 
     # Save results JSON
     results_path = model_dir / f'tier1_results_{timestamp}.json'
     with open(results_path, 'w') as f:
         json.dump(results, f, indent=2, default=str)
 
-    logger.info(f'Results saved to: {results_path}')
+    logger.info(f'Results saved to: {results_path}')  # noqa: G004
 
     return results
 
@@ -404,9 +404,9 @@ def main():
         if args.dry_run:
             logger.info('DRY RUN - Validating setup...')
             df = load_training_data(conn, limit=1000)
-            logger.info(f'✓ Data load successful: {len(df)} rows')
-            logger.info(f'✓ Features: {len(get_feature_columns())}')
-            logger.info(f'✓ Target distribution: {df["target"].value_counts().to_dict()}')
+            logger.info(f'✓ Data load successful: {len(df)} rows')  # noqa: G004
+            logger.info(f'✓ Features: {len(get_feature_columns())}')  # noqa: G004
+            logger.info(f'✓ Target distribution: {df["target"].value_counts().to_dict()}')  # noqa: G004
             return
 
         # Load data

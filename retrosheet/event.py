@@ -112,7 +112,7 @@ class event:
             elif mpm == '' or mpm == 'U4U1':
                 pass
             else:
-                self.log.debug(f'Event Not Known: {mpm}')
+                self.log.debug(f'Event Not Known: {mpm}')  # noqa: G004
 
     def _advances(self):
         ### Explicit advances
@@ -376,7 +376,7 @@ class event:
                                 self.modifiers['passes'].append(passes) if passes else None
 
             else:
-                self.log.debug(f'Explicit move not found: {move}')
+                self.log.debug(f'Explicit move not found: {move}')  # noqa: G004
 
     """"""
 
@@ -1795,7 +1795,7 @@ class event:
                 ###########################   end   ################################
 
         else:
-            self.log.debug(f'Main event not known: {mp}')
+            self.log.debug(f'Main event not known: {mp}')  # noqa: G004
             # raise eventNotFoundError('Event Not Known', mp)
 
     def _split_plays(self):
@@ -1958,5 +1958,5 @@ class eventNotFoundError(Exception):
 
     def __init__(self, error, event):
         self.log = logging.getLogger(__name__)
-        self.log.debug(f'Event not found: {event}')
+        self.log.debug(f'Event not found: {event}')  # noqa: G004
         super().__init__(event)

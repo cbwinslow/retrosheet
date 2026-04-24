@@ -60,5 +60,5 @@ class InvalidYearError(Exception):
 
     def __init__(self, error, years):
         self.log = logging.getLogger(__name__)
-        self.log.debug(f'Invalid Year Passed: {years[0]}-{years[1]}')
+        self.log.debug(f'Invalid Year Passed: {years[0]}-{years[1]}')  # noqa: G004
         super().__init__(years)

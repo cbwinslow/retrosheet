@@ -68,7 +68,7 @@ def load_season(conn, season: int, batch_size: int = 50000) -> int:
 
     Uses batched inserts for memory efficiency with large datasets.
     """
-    logger.info(f'Loading season {season}...')
+    logger.info(f'Loading season {season}...')  # noqa: G004
 
     with conn.cursor() as cur:
         # First, count how many rows we'll be inserting
@@ -86,10 +86,10 @@ def load_season(conn, season: int, batch_size: int = 50000) -> int:
         total_rows = cur.fetchone()[0]
 
         if total_rows == 0:
-            logger.warning(f'No pitch data found for season {season}')
+            logger.warning(f'No pitch data found for season {season}')  # noqa: G004
             return 0
 
-        logger.info(f'Found {total_rows:,} pitches to load for season {season}')
+        logger.info(f'Found {total_rows:,} pitches to load for season {season}')  # noqa: G004
 
         # Check if we already have data for this season
         cur.execute(
@@ -101,7 +101,7 @@ def load_season(conn, season: int, batch_size: int = 50000) -> int:
 
         existing = cur.fetchone()[0]
         if existing > 0:
-            logger.warning(f'Season {season} already has {existing:,} rows. Use --force to reload.')
+            logger.warning(f'Season {season} already has {existing:,} rows. Use --force to reload.')  # noqa: G004
             return 0
 
         # Load in batches using server-side cursor
@@ -168,12 +168,12 @@ def load_season(conn, season: int, batch_size: int = 50000) -> int:
 
             conn.commit()
             inserted += len(rows)
-            logger.info(f'  Loaded {inserted:,} / {total_rows:,} pitches...')
+            logger.info(f'  Loaded {inserted:,} / {total_rows:,} pitches...')  # noqa: G004
 
         cur.execute('CLOSE pitch_cursor')
 
         # Update geometry for the loaded season
-        logger.info(f'Updating PostGIS geometry for season {season}...')
+        logger.info(f'Updating PostGIS geometry for season {season}...')  # noqa: G004
         cur.execute(
             """
             UPDATE features_pitch.locations
@@ -188,7 +188,7 @@ def load_season(conn, season: int, batch_size: int = 50000) -> int:
 
         conn.commit()
 
-        logger.info(f'✓ Season {season} complete: {inserted:,} pitches loaded')
+        logger.info(f'✓ Season {season} complete: {inserted:,} pitches loaded')  # noqa: G004
         return inserted
 
 
@@ -243,7 +243,7 @@ Examples:
         for year, count in available_seasons:
             loaded = next((c for y, c in loaded_seasons if y == year), 0)
             status = '✓' if loaded > 0 else '○'
-            logger.info(f'  {status} {year}: {count:,} pitches available, {loaded:,} loaded')
+            logger.info(f'  {status} {year}: {count:,} pitches available, {loaded:,} loaded')  # noqa: G004
 
         if args.dry_run:
             logger.info('\nDry run complete. No data was loaded.')
@@ -269,7 +269,7 @@ Examples:
             logger.error('No valid seasons to load')
             sys.exit(1)
 
-        logger.info(f'\nLoading {len(seasons_to_load)} season(s): {seasons_to_load}')
+        logger.info(f'\nLoading {len(seasons_to_load)} season(s): {seasons_to_load}')  # noqa: G004
         logger.info('-' * 60)
 
         # Load each season
@@ -279,13 +279,13 @@ Examples:
             total_loaded += count
 
         logger.info('-' * 60)
-        logger.info(f'Total pitches loaded: {total_loaded:,}')
+        logger.info(f'Total pitches loaded: {total_loaded:,}')  # noqa: G004
 
         # Final summary
         loaded_seasons = get_loaded_season_counts(conn)
         logger.info('\nFinal status:')
         for year, count in loaded_seasons:
-            logger.info(f'  {year}: {count:,} pitches')
+            logger.info(f'  {year}: {count:,} pitches')  # noqa: G004
 
     finally:
         conn.close()

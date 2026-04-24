@@ -359,12 +359,12 @@ class Parser:
 
         progress(100, 100, status='Files Parsed')
         self.log.warning(self.errors)
-        self.log.warning(f'Total errors: {len(self.errors)}')
+        self.log.warning(f'Total errors: {len(self.errors)}')  # noqa: G004
 
         return True  # info, starting, plays, er, subs, comments, rosters, teams
 
     def save_csv(self, path=''):
-        self.log.warning(f'Saving files to csv ({path}) ...')
+        self.log.warning(f'Saving files to csv ({path}) ...')  # noqa: G004
 
         self.info.to_csv(f'{path}info.csv', index=False)
         self.starting.to_csv(f'{path}starting.csv', index=False)

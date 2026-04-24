@@ -300,17 +300,23 @@ WHERE p.game_pk = <GAME_PK>;
 | **Attendance** | `attendance_vs_capacity_pct`, `is_sellout`, `crowd_noise_proxy`, `home_field_advantage_score`, `is_rivalry_game` | Crowd effects |
 | **Park Factors** | `park_elevation_feet`, `park_hr_factor_lf`, `park_hr_factor_cf`, `park_hr_factor_rf`, `park_overall_hr_factor`, `park_grass_turf`, `park_is_dome` | Stadium physics |
 | **Fatigue** | `pitcher_days_rest`, `is_short_rest_start`, `pitcher_season_workload`, `pitcher_inning_velocity_decline` | Pitcher rest and workload |
+| **Markov Chains** | `strike_accumulation_rate`, `ball_accumulation_rate`, `expected_pitches_remaining`, `is_absorbing_state`, `count_pressure_index` | Count state transitions (FanGraphs/Retrosheet research) |
+| **Matchup History** | `matchup_prior_pa_count`, `matchup_prior_ba`, `matchup_prior_hr_count`, `matchup_first_time_facing`, `matchup_success_trend` | Batter-pitcher historical data |
+| **Postseason** | `is_postseason`, `month_of_season`, `is_season_opener`, `is_elimination_game` | Playoff and seasonal context |
+| **Sequence** | `prev_2_pitch_types`, `is_repeated_pitch`, `is_alternating_pattern`, `pitch_sequence_category` | Pitch sequencing patterns |
+| **Platoon** | `is_platoon_advantage_batter`, `platoon_advantage_direction` | Handedness matchups |
+| **Experience** | `is_rookie_batter`, `is_veteran_batter`, `batter_experience_level`, `pitcher_experience_level` | Career stage classification |
 
-**Outcome Labels (Two-Tier Hierarchy):**
+**Outcome Labels (Two-Tier Hierarchy):
 - **Tier 1** (Coarse): S (Strike, 69.9%), X (Ball-in-Play, 26.9%), B (Ball, 3.2%)
 - **Tier 2** (Fine): Strikeout, Walk, Single, Double, Triple, HR, Out, HBP, Foul, Ball, Strike, Other
 
 **Training Data:**
 - Valid Pitches: 5,072,278 (excludes 'U' unknown outcomes)
 - Stratified sampling for balanced class representation
-- **170+ engineered features** across 18 categories, all research-backed
+- **220+ engineered features** across 24 categories, all research-backed
 - **118 raw Statcast fields** preserved in base_features
-- **Total feature space: 290+ columns** for maximum model coverage
+- **Total feature space: 340+ columns** for maximum model coverage
 
 **Scripts:**
 ```bash
@@ -333,6 +339,11 @@ done
 # Populate context features: weather, momentum, umpire, attendance, park, fatigue
 for i in {1..80}; do
     psql -f sql/features/014_populate_context_features_batch.sql
+done
+
+# Populate final features: Markov chains, matchup history, postseason, sequence
+for i in {1..80}; do
+    psql -f sql/features/017_populate_final_features_batch.sql
 done
 
 # Train Tier-1 XGBoost model

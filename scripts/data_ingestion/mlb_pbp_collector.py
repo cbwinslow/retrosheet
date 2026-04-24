@@ -437,11 +437,11 @@ def _load_statcast(start_dt: str, end_dt: str) -> pd.DataFrame | None:
     if not PYBASEBALL_AVAILABLE:
         return None
     try:
-        logging.info(f'  Pulling Statcast {start_dt} → {end_dt} …')
+        logging.info(f'  Pulling Statcast {start_dt} → {end_dt} …')  # noqa: G004
         df = statcast(start_dt=start_dt, end_dt=end_dt)
         return df if df is not None and not df.empty else None
     except Exception as exc:
-        logging.warning(f'  Statcast pull failed: {exc}')
+        logging.warning(f'  Statcast pull failed: {exc}')  # noqa: G004
         return None
 
 
@@ -555,14 +555,14 @@ def collect_game(
     game_meta['home_abbr'] = _get_team_abbr(game_meta.get('home_team', 'UNK'))
 
     logging.info(
-        f'Collecting game {game_pk}: '
+        f'Collecting game {game_pk}: '  # noqa: G004
         f'{game_meta.get("away_team", "?")} @ {game_meta.get("home_team", "?")} '
         f'({game_meta.get("game_date", "?")})',
     )
 
     all_plays = _get_play_by_play(game_pk)
     if not all_plays:
-        logging.warning(f'  No plays found for game {game_pk} (game may not have started)')
+        logging.warning(f'  No plays found for game {game_pk} (game may not have started)')  # noqa: G004
         return pd.DataFrame()
 
     rows = [_parse_play(play, game_meta, i + 1) for i, play in enumerate(all_plays)]
@@ -610,7 +610,7 @@ def collect_season(
         format='%(asctime)s  %(levelname)-8s  %(message)s',
     )
 
-    logging.info(f'Fetching {season} schedule (type={game_type}) …')
+    logging.info(f'Fetching {season} schedule (type={game_type}) …')  # noqa: G004
     schedule = _get_schedule(season, game_type)
 
     if start_date:
@@ -624,7 +624,7 @@ def collect_season(
         logging.warning('No games matched the filter criteria.')
         return pd.DataFrame()
 
-    logging.info(f'Processing {len(schedule)} games …')
+    logging.info(f'Processing {len(schedule)} games …')  # noqa: G004
 
     # Group by date for efficient Statcast batch pulls
     by_date: dict[str, list[dict]] = {}
@@ -645,7 +645,7 @@ def collect_season(
                 if not df.empty:
                     all_frames.append(df)
             except Exception as exc:
-                logging.exception(f'  Failed game {meta["game_pk"]}: {exc}')
+                logging.exception(f'  Failed game {meta["game_pk"]}: {exc}')  # noqa: G004
             time.sleep(RATE_LIMIT_SLEEP)
 
     if not all_frames:
@@ -659,7 +659,7 @@ def collect_season(
         out = Path(output_csv)
         out.parent.mkdir(parents=True, exist_ok=True)
         result.to_csv(out, index=False)
-        logging.info(f'Saved {len(result):,} rows → {out.resolve()}')
+        logging.info(f'Saved {len(result):,} rows → {out.resolve()}')  # noqa: G004
 
     return result
 
