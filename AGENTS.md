@@ -203,6 +203,50 @@ uv lock
 
 All project scripts, CI, and environments use Python 3.10. Legacy `requirements.txt` is archived and no longer maintained.
 
+## LLM Sub-Agent System (NEW)
+
+Automated linting and code fixing using local multi-GPU inference.
+
+### Hardware
+- **GPU 0**: NVIDIA Tesla K80 (12GB VRAM, CC 3.7)
+- **GPU 1**: NVIDIA Tesla K80 (12GB VRAM, CC 3.7)
+- **GPU 2**: NVIDIA Tesla K40 (11GB VRAM, CC 3.5)
+- **Total VRAM**: 35GB
+
+### LLM Infrastructure (External to Repo)
+Located at `~/llama.cpp` (not in git):
+- **Model**: CodeLlama-34B-Instruct-Q6_K (26GB)
+- **Inference Engine**: llama.cpp with CUDA 11.8
+- **CUDA Architectures**: sm_35 (K40) + sm_37 (K80)
+- **Optimizations**: Flash Attention, CUDA Graphs, NCCL
+
+### Sub-Agent Scripts
+- `scripts/utility/llm_subagent.py` - Main sub-agent with batch processing
+- `scripts/utility/run_llm_linter_fixes.sh` - Interactive orchestration
+
+### Usage
+```bash
+# Analyze current Ruff errors
+python scripts/utility/llm_subagent.py analyze
+
+# Fix specific rule (dry-run first)
+python scripts/utility/llm_subagent.py fix Q000
+
+# Fix and apply
+python scripts/utility/llm_subagent.py fix-apply Q000
+
+# Interactive mode
+./scripts/utility/run_llm_linter_fixes.sh
+```
+
+### Current Status
+- **Ruff Errors**: 1,950 (down from 1,487)
+- **SQLFluff Errors**: 0
+- **Target Rules**: Q000 (bad quotes), W293 (trailing ws), COM812 (missing commas)
+
+### Documentation
+- `docs/LLM_GPU_OPTIMIZATION_REPORT.md` - Performance analysis
+
 ## Data Layers
 
 - `raw_retrosheet`: source-preserved Chadwick extracts and Retrosheet reference tables.
