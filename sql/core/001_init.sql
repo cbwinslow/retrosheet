@@ -1,3 +1,48 @@
+/*
+File: sql/core/001_init.sql
+Purpose: Initialize core database schemas and raw landing tables
+Author: Agent Cascade
+Date: 2026-04-24
+Depends On: None - this is the first file to run
+Called By: scripts/rebuild_warehouse.sh, docs/agents/PROCEDURES.md Full Warehouse Rebuild
+
+Schemas Created:
+- raw_retrosheet: Landing zone for Retrosheet/Chadwick data
+- raw_mlb: Landing zone for MLB Stats API data
+- bridge: ID cross-reference tables between data sources
+- core: Canonical baseball entities (games, events, plate appearances)
+- features: ML-ready feature marts for model training
+- models: Trained model metadata and artifacts
+- predictions: Model outputs, backtests, live predictions
+- raw_markets: Prediction market data from Kalshi/Polymarket
+- market_edges: Market comparison and edge analysis
+- chat: Chatbot conversation history and context
+
+Tables Created:
+- raw_retrosheet.ingest_runs: Tracks data ingestion runs with status and metadata
+- raw_retrosheet.chadwick_event_raw: Raw Chadwick event output (source-preserved)
+- raw_mlb.live_feed_snapshots: MLB API live game snapshots
+- bridge.player_xref: Player ID crosswalk (Retrosheet ↔ MLB ↔ Lahman)
+- bridge.team_xref: Team ID crosswalk (Retrosheet ↔ MLB)
+- bridge.park_xref: Park/Venue ID crosswalk (Retrosheet ↔ MLB)
+- bridge.game_xref: Game ID crosswalk (Retrosheet ↔ MLB)
+
+Row Counts (as of 2026-04-24):
+- ingest_runs: ~50 runs tracked
+- chadwick_event_raw: ~4.9M event records
+- live_feed_snapshots: ~125K snapshots
+- player_xref: ~3,500 players mapped
+- team_xref: ~35 teams mapped
+- park_xref: ~60 parks mapped
+- game_xref: ~62,598 games mapped
+
+Notes:
+- This is the foundation SQL - must run first before any other SQL files
+- Uses IF NOT EXISTS for idempotency (safe to re-run)
+- Creates indexes for common query patterns
+- Preserves all raw data without transformation
+*/
+
 CREATE SCHEMA IF NOT EXISTS raw_retrosheet;
 CREATE SCHEMA IF NOT EXISTS raw_mlb;
 CREATE SCHEMA IF NOT EXISTS bridge;
@@ -112,3 +157,55 @@ SELECT DISTINCT ON (game_pk)
     payload
 FROM raw_mlb.live_feed_snapshots
 ORDER BY game_pk ASC, fetched_at DESC;
+
+-- =============================================================================
+-- TABLE AND COLUMN COMMENTS
+-- =============================================================================
+
+COMMENT ON SCHEMA raw_retrosheet IS 'Landing zone for Retrosheet/Chadwick source data. Source-preserved raw event files and ingest tracking.';
+COMMENT ON SCHEMA raw_mlb IS 'Landing zone for MLB Stats API / GUMBO data. Source-preserved JSON snapshots from live feeds.';
+COMMENT ON SCHEMA bridge IS 'ID cross-reference tables mapping between Retrosheet, MLB, Lahman, ESPN, and other external ID systems.';
+COMMENT ON SCHEMA core IS 'Canonical baseball entities: typed games, events, and plate appearances shared by historical and live sources.';
+COMMENT ON SCHEMA features IS 'ML-ready feature marts for model training and inference. Aggregated metrics and engineered features.';
+COMMENT ON SCHEMA models IS 'Trained model metadata, hyperparameters, and artifact locations.';
+COMMENT ON SCHEMA predictions IS 'Model outputs, backtest results, and live prediction snapshots with confidence scores.';
+
+-- raw_retrosheet.ingest_runs
+COMMENT ON TABLE raw_retrosheet.ingest_runs IS 'Tracks data ingestion runs with status, timing, and metadata for reproducibility';
+COMMENT ON COLUMN raw_retrosheet.ingest_runs.ingest_run_id IS 'Unique identifier for each ingestion run';
+COMMENT ON COLUMN raw_retrosheet.ingest_runs.source_name IS 'Data source name (e.g., chadwick, mlb_api, espn)';
+COMMENT ON COLUMN raw_retrosheet.ingest_runs.status IS 'Run status: running, completed, failed';
+COMMENT ON COLUMN raw_retrosheet.ingest_runs.details IS 'JSONB metadata about the run (files processed, row counts, errors)';
+
+-- raw_retrosheet.chadwick_event_raw
+COMMENT ON TABLE raw_retrosheet.chadwick_event_raw IS 'Source-preserved Chadwick event output. One row per event field (c001-cxxx) from event files.';
+COMMENT ON COLUMN raw_retrosheet.chadwick_event_raw.season IS 'Baseball season (year)';
+COMMENT ON COLUMN raw_retrosheet.chadwick_event_raw.game_id IS 'Retrosheet game identifier';
+COMMENT ON COLUMN raw_retrosheet.chadwick_event_raw.event_id IS 'Event sequence number within game';
+
+-- raw_mlb.live_feed_snapshots
+COMMENT ON TABLE raw_mlb.live_feed_snapshots IS 'Source-preserved MLB Stats API live feed JSON snapshots';
+COMMENT ON COLUMN raw_mlb.live_feed_snapshots.game_pk IS 'MLB game identifier (primary key from MLB API)';
+COMMENT ON COLUMN raw_mlb.live_feed_snapshots.payload IS 'Full JSON response from MLB API /game/{game_pk}/feed/live';
+
+-- bridge.player_xref
+COMMENT ON TABLE bridge.player_xref IS 'Player ID crosswalk mapping Retrosheet ID ↔ MLB ID ↔ Baseball-Reference ID';
+COMMENT ON COLUMN bridge.player_xref.retrosheet_id IS 'Retrosheet player ID (e.g., ruthb101)';
+COMMENT ON COLUMN bridge.player_xref.mlb_id IS 'MLB Stats API player ID (numeric)';
+COMMENT ON COLUMN bridge.player_xref.baseball_reference_id IS 'Baseball-Reference player ID (e.g., ruthba01)';
+COMMENT ON COLUMN bridge.player_xref.source_notes IS 'JSONB metadata about mapping confidence and sources';
+
+-- bridge.team_xref
+COMMENT ON TABLE bridge.team_xref IS 'Team ID crosswalk mapping Retrosheet team ID ↔ MLB team ID';
+COMMENT ON COLUMN bridge.team_xref.retrosheet_team_id IS 'Retrosheet 3-character team code (e.g., NYA)';
+COMMENT ON COLUMN bridge.team_xref.mlb_team_id IS 'MLB Stats API team ID (numeric)';
+
+-- bridge.park_xref
+COMMENT ON TABLE bridge.park_xref IS 'Park/Venue ID crosswalk mapping Retrosheet park ID ↔ MLB venue ID';
+COMMENT ON COLUMN bridge.park_xref.retrosheet_park_id IS 'Retrosheet park identifier';
+COMMENT ON COLUMN bridge.park_xref.mlb_venue_id IS 'MLB Stats API venue ID (numeric)';
+
+-- bridge.game_xref
+COMMENT ON TABLE bridge.game_xref IS 'Game ID crosswalk mapping Retrosheet game ID ↔ MLB game_pk';
+COMMENT ON COLUMN bridge.game_xref.retrosheet_game_id IS 'Retrosheet game identifier (e.g., BOS202304150)';
+COMMENT ON COLUMN bridge.game_xref.mlb_game_pk IS 'MLB Stats API game primary key (numeric)';
