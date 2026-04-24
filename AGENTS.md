@@ -17,7 +17,7 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 - Prefer additive migrations and views over destructive schema changes.
 - Keep `README.md` current when commands, setup, or workflow changes.
 - Keep this `AGENTS.md` current when project conventions change.
- - Add and maintain backup procedures for database objects. See `scripts/utility/backup_procedures.sh`.
+- Add and maintain backup procedures for database objects. See `scripts/utility/backup_procedures.sh`.
 - Keep `docs/agents/` current when file purposes, modeling goals, or canonical procedures change.
 - Keep `docs/PROJECT_LOG.md` current with significant completed work, validation counts, and next-step decisions.
 - Treat unintegrated `EdgeForge` / `mlb_features` / `mlb_models` / `mlb_enhanced` files as experimental until they are explicitly merged into the canonical warehouse layers and documented in `docs/agents/FILE_INVENTORY.md`. See `docs/EDGEFORGE_TRIAGE.md`.
@@ -26,6 +26,155 @@ This project builds a reproducible baseball prediction warehouse from free/open 
 - Maintain reproducibility: scripts should run from a clean checkout with documented dependencies.
 - Default database target is the local PostgreSQL database named `retrosheet` on port `5432`, unless `DATABASE_URL` or `PG*` environment variables override it.
 - Do not require Git LFS. Keep generated data and model binaries out of git; scripts and database metadata must be enough to regenerate artifacts.
+
+## REPRODUCIBILITY MANDATE (CRITICAL)
+
+**Every action must leave a paper trail. This is not optional.**
+
+### SQL-First Development Rule
+
+**ALL database operations must be stored in .sql files under version control.**
+
+- **NEVER execute ad-hoc SQL against the database without saving it first.**
+- **NEVER use database GUI tools or CLI to make schema changes.**
+- **ALWAYS write SQL to a file, commit it, then execute the file.**
+
+**Workflow:**
+```
+1. Create/edit .sql file in appropriate sql/ subdirectory
+2. Add header comment with purpose, date, author
+3. Test the SQL file: psql -f sql/path/to/file.sql
+4. Commit the SQL file with descriptive message
+5. Update docs/agents/FILE_INVENTORY.md with the new file
+6. Update docs/agents/PROCEDURES.md if it creates a canonical workflow
+```
+
+### Script Wrapper Requirement
+
+**All data pipelines must have wrapper scripts that call more granular procedures.**
+
+- Create orchestrator scripts like `update_all_pitch_data.sh` that call:
+  - `load_statcast_season_2025.sql`
+  - `refresh_pitch_features.sql`
+  - `update_pitcher_arsenals.sql`
+- Each granular script must be independently runnable
+- Wrapper scripts must log what they call and in what order
+
+### Documentation Requirements
+
+**Every SQL file must include at the top:**
+```sql
+/*
+File: sql/features/010_pitcher_arsenal_features.sql
+Purpose: Build pitcher arsenal features from Statcast pitch data
+Author: Agent [identifier]
+Date: 2026-04-24
+Depends On: features_pitch.locations, features_pitch.base_features
+Called By: scripts/pitch_data/update_all_pitch_features.sh
+
+Tables Created:
+- features.pitcher_arsenals (pitcher-level aggregated metrics)
+- features.pitcher_repertoire (pitch-type breakdowns)
+
+Notes:
+- Uses 30-day rolling windows
+- Excludes pitches with null release_speed
+*/
+```
+
+**Every table must have COMMENT ON statements:**
+```sql
+COMMENT ON TABLE features.pitcher_arsenals IS 'Aggregated pitcher arsenal metrics by season';
+COMMENT ON COLUMN features.pitcher_arsenals.fastball_pct IS 'Percentage of fastballs thrown (FF, FT, FC, SI)';
+```
+
+### The Paper Trail Checklist
+
+Before completing ANY task, verify:
+
+- [ ] All SQL saved in version-controlled .sql files
+- [ ] All scripts saved in version-controlled files
+- [ ] Table/column comments added for new schema objects
+- [ ] FILE_INVENTORY.md updated with new files
+- [ ] PROCEDURES.md updated with new workflows
+- [ ] PROJECT_LOG.md updated with what was accomplished
+- [ ] Row counts/validation metrics recorded
+- [ ] Git commit made with descriptive message
+- [ ] E2E tests pass (`scripts/test/e2e_test_runner.sh` or similar)
+
+### Scientific Reproducibility Standard
+
+This project must be reproducible by other researchers. Every number we report must be traceable to:
+
+1. **Source data**: Which raw table and fetch date
+2. **Transformation**: Which SQL file performed the transformation
+3. **Model training**: Which script, with what hyperparameters
+4. **Evaluation**: Which validation set, what metrics
+
+**When publishing results, we must show our work.**
+
+### E2E Testing Environment (Free Local Setup)
+
+**Yes, you can run E2E tests for free on your PC.** No Docker, no cloud, no additional cost.
+
+#### Test Infrastructure
+
+- **Test Schema**: `test` schema in existing PostgreSQL database - isolated from production
+- **Test Fixtures**: Small, fast datasets (100 games instead of 62,000)
+- **Test Scripts**: Bash scripts in `scripts/test/` that validate everything works
+- **Validation**: Automated checks for headers, comments, row counts
+
+#### Running Tests
+
+```bash
+# Quick validation (5 minutes)
+./scripts/test/validate_sql_files.sh
+
+# Run E2E test suite
+./scripts/test/e2e_test_runner.sh --quick
+
+# Full rebuild verification (30+ minutes)
+./scripts/test/verify_rebuild.sh
+```
+
+#### AI Agent Gap-Fill Loop
+
+When another agent fills documentation gaps, they use this loop:
+
+1. **RUN** `validate_sql_files.sh` to find missing headers
+2. **CREATE** missing SQL files/scripts to close gaps
+3. **ADD** headers, comments, documentation
+4. **TEST** with `e2e_test_runner.sh`
+5. **COMMIT** when tests pass
+6. **REPEAT** until all tests pass
+
+#### Test Files (Created by Audit Agent)
+
+- `sql/test/001_create_test_schema.sql` - Test schema setup
+- `sql/test/002_test_fixtures.sql` - Test data fixtures
+- `scripts/test/e2e_test_runner.sh` - Main test runner
+- `scripts/test/validate_sql_files.sh` - SQL validation
+- `scripts/test/verify_rebuild.sh` - Rebuild verification
+
+### Never Again List
+
+**NEVER do these things:**
+- Execute SQL in psql/pgAdmin/DBeaver without saving to a file first
+- Make "quick fixes" directly to the database
+- Create scripts that aren't committed
+- Leave tables without documentation
+- Assume "I'll document it later" (document NOW)
+- Use hardcoded values without explanation
+- Skip validation/verification steps
+
+### For Live Data Operations
+
+When updating models with live data:
+1. Save the query that extracts features as .sql
+2. Save the model scoring script
+3. Save the results validation query
+4. Create a wrapper procedure that runs the full pipeline
+5. Document the expected inputs/outputs
 
 ## Python Environment Standard
 

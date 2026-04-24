@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { TrendingUp, BarChart3, PieChart, Target, RefreshCw, Award, Zap } from 'lucide-react'
+import { Award, BarChart3, RefreshCw, Target, Zap } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface ModelMetrics {
   model_name: string
@@ -44,7 +44,7 @@ export function ModelPerformance() {
   const [error, setError] = useState<string | null>(null)
   const [selectedModel, setSelectedModel] = useState<string | null>(null)
 
-  const fetchPerformanceData = async () => {
+  const fetchPerformanceData = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/analytics')
@@ -57,11 +57,11 @@ export function ModelPerformance() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchPerformanceData()
-  }, [])
+  }, [fetchPerformanceData])
 
   const formatPercentage = (value: number) => `${(value * 100).toFixed(1)}%`
   const formatNumber = (value: number) => value.toLocaleString()
@@ -74,11 +74,16 @@ export function ModelPerformance() {
 
   const getModelTypeIcon = (type: string) => {
     switch (type.toLowerCase()) {
-      case 'xgboost': return '🌳'
-      case 'random_forest': return '🌲'
-      case 'neural_network': return '🧠'
-      case 'logistic_regression': return '📈'
-      default: return '🤖'
+      case 'xgboost':
+        return '🌳'
+      case 'random_forest':
+        return '🌲'
+      case 'neural_network':
+        return '🧠'
+      case 'logistic_regression':
+        return '📈'
+      default:
+        return '🤖'
     }
   }
 
@@ -88,10 +93,13 @@ export function ModelPerformance() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white mb-2">Model Performance Dashboard</h2>
-          <p className="text-slate-400">Performance metrics for our 18 ML models across 9 prediction targets</p>
+          <p className="text-slate-400">
+            Performance metrics for our 18 ML models across 9 prediction targets
+          </p>
         </div>
 
         <button
+          type="button"
           onClick={fetchPerformanceData}
           disabled={loading}
           className="p-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 rounded-lg transition-colors"
@@ -127,7 +135,9 @@ export function ModelPerformance() {
                 <BarChart3 className="w-8 h-8 text-blue-400" />
                 <span className="text-sm text-slate-400">Total Models</span>
               </div>
-              <div className="text-3xl font-bold text-white">{data.overall_metrics.total_models}</div>
+              <div className="text-3xl font-bold text-white">
+                {data.overall_metrics.total_models}
+              </div>
               <div className="text-sm text-slate-500 mt-1">18 active models</div>
             </div>
 
@@ -136,7 +146,9 @@ export function ModelPerformance() {
                 <Target className="w-8 h-8 text-green-400" />
                 <span className="text-sm text-slate-400">Avg Accuracy</span>
               </div>
-              <div className={`text-3xl font-bold ${getAccuracyColor(data.overall_metrics.average_accuracy)}`}>
+              <div
+                className={`text-3xl font-bold ${getAccuracyColor(data.overall_metrics.average_accuracy)}`}
+              >
                 {formatPercentage(data.overall_metrics.average_accuracy)}
               </div>
               <div className="text-sm text-slate-500 mt-1">Across all targets</div>
@@ -147,7 +159,9 @@ export function ModelPerformance() {
                 <Award className="w-8 h-8 text-yellow-400" />
                 <span className="text-sm text-slate-400">Best Model</span>
               </div>
-              <div className="text-lg font-bold text-white mb-1">{data.overall_metrics.best_performing_model}</div>
+              <div className="text-lg font-bold text-white mb-1">
+                {data.overall_metrics.best_performing_model}
+              </div>
               <div className="text-sm text-slate-500">Highest accuracy</div>
             </div>
 
@@ -180,7 +194,9 @@ export function ModelPerformance() {
                         style={{ width: `${target.average_accuracy * 100}%` }}
                       />
                     </div>
-                    <span className={`text-sm font-medium ${getAccuracyColor(target.average_accuracy)}`}>
+                    <span
+                      className={`text-sm font-medium ${getAccuracyColor(target.average_accuracy)}`}
+                    >
                       {formatPercentage(target.average_accuracy)}
                     </span>
                   </div>
@@ -196,16 +212,17 @@ export function ModelPerformance() {
               <h3 className="text-lg font-semibold text-white mb-4">Model Performance</h3>
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {data.model_metrics.map((model) => (
-                  <div
+                  <button
+                    type="button"
                     key={model.model_name}
-                    className={`p-4 rounded-lg border transition-colors cursor-pointer ${
+                    className={`p-4 rounded-lg border transition-colors text-left w-full ${
                       selectedModel === model.model_name
                         ? 'bg-blue-900/20 border-blue-600'
                         : 'bg-slate-700 border-slate-600 hover:border-slate-500'
                     }`}
-                    onClick={() => setSelectedModel(
-                      selectedModel === model.model_name ? null : model.model_name
-                    )}
+                    onClick={() =>
+                      setSelectedModel(selectedModel === model.model_name ? null : model.model_name)
+                    }
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-3">
@@ -225,32 +242,41 @@ export function ModelPerformance() {
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <span className="text-slate-400">Precision:</span>
-                            <span className="text-white ml-2">{formatPercentage(model.precision)}</span>
+                            <span className="text-white ml-2">
+                              {formatPercentage(model.precision)}
+                            </span>
                           </div>
                           <div>
                             <span className="text-slate-400">Recall:</span>
-                            <span className="text-white ml-2">{formatPercentage(model.recall)}</span>
+                            <span className="text-white ml-2">
+                              {formatPercentage(model.recall)}
+                            </span>
                           </div>
                           <div>
                             <span className="text-slate-400">F1 Score:</span>
-                            <span className="text-white ml-2">{formatPercentage(model.f1_score)}</span>
+                            <span className="text-white ml-2">
+                              {formatPercentage(model.f1_score)}
+                            </span>
                           </div>
                           {model.auc_roc && (
                             <div>
                               <span className="text-slate-400">AUC-ROC:</span>
-                              <span className="text-white ml-2">{formatPercentage(model.auc_roc)}</span>
+                              <span className="text-white ml-2">
+                                {formatPercentage(model.auc_roc)}
+                              </span>
                             </div>
                           )}
                         </div>
                         <div className="text-xs text-slate-500">
-                          {formatNumber(model.training_samples)} training samples • {model.features_used} features
+                          {formatNumber(model.training_samples)} training samples •{' '}
+                          {model.features_used} features
                         </div>
                         <div className="text-xs text-slate-500">
                           Last trained: {new Date(model.last_trained).toLocaleDateString()}
                         </div>
                       </div>
                     )}
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>

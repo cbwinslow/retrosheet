@@ -4,8 +4,8 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const [overall, modelMetrics, batterLeaders, pitcherLeaders, targetSummary] =
-      await Promise.all([
+    const [overall, modelMetrics, batterLeaders, pitcherLeaders, targetSummary] = await Promise.all(
+      [
         queryOne(`
           SELECT
             count(*) AS total_active_models,
@@ -79,7 +79,8 @@ export async function GET() {
           GROUP BY target_id
           ORDER BY target_id
         `),
-      ])
+      ]
+    )
 
     return Response.json({
       generated_at: new Date().toISOString(),

@@ -1,11 +1,8 @@
 'use client'
 
-import { FormEvent, useEffect, useMemo, useState } from 'react'
 import {
-  Activity,
   BarChart3,
   Bot,
-  Database,
   FileSpreadsheet,
   MessageSquare,
   Play,
@@ -13,15 +10,8 @@ import {
   ShieldCheck,
   TerminalSquare,
 } from 'lucide-react'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 type View = 'chat' | 'simulations' | 'models' | 'workbench'
 
@@ -102,8 +92,11 @@ function DataTable({ rows, title }: { rows: Row[]; title: string }) {
 
   const csv = useMemo(() => {
     if (!rows.length) return ''
-    const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`
-    return [columns.join(','), ...rows.map((row) => columns.map((column) => escape(row[column])).join(','))].join('\n')
+    const escapeCsv = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`
+    return [
+      columns.join(','),
+      ...rows.map((row) => columns.map((column) => escapeCsv(row[column])).join(',')),
+    ].join('\n')
   }, [columns, rows])
 
   return (
@@ -141,9 +134,15 @@ function DataTable({ rows, title }: { rows: Row[]; title: string }) {
               </tr>
             )}
             {rows.map((row, index) => (
-              <tr key={index} className="odd:bg-white/[0.025] hover:bg-clay/10">
+              <tr
+                key={`row-${index}-${JSON.stringify(row).slice(0, 50)}`}
+                className="odd:bg-white/[0.025] hover:bg-clay/10"
+              >
                 {columns.map((column) => (
-                  <td key={column} className="whitespace-nowrap border-b border-white/5 px-3 py-2 text-chalk/80">
+                  <td
+                    key={column}
+                    className="whitespace-nowrap border-b border-white/5 px-3 py-2 text-chalk/80"
+                  >
                     {numberText(row[column])}
                   </td>
                 ))}
@@ -163,7 +162,7 @@ export default function Home() {
   const [backtests, setBacktests] = useState<BacktestPayload | null>(null)
   const [loading, setLoading] = useState(true)
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setLoading(true)
     const [statusRes, analyticsRes, backtestsRes] = await Promise.all([
       fetch('/api/status'),
@@ -174,14 +173,15 @@ export default function Home() {
     setAnalytics(await analyticsRes.json())
     setBacktests(await backtestsRes.json())
     setLoading(false)
-  }
+  }, [])
 
   useEffect(() => {
     refresh().catch(() => setLoading(false))
-  }, [])
+  }, [refresh])
 
   const activeModels = status?.active_models?.length ?? 0
-  const warehouseRows = status?.summary?.reduce((sum, row) => sum + Number(row.row_count ?? 0), 0) ?? 0
+  const warehouseRows =
+    status?.summary?.reduce((sum, row) => sum + Number(row.row_count ?? 0), 0) ?? 0
   const bestAuc = Number(analytics?.overall?.best_roc_auc ?? 0)
 
   return (
@@ -199,11 +199,13 @@ export default function Home() {
                 <span className="block text-clay">Run the model room.</span>
               </h1>
               <p className="mt-4 max-w-3xl text-base text-chalk/65 md:text-lg">
-                Chat over PostgreSQL, inspect active model registrations, run historical scenario simulations,
-                export spreadsheet-like tables, and launch safe local workflow commands.
+                Chat over PostgreSQL, inspect active model registrations, run historical scenario
+                simulations, export spreadsheet-like tables, and launch safe local workflow
+                commands.
               </p>
             </div>
             <button
+              type="button"
               onClick={refresh}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-clay px-5 py-3 font-bold text-white shadow-lg shadow-clay/20 hover:bg-[#cc7040]"
             >
@@ -212,9 +214,24 @@ export default function Home() {
             </button>
           </div>
           <div className="grid gap-3 border-t border-white/10 p-4 md:grid-cols-3">
-            <StatCard label="Active Models" value={numberText(activeModels)} accent="text-emerald-300" caption="registered in models.model_registry" />
-            <StatCard label="Best ROC AUC" value={bestAuc ? bestAuc.toFixed(3) : '...'} accent="text-amber-200" caption="current active model ceiling" />
-            <StatCard label="Warehouse Rows" value={numberText(warehouseRows)} accent="text-sky-200" caption="validation summaries combined" />
+            <StatCard
+              label="Active Models"
+              value={numberText(activeModels)}
+              accent="text-emerald-300"
+              caption="registered in models.model_registry"
+            />
+            <StatCard
+              label="Best ROC AUC"
+              value={bestAuc ? bestAuc.toFixed(3) : '...'}
+              accent="text-amber-200"
+              caption="current active model ceiling"
+            />
+            <StatCard
+              label="Warehouse Rows"
+              value={numberText(warehouseRows)}
+              accent="text-sky-200"
+              caption="validation summaries combined"
+            />
           </div>
         </header>
 
@@ -226,6 +243,7 @@ export default function Home() {
             ['workbench', TerminalSquare, 'Workbench'],
           ].map(([id, Icon, label]) => (
             <button
+              type="button"
               key={String(id)}
               onClick={() => setView(id as View)}
               className={`rounded-2xl border px-4 py-3 text-left transition ${
@@ -292,21 +310,38 @@ function ChatPanel() {
           <Bot className="h-6 w-6 text-emerald-300" />
           <div>
             <h2 className="font-display text-2xl font-bold">Chat Analyst</h2>
-            <p className="text-sm text-chalk/55">Rule-based local tools today; LLM orchestration plugs in later.</p>
+            <p className="text-sm text-chalk/55">
+              Rule-based local tools today; LLM orchestration plugs in later.
+            </p>
           </div>
         </div>
         <div className="mb-4 h-[520px] overflow-auto rounded-2xl border border-white/10 bg-black/20 p-4">
           <div className="space-y-4">
             {messages.map((message, index) => (
-              <div key={index} className={message.role === 'user' ? 'ml-auto max-w-2xl' : 'mr-auto max-w-3xl'}>
-                <div className={`rounded-2xl p-4 ${message.role === 'user' ? 'bg-clay text-white' : 'bg-white/[0.07] text-chalk/80'}`}>
+              <div
+                key={`msg-${index}-${message.role}-${message.content.slice(0, 20)}`}
+                className={message.role === 'user' ? 'ml-auto max-w-2xl' : 'mr-auto max-w-3xl'}
+              >
+                <div
+                  className={`rounded-2xl p-4 ${message.role === 'user' ? 'bg-clay text-white' : 'bg-white/[0.07] text-chalk/80'}`}
+                >
                   <p className="whitespace-pre-wrap text-sm leading-6">{message.content}</p>
-                  {message.tools && <p className="mt-2 text-xs text-emerald-200/75">Tools: {message.tools.join(', ')}</p>}
+                  {message.tools && (
+                    <p className="mt-2 text-xs text-emerald-200/75">
+                      Tools: {message.tools.join(', ')}
+                    </p>
+                  )}
                 </div>
-                {message.table && message.table.length > 0 && <div className="mt-3"><DataTable rows={message.table} title="Chat Result" /></div>}
+                {message.table && message.table.length > 0 && (
+                  <div className="mt-3">
+                    <DataTable rows={message.table} title="Chat Result" />
+                  </div>
+                )}
               </div>
             ))}
-            {loading && <div className="text-sm text-chalk/55">Thinking through the warehouse...</div>}
+            {loading && (
+              <div className="text-sm text-chalk/55">Thinking through the warehouse...</div>
+            )}
           </div>
         </div>
         <form onSubmit={submit} className="flex gap-3">
@@ -316,7 +351,12 @@ function ChatPanel() {
             className="flex-1 rounded-full border border-white/10 bg-white/[0.06] px-5 py-3 text-chalk outline-none focus:border-clay"
             placeholder="Ask about active models, top hitters, or half-inning scenarios..."
           />
-          <button className="rounded-full bg-emerald-600 px-5 py-3 font-bold text-white hover:bg-emerald-500">Ask</button>
+          <button
+            type="submit"
+            className="rounded-full bg-emerald-600 px-5 py-3 font-bold text-white hover:bg-emerald-500"
+          >
+            Ask
+          </button>
         </form>
       </div>
       <div className="space-y-4">
@@ -332,8 +372,9 @@ function ChatPanel() {
         <div className="rounded-3xl border border-white/10 bg-white/[0.045] p-5 text-sm leading-6 text-chalk/65">
           <h3 className="mb-2 font-display text-xl font-bold text-chalk">Interface Approach</h3>
           <p>
-            Best path: Next.js cockpit for humans, Python scripts for heavy model work, Postgres views for
-            spreadsheet exports, and a safe command workbench instead of a raw shell until auth/PTY isolation exists.
+            Best path: Next.js cockpit for humans, Python scripts for heavy model work, Postgres
+            views for spreadsheet exports, and a safe command workbench instead of a raw shell until
+            auth/PTY isolation exists.
           </p>
         </div>
       </div>
@@ -350,15 +391,15 @@ function SimulationPanel() {
   const [savedRuns, setSavedRuns] = useState<Row[]>([])
   const [loading, setLoading] = useState(false)
 
-  async function loadSavedRuns() {
+  const loadSavedRuns = useCallback(async () => {
     const response = await fetch('/api/simulation-runs')
     const payload = await response.json()
     setSavedRuns(payload.runs || [])
-  }
+  }, [])
 
   useEffect(() => {
     loadSavedRuns().catch(() => setSavedRuns([]))
-  }, [])
+  }, [loadSavedRuns])
 
   async function run() {
     setLoading(true)
@@ -382,29 +423,54 @@ function SimulationPanel() {
       <div className="rounded-3xl border border-white/10 bg-black/25 p-5">
         <h2 className="font-display text-2xl font-bold">Simulation Workflow</h2>
         <p className="mt-2 text-sm text-chalk/55">
-          This first workflow is a historical scenario backtest distribution. Each run is saved so we can compare scenarios and reproduce model-room decisions.
+          This first workflow is a historical scenario backtest distribution. Each run is saved so
+          we can compare scenarios and reproduce model-room decisions.
         </p>
         <div className="mt-6 space-y-4">
           <label className="block text-sm text-chalk/65">
             Season endpoint
-            <input type="number" value={season} onChange={(event) => setSeason(Number(event.target.value))} className="mt-2 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3" />
+            <input
+              type="number"
+              value={season}
+              onChange={(event) => setSeason(Number(event.target.value))}
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3"
+            />
           </label>
           <label className="block text-sm text-chalk/65">
             Inning
-            <input type="number" min={1} max={15} value={inning} onChange={(event) => setInning(Number(event.target.value))} className="mt-2 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3" />
+            <input
+              type="number"
+              min={1}
+              max={15}
+              value={inning}
+              onChange={(event) => setInning(Number(event.target.value))}
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3"
+            />
           </label>
           <label className="block text-sm text-chalk/65">
             Half inning
-            <select value={half} onChange={(event) => setHalf(event.target.value as 'top' | 'bottom')} className="mt-2 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3">
+            <select
+              value={half}
+              onChange={(event) => setHalf(event.target.value as 'top' | 'bottom')}
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3"
+            >
               <option value="top">Top</option>
               <option value="bottom">Bottom</option>
             </select>
           </label>
           <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm">
-            <input type="checkbox" checked={leftOnly} onChange={(event) => setLeftOnly(event.target.checked)} />
+            <input
+              type="checkbox"
+              checked={leftOnly}
+              onChange={(event) => setLeftOnly(event.target.checked)}
+            />
             Require at least one left-handed batter in half-inning
           </label>
-          <button onClick={run} className="w-full rounded-full bg-clay px-5 py-3 font-bold text-white hover:bg-[#cc7040]">
+          <button
+            type="button"
+            onClick={run}
+            className="w-full rounded-full bg-clay px-5 py-3 font-bold text-white hover:bg-[#cc7040]"
+          >
             {loading ? 'Running...' : 'Run Historical Simulation'}
           </button>
         </div>
@@ -412,10 +478,30 @@ function SimulationPanel() {
       <div className="space-y-5">
         {result?.summary && (
           <div className="grid gap-3 md:grid-cols-4">
-            <StatCard label="Sample" value={numberText(result.summary.historical_half_innings)} accent="text-sky-200" caption="historical half-innings" />
-            <StatCard label="Expected Runs" value={numberText(result.summary.expected_runs)} accent="text-emerald-300" caption="mean runs scored" />
-            <StatCard label="Run Chance" value={pct(result.summary.run_probability)} accent="text-amber-200" caption="any run scores" />
-            <StatCard label="All LHB Hit" value={pct(result.summary.all_left_handed_batters_hit_probability)} accent="text-clay" caption="scenario probability" />
+            <StatCard
+              label="Sample"
+              value={numberText(result.summary.historical_half_innings)}
+              accent="text-sky-200"
+              caption="historical half-innings"
+            />
+            <StatCard
+              label="Expected Runs"
+              value={numberText(result.summary.expected_runs)}
+              accent="text-emerald-300"
+              caption="mean runs scored"
+            />
+            <StatCard
+              label="Run Chance"
+              value={pct(result.summary.run_probability)}
+              accent="text-amber-200"
+              caption="any run scores"
+            />
+            <StatCard
+              label="All LHB Hit"
+              value={pct(result.summary.all_left_handed_batters_hit_probability)}
+              accent="text-clay"
+              caption="scenario probability"
+            />
           </div>
         )}
         {result?.run_distribution && (
@@ -427,34 +513,75 @@ function SimulationPanel() {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(246,234,214,0.12)" />
                   <XAxis dataKey="runs_scored" stroke="#9fb2aa" />
                   <YAxis stroke="#9fb2aa" />
-                  <Tooltip contentStyle={{ background: '#10251d', border: '1px solid rgba(255,255,255,.15)' }} />
+                  <Tooltip
+                    contentStyle={{
+                      background: '#10251d',
+                      border: '1px solid rgba(255,255,255,.15)',
+                    }}
+                  />
                   <Bar dataKey="probability" fill="#b45f32" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
         )}
-        {result?.recent_examples && <DataTable rows={result.recent_examples} title="Recent Matching Half-Innings" />}
+        {result?.recent_examples && (
+          <DataTable rows={result.recent_examples} title="Recent Matching Half-Innings" />
+        )}
         {savedRuns.length > 0 && <DataTable rows={savedRuns} title="Saved Simulation Runs" />}
       </div>
     </section>
   )
 }
 
-function ModelsPanel({ analytics, backtests }: { analytics: AnalyticsPayload | null; backtests: BacktestPayload | null }) {
+function ModelsPanel({
+  analytics,
+  backtests,
+}: {
+  analytics: AnalyticsPayload | null
+  backtests: BacktestPayload | null
+}) {
   return (
     <section className="space-y-6">
       <div className="grid gap-3 md:grid-cols-4">
-        <StatCard label="Active Models" value={numberText(analytics?.overall?.total_active_models)} accent="text-emerald-300" caption="production candidates" />
-        <StatCard label="Avg ROC AUC" value={numberText(analytics?.overall?.avg_roc_auc)} accent="text-amber-200" caption="across active models" />
-        <StatCard label="Registered" value={numberText(backtests?.overview?.registered_models)} accent="text-sky-200" caption="all model versions" />
-        <StatCard label="Sweeps" value={numberText(backtests?.overview?.sweep_candidates)} accent="text-clay" caption="grid-search candidates" />
+        <StatCard
+          label="Active Models"
+          value={numberText(analytics?.overall?.total_active_models)}
+          accent="text-emerald-300"
+          caption="production candidates"
+        />
+        <StatCard
+          label="Avg ROC AUC"
+          value={numberText(analytics?.overall?.avg_roc_auc)}
+          accent="text-amber-200"
+          caption="across active models"
+        />
+        <StatCard
+          label="Registered"
+          value={numberText(backtests?.overview?.registered_models)}
+          accent="text-sky-200"
+          caption="all model versions"
+        />
+        <StatCard
+          label="Sweeps"
+          value={numberText(backtests?.overview?.sweep_candidates)}
+          accent="text-clay"
+          caption="grid-search candidates"
+        />
       </div>
-      {analytics?.model_metrics && <DataTable rows={analytics.model_metrics} title="Active Model Registry" />}
-      {backtests?.leaderboard && <DataTable rows={backtests.leaderboard} title="Backtest Leaderboard" />}
+      {analytics?.model_metrics && (
+        <DataTable rows={analytics.model_metrics} title="Active Model Registry" />
+      )}
+      {backtests?.leaderboard && (
+        <DataTable rows={backtests.leaderboard} title="Backtest Leaderboard" />
+      )}
       <div className="grid gap-6 lg:grid-cols-2">
-        {analytics?.batter_leaders && <DataTable rows={analytics.batter_leaders} title="2025 Batter Production" />}
-        {analytics?.pitcher_leaders && <DataTable rows={analytics.pitcher_leaders} title="2025 Pitcher Production" />}
+        {analytics?.batter_leaders && (
+          <DataTable rows={analytics.batter_leaders} title="2025 Batter Production" />
+        )}
+        {analytics?.pitcher_leaders && (
+          <DataTable rows={analytics.pitcher_leaders} title="2025 Pitcher Production" />
+        )}
       </div>
     </section>
   )
@@ -484,28 +611,42 @@ function WorkbenchPanel({ status }: { status: StatusPayload | null }) {
           <TerminalSquare className="h-6 w-6 text-clay" />
           <div>
             <h2 className="font-display text-2xl font-bold">Command Workbench</h2>
-            <p className="text-sm text-chalk/55">Safe allow-listed commands, not an unrestricted shell.</p>
+            <p className="text-sm text-chalk/55">
+              Safe allow-listed commands, not an unrestricted shell.
+            </p>
           </div>
         </div>
-        <select value={command} onChange={(event) => setCommand(event.target.value)} className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3">
+        <select
+          value={command}
+          onChange={(event) => setCommand(event.target.value)}
+          className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3"
+        >
           <option value="status">status</option>
           <option value="models">models</option>
           <option value="analyze-pa">analyze-pa</option>
           <option value="rebuild-help">rebuild-help</option>
           <option value="sweep-help">sweep-help</option>
         </select>
-        <button onClick={run} className="mt-4 w-full rounded-full bg-emerald-600 px-5 py-3 font-bold text-white hover:bg-emerald-500">
+        <button
+          type="button"
+          onClick={run}
+          className="mt-4 w-full rounded-full bg-emerald-600 px-5 py-3 font-bold text-white hover:bg-emerald-500"
+        >
           {loading ? 'Running...' : 'Run Command'}
         </button>
         <div className="mt-5 rounded-2xl border border-amber-200/20 bg-amber-200/10 p-4 text-sm leading-6 text-amber-100/80">
-          A real embedded terminal is doable with `node-pty` + `xterm.js` + websocket auth, but this allow-list is the right first step because it is safer and enough for rebuild/sweep/backtest workflows.
+          A real embedded terminal is doable with `node-pty` + `xterm.js` + websocket auth, but this
+          allow-list is the right first step because it is safer and enough for
+          rebuild/sweep/backtest workflows.
         </div>
       </div>
       <div className="space-y-5">
         <pre className="min-h-[360px] overflow-auto rounded-3xl border border-white/10 bg-[#020805] p-5 font-mono text-sm leading-6 text-emerald-100">
           {output || '$ choose an allow-listed command and run it'}
         </pre>
-        {status?.summary && <DataTable rows={status.summary.slice(0, 30)} title="Warehouse Validation Snapshot" />}
+        {status?.summary && (
+          <DataTable rows={status.summary.slice(0, 30)} title="Warehouse Validation Snapshot" />
+        )}
       </div>
     </section>
   )

@@ -1,4 +1,11 @@
-import { apiError, executeOne, jsonLiteral, queryJson, queryOne, sqlLiteral } from '../_lib/warehouse'
+import {
+  apiError,
+  executeOne,
+  jsonLiteral,
+  queryJson,
+  queryOne,
+  sqlLiteral,
+} from '../_lib/warehouse'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,7 +73,13 @@ export async function POST(request: Request) {
       `)
       const response = 'Here are the strongest active model registrations by validation ROC AUC.'
       const tools = ['models.model_registry']
-      await logChatInteraction({ message, intent: { name: 'active_models' }, response, tools, rowCount: rows.length })
+      await logChatInteraction({
+        message,
+        intent: { name: 'active_models' },
+        response,
+        tools,
+        rowCount: rows.length,
+      })
       return Response.json({
         response,
         tools_used: tools,
@@ -88,7 +101,13 @@ export async function POST(request: Request) {
       const response =
         'Using historical half-innings from 2021-2025 where at least one left-handed batter appeared, here is the scenario baseline.'
       const tools = ['features.half_inning_outcome_summary']
-      await logChatInteraction({ message, intent: { name: 'left_handed_half_inning' }, response, tools, rowCount: row ? 1 : 0 })
+      await logChatInteraction({
+        message,
+        intent: { name: 'left_handed_half_inning' },
+        response,
+        tools,
+        rowCount: row ? 1 : 0,
+      })
       return Response.json({
         response,
         tools_used: tools,
@@ -116,7 +135,13 @@ export async function POST(request: Request) {
       `)
       const response = 'Top 2025 hitters by our current OPS proxy.'
       const tools = ['features.player_production_season']
-      await logChatInteraction({ message, intent: { name: 'top_hitters' }, response, tools, rowCount: rows.length })
+      await logChatInteraction({
+        message,
+        intent: { name: 'top_hitters' },
+        response,
+        tools,
+        rowCount: rows.length,
+      })
       return Response.json({
         response,
         tools_used: tools,
@@ -135,7 +160,13 @@ export async function POST(request: Request) {
     const response =
       'I can inspect model performance, hitter/pitcher production, half-inning scenarios, and warehouse status. Try: “show active models”, “simulate left-handed batters this inning”, or “top hitters”.'
     const tools = ['warehouse_status']
-    await logChatInteraction({ message, intent: { name: 'warehouse_status' }, response, tools, rowCount: status ? 1 : 0 })
+    await logChatInteraction({
+      message,
+      intent: { name: 'warehouse_status' },
+      response,
+      tools,
+      rowCount: status ? 1 : 0,
+    })
     return Response.json({
       response,
       tools_used: tools,

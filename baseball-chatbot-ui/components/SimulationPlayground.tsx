@@ -1,7 +1,7 @@
 'use client'
 
+import { BarChart3, Play, RotateCcw, Square, Target } from 'lucide-react'
 import { useState } from 'react'
-import { Play, Square, RotateCcw, TrendingUp, Target, Zap, BarChart3 } from 'lucide-react'
 
 interface SimulationParams {
   game_id?: string
@@ -53,9 +53,9 @@ export function SimulationPlayground() {
     runners_on_base: {
       first: false,
       second: false,
-      third: false
+      third: false,
     },
-    num_simulations: 1000
+    num_simulations: 1000,
   })
 
   const [results, setResults] = useState<SimulationResult | null>(null)
@@ -94,12 +94,12 @@ export function SimulationPlayground() {
   }
 
   const updateRunners = (base: keyof SimulationParams['runners_on_base']) => {
-    setParams(prev => ({
+    setParams((prev) => ({
       ...prev,
       runners_on_base: {
         ...prev.runners_on_base,
-        [base]: !prev.runners_on_base[base]
-      }
+        [base]: !prev.runners_on_base[base],
+      },
     }))
   }
 
@@ -110,7 +110,9 @@ export function SimulationPlayground() {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">Monte Carlo Simulation Playground</h2>
-        <p className="text-slate-400">Run probabilistic simulations for half-innings using our ML models</p>
+        <p className="text-slate-400">
+          Run probabilistic simulations for half-innings using our ML models
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -125,21 +127,34 @@ export function SimulationPlayground() {
             {/* Game State */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Inning</label>
+                <label htmlFor="inning" className="block text-sm font-medium text-slate-300 mb-2">
+                  Inning
+                </label>
                 <input
+                  id="inning"
                   type="number"
                   min="1"
                   max="9"
                   value={params.inning}
-                  onChange={(e) => setParams(prev => ({ ...prev, inning: parseInt(e.target.value) || 1 }))}
+                  onChange={(e) =>
+                    setParams((prev) => ({ ...prev, inning: parseInt(e.target.value, 10) || 1 }))
+                  }
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Half</label>
+                <label htmlFor="half" className="block text-sm font-medium text-slate-300 mb-2">
+                  Half
+                </label>
                 <select
+                  id="half"
                   value={params.top_bottom}
-                  onChange={(e) => setParams(prev => ({ ...prev, top_bottom: e.target.value as 'top' | 'bottom' }))}
+                  onChange={(e) =>
+                    setParams((prev) => ({
+                      ...prev,
+                      top_bottom: e.target.value as 'top' | 'bottom',
+                    }))
+                  }
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="top">Top</option>
@@ -151,21 +166,37 @@ export function SimulationPlayground() {
             {/* Teams */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Home Team</label>
+                <label
+                  htmlFor="home-team"
+                  className="block text-sm font-medium text-slate-300 mb-2"
+                >
+                  Home Team
+                </label>
                 <input
+                  id="home-team"
                   type="text"
                   value={params.home_team}
-                  onChange={(e) => setParams(prev => ({ ...prev, home_team: e.target.value.toUpperCase() }))}
+                  onChange={(e) =>
+                    setParams((prev) => ({ ...prev, home_team: e.target.value.toUpperCase() }))
+                  }
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="NYY"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Away Team</label>
+                <label
+                  htmlFor="away-team"
+                  className="block text-sm font-medium text-slate-300 mb-2"
+                >
+                  Away Team
+                </label>
                 <input
+                  id="away-team"
                   type="text"
                   value={params.away_team}
-                  onChange={(e) => setParams(prev => ({ ...prev, away_team: e.target.value.toUpperCase() }))}
+                  onChange={(e) =>
+                    setParams((prev) => ({ ...prev, away_team: e.target.value.toUpperCase() }))
+                  }
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="BOS"
                 />
@@ -175,22 +206,44 @@ export function SimulationPlayground() {
             {/* Score */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Home Score</label>
+                <label
+                  htmlFor="home-score"
+                  className="block text-sm font-medium text-slate-300 mb-2"
+                >
+                  Home Score
+                </label>
                 <input
+                  id="home-score"
                   type="number"
                   min="0"
                   value={params.current_score_home}
-                  onChange={(e) => setParams(prev => ({ ...prev, current_score_home: parseInt(e.target.value) || 0 }))}
+                  onChange={(e) =>
+                    setParams((prev) => ({
+                      ...prev,
+                      current_score_home: parseInt(e.target.value, 10) || 0,
+                    }))
+                  }
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Away Score</label>
+                <label
+                  htmlFor="away-score"
+                  className="block text-sm font-medium text-slate-300 mb-2"
+                >
+                  Away Score
+                </label>
                 <input
+                  id="away-score"
                   type="number"
                   min="0"
                   value={params.current_score_away}
-                  onChange={(e) => setParams(prev => ({ ...prev, current_score_away: parseInt(e.target.value) || 0 }))}
+                  onChange={(e) =>
+                    setParams((prev) => ({
+                      ...prev,
+                      current_score_away: parseInt(e.target.value, 10) || 0,
+                    }))
+                  }
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -198,10 +251,15 @@ export function SimulationPlayground() {
 
             {/* Outs */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Outs</label>
+              <label htmlFor="outs" className="block text-sm font-medium text-slate-300 mb-2">
+                Outs
+              </label>
               <select
+                id="outs"
                 value={params.outs}
-                onChange={(e) => setParams(prev => ({ ...prev, outs: parseInt(e.target.value) }))}
+                onChange={(e) =>
+                  setParams((prev) => ({ ...prev, outs: parseInt(e.target.value, 10) }))
+                }
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value={0}>0 outs</option>
@@ -212,14 +270,15 @@ export function SimulationPlayground() {
 
             {/* Runners on Base */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-3">Runners on Base</label>
+              <span className="block text-sm font-medium text-slate-300 mb-3">Runners on Base</span>
               <div className="flex justify-center space-x-8">
                 {[
                   { key: 'first', label: '1st' },
                   { key: 'second', label: '2nd' },
-                  { key: 'third', label: '3rd' }
+                  { key: 'third', label: '3rd' },
                 ].map(({ key, label }) => (
                   <button
+                    type="button"
                     key={key}
                     onClick={() => updateRunners(key as keyof SimulationParams['runners_on_base'])}
                     className={`w-12 h-12 rounded-full border-2 transition-colors ${
@@ -236,10 +295,18 @@ export function SimulationPlayground() {
 
             {/* Number of Simulations */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Simulations</label>
+              <label
+                htmlFor="simulations"
+                className="block text-sm font-medium text-slate-300 mb-2"
+              >
+                Simulations
+              </label>
               <select
+                id="simulations"
                 value={params.num_simulations}
-                onChange={(e) => setParams(prev => ({ ...prev, num_simulations: parseInt(e.target.value) }))}
+                onChange={(e) =>
+                  setParams((prev) => ({ ...prev, num_simulations: parseInt(e.target.value, 10) }))
+                }
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value={100}>100</option>
@@ -253,6 +320,7 @@ export function SimulationPlayground() {
             {/* Action Buttons */}
             <div className="flex space-x-3 pt-4">
               <button
+                type="button"
                 onClick={runSimulation}
                 disabled={loading}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed px-4 py-3 rounded-lg text-white font-medium transition-colors flex items-center justify-center space-x-2"
@@ -270,6 +338,7 @@ export function SimulationPlayground() {
                 )}
               </button>
               <button
+                type="button"
                 onClick={resetSimulation}
                 className="px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 hover:text-white transition-colors flex items-center space-x-2"
               >
@@ -297,7 +366,9 @@ export function SimulationPlayground() {
             <div className="text-center py-12">
               <Square className="w-12 h-12 text-slate-600 mx-auto mb-4" />
               <h4 className="text-lg font-medium text-slate-400 mb-2">No Results Yet</h4>
-              <p className="text-slate-500">Configure your simulation parameters and click "Run Simulation"</p>
+              <p className="text-slate-500">
+                Configure your simulation parameters and click "Run Simulation"
+              </p>
             </div>
           )}
 
@@ -305,7 +376,9 @@ export function SimulationPlayground() {
             <div className="text-center py-12">
               <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
               <h4 className="text-lg font-medium text-slate-400 mb-2">Running Simulation</h4>
-              <p className="text-slate-500">Analyzing {params.num_simulations.toLocaleString()} scenarios...</p>
+              <p className="text-slate-500">
+                Analyzing {params.num_simulations.toLocaleString()} scenarios...
+              </p>
             </div>
           )}
 
@@ -356,11 +429,14 @@ export function SimulationPlayground() {
               <div>
                 <h4 className="text-md font-medium text-slate-300 mb-3">Possible Outcomes</h4>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {results.detailed_outcomes.slice(0, 10).map((outcome, index) => (
-                    <div key={index} className="flex items-center justify-between bg-slate-700 rounded-lg p-3">
+                  {results.detailed_outcomes.slice(0, 10).map((outcome) => (
+                    <div
+                      key={`${outcome.runs_scored}-${outcome.probability}`}
+                      className="flex items-center justify-between bg-slate-700 rounded-lg p-3"
+                    >
                       <div className="flex items-center space-x-3">
                         <span className="text-sm text-slate-400">
-                          {outcome.runs_scored} run{outcome.runs_scored !== 1 ? 's' : ''}
+                          {outcome.runs_scored} run{outcome.runs_scored === 1 ? '' : 's'}
                         </span>
                         <div className="text-xs text-slate-500">
                           {outcome.most_likely_events.slice(0, 2).join(', ')}

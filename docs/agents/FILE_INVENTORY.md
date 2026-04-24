@@ -44,6 +44,7 @@ This inventory tells agents what each important file does and which workflows ow
 | `docs/ESPN_BRIDGE_REQUIREMENTS.md` | Requirements for ESPN bridge table integration, including dependencies, implementation status, and validation. | ESPN bridge reference |
 | `docs/CONFIDENCE_SCORING.md` | Confidence scoring framework documentation for bridge table mappings, including score levels, usage, and monitoring. | Bridge data quality reference |
 | `docs/agents/ZSH_SQL_MANGLING_FIX.md` | Documentation of the zsh globsubst bug that was silently corrupting SQL commands and the fix applied (removing /etc/zsh/zshenv). | Shell configuration reference |
+| `docs/agents/REPRODUCIBILITY_AUDIT_PROMPT.md` | **CRITICAL** - Comprehensive prompt for another agent to audit and fill all documentation gaps to make project reproducible. | All agents must follow |
 | `CHATBOT_INTERFACE_DESIGN.md` | Current/future web command-center design notes. | Interface, agents |
 
 ## Configuration

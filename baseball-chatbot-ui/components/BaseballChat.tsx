@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, TrendingUp, Target, Zap } from 'lucide-react'
+import { Bot, Send, Target, User, Zap } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface Message {
   id: string
@@ -17,21 +17,23 @@ export function BaseballChat() {
     {
       id: '1',
       role: 'assistant',
-      content: "🎯 Welcome to the AI Baseball Analyst! I'm powered by 18 machine learning models trained on 25+ years of MLB data. Ask me anything about baseball predictions, game analysis, or player performance!",
-      timestamp: new Date()
-    }
+      content:
+        "🎯 Welcome to the AI Baseball Analyst! I'm powered by 18 machine learning models trained on 25+ years of MLB data. Ask me anything about baseball predictions, game analysis, or player performance!",
+      timestamp: new Date(),
+    },
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  }, [])
 
   useEffect(() => {
     scrollToBottom()
-  }, [messages])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollToBottom])
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,10 +43,10 @@ export function BaseballChat() {
       id: Date.now().toString(),
       role: 'user',
       content: input.trim(),
-      timestamp: new Date()
+      timestamp: new Date(),
     }
 
-    setMessages(prev => [...prev, userMessage])
+    setMessages((prev) => [...prev, userMessage])
     setInput('')
     setIsLoading(true)
 
@@ -57,7 +59,7 @@ export function BaseballChat() {
         },
         body: JSON.stringify({
           message: userMessage.content,
-          conversation_history: messages.slice(-5) // Last 5 messages for context
+          conversation_history: messages.slice(-5), // Last 5 messages for context
         }),
       })
 
@@ -69,19 +71,19 @@ export function BaseballChat() {
         content: result.response,
         timestamp: new Date(),
         tools_used: result.tools_used,
-        odds: result.odds
+        odds: result.odds,
       }
 
-      setMessages(prev => [...prev, assistantMessage])
+      setMessages((prev) => [...prev, assistantMessage])
     } catch (error) {
       console.error('Error sending message:', error)
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "Sorry, I encountered an error. Please try again.",
-        timestamp: new Date()
+        content: 'Sorry, I encountered an error. Please try again.',
+        timestamp: new Date(),
       }
-      setMessages(prev => [...prev, errorMessage])
+      setMessages((prev) => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
     }
@@ -106,12 +108,15 @@ export function BaseballChat() {
         {/* Messages */}
         <div className="h-96 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
-            <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                message.role === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-700 text-slate-100'
-              }`}>
+            <div
+              key={message.id}
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                  message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-100'
+                }`}
+              >
                 <div className="flex items-center space-x-2 mb-1">
                   {message.role === 'user' ? (
                     <User className="w-4 h-4" />
@@ -143,12 +148,14 @@ export function BaseballChat() {
                       <span className="text-green-400 font-medium">Live Odds</span>
                     </div>
                     <div className="grid grid-cols-2 gap-1 text-slate-300">
-                      {Object.entries(message.odds).slice(0, 6).map(([key, value]) => (
-                        <div key={key} className="flex justify-between">
-                          <span>{key.replace('pa_batter_', '').replace('_', ' ')}:</span>
-                          <span className="font-mono">{(value * 100).toFixed(1)}%</span>
-                        </div>
-                      ))}
+                      {Object.entries(message.odds)
+                        .slice(0, 6)
+                        .map(([key, value]) => (
+                          <div key={key} className="flex justify-between">
+                            <span>{key.replace('pa_batter_', '').replace('_', ' ')}:</span>
+                            <span className="font-mono">{(value * 100).toFixed(1)}%</span>
+                          </div>
+                        ))}
                     </div>
                   </div>
                 )}
@@ -163,8 +170,14 @@ export function BaseballChat() {
                   <Bot className="w-4 h-4" />
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                    <div
+                      className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"
+                      style={{ animationDelay: '0.1s' }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"
+                      style={{ animationDelay: '0.2s' }}
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -198,12 +211,13 @@ export function BaseballChat() {
           {/* Quick suggestions */}
           <div className="mt-3 flex flex-wrap gap-2">
             {[
-              "What are the odds of a home run?",
-              "Simulate this half-inning",
-              "Who has the best batting average?",
-              "What's the win probability?"
+              'What are the odds of a home run?',
+              'Simulate this half-inning',
+              'Who has the best batting average?',
+              "What's the win probability?",
             ].map((suggestion) => (
               <button
+                type="button"
                 key={suggestion}
                 onClick={() => setInput(suggestion)}
                 className="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full transition-colors"

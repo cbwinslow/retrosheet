@@ -37,7 +37,7 @@ export async function POST(request: Request) {
           error: 'Command is not allow-listed.',
           allowed: Object.keys(commands),
         },
-        { status: 400 },
+        { status: 400 }
       )
     }
     const output = await commands[command]()

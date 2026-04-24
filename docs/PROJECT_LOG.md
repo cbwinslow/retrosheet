@@ -1,5 +1,94 @@
 # Project Log
 
+## 2026-04-24 (Reproducibility Mandate - CRITICAL)
+
+### Problem Identified
+User identified critical gap: we have NOT been following proper reproducibility standards. No paper trail exists for much of our work, making it impossible for other researchers to reproduce our analysis.
+
+### Changes Made
+
+#### 1. AGENTS.md Updated
+- Added **REPRODUCIBILITY MANDATE (CRITICAL)** section
+- SQL-First Development Rule: ALL database operations must be in version-controlled .sql files
+- Script Wrapper Requirement: All pipelines must have orchestrator scripts
+- Documentation Requirements: Every SQL file must have header comments, every table/column must have COMMENT ON
+- The Paper Trail Checklist: 8-point checklist before completing ANY task
+- Scientific Reproducibility Standard: Every number must be traceable to source/transformation/model/evaluation
+- Never Again List: Explicit prohibitions (no ad-hoc SQL, no direct DB changes, etc.)
+
+#### 2. Audit Prompt Created
+- Created `docs/agents/REPRODUCIBILITY_AUDIT_PROMPT.md`
+- Comprehensive 4-phase audit plan for another agent to execute:
+  - Phase 1: Audit Current State (inventory SQL, scripts, table comments)
+  - Phase 2: Fix Documentation Gaps (add headers, comments, wrapper scripts)
+  - Phase 3: Create Missing Documentation (Table Dictionary, Data Lineage)
+  - Phase 4: Validation & Verification
+
+### Deliverables for Follow-up Agent
+- Must document all SQL files with headers
+- Must add COMMENT ON for all tables/columns
+- Must create wrapper scripts for all pipelines
+- Must create docs/TABLE_DICTIONARY.md
+- Must create docs/DATA_LINEAGE.md
+- Must update FILE_INVENTORY.md and PROCEDURES.md
+
+### Git Commit
+- Commit message: "Add REPRODUCIBILITY MANDATE to AGENTS.md and create comprehensive audit prompt"
+
+## 2026-04-23 (Sabermetrics Knowledge Base Expansion)
+
+### Ingested Research
+- Massively expanded `docs/KNOWLEDGE_BASE_SABERMETRICS.md` with 7 extracted PDFs + 3 fetched web resources
+- Created `docs/SABERMETRICS_LINK_INVENTORY.md` tracking 40+ research links with status
+
+### Papers Extracted
+| Paper | Source | Key Finding |
+|-------|--------|-------------|
+| Jim Albert - Sabermetrics Overview | ASA 2010 | OPS explains 89% run variance; DICE formula; PITCHf/x applications |
+| Pavitt - Bibliography Explainer | Retrosheet | 4,153-entry taxonomy with 19 macrocode categories |
+| Tobin - Steroids Physics | AJP 2008 | 10% muscle → 50-100% HR increase; HRBiP analysis |
+| Beneventano et al. - Run Production | IJBHT 2012 | Runs model R²=95.3% (wOBA+K%+SLG+OBP); ERA model R²=98.8% |
+| Gopal et al. - Baseball MDP/RL | SMU 2024 | Feedforward NN 58% pitch outcome accuracy; RE288 framework |
+| CMU - Neural Sabermetrics LLM | arXiv 2026 | Llama-3.2 3B world model; 63.7% pitch type, 76.6% swing IZ accuracy |
+| Birnbaum - Book Review | BTN 2006 | Leverage index optimal closer usage; clutch hitting ≈0.008 OBP SD |
+
+### Web Resources Fetched
+- Swing Probability (Towards Data Science): LightGBM 80.5% accuracy
+- Retrosheet Fall 2025 Updates: 2025 season, 1910 deduced, 1935 Negro Leagues
+- Retrosheet DB Tutorial: MySQL schema guidance
+- CareerKarma Sabermetrics Courses: Training resource catalog
+- Syracuse Grad Program Blog: Analytics education overview
+
+### Additional Sources Fetched (2026-04-23 Extended Session)
+| Source | Type | Size | Status |
+|--------|------|------|--------|
+| Practicing Sabermetrics (Costa, Huber, Saccoman) | Book PDF | 14,227 lines / 2.5MB | **Extracted** → `docs/kb/sources/books/` |
+| FanGraphs Sabermetrics Library | Reference | 21,469 chars | **Fetched** → `docs/kb/sources/reference/` |
+| SABR Guide to Sabermetric Research | Reference | 6,710 chars | **Fetched** → `docs/kb/sources/reference/` |
+| PMC - Current State of Baseball Analytics | Review Paper | 45,401 chars | **Fetched** → `docs/kb/sources/papers/` |
+| SABR - Tobin Steroids Review (Nathan) | Article | 10,870 chars | **Fetched** → `docs/kb/sources/articles/` |
+| SABR - PEDs and Career Length (Gordon) | Article | 31,149 chars | **Fetched** → `docs/kb/sources/articles/` |
+
+### Blocked Sources (Documented)
+- MDPI journals: Akamai/EdgeSuite access denied (3 papers)
+- Beyond the Box Score: Fastly domain error (site dead)
+- Reddit r/Sabermetrics: JS-required/bot detection
+- Hilaris Publisher steroid PDF: Returns HTML instead of PDF
+- Scribd: Paywall blocked Birnbaum guide
+
+### Pavitt Bibliography Loaded
+- **4,153 entries** from `https://www.retrosheet.org/resources/BBREF.xls`
+- Top categories: WAR (88), Run Differentials (73), Postseasons (67), Home Advantage (67)
+- Covers journals: Baseball Analyst, Baseball Research Journal, JQAS, JoSE, etc.
+- Journals span 1982-2025 research
+
+### KB File Updated
+- `docs/KNOWLEDGE_BASE_SABERMETRICS.md`: Added sections on Advanced Research Findings, Retrosheet Bibliography, Source Documents
+- New metrics documented: DICE, RF/9, xWOBA, RE288, leverage index
+- New modeling approaches: Swing probability (LightGBM), Pitch outcome prediction (Feedforward NN), LLM world models (Llama-3.2)
+
+---
+
 ## 2026-04-12 (Team/Park Bridge Repair And Live Priors Activation)
 
 ### Built
@@ -1304,6 +1393,53 @@
   - next work should turn this experimental calibration pass into a repeatable report and decide whether calibrated outputs should be stored separately from raw model probabilities
 ### Completed ✅
 2026-04-22: Feature engineering phases 1, 2, and 3 fully implemented. 135 total features across 4.78M training rows. All feature marts materialized, indexed, and committed.
+
+## 2026-04-23 (KB RAG Infrastructure + Source Ingestion)
+
+### Built
+- Created `docs/kb/` RAG-ready directory structure:
+  - `docs/kb/AGENTS.md` - Agent guide for KB operations, chunking strategy, LlamaIndex recommendation
+  - `docs/kb/sources/` - Organized extracted sources: books/, papers/, articles/, reference/
+  - `docs/kb/chunks/` - Chunked documents for RAG (by_source/ and by_topic/)
+  - `docs/kb/indices/` - Vector index metadata
+  - `docs/kb/metadata/` - Source tracking and ingestion logs
+- Created `scripts/kb/chunk_sources.py` - Paragraph-aware chunking script with metadata enrichment
+  - Outputs JSONL files organized by source and by topic
+  - 9 source files chunked into 9 chunks (4 fundamentals, 2 steroid_era, 3 modeling)
+- Created `sql/maintenance/030_kb_vector_schema.sql` - pgvector schema for RAG:
+  - `kb.document_chunks` table with VECTOR(1536) embeddings
+  - ivfflat similarity index + B-tree filters on topic/source_type
+  - `kb.similar_chunks()` function for semantic search with topic filtering
+  - `kb.keyword_search()` function for text fallback
+  - `kb.chunk_summary` view for validation
+- Ingested 6 additional web sources via curl (previously blocked by 402):
+  - FanGraphs Library (21K chars) - fundamentals
+  - SABR Basics (6.7K chars) - fundamentals
+  - PMC Baseball Analytics (45K chars) - modeling
+  - Tobin Steroids SABR review (10K chars) - steroid_era
+  - PED Career Length (31K chars) - steroid_era
+  - Practicing Sabermetrics PDF extracted (14,227 lines / 2.5MB)
+
+### RAG Framework Recommendation
+- **Primary: LlamaIndex** over Haystack
+  - Native pgvector integration (we already have it installed)
+  - Simple ingestion: SimpleDirectoryReader + VectorStoreIndex
+  - SQL Query Engine for structured + unstructured hybrid queries
+  - Built-in agent tooling (QueryEngineTool, OpenAIAgent, ReActAgent)
+  - Better observability with TokenCountingHandler
+- Implementation phases documented in `docs/kb/AGENTS.md`
+
+### Blocked Sources Documented
+- MDPI journals (3 papers): Akamai/EdgeSuite access denied
+- Beyond the Box Score: Fastly domain error (site dead)
+- Reddit r/Sabermetrics: JS-required/bot detection
+- Hilaris Publisher steroid PDF: Returns HTML instead of PDF
+- Scribd: Paywall blocked Birnbaum guide
+
+### Updated Files
+- `docs/SABERMETRICS_LINK_INVENTORY.md` - Updated all fetch statuses with locations
+- `docs/agents/FILE_INVENTORY.md` - Added KB files, chunk script, vector schema SQL
+- `docs/PROJECT_LOG.md` - This entry
 
 ## 2026-04-23 (KB Organization + Modular Framework Research)
 
