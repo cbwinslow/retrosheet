@@ -1,25 +1,25 @@
 """
-MLB Predict: Unified Framework for Baseball Prediction Research
+MLB Prediction Framework
 
-Phase 1.1: Pydantic Configuration Schemas ✅ COMPLETE
-
-This framework wraps and extends your existing working infrastructure:
-- Uses existing feature marts (features_pitch.*, features.plate_appearance_*)
-- Integrates with existing model_registry table
-- Wraps existing training scripts (train_models.py, train_pa_outcome_distribution.py)
-- Provides plugin system for custom models that output to existing registry
+Phase 1 & 2 Implementation - Pydantic Configs, Rich Results, ModelTrainer, Plugins
 
 Example:
-    from mlb_predict.config import ModelConfig, ModelFamily, TargetVariable
+    from mlb_predict import ModelConfig, ModelTrainer, FeatureLoader
     
-    config = ModelConfig(
-        family=ModelFamily.XGBOOST,
-        target=TargetVariable.SWING_DECISION
-    )
-    config.to_yaml("my_experiment.yaml")
+    # Create config
+    config = ModelConfig(family='xgboost', target='swing_decision')
+    
+    # Load features
+    data = FeatureLoader(config).load_split(train_through=2022)
+    
+    # Train model
+    trainer = ModelTrainer(config)
+    result = trainer.train()
+    
+    # Analyze results
+    print(result.summary())
+    top_features = result.get_best_features(20)
 """
-
-__version__ = "0.1.0"
 
 # Phase 1.1: Configuration - COMPLETE
 from mlb_predict.config import (
@@ -45,7 +45,7 @@ from mlb_predict.config import (
     get_quick_test_config,
 )
 
-# Phase 1.2: Rich Result Classes - COMPLETE
+# Phase 1.2: Rich Results - COMPLETE
 from mlb_predict.core.results import (
     TrainResult,
     PredictResult,
@@ -70,11 +70,33 @@ from mlb_predict.core.plugin import (
     list_plugins,
 )
 
-# TODO: Phase 2.3 - FeatureLoader
-# from mlb_predict.data.feature_loader import FeatureLoader
+# Phase 2.3: FeatureLoader - COMPLETE
+from mlb_predict.core.feature_loader import (
+    FeatureLoader,
+    FeatureSchema,
+    DataSplit,
+    load_features_for_config,
+)
 
-# TODO: Phase 2.4 - Experiment Runner
-# from mlb_predict.core.experiment import Experiment
+# Phase 2.4: Experiment Runner - COMPLETE
+from mlb_predict.core.experiment import (
+    ExperimentRun,
+    ExperimentSummary,
+    ExperimentRunner,
+    HyperparameterSweep,
+    compare_feature_sets,
+    compare_model_families,
+)
+
+# Production Integration - Legacy Bridge
+from mlb_predict.integration import (
+    create_config_from_legacy_args,
+    LegacyCompatibleTrainer,
+    convert_legacy_cli_args_to_config,
+    print_framework_result_legacy_style,
+    LEGACY_TO_FRAMEWORK_FEATURES,
+    LEGACY_TARGET_MAPPING,
+)
 
 __all__ = [
     # Configuration (Phase 1.1)
@@ -116,4 +138,23 @@ __all__ = [
     'register_plugin',
     'get_plugin',
     'list_plugins',
+    # Data Loading (Phase 2.3)
+    'FeatureLoader',
+    'FeatureSchema',
+    'DataSplit',
+    'load_features_for_config',
+    # Experiment Runner (Phase 2.4)
+    'ExperimentRun',
+    'ExperimentSummary',
+    'ExperimentRunner',
+    'HyperparameterSweep',
+    'compare_feature_sets',
+    'compare_model_families',
+    # Production Integration
+    'create_config_from_legacy_args',
+    'LegacyCompatibleTrainer',
+    'convert_legacy_cli_args_to_config',
+    'print_framework_result_legacy_style',
+    'LEGACY_TO_FRAMEWORK_FEATURES',
+    'LEGACY_TARGET_MAPPING',
 ]

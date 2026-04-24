@@ -1,0 +1,42 @@
+"""
+MLB Predict Integration Module.
+
+Provides bridges between legacy scripts and new framework.
+
+Usage:
+    from mlb_predict.integration import LegacyCompatibleTrainer
+    
+    trainer = LegacyCompatibleTrainer()
+    result = trainer.train_legacy_style(
+        target_id='swing_outcome',
+        feature_set='advanced',
+        min_season=2020,
+        max_season=2024,
+        train_through=2022,
+    )
+    print(result.summary())
+"""
+
+from mlb_predict.integration.legacy_bridge import (
+    create_config_from_legacy_args,
+    get_legacy_feature_lists,
+    convert_legacy_metrics_to_framework,
+    create_train_result_from_legacy,
+    LegacyCompatibleTrainer,
+    convert_legacy_cli_args_to_config,
+    print_framework_result_legacy_style,
+    LEGACY_TO_FRAMEWORK_FEATURES,
+    LEGACY_TARGET_MAPPING,
+)
+
+__all__ = [
+    'create_config_from_legacy_args',
+    'get_legacy_feature_lists',
+    'convert_legacy_metrics_to_framework',
+    'create_train_result_from_legacy',
+    'LegacyCompatibleTrainer',
+    'convert_legacy_cli_args_to_config',
+    'print_framework_result_legacy_style',
+    'LEGACY_TO_FRAMEWORK_FEATURES',
+    'LEGACY_TARGET_MAPPING',
+]

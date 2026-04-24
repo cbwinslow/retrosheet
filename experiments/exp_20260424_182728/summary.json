@@ -1,0 +1,44 @@
+{
+  "experiment_id": "exp_20260424_182728",
+  "experiment_name": "model_family_comparison_swing_decision",
+  "n_runs": 2,
+  "n_completed": 2,
+  "n_failed": 0,
+  "best_run_id": "run_000",
+  "best_metric_value": 0.8651586449228956,
+  "metric_name": "val_roc_auc",
+  "runs": [
+    {
+      "run_id": "run_000",
+      "config": {
+        "family": "xgboost",
+        "target": "swing_decision",
+        "features": "advanced"
+      },
+      "status": "completed",
+      "duration_seconds": 0.003865,
+      "result": {
+        "model_id": 999,
+        "model_name": "xgboost_swing_decision",
+        "val_roc_auc": 0.8651586449228956
+      },
+      "error_message": null
+    },
+    {
+      "run_id": "run_001",
+      "config": {
+        "family": "lightgbm",
+        "target": "swing_decision",
+        "features": "advanced"
+      },
+      "status": "completed",
+      "duration_seconds": 0.003536,
+      "result": {
+        "model_id": 999,
+        "model_name": "lightgbm_swing_decision",
+        "val_roc_auc": 0.8633206751380619
+      },
+      "error_message": null
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "target_id": "win_probability",
+  "feature_set": "basic",
+  "model_family": "logistic_regression",
+  "timestamp": "20260424_190025",
+  "model_name": "win_probability_logistic_regression_basic_20260424_190025",
+  "model_path": "models/test/win_probability_logistic_regression_basic_20260424_190025.joblib",
+  "features": {
+    "numeric": [
+      "inning",
+      "is_bottom_inning",
+      "outs_before",
+      "start_bases",
+      "balls",
+      "strikes",
+      "home_score_diff"
+    ],
+    "categorical": [
+      "batter_hand",
+      "pitcher_hand"
+    ]
+  },
+  "data": {
+    "min_season": 2023,
+    "max_season": 2024,
+    "train_through": 2023,
+    "n_train": 18714,
+    "n_val": 18385,
+    "n_test": 0
+  },
+  "metrics": {
+    "train": {
+      "roc_auc": 0.8350440594762055,
+      "accuracy": 0.745164048306081,
+      "log_loss": 0.49366121436266325,
+      "brier_score": 0.1656789934854641,
+      "n_samples": 18714
+    },
+    "validation": {
+      "roc_auc": 0.8436435904674484,
+      "accuracy": 0.750883872722328,
+      "log_loss": 0.48070255184596805,
+      "brier_score": 0.16058956522549683,
+      "n_samples": 18385
+    }
+  }
+}

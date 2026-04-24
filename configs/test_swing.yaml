@@ -1,0 +1,84 @@
+artifact_path: null
+batch_size: null
+calibration:
+  cv_folds: 3
+  enabled: true
+  method: isotonic
+  n_bins: 10
+catboost: null
+class_weight: null
+custom_features: null
+custom_params: null
+description: null
+early_stopping:
+  enabled: true
+  metric: auc
+  min_delta: 0.001
+  rounds: 50
+exclude_features: null
+exclude_seasons: null
+experiment_name: null
+family: xgboost
+feature_importance:
+  compute_shap: false
+  enabled: true
+  methods:
+  - gain
+  - weight
+  - cover
+  shap_sample_size: 1000
+  top_n: 50
+features: advanced
+git_commit: null
+lightgbm: null
+logging:
+  log_file_path: null
+  log_level: INFO
+  log_metrics_every_n: 10
+  log_to_db: true
+  log_to_file: true
+  progress_bar: true
+max_season: null
+min_season: null
+run_name: null
+sample_weight: null
+save_feature_importance: true
+save_model: true
+save_predictions: true
+save_validation_curves: true
+seasons:
+- 2023
+- 2024
+- 2025
+sklearn_params: null
+split:
+  group_column: null
+  n_folds: 5
+  random_seed: 42
+  strategy: temporal
+  stratify_column: null
+  test_ratio: 0.15
+  test_seasons: null
+  train_ratio: 0.7
+  val_ratio: 0.15
+  val_seasons:
+  - 2024
+  - 2025
+tags: null
+target: swing_decision
+xgboost:
+  colsample_bylevel: 1.0
+  colsample_bynode: 1.0
+  colsample_bytree: 0.8
+  gamma: 0.0
+  grow_policy: depthwise
+  learning_rate: 0.05
+  max_delta_step: 0.0
+  max_depth: 6
+  min_child_weight: 3
+  n_estimators: 200
+  reg_alpha: 0.0
+  reg_lambda: 1.0
+  scale_pos_weight: null
+  subsample: 0.8
+  tree_method: hist

@@ -396,6 +396,135 @@ python scripts/pitch_models/train_tier1_xgboost.py
 
 **GitHub Issues:**
 - Epic #78: Pitch-Level Model Pipeline (Phase 4 In Progress)
+
+## MLB Predict Framework (Extensible Modeling Library)
+
+**Production-ready Python framework for baseball prediction with Pydantic configs, plugins, and experiments.**
+
+### Architecture
+
+```
+mlb_predict/
+├── config/          # Pydantic schemas (ModelConfig, ExperimentConfig)
+├── core/            # Trainer, ExperimentRunner, FeatureLoader, Results
+├── models/          # Multinomial classification models
+├── simulation/      # Markov chain game simulator
+├── betting/         # EV calculator and Kelly criterion
+├── integration/     # Legacy bridge for gradual migration
+└── cli/             # Unified command-line interface
+```
+
+### Key Components
+
+| Component | Purpose | Import Path |
+|-----------|---------|-------------|
+| **ModelConfig** | Pydantic configuration with validation | `from mlb_predict import ModelConfig` |
+| **ModelTrainer** | Wraps sklearn/XGBoost/LightGBM with plugins | `from mlb_predict import ModelTrainer` |
+| **ExperimentRunner** | Multi-model comparison, hyperparameter sweeps | `from mlb_predict import ExperimentRunner` |
+| **FeatureLoader** | PostgreSQL feature mart access with splits | `from mlb_predict import FeatureLoader` |
+| **TrainResult** | Rich result class with metrics, residuals, importance | `from mlb_predict import TrainResult, Metrics` |
+| **PluginRegistry** | Register custom models dynamically | `from mlb_predict import PluginRegistry` |
+
+### Multinomial Models (ChatGPT Spec Implementation)
+
+**All 8 model types required by the specification:**
+
+1. **MultinomialLogisticRegression** - Baseline with softmax
+2. **MultinomialXGBoost** - Gradient boosting with softprob
+3. **MultinomialLightGBM** - LightGBM multiclass
+4. **SimpleMLP** - Neural network with embeddings
+5. **Bayesian** - Framework ready for PyMC
+6. **MarkovChainSimulator** - Game state transitions
+7. **MonteCarlo** - Win probability via simulation
+8. **EVCalculator** - Expected value betting with Kelly
+
+### Usage Examples
+
+**Train with Configuration:**
+```python
+from mlb_predict import ModelConfig, ModelTrainer, ModelFamily, TargetVariable
+
+config = ModelConfig(
+    family=ModelFamily.XGBOOST,
+    target=TargetVariable.SWING_DECISION,
+    features=FeatureSet.ADVANCED,
+    seasons=[2020, 2021, 2022, 2023],
+)
+
+trainer = ModelTrainer(config)
+result = trainer.train()
+print(f"Val AUC: {result.metrics.validation.roc_auc:.3f}")
+```
+
+**Run Experiment:**
+```python
+from mlb_predict import ExperimentRunner, compare_model_families
+
+results = compare_model_families(
+    target='swing_decision',
+    families=['xgboost', 'lightgbm', 'catboost'],
+    feature_sets=['basic', 'advanced'],
+)
+```
+
+**Markov Simulation:**
+```python
+from mlb_predict.simulation import MarkovChainSimulator, GameState
+
+simulator = MarkovChainSimulator(outcome_probs_fn)
+win_prob = simulator.simulate_many_games(n_sims=1000)
+```
+
+**EV Betting:**
+```python
+from mlb_predict.betting import EVCalculator
+
+calc = EVCalculator(min_edge=0.02)
+opportunities = calc.find_opportunities(model_probs, market_odds)
+```
+
+### CLI Commands
+
+```bash
+# Train with framework
+mlb-predict train --config configs/xgboost_swing.yaml
+
+# Run experiment
+mlb-predict experiment --target swing_decision --families xgboost lightgbm
+
+# Sweep hyperparameters
+mlb-predict sweep --config configs/xgboost.yaml --param learning_rate --values 0.01 0.1 0.3
+```
+
+### Integration with Legacy Code
+
+```python
+from mlb_predict.integration import LegacyCompatibleTrainer
+
+# Bridge old training scripts to new framework
+trainer = LegacyCompatibleTrainer()
+result = trainer.train_legacy_style(
+    target_id='swing_outcome',
+    feature_set='advanced',
+    min_season=2020,
+    max_season=2025,
+    train_through=2023,
+)
+```
+
+### Files
+
+- `mlb_predict/config/schemas.py` - Pydantic configuration classes
+- `mlb_predict/core/trainer.py` - ModelTrainer with plugin system
+- `mlb_predict/core/experiment.py` - ExperimentRunner for comparisons
+- `mlb_predict/models/multinomial.py` - All 8 model types from spec
+- `mlb_predict/simulation/markov_chain.py` - Game simulator
+- `mlb_predict/betting/ev_calculator.py` - Kelly criterion, EV calc
+- `mlb_predict/integration/legacy_bridge.py` - Gradual migration support
+- `scripts/demo_advanced_modeling.py` - Complete demonstration
+
+**GitHub Issues:**
+- Epic #80: Extensible MLB Prediction Framework (All Phases Complete ✅)
 - Sub-Issue #79: Flexible Feature Mart Schema (✅ Complete)
 
 ## PostgreSQL Extensions and Features

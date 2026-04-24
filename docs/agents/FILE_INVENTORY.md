@@ -177,6 +177,20 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `sql/test/001_create_test_schema.sql` | Creates isolated `test` schema with test tracking tables. | E2E test setup. Run first before tests. |
 | `sql/test/002_test_fixtures.sql` | Creates small test datasets (100 games) from real data for fast testing. | E2E test data setup. Run after test schema. |
 
+## Metadata SQL (Database Documentation)
+
+| File | Purpose | Canonical Position |
+|---|---|---|
+| `sql/metadata/001_add_table_comments.sql` | **TABLE COMMENTS** - Adds COMMENT ON statements for all 150+ database tables and views. Documents purpose, row counts, data sources, and key relationships per AGENTS.md standards. | Run after all tables created. |
+| `sql/metadata/002_add_procedure_comments.sql` | **PROCEDURE/FUNCTION COMMENTS** - Adds COMMENT ON statements for all 87 database functions and procedures. Documents arguments, return values, and usage. | Run after all procedures created. |
+| `docs/DATABASE_CATALOG.md` | **COMPLETE DATABASE CATALOG** - Comprehensive documentation of all 36 schemas, 152 tables, 85 views, and 87 functions/procedures. Includes row counts, sizes, and descriptions. | Reference document for all database objects. |
+
+**Documentation Standards (per AGENTS.md):**
+- All tables must have COMMENT ON TABLE statements
+- All procedures must have COMMENT ON FUNCTION/PROCEDURE statements
+- Comments must include: purpose, row counts (where applicable), source data, and relationships
+- Metadata schema (`metadata.table_dictionary`, `metadata.column_dictionary`) tracks all objects
+
 ## Test Scripts (E2E Validation)
 
 | File | Purpose | Notes |
@@ -394,6 +408,9 @@ The flexible feature mart follows the principle: **"All fields available, select
 | File | Purpose | Targets / Outputs |
 |---|---|---|
 | `scripts/train_models.py` | General binary model trainer for game, PA, and some half-inning targets. | `game_home_win`, `pa_batter_*`, `half_inning_*`; writes `data/models/`, registers `models.model_registry`. |
+| `scripts/model_training/run_model_training_campaign.py` | **MASTER TRAINING ORCHESTRATOR** - Trains all production models (swing, contact, hit, win). Supports --all, --compare, --target. Uses LegacyCompatibleTrainer. | All targets; writes `models/production/`, saves metadata JSON. |
+| `scripts/model_training/train_with_framework.py` | **FRAMEWORK INTEGRATION** - Production wrapper bridging legacy scripts with new ModelTrainer framework. Supports legacy args and YAML configs. | Single model training with framework integration. |
+| `scripts/demo_advanced_modeling.py` | **DEMONSTRATION** - Complete demo of multinomial models, Markov simulation, EV betting. Showcases all 8 model types from ChatGPT spec. | Demo outputs, no artifacts. |
 | `scripts/train_pa_outcome_distribution.py` | Dedicated multiclass PA outcome distribution trainer. Supports `basic`, `advanced`, and `advanced_count` feature sets. | `pa_outcome_distribution`; writes `data/models/`, registers `models.model_registry`. |
 | `scripts/sweep_pa_outcome_temporal.py` | Runs reproducible temporal-policy sweeps against the PA outcome distribution trainer and emits comparable benchmark rows. | Recent-window and recency-weighting policy selection for `pa_outcome_distribution`. |
 | `scripts/analyze_pa_outcome_calibration.py` | Runs read-only calibration bins, per-class ECE summaries, and subgroup reliability diagnostics for a registered multiclass PA outcome model. | Probability-quality evaluation for `pa_outcome_distribution`. |
@@ -423,6 +440,58 @@ The flexible feature mart follows the principle: **"All fields available, select
 | `scripts/benchmark_report.py` | Benchmark reporting helper. | Query-performance reports. |
 | `scripts/performance_test.py` | Performance experiment script. | Verify syntax/status before relying on it. |
 | `scripts/simple_perf_test.py` | Simple performance demonstration. | Local investigation. |
+
+## MLB Predict Framework (Python Library)
+
+**Modular, Pydantic-based prediction framework with plugins, experiments, and simulations.**
+
+### Configuration & Core (`mlb_predict/`)
+
+| File | Purpose | Components |
+|---|---|---|
+| `mlb_predict/__init__.py` | Package exports. Exports ModelConfig, TrainResult, ModelTrainer, ExperimentRunner, etc. | Public API |
+| `mlb_predict/config/schemas.py` | **PYDANTIC CONFIGURATION** - ModelConfig, ExperimentConfig, ModelFamily, TargetVariable, FeatureSet enums. YAML serialization, validation. | Config classes |
+| `mlb_predict/config/__init__.py` | Config module exports. | load_config, save_config |
+| `mlb_predict/core/trainer.py` | **MODEL TRAINER** - ModelTrainer class wrapping sklearn/xgboost/lightgbm. Plugin system integration, TrainResult generation. | ModelTrainer |
+| `mlb_predict/core/experiment.py` | **EXPERIMENT RUNNER** - ExperimentRunner, ExperimentRun, ExperimentSummary classes. Multi-model comparison, hyperparameter sweeps. | ExperimentRunner |
+| `mlb_predict/core/feature_loader.py` | **FEATURE LOADER** - FeatureLoader class for PostgreSQL feature marts. Train/val/test splits, DataSplit enum. | FeatureLoader |
+| `mlb_predict/core/results.py` | **RICH RESULTS** - TrainResult, Metrics, MetricValue, Residuals, FeatureImportance dataclasses. | Result classes |
+| `mlb_predict/core/registry.py` | **PLUGIN REGISTRY** - PluginRegistry, BasePluginModel, SklearnPluginModel. Model registration and discovery. | Plugin system |
+| `mlb_predict/core/plugin_models.py` | Plugin model implementations. XGBoost, LightGBM, CatBoost, sklearn wrappers. | Plugin models |
+| `mlb_predict/cli/main.py` | **UNIFIED CLI** - Command-line interface with train, experiment, sweep, info subcommands. argparse dispatch. | CLI entry point |
+| `mlb_predict/cli/__init__.py` | CLI module exports. | create_parser, main |
+
+### Models (`mlb_predict/models/`)
+
+| File | Purpose | Components |
+|---|---|---|
+| `mlb_predict/models/multinomial.py` | **MULTINOMIAL MODELS** - Implements all 8 model types from ChatGPT spec: MultinomialLogisticRegression, MultinomialXGBoost, MultinomialLightGBM, SimpleMLP, PlattScaler, MulticlassCalibration. Softmax outputs, probability calibration, ECE metrics. | Multinomial models |
+
+### Simulation (`mlb_predict/simulation/`)
+
+| File | Purpose | Components |
+|---|---|---|
+| `mlb_predict/simulation/markov_chain.py` | **MARKOV CHAIN SIMULATOR** - GameState, BaseState enums, MarkovChainSimulator. Plate appearance transitions, half-inning simulation, full game simulation, Monte Carlo win probability. | Markov simulator |
+
+### Betting (`mlb_predict/betting/`)
+
+| File | Purpose | Components |
+|---|---|---|
+| `mlb_predict/betting/ev_calculator.py` | **EV BETTING CALCULATOR** - Odds conversion, vig calculations, Kelly criterion, portfolio management, backtesting. MoneylineBet, RunLineBet, TotalBet, BettingOpportunity classes. EV calculator matching ChatGPT spec. | EV betting |
+
+### Integration (`mlb_predict/integration/`)
+
+| File | Purpose | Components |
+|---|---|---|
+| `mlb_predict/integration/legacy_bridge.py` | **LEGACY BRIDGE** - Bridges legacy train_models.py with new framework. create_config_from_legacy_args(), LegacyCompatibleTrainer, convert_legacy_metrics_to_framework(). Gradual migration support. | Legacy bridge |
+| `mlb_predict/integration/__init__.py` | Integration module exports. | LegacyCompatibleTrainer, etc. |
+
+### Configuration Examples (`configs/`)
+
+| File | Purpose |
+|---|---|
+| `configs/xgboost_swing_decision.yaml` | Example XGBoost config for swing prediction. |
+| `configs/lightgbm_contact_made.yaml` | Example LightGBM config for contact prediction. |
 
 ## Agent And Interface Scripts
 

@@ -24,6 +24,8 @@ dependencies = [
   "pybaseball>=2.2.7",
   "lightgbm>=4.6.0",
   "catboost>=1.2.10",
+  "psycopg>=3.3.3",
+  "psycopg2>=2.9.12",
 ]
 
 [project.optional-dependencies]
@@ -35,6 +37,9 @@ dev = [
   "black>=24.0",
   "isort>=5.13",
 ]
+
+[project.scripts]
+mlb-predict = "mlb_predict.cli.main:main"
 
 [tool.uv]
 resolution = "highest"
