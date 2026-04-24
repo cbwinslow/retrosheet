@@ -1,10 +1,24 @@
 /*
+⚠️  DEPRECATED - DO NOT USE ⚠️
+
+This file creates redundant tables that duplicate existing infrastructure:
+- framework.log → Use warehouse.rebuild_log instead
+- framework.experiments → Use warehouse.rebuild_runs instead  
+- framework.plugins → Use Python plugin registry instead
+- framework.model_registry → Use models.model_registry instead
+- framework.feature_registry → Use features_pitch.feature_registry instead
+
+Only framework.batches has unique value - use warehouse.batch_operations instead.
+
+See: docs/WORKFLOW_VALIDATION_REPORT.md for analysis
+
 File: sql/framework/001_framework_schema.sql
-Purpose: Framework extension schema for logging, experiments, and plugin registry
+Purpose: [DEPRECATED] Framework extension schema - DO NOT APPLY
 Author: Agent Cascade
 Date: 2026-04-24
+Status: DEPRECATED - DO NOT RUN
 Depends On: sql/warehouse/001_warehouse_schema.sql
-Called By: Framework initialization, scripts/mlb-predict
+Called By: [DEPRECATED]
 
 Tables Created:
 - framework.log: Structured logging for all framework operations

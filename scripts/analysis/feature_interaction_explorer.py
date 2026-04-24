@@ -44,7 +44,7 @@ def load_top_features(conn, n_features: int = 20, sample_size: int = 50000) -> p
     # Try to get from importance table first
     query = f"""
     SELECT feature_name
-    FROM framework.feature_importance
+    FROM analysis.feature_importance
     WHERE analysis_method = 'xgboost_gain'
     GROUP BY feature_name
     ORDER BY AVG(importance_score) DESC

@@ -13,6 +13,7 @@
 - Issue #10: Statcast Pitch-Level Data Ingestion – completed. See [#58](https://github.com/cbwinslow/retrosheet/issues/58)
 - Issue #11: Pitch-Level Model Pipeline (Epic #78) – **in progress**. See [#78](https://github.com/cbwinslow/retrosheet/issues/78)
 - Issue #11.1: Flexible Feature Mart Schema (Sub-Issue #79) – **in progress**. See [#79](https://github.com/cbwinslow/retrosheet/issues/79)
+- Issue #12: Extensible MLB Prediction Framework (22 hours, 3 weeks) – **ready to implement**. See [#80](https://github.com/cbwinslow/retrosheet/issues/80)
 
 This inventory tells agents what each important file does and which workflows own it. Files may appear in multiple sections when they serve multiple goals.
 
@@ -46,6 +47,14 @@ This inventory tells agents what each important file does and which workflows ow
 | `docs/agents/ZSH_SQL_MANGLING_FIX.md` | Documentation of the zsh globsubst bug that was silently corrupting SQL commands and the fix applied (removing /etc/zsh/zshenv). | Shell configuration reference |
 | `docs/agents/REPRODUCIBILITY_AUDIT_PROMPT.md` | **CRITICAL** - Comprehensive prompt for another agent to audit and fill all documentation gaps to make project reproducible. | All agents must follow |
 | `CHATBOT_INTERFACE_DESIGN.md` | Current/future web command-center design notes. | Interface, agents |
+| `docs/WORKFLOW_VALIDATION_REPORT.md` | Complete infrastructure audit, redundancy analysis, architecture diagrams. | Framework planning |
+| `docs/USER_MANUAL.md` | Comprehensive user guide with all features, procedures, and examples. | User onboarding |
+| `docs/PROCEDURES_DETAILED.md` | 25 detailed step-by-step procedures for all operations. | Operations reference |
+| `docs/MASTER_INDEX.md` | Master documentation index and navigation guide. | Documentation hub |
+| `docs/EXTENSIBLE_FRAMEWORK_DESIGN.md` | Pydantic schemas, result classes, plugin architecture, examples. | Framework implementation |
+| `docs/FRAMEWORK_CONFIRMATION.md` | Proof architecture will work, risk analysis, success criteria. | Architecture validation |
+| `docs/IMPLEMENTATION_ROADMAP.md` | 22-hour implementation plan with phases and deliverables. | Implementation tracking |
+| `docs/DEPLOYMENT_PLAN.md` | Complete deployment guide for agents, handoff checklist, rollback plan. | Agent handoff |
 
 ## Configuration
 
@@ -145,6 +154,10 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `sql/warehouse/001_warehouse_schema.sql` | Warehouse rebuild orchestration schema: `warehouse.rebuild_runs`, `warehouse.rebuild_log`, helper functions. | Master rebuild infrastructure. |
 | `sql/warehouse/002_phase_procedures.sql` | Phase-level procedures: `phase_raw_load()`, `phase_core_build()`, `phase_bridge_sync()`, `phase_feature_build()`, `phase_model_prep()`. | Individual rebuild phases. |
 | `sql/warehouse/003_rebuild_orchestrator.sql` | Main orchestrator: `warehouse.rebuild(mode, seasons)` procedure with per-phase commit and resume capability. | Master rebuild entry point. |
+| `sql/warehouse/004_batch_operations.sql` | Resume-capable batch processing: `warehouse.batch_operations` table with progress tracking and resume functions. | Long-running operation tracking. |
+| `sql/warehouse/005_feature_population_procedures.sql` | **FEATURE POPULATION ORCHESTRATION** - SQL procedures: `populate_features_phase()`, `verify_features_populated()`, `get_feature_stats()`, `estimate_batch_completion()`. | Feature population automation with warehouse integration. |
+| `sql/analysis/001_feature_importance.sql` | Feature importance storage: `analysis.feature_importance` table for XGBoost/SHAP scores, with top features view. | Feature selection and interaction analysis. |
+| `sql/framework/001_framework_schema_DEPRECATED.sql` | **DEPRECATED** - Redundant with existing warehouse/models/features_pitch schemas. Do not apply. | [DEPRECATED] |
 
 ## Test SQL (E2E Testing Infrastructure)
 
@@ -294,6 +307,7 @@ These files may be present as active development work. Treat them as live-bridge
 | `sql/features/018_swing_model_schema.sql` | **SWING MODEL SCHEMA** - Tables for swing probability predictions, performance tracking, calibration curves. | ✅ Ready |
 | `scripts/pitch_models/train_swing_probability.py` | **SWING PROBABILITY MODEL** - Binary classifier for P(swing). Research-backed features. | 🔄 Ready to train |
 | `scripts/pitch_models/feature_ablation_study.py` | **FEATURE ABLATION STUDY** - Tests which feature groups actually improve predictions (Option A). | 🔄 Ready to run |
+| `scripts/analysis/post_hoc_feature_selection.py` | **POST-HOC FEATURE SELECTION** - 3-phase workflow: 1) Train full model, 2) Test feature subsets (20-200 features), 3) Retrain optimal. Tests PAST 50 features with `--subset-sizes`. | Feature optimization |
 | `sql/framework/002_feature_discovery_schema.sql` | **FEATURE DISCOVERY FRAMEWORK** - Schema for PCA, stepwise selection, correlations, optimal feature subsets. | ✅ Ready |
 | `scripts/analysis/pca_feature_analysis.py` | **PCA ANALYSIS** - Dimensionality reduction, variance explained, component interpretation. | 🔄 Ready |
 | `scripts/analysis/stepwise_feature_selection.py` | **STEPWISE SELECTION** - Forward/backward feature selection with performance tracking. | 🔄 Ready |
@@ -326,13 +340,15 @@ These files may be present as active development work. Treat them as live-bridge
 - CRISP-DM Phase 3: 100% Complete
 
 **Phase 4: Modeling (In Progress):**
-- 🔄 Tier-1 XGBoost baseline training
-- ⏳ Tier-2 XGBoost fine-grained outcomes
-- ⏳ Model evaluation and calibration
+- Tier-1 XGBoost baseline training
+- Tier-2 XGBoost fine-grained outcomes
+- Model evaluation and calibration
 
 **Scripts:**
-- `scripts/pitch_data/populate_base_features.py` - Data migration
-- `scripts/pitch_models/train_tier1_xgboost.py` - Tier-1 model training
+- `scripts/pitch_data/populate_base_features.py` - Data migration from locations to base_features with column mapping. | Population |
+- `scripts/pitch_data/orchestrate_feature_population.py` - **MASTER ORCHESTRATOR** - Runs all 13 phases of feature population in correct order. Phase 0-12 with verification and resume capability. Usage: `--all`, `--phase N`, `--verify`. | Feature population orchestration |
+- `scripts/pitch_data/batch_feature_runner.sh` - **BATCH RUNNER** - Runs batch SQL files in a loop until complete. Progress tracking, resume capability, stall detection. Usage: `--sql-file <path>`, `--max-iterations N`. | Repeatable batch population |
+- `scripts/train_models.py` - Tier-1 model training
 
 ### Feature Mart Schema Design
 

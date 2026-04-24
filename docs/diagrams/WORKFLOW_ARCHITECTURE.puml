@@ -1,0 +1,172 @@
+@startuml
+!theme cerulean-outline
+
+title Baseball Prediction Warehouse - Workflow Architecture
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+' Data Sources
+package "Data Sources" {
+    [Retrosheet\nHistorical] as retrosheet
+    [MLB Stats API\nStatcast] as mlb_api
+    [ESPN API] as espn
+    [Lahman\nDatabase] as lahman
+}
+
+' Raw Layer
+package "Raw Layer" #LightBlue {
+    database "raw_retrosheet" {
+        [events\n4.9M rows] as raw_events
+        [games\n62K rows] as raw_games
+    }
+    
+    database "raw_mlb" {
+        [statcast\n7.8M pitches] as statcast
+        [schedules] as mlb_sched
+        [live feeds] as mlb_live
+    }
+    
+    database "raw_espn" {
+        [game snapshots\n71K rows] as espn_games
+        [play-by-play\n1.3M rows] as espn_plays
+    }
+}
+
+' Bridge Layer
+package "Bridge Layer (ID Mappings)" #LightGreen {
+    database "bridge" {
+        [player_xref\n128K mappings] as player_xref
+        [team_xref\n294 rows] as team_xref
+        [game_xref\n59K rows] as game_xref
+        [park_xref\n656 rows] as park_xref
+    }
+}
+
+' Core Layer
+package "Core Layer (Canonical)" #LightYellow {
+    database "core" {
+        [games\n62K] as core_games
+        [events\n4.9M] as core_events
+        [plate_appearances\n4.8M] as core_pa
+    }
+}
+
+' Feature Layer
+package "Feature Layer (ML-Ready)" #LightCoral {
+    database "features" {
+        [prior_season_marts] as feat_prior
+        [career_prior] as feat_career
+        [matchup_history] as feat_matchup
+        [count_state] as feat_count
+    }
+    
+    database "features_pitch" {
+        [base_features\n118 fields] as pitch_base
+        [engineered_features\n220+ features] as pitch_eng
+        [feature_registry] as pitch_reg
+        [model_training_set] as pitch_train
+        [player_context] as pitch_context
+    }
+}
+
+' Model Layer
+package "Model Layer" #Plum {
+    database "models" {
+        [model_registry] as model_reg
+    }
+    
+    component "Training Scripts" {
+        [train_models.py\n(binary)] as train_binary
+        [train_pa_outcome_\ndistribution.py\n(multiclass)] as train_multi
+    }
+}
+
+' Prediction Layer
+package "Prediction & Evaluation" #LightGray {
+    database "predictions" {
+        [calibration_reports] as pred_calib
+        [evaluation_reports] as pred_eval
+    }
+    
+    component "Inference Scripts" {
+        [predict_plate_\nappearance.py] as pred_pa
+        [predict_pa_outcome_\ndistribution.py] as pred_multi
+        [predict_live_pa_\noutcome.py] as pred_live
+    }
+    
+    component "Evaluation Scripts" {
+        [analyze_pa_\nmodels.py] as eval_pa
+        [calibrate_pa_\noutcome.py] as eval_calib
+        [cross_validate_\nmodels.py] as eval_cv
+    }
+}
+
+' Orchestration
+package "Orchestration" #PaleTurquoise {
+    database "warehouse" {
+        [rebuild_runs] as wh_runs
+        [rebuild_log] as wh_log
+        [batch_operations\n(NEW)] as wh_batch
+    }
+}
+
+' Connections - Data Flow
+retrosheet --> raw_events
+retrosheet --> raw_games
+mlb_api --> statcast
+mlb_api --> mlb_sched
+mlb_api --> mlb_live
+espn --> espn_games
+espn --> espn_plays
+
+raw_events --> player_xref
+raw_events --> team_xref
+raw_games --> game_xref
+statcast --> player_xref
+statcast --> game_xref
+
+player_xref --> core_events
+team_xref --> core_games
+game_xref --> core_games
+
+core_events --> core_pa
+core_games --> core_pa
+
+core_pa --> feat_prior
+core_pa --> feat_career
+core_pa --> feat_matchup
+core_pa --> feat_count
+
+statcast --> pitch_base
+pitch_base --> pitch_eng
+pitch_eng --> pitch_reg
+pitch_eng --> pitch_train
+pitch_train --> pitch_context
+
+feat_prior --> train_binary
+feat_count --> train_multi
+pitch_train --> train_binary
+
+train_binary --> model_reg
+train_multi --> model_reg
+
+model_reg --> pred_pa
+model_reg --> pred_multi
+model_reg --> pred_live
+
+pred_pa --> pred_calib
+pred_multi --> pred_eval
+pred_live --> pred_eval
+
+eval_pa --> pred_eval
+eval_calib --> pred_calib
+eval_cv --> model_reg
+
+' Orchestration connections (dashed)
+wh_runs ..> raw_events : orchestrates
+wh_runs ..> feat_prior : tracks
+wh_runs ..> model_reg : tracks
+wh_batch ..> pitch_eng : resume
+
+@enduml

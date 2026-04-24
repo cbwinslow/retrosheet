@@ -1,5 +1,126 @@
 # Project Log
 
+## 2026-04-24 (Deployment Plan & GitHub Issue #80)
+
+### Implementation Ready - Issue #80 Created
+
+**GitHub Issue**: [#80 - Extensible MLB Prediction Framework](https://github.com/cbwinslow/retrosheet/issues/80)
+
+**Status**: Ready for Implementation  
+**Estimated**: 22 hours (3 weeks)  
+**Priority**: High  
+**Risk**: Low  
+
+### Documents Created
+
+| Document | Purpose | Size |
+|----------|---------|------|
+| **DEPLOYMENT_PLAN.md** | Complete implementation guide with phases | 400+ lines |
+| **EXTENSIBLE_FRAMEWORK_DESIGN.md** | Pydantic schemas, architecture, examples | 600+ lines |
+| **FRAMEWORK_CONFIRMATION.md** | Proof this will work, risk analysis | 400+ lines |
+| **IMPLEMENTATION_ROADMAP.md** | 22-hour task breakdown by week | 500+ lines |
+
+### Implementation Phases
+
+**Phase 1: Foundation (Week 1)** - 6 hours
+- Pydantic Configuration Schemas (2 hrs)
+- Rich Result Classes (3 hrs)  
+- Test Infrastructure (1 hr)
+
+**Phase 2: Core Wrappers (Week 2)** - 10 hours
+- ModelTrainer Class (4 hrs)
+- Plugin Registry (2 hrs)
+- FeatureLoader (2 hrs)
+- Experiment Runner (2 hrs)
+
+**Phase 3: Polish (Week 3)** - 6 hours
+- Unified CLI (2 hrs)
+- Database Triggers (1 hr)
+- Documentation (2 hrs)
+- Final Tests (1 hr)
+
+### GitHub Tracking
+
+- ✅ Issue #80 created with deployment plan
+- ✅ Detailed comment with all phases
+- 🔄 Project board entries to be added
+- 🔄 Labels: enhancement, framework, pydantic
+
+### Next Action
+
+Start **Phase 1.1**: Create Pydantic Configuration Schemas
+- File: `mlb_predict/config/schemas.py`
+- Classes: ModelConfig, XGBoostConfig, enums
+- Tests: `tests/test_config.py`
+
+---
+
+## 2026-04-24 (Workflow Validation & Documentation Overhaul)
+
+### Critical Finding: Framework Schema Redundancy
+
+**Problem**: Created `sql/framework/001_framework_schema.sql` without checking existing infrastructure. Found that 5 of 6 tables duplicate existing schemas.
+
+**Redundancy Analysis**:
+| Framework Table | Existing Equivalent | Status |
+|----------------|---------------------|--------|
+| `framework.log` | `warehouse.rebuild_log` | ❌ Redundant |
+| `framework.experiments` | `warehouse.rebuild_runs` | ❌ Redundant |
+| `framework.plugins` | Python plugin registry | ❌ Not needed |
+| `framework.model_registry` | `models.model_registry` | ❌ Redundant |
+| `framework.feature_registry` | `features_pitch.feature_registry` | ❌ Redundant |
+| `framework.batches` | None | ✅ Keep as `warehouse.batch_operations` |
+
+**Action Taken**:
+- Marked `sql/framework/001_framework_schema.sql` as **DEPRECATED**
+- Created `sql/warehouse/004_batch_operations.sql` (unique capability only)
+- Created `sql/analysis/001_feature_importance.sql` (for analysis scripts)
+- Fixed `scripts/analysis/feature_interaction_explorer.py` framework reference
+
+### Documentation Created
+
+**Comprehensive User Manual**: `docs/USER_MANUAL.md`
+- Complete system architecture with data flow diagrams
+- Step-by-step guides for every feature
+- Quick start guide (5 minutes to first prediction)
+- Troubleshooting procedures
+- Custom model integration examples
+
+**Detailed Procedures Guide**: `docs/PROCEDURES_DETAILED.md`
+- 25 detailed procedures covering:
+  - Data ingestion (ESPN, MLB, Retrosheet)
+  - Warehouse rebuild (full, quick, resume)
+  - Feature engineering
+  - Model training (binary & multiclass)
+  - Inference (historical & live)
+  - Analysis tools
+  - Maintenance & troubleshooting
+
+**Workflow Validation Report**: `docs/WORKFLOW_VALIDATION_REPORT.md`
+- Complete infrastructure audit
+- Architecture diagrams (PlantUML)
+- Gap analysis
+- Revised integration plan
+
+**Architecture Diagrams**:
+- `docs/diagrams/WORKFLOW_ARCHITECTURE.puml` - Full data flow
+- `docs/diagrams/INTEGRATION_LAYER.puml` - Proposed Python integration
+
+### Key Insight
+
+The warehouse is **85% complete and working**. What's needed:
+1. ✅ Thin Python integration layer (wrappers, not new infrastructure)
+2. ❌ NOT redundant SQL schemas
+
+### Updated FILE_INVENTORY.md
+
+Added entries for:
+- `sql/warehouse/004_batch_operations.sql`
+- `sql/analysis/001_feature_importance.sql`
+- `sql/framework/001_framework_schema_DEPRECATED.sql`
+
+---
+
 ## 2026-04-24 (Reproducibility Mandate - CRITICAL)
 
 ### Problem Identified

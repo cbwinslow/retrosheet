@@ -1,0 +1,93 @@
+@startuml
+!theme cerulean-outline
+
+title Proposed Integration Layer (Python Wrappers)
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+' Current State
+package "Existing Infrastructure (Keep Unchanged)" #LightGreen {
+    
+    package "SQL Schema" {
+        database "warehouse" {
+            [rebuild_runs] as wh_runs
+            [rebuild_log] as wh_log
+            [batch_operations\n(NEW - minimal)] as wh_batch
+        }
+        
+        database "models" {
+            [model_registry] as model_reg
+        }
+        
+        database "features_pitch" {
+            [feature_registry] as feat_reg
+            [model_training_set] as feat_train
+        }
+        
+        database "analysis" {
+            [feature_importance\n(NEW - minimal)] as analysis_imp
+        }
+    }
+    
+    package "Existing Scripts" {
+        [train_models.py] as train_script
+        [train_pa_outcome_\ndistribution.py] as train_pa_script
+        [predict_plate_\nappearance.py] as pred_script
+        [rebuild_warehouse.sh] as rebuild_script
+    }
+}
+
+' Proposed Integration Layer
+package "Python Integration Layer (NEW)" #LightBlue {
+    
+    package "Configuration" {
+        [Pydantic Models\nconfig/schema.py] as pydantic
+        [YAML Loader\nconfig/loader.py] as yaml_loader
+        [Experiment Config\nexperiments/*.yaml] as exp_config
+    }
+    
+    package "Core Wrappers" {
+        [ModelTrainer\ncore/trainer.py] as trainer
+        [Experiment\ncore/experiment.py] as experiment
+        [PluginRegistry\ncore/registry.py] as registry
+    }
+    
+    package "CLI" {
+        [mlb-predict\ncli/main.py] as cli
+        [Entry Point\nscripts/mlb-predict] as entry
+    }
+    
+    package "Utilities" {
+        [Batch Processor\nutils/batch.py] as batch_util
+        [Feature Loader\ndata/loader.py] as feat_loader
+        [Logger\nutils/logger.py] as logger
+    }
+}
+
+' Data Flow
+exp_config --> pydantic
+pydantic --> trainer
+trainer --> experiment
+experiment --> registry
+
+cli --> trainer
+cli --> experiment
+cli --> registry
+entry --> cli
+
+batch_util --> wh_batch
+logger --> wh_log
+feat_loader --> feat_train
+
+' Integration Points (wrappers call existing scripts)
+trainer ..> train_script : subprocess call
+trainer ..> train_pa_script : subprocess call
+trainer ..> model_reg : inserts results
+
+experiment ..> wh_runs : logs tracking
+
+cli ..> pred_script : subprocess call
+cli ..> rebuild_script : subprocess call
+
+@enduml
