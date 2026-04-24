@@ -1,8 +1,7 @@
--- Player Xref Population Procedure (SQL-based)
--- This procedure expects Chadwick CSV files to be available in /tmp/chadwick_register/
--- Use the wrapper script to download files before calling this procedure
-
--- Create temp table schema for Chadwick data
+-- File: sql/bridge/985_player_xref_population_procedure.sql
+-- Purpose: Populate player_xref from Chadwick Register with full ID mapping
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE TEMPORARY TABLE IF NOT EXISTS temp_table.chadwick_player_data (
     key_uuid TEXT,
     key_mlbam TEXT,
@@ -135,3 +134,4 @@ END;
 $$;
 
 COMMENT ON PROCEDURE bridge.populate_player_xref_full () IS 'Downloads Chadwick Bureau Register data and populates bridge.player_xref';
+

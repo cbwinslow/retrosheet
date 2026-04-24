@@ -8,11 +8,11 @@ import psycopg2
 
 def database_kwargs():
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
@@ -143,7 +143,7 @@ def create_analytical_views():
             """)
 
         conn.commit()
-        print("✅ Analytical views created successfully")
+        print('✅ Analytical views created successfully')
 
     finally:
         conn.close()
@@ -266,7 +266,7 @@ def create_materialized_views():
             """)
 
         conn.commit()
-        print("✅ Materialized views created successfully")
+        print('✅ Materialized views created successfully')
 
     finally:
         conn.close()
@@ -447,7 +447,7 @@ def create_analytical_procedures():
             """)
 
         conn.commit()
-        print("✅ Analytical procedures created successfully")
+        print('✅ Analytical procedures created successfully')
 
     finally:
         conn.close()
@@ -592,36 +592,36 @@ def create_data_quality_procedures():
             """)
 
         conn.commit()
-        print("✅ Data quality procedures created successfully")
+        print('✅ Data quality procedures created successfully')
 
     finally:
         conn.close()
 
 
-if __name__ == "__main__":
-    print("🚀 Setting up MLB analytical pipeline...")
+if __name__ == '__main__':
+    print('🚀 Setting up MLB analytical pipeline...')
 
     create_analytical_views()
     create_materialized_views()
     create_analytical_procedures()
     create_data_quality_procedures()
 
-    print("🎉 MLB analytical pipeline setup complete!")
-    print("\nAvailable views:")
-    print("- analysis.mlb_combined_games")
-    print("- analysis.mlb_combined_events")
-    print("- analysis.mlb_player_performance")
-    print("- analysis.mlb_pitch_analysis")
-    print("\nAvailable materialized views:")
-    print("- analysis.mlb_season_batting_leaders")
-    print("- analysis.mlb_season_pitching_leaders")
-    print("- analysis.mlb_team_season_stats")
-    print("\nAvailable procedures:")
-    print("- analysis.refresh_mlb_analytics()")
-    print("- analysis.validate_mlb_data()")
-    print("- analysis.detect_duplicate_games()")
-    print("\nAvailable functions:")
-    print("- analysis.get_player_season_stats(player_id, season)")
-    print("- analysis.get_team_season_stats(team_id, season)")
-    print("- analysis.calculate_mlb_data_quality(game_id)")
-    print("- analysis.get_data_completeness_report()")
+    print('🎉 MLB analytical pipeline setup complete!')
+    print('\nAvailable views:')
+    print('- analysis.mlb_combined_games')
+    print('- analysis.mlb_combined_events')
+    print('- analysis.mlb_player_performance')
+    print('- analysis.mlb_pitch_analysis')
+    print('\nAvailable materialized views:')
+    print('- analysis.mlb_season_batting_leaders')
+    print('- analysis.mlb_season_pitching_leaders')
+    print('- analysis.mlb_team_season_stats')
+    print('\nAvailable procedures:')
+    print('- analysis.refresh_mlb_analytics()')
+    print('- analysis.validate_mlb_data()')
+    print('- analysis.detect_duplicate_games()')
+    print('\nAvailable functions:')
+    print('- analysis.get_player_season_stats(player_id, season)')
+    print('- analysis.get_team_season_stats(team_id, season)')
+    print('- analysis.calculate_mlb_data_quality(game_id)')
+    print('- analysis.get_data_completeness_report()')

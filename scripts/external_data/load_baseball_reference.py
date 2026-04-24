@@ -17,7 +17,8 @@ from pathlib import Path
 
 import psycopg2
 
-DB_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
+
+DB_URL = os.getenv('DATABASE_URL', 'postgresql://localhost/retrosheet')
 
 
 def get_conn():
@@ -25,7 +26,7 @@ def get_conn():
 
 
 def create_staging(cur):
-    cur.execute("DROP TABLE IF EXISTS raw_baseball_reference.stg_game_logs")
+    cur.execute('DROP TABLE IF EXISTS raw_baseball_reference.stg_game_logs')
     # All columns as TEXT – we will cast later
     cur.execute("""
         CREATE TABLE raw_baseball_reference.stg_game_logs (
@@ -66,8 +67,8 @@ def create_staging(cur):
 
 
 def copy_to_staging(cur, csv_path):
-    with open(csv_path, "r", newline="") as f:
-        cur.copy_expert("COPY raw_baseball_reference.stg_game_logs FROM STDIN WITH CSV HEADER", f)
+    with open(csv_path, newline='') as f:
+        cur.copy_expert('COPY raw_baseball_reference.stg_game_logs FROM STDIN WITH CSV HEADER', f)
 
 
 def upsert(cur):
@@ -188,12 +189,12 @@ def upsert(cur):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Load Baseball‑Reference game logs")
-    parser.add_argument("--dir", type=Path, required=True, help="Directory with CSV files")
+    parser = argparse.ArgumentParser(description='Load Baseball‑Reference game logs')
+    parser.add_argument('--dir', type=Path, required=True, help='Directory with CSV files')
     args = parser.parse_args()
-    csv_files = list(Path(args.dir).glob("*.csv"))
+    csv_files = list(Path(args.dir).glob('*.csv'))
     if not csv_files:
-        print("⚠️  No CSV files found in the directory.", file=sys.stderr)
+        print('⚠️  No CSV files found in the directory.', file=sys.stderr)
         sys.exit(1)
 
     conn = get_conn()
@@ -204,11 +205,11 @@ def main():
             copy_to_staging(cur, csv_path)
         upsert(cur)
         conn.commit()
-        print(f"✅ Loaded {len(csv_files)} Baseball‑Reference game‑log files")
+        print(f'✅ Loaded {len(csv_files)} Baseball‑Reference game‑log files')
     finally:
         cur.close()
         conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

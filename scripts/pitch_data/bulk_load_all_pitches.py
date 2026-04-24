@@ -12,24 +12,24 @@ Usage:
 import argparse
 import logging
 import os
-from typing import List, Tuple
 
 import psycopg2
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
 def get_connection():
     return psycopg2.connect(
-        host=os.getenv("PGHOST", "localhost"),
-        port=int(os.getenv("PGPORT", 5432)),
-        database=os.getenv("PGDATABASE", "retrosheet"),
-        user=os.getenv("PGUSER", os.getenv("USER", "postgres")),
+        host=os.getenv('PGHOST', 'localhost'),
+        port=int(os.getenv('PGPORT', 5432)),
+        database=os.getenv('PGDATABASE', 'retrosheet'),
+        user=os.getenv('PGUSER', os.getenv('USER', 'postgres')),
     )
 
 
-def get_season_counts(conn) -> List[Tuple[int, int]]:
+def get_season_counts(conn) -> list[tuple[int, int]]:
     with conn.cursor() as cur:
         cur.execute("""
             SELECT game_year::int, COUNT(*) 
@@ -43,19 +43,19 @@ def get_season_counts(conn) -> List[Tuple[int, int]]:
 
 def get_loaded_counts(conn) -> dict:
     with conn.cursor() as cur:
-        cur.execute("SELECT game_year, COUNT(*) FROM features_pitch.locations GROUP BY game_year")
+        cur.execute('SELECT game_year, COUNT(*) FROM features_pitch.locations GROUP BY game_year')
         return {row[0]: row[1] for row in cur.fetchall()}
 
 
 def load_season_bulk(conn, season: int) -> int:
     """Load entire season using single INSERT...SELECT (fastest for PostgreSQL)."""
-    logger.info(f"BULK loading season {season}...")
+    logger.info(f'BULK loading season {season}...')
 
     with conn.cursor() as cur:
         # Check if already loaded
-        cur.execute("SELECT COUNT(*) FROM features_pitch.locations WHERE game_year = %s", (season,))
+        cur.execute('SELECT COUNT(*) FROM features_pitch.locations WHERE game_year = %s', (season,))
         if cur.fetchone()[0] > 0:
-            logger.warning(f"Season {season} already loaded. Use --force to reload.")
+            logger.warning(f'Season {season} already loaded. Use --force to reload.')
             return 0
 
         # Single bulk insert - let PostgreSQL handle it efficiently
@@ -106,10 +106,10 @@ def load_season_bulk(conn, season: int) -> int:
         inserted = cur.rowcount
         conn.commit()
 
-        logger.info(f"Inserted {inserted:,} pitches for season {season}")
+        logger.info(f'Inserted {inserted:,} pitches for season {season}')
 
         # Update geometry
-        logger.info(f"Updating PostGIS geometry for {inserted:,} pitches...")
+        logger.info(f'Updating PostGIS geometry for {inserted:,} pitches...')
         cur.execute(
             """
             UPDATE features_pitch.locations 
@@ -122,26 +122,26 @@ def load_season_bulk(conn, season: int) -> int:
         )
 
         conn.commit()
-        logger.info(f"✓ Season {season} complete: {inserted:,} pitches with geometry")
+        logger.info(f'✓ Season {season} complete: {inserted:,} pitches with geometry')
         return inserted
 
 
 def clear_season(conn, season: int):
     """Clear existing data for a season."""
     with conn.cursor() as cur:
-        cur.execute("DELETE FROM features_pitch.locations WHERE game_year = %s", (season,))
+        cur.execute('DELETE FROM features_pitch.locations WHERE game_year = %s', (season,))
         deleted = cur.rowcount
         conn.commit()
         if deleted > 0:
-            logger.info(f"Cleared {deleted:,} existing rows for season {season}")
+            logger.info(f'Cleared {deleted:,} existing rows for season {season}')
 
 
 def main():
-    parser = argparse.ArgumentParser(description="BULK Load ALL Statcast pitch data")
-    parser.add_argument("--seasons", type=str, help="Seasons to load (e.g., 2015-2025)")
-    parser.add_argument("--all", action="store_true", help="Load all seasons")
-    parser.add_argument("--force", action="store_true", help="Force reload")
-    parser.add_argument("--dry-run", action="store_true", help="Show what would be loaded")
+    parser = argparse.ArgumentParser(description='BULK Load ALL Statcast pitch data')
+    parser.add_argument('--seasons', type=str, help='Seasons to load (e.g., 2015-2025)')
+    parser.add_argument('--all', action='store_true', help='Load all seasons')
+    parser.add_argument('--force', action='store_true', help='Force reload')
+    parser.add_argument('--dry-run', action='store_true', help='Show what would be loaded')
 
     args = parser.parse_args()
 
@@ -151,18 +151,18 @@ def main():
         available = get_season_counts(conn)
         loaded = get_loaded_counts(conn)
 
-        logger.info("=" * 70)
-        logger.info("BULK STATCAST PITCH LOADER")
-        logger.info("=" * 70)
+        logger.info('=' * 70)
+        logger.info('BULK STATCAST PITCH LOADER')
+        logger.info('=' * 70)
 
-        logger.info("\nAvailable vs Loaded:")
+        logger.info('\nAvailable vs Loaded:')
         for year, count in available:
             loaded_count = loaded.get(year, 0)
-            status = "✅" if loaded_count == count else f"⚠️  ({loaded_count:,}/{count:,})"
-            logger.info(f"  {year}: {count:,} available, {loaded_count:,} loaded {status}")
+            status = '✅' if loaded_count == count else f'⚠️  ({loaded_count:,}/{count:,})'
+            logger.info(f'  {year}: {count:,} available, {loaded_count:,} loaded {status}')
 
         if args.dry_run:
-            logger.info("\nDry run complete.")
+            logger.info('\nDry run complete.')
             return
 
         # Parse seasons
@@ -170,9 +170,9 @@ def main():
         if args.all:
             seasons_to_load = [year for year, _ in available]
         elif args.seasons:
-            for part in args.seasons.split(","):
-                if "-" in part:
-                    start, end = map(int, part.split("-"))
+            for part in args.seasons.split(','):
+                if '-' in part:
+                    start, end = map(int, part.split('-'))
                     seasons_to_load.extend(range(start, end + 1))
                 else:
                     seasons_to_load.append(int(part))
@@ -181,11 +181,11 @@ def main():
         seasons_to_load = [s for s in seasons_to_load if s in available_years]
 
         if not seasons_to_load:
-            logger.error("No valid seasons to load")
+            logger.error('No valid seasons to load')
             return
 
-        logger.info(f"\nLoading {len(seasons_to_load)} season(s): {seasons_to_load}")
-        logger.info("-" * 70)
+        logger.info(f'\nLoading {len(seasons_to_load)} season(s): {seasons_to_load}')
+        logger.info('-' * 70)
 
         total = 0
         for season in seasons_to_load:
@@ -194,13 +194,13 @@ def main():
             count = load_season_bulk(conn, season)
             total += count
 
-        logger.info("-" * 70)
-        logger.info(f"TOTAL PITCHES LOADED: {total:,}")
-        logger.info("=" * 70)
+        logger.info('-' * 70)
+        logger.info(f'TOTAL PITCHES LOADED: {total:,}')
+        logger.info('=' * 70)
 
     finally:
         conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

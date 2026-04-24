@@ -20,10 +20,11 @@ import subprocess
 import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+
 SCRIPTS = [
-    "scripts/scrape_retrosheet_kb.py",
-    "scripts/download_moneyball.py",
-    "scripts/web_search_kb.py",
+    'scripts/scrape_retrosheet_kb.py',
+    'scripts/download_moneyball.py',
+    'scripts/web_search_kb.py',
 ]
 
 
@@ -31,14 +32,14 @@ def run_script(path: str) -> tuple:
     """Execute a Python script and return (path, returncode)."""
     try:
         result = subprocess.run([sys.executable, path], capture_output=True, text=True)
-        print(f"--- {path} finished (code {result.returncode}) ---")
+        print(f'--- {path} finished (code {result.returncode}) ---')
         if result.stdout:
             print(result.stdout)
         if result.stderr:
             print(result.stderr, file=sys.stderr)
         return (path, result.returncode)
     except Exception as e:
-        print(f"Error running {path}: {e}", file=sys.stderr)
+        print(f'Error running {path}: {e}', file=sys.stderr)
         return (path, -1)
 
 
@@ -49,15 +50,15 @@ def main():
         for future in as_completed(futures):
             script, rc = future.result()
             if rc != 0:
-                print(f"⚠️ {script} exited with code {rc}")
+                print(f'⚠️ {script} exited with code {rc}')
 
     # After the above finish, run the optional ingestion step (sequential)
-    print("=== Running optional LlamaIndex ingestion ===")
+    print('=== Running optional LlamaIndex ingestion ===')
     rc = subprocess.run(
-        [sys.executable, "scripts/ingest_kb_llamaindex.py"], capture_output=True, text=True
+        [sys.executable, 'scripts/ingest_kb_llamaindex.py'], capture_output=True, text=True,
     ).returncode
-    print(f"ingest_kb_llamaindex.py finished with code {rc}")
+    print(f'ingest_kb_llamaindex.py finished with code {rc}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

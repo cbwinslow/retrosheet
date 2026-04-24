@@ -1,11 +1,7 @@
--- =============================================================================
--- Lahman Baseball Database Raw Tables
--- =============================================================================
--- This migration creates a separate schema for the free Lahman CSV data.
--- The tables are kept raw‑preserved; downstream feature views will join to
--- the canonical `core` entities via bridge tables.
--- =============================================================================
-
+-- File: sql/external/210_lahman_raw.sql
+-- Purpose: Create Lahman raw tables for players, teams, salaries, pitching, batting
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS raw_lahman;
 
 -- People (players) basic biographical data
@@ -153,3 +149,10 @@ CREATE TABLE IF NOT EXISTS raw_lahman.batting (
     gidp INT,
     PRIMARY KEY (yearid, playerid, teamid)
 );
+
+-- Table comments
+COMMENT ON TABLE raw_lahman.people IS 'people data table';
+COMMENT ON TABLE raw_lahman.teams IS 'Lahman database team information';
+COMMENT ON TABLE raw_lahman.salaries IS 'Lahman database player salary data';
+COMMENT ON TABLE raw_lahman.pitching IS 'Lahman database pitching statistics';
+COMMENT ON TABLE raw_lahman.batting IS 'Lahman database batting statistics';

@@ -1,3 +1,7 @@
+-- File: sql/core/080_backtest_results.sql
+-- Purpose: Create backtest results table and historical performance views
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 /*
 Materialized view for model back‑test results.
 This view aggregates predictions from the win‑probability model (stored in
@@ -32,3 +36,4 @@ WITH DATA;
 
 CREATE UNIQUE INDEX backtest_results_pk ON features.backtest_results (game_id);
 CREATE INDEX backtest_results_season_idx ON features.backtest_results (season);
+

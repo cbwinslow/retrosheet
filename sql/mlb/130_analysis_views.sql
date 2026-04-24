@@ -1,6 +1,7 @@
--- Analysis views for combining historical Retrosheet and live MLB data
--- These views provide unified access to both data sources while maintaining separation
-
+-- File: sql/mlb/130_analysis_views.sql
+-- Purpose: Analysis views combining historical and live game data
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS analysis;
 
 -- Combined games view - unions historical and live games
@@ -323,3 +324,4 @@ BEGIN
     ORDER BY cg.game_date DESC, cg.game_id;
 END;
 $$;
+

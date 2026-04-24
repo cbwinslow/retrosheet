@@ -1,3 +1,7 @@
+-- File: sql/mlb/090_mlb_live_data.sql
+-- Purpose: Tables for raw MLB API schedule and live feed snapshots
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS raw_mlb;
 
 CREATE TABLE IF NOT EXISTS raw_mlb.schedule_snapshots (
@@ -86,3 +90,4 @@ CREATE TABLE IF NOT EXISTS features.play_snapshot (
 );
 
 CREATE INDEX IF NOT EXISTS idx_features_play_snapshot_game ON features.play_snapshot (game_pk);
+

@@ -8,37 +8,37 @@ import json
 import os
 import sys
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import psycopg2
 import requests
 
+
 # Load environment variables
-LETTA_BASE_URL = os.getenv("LETTA_BASE_URL", "http://localhost:8283")
+LETTA_BASE_URL = os.getenv('LETTA_BASE_URL', 'http://localhost:8283')
 LETTA_API_KEY = os.getenv(
-    "LETTA_API_KEY",
-    "sk-let-NzY2MDVkMWUtMGRmMy00MjExLTg1NDMtNjdhOGJjYTdiM2I0OmE3Y2I5MWM0LTdjYTctNDlmOC05N2Q0LTVk",
+    'LETTA_API_KEY',
+    'sk-let-NzY2MDVkMWUtMGRmMy00MjExLTg1NDMtNjdhOGJjYTdiM2I0OmE3Y2I5MWM0LTdjYTctNDlmOC05N2Q0LTVk',
 )
 
-ESPN_CORE_URL = "https://sports.core.api.espn.com/v2/sports/baseball/mlb"
+ESPN_CORE_URL = 'https://sports.core.api.espn.com/v2/sports/baseball/mlb'
 
 
 def get_db_connection():
     """Get PostgreSQL connection from environment variables."""
-    db_url = os.getenv("DATABASE_URL")
+    db_url = os.getenv('DATABASE_URL')
     if db_url:
         return psycopg2.connect(db_url)
-    else:
-        return psycopg2.connect(
-            host=os.getenv("PGHOST", "localhost"),
-            port=os.getenv("PGPORT", "5432"),
-            database=os.getenv("PGDATABASE", "retrosheet"),
-            user=os.getenv("PGUSER", os.getenv("USER")),
-            password=os.getenv("PGPASSWORD"),
-        )
+    return psycopg2.connect(
+        host=os.getenv('PGHOST', 'localhost'),
+        port=os.getenv('PGPORT', '5432'),
+        database=os.getenv('PGDATABASE', 'retrosheet'),
+        user=os.getenv('PGUSER', os.getenv('USER')),
+        password=os.getenv('PGPASSWORD'),
+    )
 
 
-def compute_checksum(data: Dict[str, Any]) -> str:
+def compute_checksum(data: dict[str, Any]) -> str:
     """Compute SHA256 checksum for JSON data."""
     if data is None:
         return None
@@ -46,9 +46,9 @@ def compute_checksum(data: Dict[str, Any]) -> str:
     return hashlib.sha256(data_str.encode()).hexdigest()
 
 
-def fetch_espn_plays(game_id: str) -> Optional[Dict[str, Any]]:
+def fetch_espn_plays(game_id: str) -> dict[str, Any] | None:
     """Fetch play-by-play data for a specific game from ESPN Core API v2."""
-    url = f"{ESPN_CORE_URL}/events/{game_id}/competitions/{game_id}/plays"
+    url = f'{ESPN_CORE_URL}/events/{game_id}/competitions/{game_id}/plays'
 
     try:
         start_time = time.time()
@@ -60,37 +60,36 @@ def fetch_espn_plays(game_id: str) -> Optional[Dict[str, Any]]:
             checksum = compute_checksum(data)
 
             return {
-                "url": url,
-                "status": response.status_code,
-                "response_time_ms": response_time_ms,
-                "data": data,
-                "checksum": checksum,
+                'url': url,
+                'status': response.status_code,
+                'response_time_ms': response_time_ms,
+                'data': data,
+                'checksum': checksum,
             }
-        else:
-            print(f"Error fetching plays for game {game_id}: HTTP {response.status_code}")
-            return {
-                "url": url,
-                "status": response.status_code,
-                "response_time_ms": response_time_ms,
-                "data": None,
-                "checksum": None,
-            }
+        print(f'Error fetching plays for game {game_id}: HTTP {response.status_code}')
+        return {
+            'url': url,
+            'status': response.status_code,
+            'response_time_ms': response_time_ms,
+            'data': None,
+            'checksum': None,
+        }
     except Exception as e:
-        print(f"Error fetching plays for game {game_id}: {e}")
+        print(f'Error fetching plays for game {game_id}: {e}')
         return None
 
 
-def store_plays_snapshot(snapshot_data: Dict[str, Any], game_id: str) -> bool:
+def store_plays_snapshot(snapshot_data: dict[str, Any], game_id: str) -> bool:
     """Store plays snapshot in raw_espn.plays_snapshots."""
-    if not snapshot_data or snapshot_data["data"] is None:
+    if not snapshot_data or snapshot_data['data'] is None:
         return False
 
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
             # Extract game_date and season from snapshot_data (now included by fetch_espn_plays)
-            game_date = snapshot_data.get("game_date")
-            season = snapshot_data.get("season")
+            game_date = snapshot_data.get('game_date')
+            season = snapshot_data.get('season')
 
             # Check if snapshot already exists
             cur.execute(
@@ -98,11 +97,11 @@ def store_plays_snapshot(snapshot_data: Dict[str, Any], game_id: str) -> bool:
                 SELECT snapshot_id FROM raw_espn.plays_snapshots
                 WHERE game_id = %s AND checksum = %s
             """,
-                (game_id, snapshot_data["checksum"]),
+                (game_id, snapshot_data['checksum']),
             )
 
             if cur.fetchone():
-                print(f"Plays snapshot already exists for game {game_id} (duplicate checksum)")
+                print(f'Plays snapshot already exists for game {game_id} (duplicate checksum)')
                 return True
 
             # Insert new snapshot
@@ -117,21 +116,21 @@ def store_plays_snapshot(snapshot_data: Dict[str, Any], game_id: str) -> bool:
             """,
                 (
                     game_id,
-                    snapshot_data["url"],
-                    snapshot_data["status"],
-                    snapshot_data["response_time_ms"],
-                    Json(snapshot_data["data"]),
-                    snapshot_data["checksum"],
+                    snapshot_data['url'],
+                    snapshot_data['status'],
+                    snapshot_data['response_time_ms'],
+                    Json(snapshot_data['data']),
+                    snapshot_data['checksum'],
                     game_date,
                     season,
                 ),
             )
 
         conn.commit()
-        print(f"Stored plays snapshot for game {game_id}")
+        print(f'Stored plays snapshot for game {game_id}')
         return True
     except Exception as e:
-        print(f"Error storing plays snapshot: {e}")
+        print(f'Error storing plays snapshot: {e}')
         conn.rollback()
         return False
     finally:
@@ -156,7 +155,7 @@ def main():
             """)
 
             game_ids = [row[0] for row in cur.fetchall()]
-            print(f"Found {len(game_ids)} games from 2024+ without plays snapshots")
+            print(f'Found {len(game_ids)} games from 2024+ without plays snapshots')
 
         conn.close()
 
@@ -173,45 +172,45 @@ def main():
         for i in range(0, total_games, batch_size):
             batch = game_ids[i : i + batch_size]
             print(
-                f"\nProcessing batch {i // batch_size + 1}/{(total_games + batch_size - 1) // batch_size}"
+                f'\nProcessing batch {i // batch_size + 1}/{(total_games + batch_size - 1) // batch_size}',
             )
-            print(f"Games {i + 1}-{min(i + batch_size, total_games)} of {total_games}")
+            print(f'Games {i + 1}-{min(i + batch_size, total_games)} of {total_games}')
 
             for game_id in batch:
                 # First verify game data exists before fetching plays
                 game_data = fetch_espn_game(game_id)
-                if not game_data or game_data.get("status") != 200:
-                    print(f"Skipping game {game_id} - no game data available")
+                if not game_data or game_data.get('status') != 200:
+                    print(f'Skipping game {game_id} - no game data available')
                     skipped_count += 1
                     continue
 
                 # Fetch plays data
                 snapshot = fetch_espn_plays(game_id)
-                if snapshot and snapshot["data"] is not None and len(snapshot["data"]) > 0:
+                if snapshot and snapshot['data'] is not None and len(snapshot['data']) > 0:
                     if store_plays_snapshot(snapshot, game_id):
                         success_count += 1
                     else:
                         failed_count += 1
-                elif snapshot and snapshot.get("status") == 404:
+                elif snapshot and snapshot.get('status') == 404:
                     # Game doesn't have play-by-play data available, skip it
-                    print(f"Skipping game {game_id} - no play-by-play data available")
+                    print(f'Skipping game {game_id} - no play-by-play data available')
                     skipped_count += 1
                 else:
-                    print(f"Skipping game {game_id} - empty plays array")
+                    print(f'Skipping game {game_id} - empty plays array')
                     skipped_count += 1
 
             print(
-                f"Batch complete: {success_count} success, {failed_count} failed, {skipped_count} skipped"
+                f'Batch complete: {success_count} success, {failed_count} failed, {skipped_count} skipped',
             )
 
         print(
-            f"\nFinal results: {success_count} success, {failed_count} failed, {skipped_count} skipped out of {total_games} games"
+            f'\nFinal results: {success_count} success, {failed_count} failed, {skipped_count} skipped out of {total_games} games',
         )
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f'Error: {e}')
         sys.exit(1)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

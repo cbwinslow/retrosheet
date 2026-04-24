@@ -1,11 +1,7 @@
--- Update cron jobs to use game-hours-aware scheduling
--- This applies conditional polling using the metadata wrapper functions
-
--- Option 1: Use conditional polling functions (recommended)
--- These check season and game hours before executing
-
--- Update live game poll to use conditional wrapper
--- This will only poll during MLB season and game hours
+-- File: sql/maintenance/021_update_cron_game_hours.sql
+-- Purpose: Update cron jobs for season-aware MLB polling schedule
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 SELECT cron.unschedule('live-game-poll-10s');
 
 -- Use conditional wrapper - polls every 10s but only executes if conditions met
@@ -39,3 +35,4 @@ SELECT
     active
 FROM cron.job
 ORDER BY jobid;
+

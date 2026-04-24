@@ -18,10 +18,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-DRY_RUN = "--dry-run" in sys.argv
+
+DRY_RUN = '--dry-run' in sys.argv
 
 # Resolve the database URL – fallback to a local default
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
+DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://localhost/retrosheet')
 
 
 def run_sql_file(sql_path: Path) -> None:
@@ -31,29 +32,29 @@ def run_sql_file(sql_path: Path) -> None:
         sql_path: Path to the ``.sql`` file.
     """
     cmd = [
-        "psql",
+        'psql',
         DATABASE_URL,
-        "-f",
+        '-f',
         str(sql_path),
     ]
     if DRY_RUN:
         print(f"[dry‑run] Would execute: {' '.join(cmd)}")
         return
-    print(f"Executing {sql_path.name} …")
+    print(f'Executing {sql_path.name} …')
     subprocess.check_call(cmd)
 
 
 def main() -> None:
-    sql_dir = Path(__file__).resolve().parent.parent / "sql"
+    sql_dir = Path(__file__).resolve().parent.parent / 'sql'
     if not sql_dir.is_dir():
-        print(f"SQL directory not found: {sql_dir}")
+        print(f'SQL directory not found: {sql_dir}')
         sys.exit(1)
 
     # Select files that are part of the feature‑mart pipeline
-    pattern = "[05][0-9]*_*.sql"
+    pattern = '[05][0-9]*_*.sql'
     sql_files = sorted(sql_dir.glob(pattern))
     if not sql_files:
-        print("No feature‑mart SQL files found.")
+        print('No feature‑mart SQL files found.')
         return
 
     for sql_file in sql_files:
@@ -61,10 +62,10 @@ def main() -> None:
 
     # Refresh materialized views if any were created
     refresh_cmd = [
-        "psql",
+        'psql',
         DATABASE_URL,
-        "-c",
-        "SELECT pg_catalog.pg_reload_conf();",
+        '-c',
+        'SELECT pg_catalog.pg_reload_conf();',
     ]
     if not DRY_RUN:
         # Refresh all materialized views concurrently
@@ -74,8 +75,8 @@ def main() -> None:
             "EXECUTE format('REFRESH MATERIALIZED VIEW CONCURRENTLY %I.%I', r.schemaname, r.matviewname); "
             "END LOOP; END $$;"
         )
-        subprocess.check_call(["psql", DATABASE_URL, "-c", refresh_sql])
+        subprocess.check_call(['psql', DATABASE_URL, '-c', refresh_sql])
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

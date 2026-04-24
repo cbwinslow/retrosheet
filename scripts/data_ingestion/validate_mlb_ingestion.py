@@ -45,32 +45,32 @@ def run_validation(limit_hours: int = None) -> int:
                     """
                     ALTER TABLE core.live_games RENAME TO live_games_original;
                     ALTER TABLE recent_live_games RENAME TO live_games;
-                    """
+                    """,
                 )
 
-            cur.execute("CALL analysis.validate_mlb_data();")
+            cur.execute('CALL analysis.validate_mlb_data();')
             # Capture NOTICE and WARNING messages from the procedure.
             notices = conn.notices
-            warning_count = sum(1 for n in notices if "WARNING" in n)
+            warning_count = sum(1 for n in notices if 'WARNING' in n)
             if warning_count:
-                print("⚠️ Validation completed with warnings:")
+                print('⚠️ Validation completed with warnings:')
                 for n in notices:
-                    if "WARNING" in n:
+                    if 'WARNING' in n:
                         print(n.strip())
             else:
-                print("✅ Validation completed with no warnings.")
+                print('✅ Validation completed with no warnings.')
             return warning_count
     finally:
         conn.close()
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Validate MLB ingestion data")
+    parser = argparse.ArgumentParser(description='Validate MLB ingestion data')
     parser.add_argument(
-        "--hours",
+        '--hours',
         type=int,
         default=None,
-        help="Limit validation to the last N hours (default: all data)",
+        help='Limit validation to the last N hours (default: all data)',
     )
     args = parser.parse_args()
 
@@ -78,5 +78,5 @@ def main():
     sys.exit(1 if warnings else 0)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

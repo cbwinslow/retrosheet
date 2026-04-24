@@ -10,17 +10,17 @@ import psycopg2
 
 def database_kwargs():
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
 def populate_mlb_teams():
     """Populate mlb.teams table from raw game feed data."""
-    print("📊 Populating MLB teams...")
+    print('📊 Populating MLB teams...')
 
     conn = psycopg2.connect(**database_kwargs())
     try:
@@ -34,7 +34,7 @@ def populate_mlb_teams():
                 WHERE http_status = 200;
             """)
             total_feeds, home_teams, away_teams = cur.fetchone()
-            print(f"   Found {total_feeds} feeds, {home_teams} home teams, {away_teams} away teams")
+            print(f'   Found {total_feeds} feeds, {home_teams} home teams, {away_teams} away teams')
 
             # Extract teams from game feeds
             cur.execute("""
@@ -54,7 +54,7 @@ def populate_mlb_teams():
             """)
 
             home_count = cur.rowcount
-            print(f"   Inserted {home_count} home teams")
+            print(f'   Inserted {home_count} home teams')
 
             cur.execute("""
                 INSERT INTO mlb.teams (mlb_id, team_name, team_code, location_name, league_name, active, first_year)
@@ -73,10 +73,10 @@ def populate_mlb_teams():
             """)
 
             away_count = cur.rowcount
-            print(f"   Inserted {away_count} away teams")
+            print(f'   Inserted {away_count} away teams')
 
         conn.commit()
-        print(f"✅ MLB teams populated: {home_count + away_count} total")
+        print(f'✅ MLB teams populated: {home_count + away_count} total')
 
     finally:
         conn.close()
@@ -84,7 +84,7 @@ def populate_mlb_teams():
 
 def populate_mlb_venues():
     """Populate mlb.venues table from raw game feed data."""
-    print("🏟️ Populating MLB venues...")
+    print('🏟️ Populating MLB venues...')
 
     conn = psycopg2.connect(**database_kwargs())
     try:
@@ -104,7 +104,7 @@ def populate_mlb_venues():
             """)
 
         conn.commit()
-        print("✅ MLB venues populated")
+        print('✅ MLB venues populated')
 
     finally:
         conn.close()
@@ -112,7 +112,7 @@ def populate_mlb_venues():
 
 def populate_mlb_players():
     """Populate mlb.players table from raw game feed data."""
-    print("👥 Populating MLB players...")
+    print('👥 Populating MLB players...')
 
     conn = psycopg2.connect(**database_kwargs())
     try:
@@ -160,7 +160,7 @@ def populate_mlb_players():
             """)
 
         conn.commit()
-        print("✅ MLB players populated")
+        print('✅ MLB players populated')
 
     finally:
         conn.close()
@@ -168,7 +168,7 @@ def populate_mlb_players():
 
 def populate_mlb_pitches():
     """Populate mlb.pitches table from raw game feed data."""
-    print("⚾ Populating MLB pitches...")
+    print('⚾ Populating MLB pitches...')
 
     conn = psycopg2.connect(**database_kwargs())
     try:
@@ -203,7 +203,7 @@ def populate_mlb_pitches():
             """)
 
         conn.commit()
-        print("✅ MLB pitches populated")
+        print('✅ MLB pitches populated')
 
     finally:
         conn.close()
@@ -211,7 +211,7 @@ def populate_mlb_pitches():
 
 def update_team_venue_links():
     """Link teams to their home venues."""
-    print("🔗 Linking teams to venues...")
+    print('🔗 Linking teams to venues...')
 
     conn = psycopg2.connect(**database_kwargs())
     try:
@@ -229,14 +229,14 @@ def update_team_venue_links():
             """)
 
         conn.commit()
-        print("✅ Team-venue links updated")
+        print('✅ Team-venue links updated')
 
     finally:
         conn.close()
 
 
 def main():
-    print("🚀 Populating MLB reference tables...")
+    print('🚀 Populating MLB reference tables...')
 
     populate_mlb_teams()
     populate_mlb_venues()
@@ -256,17 +256,17 @@ def main():
                     (SELECT COUNT(*) FROM mlb.pitches) as pitches
             """)
             players, teams, venues, pitches = cur.fetchone()
-            print("\n📊 Population Summary:")
-            print(f"   👥 Players: {players}")
-            print(f"   🏟️ Teams: {teams}")
-            print(f"   🏟️ Venues: {venues}")
-            print(f"   ⚾ Pitches: {pitches}")
+            print('\n📊 Population Summary:')
+            print(f'   👥 Players: {players}')
+            print(f'   🏟️ Teams: {teams}')
+            print(f'   🏟️ Venues: {venues}')
+            print(f'   ⚾ Pitches: {pitches}')
 
     finally:
         conn.close()
 
-    print("🎉 MLB reference tables populated!")
+    print('🎉 MLB reference tables populated!')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

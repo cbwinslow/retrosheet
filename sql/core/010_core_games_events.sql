@@ -1,51 +1,7 @@
-/*
-File: sql/core/010_core_games_events.sql
-Purpose: Create core baseball entities (games, events, teams, players) and prediction infrastructure
-Author: Agent Cascade
-Date: 2026-04-24
-Depends On: sql/core/001_init.sql (schemas and bridge tables must exist)
-Called By: scripts/rebuild_warehouse.sh, docs/agents/PROCEDURES.md Full Warehouse Rebuild
-
-Functions Created:
-- core.safe_int(text): Safely parse text to integer
-- core.safe_date_yyyymmdd(text): Parse YYYYMMDD format dates
-- core.safe_date_mmddyyyy(text): Parse MMDDYYYY format dates
-
-Tables Created:
-- core.teams: Team reference data (retrosheet_team_id, names, leagues, divisions)
-- core.parks: Park/Venue reference data (retrosheet_park_id, names, locations)
-- core.players: Player reference data (retrosheet_player_id, names, batting/throwing hands)
-- core.games: Game-level records (62,598 historical games 1898-2025)
-- core.events: Event-level records (~4.9M play-by-play events)
-- features.game_outcome_examples: Materialized view of game states for ML training
-- predictions.prediction_targets: Taxonomy of prediction targets (game, pa, pitch outcomes)
-- predictions.target_outcomes: Possible outcomes for each prediction target
-- models.model_registry: Trained model metadata and artifact locations
-- predictions.prediction_runs: Batch prediction job tracking
-- predictions.target_probabilities: Individual prediction outputs with probabilities
-- raw_markets.market_snapshots: Prediction market data snapshots (Kalshi, Polymarket)
-- market_edges.market_prices: Market price history with implied probabilities
-- market_edges.detected_edges: Model vs market edge detection results
-- chat.query_logs: Chatbot interaction history
-
-Indexes Created:
-- Games: season+date, home_team+date, away_team+date, park+date
-- Events: game+sequence, season+game, state (inning/out/bases), batter, pitcher
-
-Row Counts (as of 2026-04-24):
-- core.games: 62,598 games
-- core.events: 4,897,234 events
-- core.teams: ~35 teams
-- core.parks: ~60 parks
-- core.players: ~15,000 players
-- features.game_outcome_examples: ~1.2M training examples
-
-Notes:
-- Creates typed core tables from raw_retrosheet.chadwick_event_raw
-- Uses safe_* helper functions for robust parsing of messy text data
-- Events table includes derived game-state columns (bases occupied, score differential)
-- Indexes optimized for common query patterns (season, team, date, state)
-*/
+-- File: sql/core/010_core_games_events.sql
+-- Purpose: Create core baseball entities (games, events, teams, players) and prediction infrastructure
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 
 CREATE SCHEMA IF NOT EXISTS core;
 CREATE SCHEMA IF NOT EXISTS features;

@@ -1,3 +1,7 @@
+-- File: sql/core/030_reference_metadata.sql
+-- Purpose: Load reference tables, enrich players/teams/parks, create bridge xref
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS raw_retrosheet;
 CREATE SCHEMA IF NOT EXISTS core;
 CREATE SCHEMA IF NOT EXISTS bridge;
@@ -258,3 +262,8 @@ SELECT
     count(*) FILTER (WHERE batter_hand <> 'U'),
     count(*) FILTER (WHERE pitcher_hand <> 'U')
 FROM features.plate_appearance_examples;
+
+-- Table comments
+COMMENT ON TABLE raw_retrosheet.biofile IS 'Player biographical and career metadata from Retrosheet';
+COMMENT ON TABLE raw_retrosheet.teams_reference IS 'Team reference data with league, city, and active seasons';
+COMMENT ON TABLE raw_retrosheet.ballparks_reference IS 'Ballpark reference data with name, location, and league';

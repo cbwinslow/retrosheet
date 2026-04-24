@@ -1,6 +1,7 @@
--- Migrate existing pitch data to include ALL 118 Statcast fields
--- This updates rows that were loaded with partial data
-
+-- File: sql/maintenance/022_migrate_full_statcast.sql
+-- Purpose: Backfill Statcast pitch data into locations table
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 DO $$
 DECLARE
     v_season INTEGER;
@@ -159,3 +160,4 @@ SELECT
 FROM features_pitch.locations
 GROUP BY game_year
 ORDER BY game_year DESC;
+

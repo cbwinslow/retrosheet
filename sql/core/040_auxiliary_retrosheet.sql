@@ -1,3 +1,7 @@
+-- File: sql/core/040_auxiliary_retrosheet.sql
+-- Purpose: Load auxiliary tables, create roster/allstar/ejection/umpire/coach views
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS raw_retrosheet;
 CREATE SCHEMA IF NOT EXISTS core;
 CREATE SCHEMA IF NOT EXISTS bridge;
@@ -428,3 +432,14 @@ SELECT
     'core.allstar_games',
     count(*)
 FROM core.allstar_games;
+
+-- Table comments
+COMMENT ON TABLE raw_retrosheet.biofile_legacy IS 'Legacy-format player biographical data from Retrosheet';
+COMMENT ON TABLE raw_retrosheet.coaches IS 'Coaching assignments by season, team, and role';
+COMMENT ON TABLE raw_retrosheet.ejections IS 'Game ejection records with ejectee, umpire, and reason';
+COMMENT ON TABLE raw_retrosheet.relatives IS 'Player relationship records';
+COMMENT ON TABLE raw_retrosheet.season_rosters IS 'season rosters data table';
+COMMENT ON TABLE raw_retrosheet.season_teams IS 'season teams data table';
+COMMENT ON TABLE raw_retrosheet.season_schedules IS 'season schedules data table';
+COMMENT ON TABLE raw_retrosheet.season_umpires IS 'season umpires data table';
+COMMENT ON TABLE raw_retrosheet.special_gamelog_lines IS 'special gamelog lines data table';

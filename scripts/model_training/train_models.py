@@ -19,227 +19,228 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sqlalchemy import URL, create_engine, text
 
+
 ROOT = Path(__file__).resolve().parents[1]
-MODEL_DIR = ROOT / "data" / "models"
+MODEL_DIR = ROOT / 'data' / 'models'
 
 
 GAME_NUMERIC_FEATURES = [
-    "inning",
-    "is_bottom_inning",
-    "outs_before",
-    "start_bases",
-    "balls",
-    "strikes",
-    "home_score_diff",
-    "away_score_before",
-    "home_score_before",
+    'inning',
+    'is_bottom_inning',
+    'outs_before',
+    'start_bases',
+    'balls',
+    'strikes',
+    'home_score_diff',
+    'away_score_before',
+    'home_score_before',
 ]
-GAME_CATEGORICAL_FEATURES = ["batter_hand", "pitcher_hand"]
-GAME_TARGET = "final_home_win"
+GAME_CATEGORICAL_FEATURES = ['batter_hand', 'pitcher_hand']
+GAME_TARGET = 'final_home_win'
 
 PA_NUMERIC_FEATURES = [
-    "inning",
-    "is_bottom_inning",
-    "outs_before",
-    "start_bases",
-    "balls",
-    "strikes",
-    "home_score_diff",
+    'inning',
+    'is_bottom_inning',
+    'outs_before',
+    'start_bases',
+    'balls',
+    'strikes',
+    'home_score_diff',
 ]
-PA_CATEGORICAL_FEATURES = ["batter_hand", "pitcher_hand"]
+PA_CATEGORICAL_FEATURES = ['batter_hand', 'pitcher_hand']
 PA_ENRICHED_NUMERIC_FEATURES = PA_NUMERIC_FEATURES + [
-    "batter_prior_pa",
-    "batter_prior_hit_rate",
-    "batter_prior_walk_rate",
-    "batter_prior_strikeout_rate",
-    "batter_prior_home_run_rate",
-    "batter_prior_reach_base_rate",
-    "batter_prior_extra_base_hit_rate",
-    "pitcher_prior_batters_faced",
-    "pitcher_prior_hit_allowed_rate",
-    "pitcher_prior_walk_allowed_rate",
-    "pitcher_prior_strikeout_rate",
-    "pitcher_prior_home_run_allowed_rate",
-    "pitcher_prior_reach_base_allowed_rate",
-    "pitcher_prior_extra_base_hit_allowed_rate",
-    "batting_team_prior_win_rate",
-    "batting_team_prior_runs_scored_per_game",
-    "batting_team_prior_runs_allowed_per_game",
-    "fielding_team_prior_win_rate",
-    "fielding_team_prior_runs_scored_per_game",
-    "fielding_team_prior_runs_allowed_per_game",
-    "context_prior_pa",
-    "context_prior_hit_rate",
-    "context_prior_walk_rate",
-    "context_prior_strikeout_rate",
-    "context_prior_home_run_rate",
-    "context_prior_reach_base_rate",
-    "context_prior_extra_base_hit_rate",
-    "context_prior_batting_team_win_rate",
+    'batter_prior_pa',
+    'batter_prior_hit_rate',
+    'batter_prior_walk_rate',
+    'batter_prior_strikeout_rate',
+    'batter_prior_home_run_rate',
+    'batter_prior_reach_base_rate',
+    'batter_prior_extra_base_hit_rate',
+    'pitcher_prior_batters_faced',
+    'pitcher_prior_hit_allowed_rate',
+    'pitcher_prior_walk_allowed_rate',
+    'pitcher_prior_strikeout_rate',
+    'pitcher_prior_home_run_allowed_rate',
+    'pitcher_prior_reach_base_allowed_rate',
+    'pitcher_prior_extra_base_hit_allowed_rate',
+    'batting_team_prior_win_rate',
+    'batting_team_prior_runs_scored_per_game',
+    'batting_team_prior_runs_allowed_per_game',
+    'fielding_team_prior_win_rate',
+    'fielding_team_prior_runs_scored_per_game',
+    'fielding_team_prior_runs_allowed_per_game',
+    'context_prior_pa',
+    'context_prior_hit_rate',
+    'context_prior_walk_rate',
+    'context_prior_strikeout_rate',
+    'context_prior_home_run_rate',
+    'context_prior_reach_base_rate',
+    'context_prior_extra_base_hit_rate',
+    'context_prior_batting_team_win_rate',
 ]
 PA_ENRICHED_CATEGORICAL_FEATURES = PA_CATEGORICAL_FEATURES
 
 GAME_ENRICHED_NUMERIC_FEATURES = GAME_NUMERIC_FEATURES + [
-    "batter_prior_pa",
-    "batter_prior_hit_rate",
-    "batter_prior_walk_rate",
-    "batter_prior_strikeout_rate",
-    "batter_prior_home_run_rate",
-    "batter_prior_reach_base_rate",
-    "batter_prior_extra_base_hit_rate",
-    "pitcher_prior_batters_faced",
-    "pitcher_prior_hit_allowed_rate",
-    "pitcher_prior_walk_allowed_rate",
-    "pitcher_prior_strikeout_rate",
-    "pitcher_prior_home_run_allowed_rate",
-    "pitcher_prior_reach_base_allowed_rate",
-    "pitcher_prior_extra_base_hit_allowed_rate",
-    "home_team_prior_win_rate",
-    "home_team_prior_runs_scored_per_game",
-    "home_team_prior_runs_allowed_per_game",
-    "away_team_prior_win_rate",
-    "away_team_prior_runs_scored_per_game",
-    "away_team_prior_runs_allowed_per_game",
-    "context_prior_pa",
-    "context_prior_hit_rate",
-    "context_prior_walk_rate",
-    "context_prior_strikeout_rate",
-    "context_prior_home_run_rate",
-    "context_prior_reach_base_rate",
-    "context_prior_extra_base_hit_rate",
-    "context_prior_batting_team_win_rate",
+    'batter_prior_pa',
+    'batter_prior_hit_rate',
+    'batter_prior_walk_rate',
+    'batter_prior_strikeout_rate',
+    'batter_prior_home_run_rate',
+    'batter_prior_reach_base_rate',
+    'batter_prior_extra_base_hit_rate',
+    'pitcher_prior_batters_faced',
+    'pitcher_prior_hit_allowed_rate',
+    'pitcher_prior_walk_allowed_rate',
+    'pitcher_prior_strikeout_rate',
+    'pitcher_prior_home_run_allowed_rate',
+    'pitcher_prior_reach_base_allowed_rate',
+    'pitcher_prior_extra_base_hit_allowed_rate',
+    'home_team_prior_win_rate',
+    'home_team_prior_runs_scored_per_game',
+    'home_team_prior_runs_allowed_per_game',
+    'away_team_prior_win_rate',
+    'away_team_prior_runs_scored_per_game',
+    'away_team_prior_runs_allowed_per_game',
+    'context_prior_pa',
+    'context_prior_hit_rate',
+    'context_prior_walk_rate',
+    'context_prior_strikeout_rate',
+    'context_prior_home_run_rate',
+    'context_prior_reach_base_rate',
+    'context_prior_extra_base_hit_rate',
+    'context_prior_batting_team_win_rate',
     # Team game‑context features from features.team_game_context
-    "days_since_previous_game",
-    "played_yesterday",
-    "doubleheader_same_day",
-    "same_park_as_previous_game",
-    "changed_home_road_status",
-    "same_opponent_as_previous_game",
+    'days_since_previous_game',
+    'played_yesterday',
+    'doubleheader_same_day',
+    'same_park_as_previous_game',
+    'changed_home_road_status',
+    'same_opponent_as_previous_game',
 ]
 GAME_ENRICHED_CATEGORICAL_FEATURES = GAME_CATEGORICAL_FEATURES
 PA_ADVANCED_NUMERIC_FEATURES = PA_NUMERIC_FEATURES + [
-    "batter_career_prior_pa",
-    "batter_career_prior_hit_rate",
-    "batter_career_prior_walk_rate",
-    "batter_career_prior_strikeout_rate",
-    "batter_career_prior_home_run_rate",
-    "batter_career_prior_reach_base_rate",
-    "pitcher_career_prior_batters_faced",
-    "pitcher_career_prior_hit_allowed_rate",
-    "pitcher_career_prior_walk_allowed_rate",
-    "pitcher_career_prior_strikeout_rate",
-    "pitcher_career_prior_home_run_allowed_rate",
-    "pitcher_career_prior_reach_base_allowed_rate",
-    "prior_matchup_pa",
-    "prior_matchup_hit_rate",
-    "prior_matchup_walk_rate",
-    "prior_matchup_strikeout_rate",
-    "prior_matchup_home_run_rate",
-    "prior_matchup_reach_base_rate",
-    "coarse_context_prior_pa",
-    "coarse_context_prior_hit_rate",
-    "coarse_context_prior_walk_rate",
-    "coarse_context_prior_strikeout_rate",
-    "coarse_context_prior_home_run_rate",
-    "coarse_context_prior_reach_base_rate",
-    "coarse_context_prior_extra_base_hit_rate",
-    "park_prior_total_runs_per_game",
-    "park_prior_home_win_rate",
-    "batting_team_rolling_30_games",
-    "batting_team_rolling_30_win_rate",
-    "batting_team_rolling_30_runs_scored_per_game",
-    "batting_team_rolling_30_runs_allowed_per_game",
-    "fielding_team_rolling_30_games",
-    "fielding_team_rolling_30_win_rate",
-    "fielding_team_rolling_30_runs_scored_per_game",
-    "fielding_team_rolling_30_runs_allowed_per_game",
+    'batter_career_prior_pa',
+    'batter_career_prior_hit_rate',
+    'batter_career_prior_walk_rate',
+    'batter_career_prior_strikeout_rate',
+    'batter_career_prior_home_run_rate',
+    'batter_career_prior_reach_base_rate',
+    'pitcher_career_prior_batters_faced',
+    'pitcher_career_prior_hit_allowed_rate',
+    'pitcher_career_prior_walk_allowed_rate',
+    'pitcher_career_prior_strikeout_rate',
+    'pitcher_career_prior_home_run_allowed_rate',
+    'pitcher_career_prior_reach_base_allowed_rate',
+    'prior_matchup_pa',
+    'prior_matchup_hit_rate',
+    'prior_matchup_walk_rate',
+    'prior_matchup_strikeout_rate',
+    'prior_matchup_home_run_rate',
+    'prior_matchup_reach_base_rate',
+    'coarse_context_prior_pa',
+    'coarse_context_prior_hit_rate',
+    'coarse_context_prior_walk_rate',
+    'coarse_context_prior_strikeout_rate',
+    'coarse_context_prior_home_run_rate',
+    'coarse_context_prior_reach_base_rate',
+    'coarse_context_prior_extra_base_hit_rate',
+    'park_prior_total_runs_per_game',
+    'park_prior_home_win_rate',
+    'batting_team_rolling_30_games',
+    'batting_team_rolling_30_win_rate',
+    'batting_team_rolling_30_runs_scored_per_game',
+    'batting_team_rolling_30_runs_allowed_per_game',
+    'fielding_team_rolling_30_games',
+    'fielding_team_rolling_30_win_rate',
+    'fielding_team_rolling_30_runs_scored_per_game',
+    'fielding_team_rolling_30_runs_allowed_per_game',
 ]
-PA_ADVANCED_CATEGORICAL_FEATURES = PA_CATEGORICAL_FEATURES + ["park_id"]
+PA_ADVANCED_CATEGORICAL_FEATURES = PA_CATEGORICAL_FEATURES + ['park_id']
 
 GAME_ADVANCED_NUMERIC_FEATURES = GAME_NUMERIC_FEATURES + [
-    "batter_career_prior_pa",
-    "batter_career_prior_hit_rate",
-    "batter_career_prior_walk_rate",
-    "batter_career_prior_strikeout_rate",
-    "batter_career_prior_home_run_rate",
-    "batter_career_prior_reach_base_rate",
-    "pitcher_career_prior_batters_faced",
-    "pitcher_career_prior_hit_allowed_rate",
-    "pitcher_career_prior_walk_allowed_rate",
-    "pitcher_career_prior_strikeout_rate",
-    "pitcher_career_prior_home_run_allowed_rate",
-    "pitcher_career_prior_reach_base_allowed_rate",
-    "prior_matchup_pa",
-    "prior_matchup_hit_rate",
-    "prior_matchup_walk_rate",
-    "prior_matchup_strikeout_rate",
-    "prior_matchup_home_run_rate",
-    "prior_matchup_reach_base_rate",
-    "coarse_context_prior_pa",
-    "coarse_context_prior_hit_rate",
-    "coarse_context_prior_walk_rate",
-    "coarse_context_prior_strikeout_rate",
-    "coarse_context_prior_home_run_rate",
-    "coarse_context_prior_reach_base_rate",
-    "coarse_context_prior_extra_base_hit_rate",
-    "park_prior_total_runs_per_game",
-    "park_prior_home_win_rate",
-    "home_team_rolling_30_games",
-    "home_team_rolling_30_win_rate",
-    "home_team_rolling_30_runs_scored_per_game",
-    "home_team_rolling_30_runs_allowed_per_game",
-    "away_team_rolling_30_games",
-    "away_team_rolling_30_win_rate",
-    "away_team_rolling_30_runs_scored_per_game",
-    "away_team_rolling_30_runs_allowed_per_game",
+    'batter_career_prior_pa',
+    'batter_career_prior_hit_rate',
+    'batter_career_prior_walk_rate',
+    'batter_career_prior_strikeout_rate',
+    'batter_career_prior_home_run_rate',
+    'batter_career_prior_reach_base_rate',
+    'pitcher_career_prior_batters_faced',
+    'pitcher_career_prior_hit_allowed_rate',
+    'pitcher_career_prior_walk_allowed_rate',
+    'pitcher_career_prior_strikeout_rate',
+    'pitcher_career_prior_home_run_allowed_rate',
+    'pitcher_career_prior_reach_base_allowed_rate',
+    'prior_matchup_pa',
+    'prior_matchup_hit_rate',
+    'prior_matchup_walk_rate',
+    'prior_matchup_strikeout_rate',
+    'prior_matchup_home_run_rate',
+    'prior_matchup_reach_base_rate',
+    'coarse_context_prior_pa',
+    'coarse_context_prior_hit_rate',
+    'coarse_context_prior_walk_rate',
+    'coarse_context_prior_strikeout_rate',
+    'coarse_context_prior_home_run_rate',
+    'coarse_context_prior_reach_base_rate',
+    'coarse_context_prior_extra_base_hit_rate',
+    'park_prior_total_runs_per_game',
+    'park_prior_home_win_rate',
+    'home_team_rolling_30_games',
+    'home_team_rolling_30_win_rate',
+    'home_team_rolling_30_runs_scored_per_game',
+    'home_team_rolling_30_runs_allowed_per_game',
+    'away_team_rolling_30_games',
+    'away_team_rolling_30_win_rate',
+    'away_team_rolling_30_runs_scored_per_game',
+    'away_team_rolling_30_runs_allowed_per_game',
 ]
-GAME_ADVANCED_CATEGORICAL_FEATURES = GAME_CATEGORICAL_FEATURES + ["park_id"]
+GAME_ADVANCED_CATEGORICAL_FEATURES = GAME_CATEGORICAL_FEATURES + ['park_id']
 PA_TARGETS = {
-    "pa_batter_hit": "is_hit",
-    "pa_batter_walk": "is_walk",
-    "pa_batter_strikeout": "is_strikeout",
-    "pa_batter_home_run": "is_home_run",
-    "pa_batter_reach_base": "is_reach_base",
-    "pa_batter_extra_base_hit": "is_extra_base_hit",
+    'pa_batter_hit': 'is_hit',
+    'pa_batter_walk': 'is_walk',
+    'pa_batter_strikeout': 'is_strikeout',
+    'pa_batter_home_run': 'is_home_run',
+    'pa_batter_reach_base': 'is_reach_base',
+    'pa_batter_extra_base_hit': 'is_extra_base_hit',
 }
 
 HI_NUMERIC_FEATURES = [
-    "inning",
-    "is_bottom_inning",
-    "start_outs",
-    "start_bases",
-    "start_balls",
-    "start_strikes",
-    "start_score_diff",
+    'inning',
+    'is_bottom_inning',
+    'start_outs',
+    'start_bases',
+    'start_balls',
+    'start_strikes',
+    'start_score_diff',
 ]
 HI_CATEGORICAL_FEATURES = []  # No categorical features for half-inning level
 HI_TARGETS = {
-    "half_inning_any_run": "any_run_scored",
-    "half_inning_lhb_any_hit": "any_left_handed_hit",
+    'half_inning_any_run': 'any_run_scored',
+    'half_inning_lhb_any_hit': 'any_left_handed_hit',
 }
 
 
 def database_kwargs() -> dict[str, str]:
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
 def database_url() -> str | URL:
-    if os.environ.get("DATABASE_URL"):
-        return os.environ["DATABASE_URL"]
+    if os.environ.get('DATABASE_URL'):
+        return os.environ['DATABASE_URL']
     kwargs = database_kwargs()
     return URL.create(
-        "postgresql+psycopg2",
-        username=kwargs["user"],
-        password=kwargs["password"] or None,
-        host=kwargs["host"],
-        port=int(kwargs["port"]),
-        database=kwargs["dbname"],
+        'postgresql+psycopg2',
+        username=kwargs['user'],
+        password=kwargs['password'] or None,
+        host=kwargs['host'],
+        port=int(kwargs['port']),
+        database=kwargs['dbname'],
     )
 
 
@@ -253,10 +254,10 @@ def load_examples(
     feature_set: str,
 ) -> pd.DataFrame:
     if not 0 < sample_rate <= 1:
-        raise ValueError("--sample-rate must be between 0 and 1")
+        raise ValueError('--sample-rate must be between 0 and 1')
     sample_ppm = int(sample_rate * 1_000_000)
 
-    if target_id == "game_home_win" and feature_set == "basic":
+    if target_id == 'game_home_win' and feature_set == 'basic':
         sql = """
             SELECT
                 season,
@@ -277,8 +278,8 @@ def load_examples(
               AND final_home_win IS NOT NULL
               AND mod(abs(hashtext(game_id || ':' || event_id::text)), 1000000) < :sample_ppm
         """
-        target_col = "final_home_win"
-    elif target_id == "game_home_win" and feature_set == "enriched":
+        target_col = 'final_home_win'
+    elif target_id == 'game_home_win' and feature_set == 'enriched':
         sql = """
             SELECT
                 examples.season,
@@ -349,8 +350,8 @@ def load_examples(
               AND examples.final_home_win IS NOT NULL
               AND mod(abs(hashtext(examples.game_id || ':' || examples.event_id::text)), 1000000) < :sample_ppm
         """
-        target_col = "final_home_win"
-    elif target_id in PA_TARGETS and feature_set == "basic":
+        target_col = 'final_home_win'
+    elif target_id in PA_TARGETS and feature_set == 'basic':
         target_col_name = PA_TARGETS[target_id]
         sql = f"""
             SELECT
@@ -370,8 +371,8 @@ def load_examples(
               AND {target_col_name} IS NOT NULL
               AND mod(abs(hashtext(game_id || ':' || plate_appearance_id::text)), 1000000) < :sample_ppm
         """
-        target_col = "target"
-    elif target_id in PA_TARGETS and feature_set == "enriched":
+        target_col = 'target'
+    elif target_id in PA_TARGETS and feature_set == 'enriched':
         target_col_name = PA_TARGETS[target_id]
         sql = f"""
             SELECT
@@ -441,8 +442,8 @@ def load_examples(
               AND examples.{target_col_name} IS NOT NULL
               AND mod(abs(hashtext(examples.game_id || ':' || examples.plate_appearance_id::text)), 1000000) < :sample_ppm
         """
-        target_col = "target"
-    elif target_id == "game_home_win" and feature_set == "advanced":
+        target_col = 'target'
+    elif target_id == 'game_home_win' and feature_set == 'advanced':
         sql = """
             SELECT
                 season,
@@ -499,8 +500,8 @@ def load_examples(
               AND final_home_win IS NOT NULL
               AND mod(abs(hashtext(game_id || ':' || event_id::text)), 1000000) < :sample_ppm
         """
-        target_col = "final_home_win"
-    elif target_id in PA_TARGETS and feature_set == "advanced":
+        target_col = 'final_home_win'
+    elif target_id in PA_TARGETS and feature_set == 'advanced':
         target_col_name = PA_TARGETS[target_id]
         sql = f"""
             SELECT
@@ -556,8 +557,8 @@ def load_examples(
               AND {target_col_name} IS NOT NULL
               AND mod(abs(hashtext(game_id || ':' || plate_appearance_id::text)), 1000000) < :sample_ppm
         """
-        target_col = "target"
-    elif target_id in HI_TARGETS and feature_set == "basic":
+        target_col = 'target'
+    elif target_id in HI_TARGETS and feature_set == 'basic':
         target_col_name = HI_TARGETS[target_id]
         sql = f"""
             SELECT
@@ -575,64 +576,64 @@ def load_examples(
               AND {target_col_name} IS NOT NULL
               AND mod(abs(hashtext(game_id || ':' || inning::text || ':' || is_bottom_inning::text)), 1000000) < :sample_ppm
         """
-        target_col = "target"
+        target_col = 'target'
     else:
-        raise ValueError(f"Unknown target_id: {target_id}")
+        raise ValueError(f'Unknown target_id: {target_id}')
 
     df = pd.read_sql_query(
         text(sql),
         engine,
         params={
-            "min_season": min_season,
-            "max_season": max_season,
-            "sample_ppm": sample_ppm,
+            'min_season': min_season,
+            'max_season': max_season,
+            'sample_ppm': sample_ppm,
         },
     )
-    return df.rename(columns={target_col: "target"})
+    return df.rename(columns={target_col: 'target'})
 
 
 def preprocessor(
-    *, numeric_features: list[str], categorical_features: list[str], scale_numeric: bool
+    *, numeric_features: list[str], categorical_features: list[str], scale_numeric: bool,
 ) -> ColumnTransformer:
-    numeric_steps = [("imputer", SimpleImputer(strategy="median"))]
+    numeric_steps = [('imputer', SimpleImputer(strategy='median'))]
     if scale_numeric:
-        numeric_steps.append(("scaler", StandardScaler()))
+        numeric_steps.append(('scaler', StandardScaler()))
     numeric = Pipeline(numeric_steps)
     categorical = Pipeline(
         [
-            ("imputer", SimpleImputer(strategy="most_frequent")),
-            ("onehot", OneHotEncoder(handle_unknown="ignore")),
-        ]
+            ('imputer', SimpleImputer(strategy='most_frequent')),
+            ('onehot', OneHotEncoder(handle_unknown='ignore')),
+        ],
     )
     return ColumnTransformer(
         [
-            ("numeric", numeric, numeric_features),
-            ("categorical", categorical, categorical_features),
-        ]
+            ('numeric', numeric, numeric_features),
+            ('categorical', categorical, categorical_features),
+        ],
     )
 
 
 def build_models(
-    *, numeric_features: list[str], categorical_features: list[str]
+    *, numeric_features: list[str], categorical_features: list[str],
 ) -> dict[str, Pipeline]:
     return {
-        "logistic_regression": Pipeline(
+        'logistic_regression': Pipeline(
             [
                 (
-                    "preprocess",
+                    'preprocess',
                     preprocessor(
                         numeric_features=numeric_features,
                         categorical_features=categorical_features,
                         scale_numeric=True,
                     ),
                 ),
-                ("model", LogisticRegression(max_iter=1000)),
-            ]
+                ('model', LogisticRegression(max_iter=1000)),
+            ],
         ),
-        "hist_gradient_boosting": Pipeline(
+        'hist_gradient_boosting': Pipeline(
             [
                 (
-                    "preprocess",
+                    'preprocess',
                     preprocessor(
                         numeric_features=numeric_features,
                         categorical_features=categorical_features,
@@ -640,12 +641,12 @@ def build_models(
                     ),
                 ),
                 (
-                    "model",
+                    'model',
                     HistGradientBoostingClassifier(
-                        max_iter=250, learning_rate=0.05, random_state=42
+                        max_iter=250, learning_rate=0.05, random_state=42,
                     ),
                 ),
-            ]
+            ],
         ),
     }
 
@@ -658,15 +659,15 @@ def metrics_for(
     categorical_features: list[str],
 ) -> dict[str, float]:
     features = frame[numeric_features + categorical_features]
-    target = frame["target"]
+    target = frame['target']
     probabilities = model.predict_proba(features)[:, 1]
     predictions = probabilities >= 0.5
     return {
-        "rows": int(len(frame)),
-        "log_loss": float(log_loss(target, probabilities)),
-        "roc_auc": float(roc_auc_score(target, probabilities)),
-        "brier_score": float(brier_score_loss(target, probabilities)),
-        "accuracy": float(accuracy_score(target, predictions)),
+        'rows': len(frame),
+        'log_loss': float(log_loss(target, probabilities)),
+        'roc_auc': float(roc_auc_score(target, probabilities)),
+        'brier_score': float(brier_score_loss(target, probabilities)),
+        'accuracy': float(accuracy_score(target, predictions)),
     }
 
 
@@ -691,7 +692,7 @@ def register_model(
                 WHERE target_id = %(target_id)s
                   AND model_name = %(model_name)s;
                 """,
-                {"target_id": target_id, "model_name": model_name},
+                {'target_id': target_id, 'model_name': model_name},
             )
         cur.execute(
             """
@@ -710,14 +711,14 @@ def register_model(
                 is_active = EXCLUDED.is_active;
             """,
             {
-                "target_id": target_id,
-                "model_name": model_name,
-                "model_family": model_family,
-                "version": version,
-                "artifact_uri": str(artifact_path.relative_to(ROOT)),
-                "feature_spec": json.dumps(feature_spec),
-                "metrics": json.dumps(metrics),
-                "activate": activate,
+                'target_id': target_id,
+                'model_name': model_name,
+                'model_family': model_family,
+                'version': version,
+                'artifact_uri': str(artifact_path.relative_to(ROOT)),
+                'feature_spec': json.dumps(feature_spec),
+                'metrics': json.dumps(metrics),
+                'activate': activate,
             },
         )
     conn.commit()
@@ -728,21 +729,21 @@ def train(args: argparse.Namespace) -> None:
     conn = psycopg2.connect(**database_kwargs())
     engine = create_engine(database_url())
     try:
-        if args.target_id == "game_home_win":
-            if args.feature_set == "advanced":
+        if args.target_id == 'game_home_win':
+            if args.feature_set == 'advanced':
                 numeric_features = GAME_ADVANCED_NUMERIC_FEATURES
                 categorical_features = GAME_ADVANCED_CATEGORICAL_FEATURES
-            elif args.feature_set == "enriched":
+            elif args.feature_set == 'enriched':
                 numeric_features = GAME_ENRICHED_NUMERIC_FEATURES
                 categorical_features = GAME_ENRICHED_CATEGORICAL_FEATURES
             else:
                 numeric_features = GAME_NUMERIC_FEATURES
                 categorical_features = GAME_CATEGORICAL_FEATURES
         elif args.target_id in PA_TARGETS:
-            if args.feature_set == "advanced":
+            if args.feature_set == 'advanced':
                 numeric_features = PA_ADVANCED_NUMERIC_FEATURES
                 categorical_features = PA_ADVANCED_CATEGORICAL_FEATURES
-            elif args.feature_set == "enriched":
+            elif args.feature_set == 'enriched':
                 numeric_features = PA_ENRICHED_NUMERIC_FEATURES
                 categorical_features = PA_ENRICHED_CATEGORICAL_FEATURES
             else:
@@ -753,7 +754,7 @@ def train(args: argparse.Namespace) -> None:
             numeric_features = HI_NUMERIC_FEATURES
             categorical_features = HI_CATEGORICAL_FEATURES
         else:
-            raise ValueError(f"Unknown target_id: {args.target_id}")
+            raise ValueError(f'Unknown target_id: {args.target_id}')
 
         frame = load_examples(
             engine,
@@ -765,49 +766,49 @@ def train(args: argparse.Namespace) -> None:
         )
         if frame.empty:
             raise SystemExit(
-                f"No training rows returned for {args.target_id}. Check the feature table and season filters."
+                f'No training rows returned for {args.target_id}. Check the feature table and season filters.',
             )
 
-        train_frame = frame[frame["season"] <= args.train_through].copy()
-        validation_frame = frame[frame["season"] > args.train_through].copy()
+        train_frame = frame[frame['season'] <= args.train_through].copy()
+        validation_frame = frame[frame['season'] > args.train_through].copy()
         if train_frame.empty or validation_frame.empty:
             raise SystemExit(
-                "Need both training and validation rows. Adjust --train-through or season range."
+                'Need both training and validation rows. Adjust --train-through or season range.',
             )
 
-        version = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        version = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
         feature_spec = {
-            "numeric_features": numeric_features,
-            "categorical_features": categorical_features,
-            "target": "target",
-            "feature_set": args.feature_set,
+            'numeric_features': numeric_features,
+            'categorical_features': categorical_features,
+            'target': 'target',
+            'feature_set': args.feature_set,
         }
         for model_name, model in build_models(
-            numeric_features=numeric_features, categorical_features=categorical_features
+            numeric_features=numeric_features, categorical_features=categorical_features,
         ).items():
             model.fit(
                 train_frame[numeric_features + categorical_features],
-                train_frame["target"],
+                train_frame['target'],
             )
             metrics = {
-                "train": metrics_for(
+                'train': metrics_for(
                     model,
                     train_frame,
                     numeric_features=numeric_features,
                     categorical_features=categorical_features,
                 ),
-                "validation": metrics_for(
+                'validation': metrics_for(
                     model,
                     validation_frame,
                     numeric_features=numeric_features,
                     categorical_features=categorical_features,
                 ),
-                "sample_rate": args.sample_rate,
-                "min_season": args.min_season,
-                "max_season": args.max_season,
-                "train_through": args.train_through,
+                'sample_rate': args.sample_rate,
+                'min_season': args.min_season,
+                'max_season': args.max_season,
+                'train_through': args.train_through,
             }
-            artifact_path = MODEL_DIR / f"{args.target_id}_{model_name}_{version}.joblib"
+            artifact_path = MODEL_DIR / f'{args.target_id}_{model_name}_{version}.joblib'
             joblib.dump(model, artifact_path)
             register_model(
                 conn,
@@ -821,7 +822,7 @@ def train(args: argparse.Namespace) -> None:
                 activate=not args.no_activate,
             )
             print(f"trained {model_name}: {json.dumps(metrics['validation'], sort_keys=True)}")
-            print(f"artifact: {artifact_path}")
+            print(f'artifact: {artifact_path}')
     finally:
         engine.dispose()
         conn.close()
@@ -829,32 +830,32 @@ def train(args: argparse.Namespace) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Train warehouse-backed Retrosheet prediction models."
+        description='Train warehouse-backed Retrosheet prediction models.',
     )
-    parser.add_argument("--target-id", required=True, help="Target to train model for")
-    parser.add_argument("--min-season", type=int, default=2000)
-    parser.add_argument("--max-season", type=int, default=2025)
-    parser.add_argument("--train-through", type=int, default=2022)
+    parser.add_argument('--target-id', required=True, help='Target to train model for')
+    parser.add_argument('--min-season', type=int, default=2000)
+    parser.add_argument('--max-season', type=int, default=2025)
+    parser.add_argument('--train-through', type=int, default=2022)
     parser.add_argument(
-        "--sample-rate",
+        '--sample-rate',
         type=float,
         default=0.10,
-        help="Deterministic row sample from 0.0 to 1.0.",
+        help='Deterministic row sample from 0.0 to 1.0.',
     )
     parser.add_argument(
-        "--feature-set",
-        choices=["basic", "enriched", "advanced"],
-        default="enriched",
-        help="Use basic state features, enriched prior-season marts, or advanced career/park/form marts.",
+        '--feature-set',
+        choices=['basic', 'enriched', 'advanced'],
+        default='enriched',
+        help='Use basic state features, enriched prior-season marts, or advanced career/park/form marts.',
     )
     parser.add_argument(
-        "--no-activate",
-        action="store_true",
-        help="Register model metrics without marking the new version active.",
+        '--no-activate',
+        action='store_true',
+        help='Register model metrics without marking the new version active.',
     )
     args = parser.parse_args()
     train(args)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

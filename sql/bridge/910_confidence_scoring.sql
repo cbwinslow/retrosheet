@@ -1,16 +1,7 @@
--- Confidence Scoring Framework for Bridge Tables
--- Adds confidence scores to track mapping quality and reliability
-
--- Confidence Score Levels:
--- 1.0 - Direct mapping from authoritative source (Chadwick Register, MLB API)
--- 0.9 - High-confidence cross-reference (name + ID match)
--- 0.8 - Medium-confidence cross-reference (ID match only)
--- 0.7 - Low-confidence cross-reference (name match only)
--- 0.5 - Fuzzy match (similar names, approximate dates)
--- 0.3 - Placeholder or inferred mapping
--- 0.1 - Unverified or uncertain mapping
-
--- Add confidence_score column to bridge.player_xref
+-- File: sql/bridge/910_confidence_scoring.sql
+-- Purpose: Add confidence scoring columns and views to all bridge mapping tables
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 ALTER TABLE bridge.player_xref
 ADD COLUMN IF NOT EXISTS confidence_score NUMERIC(3, 2) DEFAULT 0.8,
 ADD COLUMN IF NOT EXISTS confidence_source TEXT DEFAULT 'chadwick_register';
@@ -176,3 +167,4 @@ GROUP BY table_name, confidence_source
 ORDER BY table_name ASC, avg_confidence DESC;
 
 COMMENT ON VIEW bridge.confidence_summary_by_source IS 'Summary statistics of confidence scores by table and source';
+

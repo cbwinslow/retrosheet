@@ -1,6 +1,7 @@
--- Phase 2 Feature Mart: Umpire Strike Zone Tendency Features
--- Umpire specific strike zone characteristics and consistency metrics
-
+-- File: sql/features/040_umpire_features.sql
+-- Purpose: Create umpire strike zone features materialized view
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE MATERIALIZED VIEW features.umpire_strike_zone_features AS
 WITH umpire_stats AS (
     SELECT
@@ -58,3 +59,4 @@ CREATE UNIQUE INDEX idx_umpire_features_season ON features.umpire_strike_zone_fe
 CREATE INDEX idx_umpire_features_season ON features.umpire_strike_zone_features (feature_season);
 
 ANALYZE features.umpire_strike_zone_features;
+

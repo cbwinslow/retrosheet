@@ -1,3 +1,7 @@
+-- File: sql/external/212_fangraphs_raw.sql
+-- Purpose: Create Fangraphs raw tables for player and team season statistics
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 d-- =============================================================================
 -- Fangraphs Player & Team Raw Tables
 -- =============================================================================
@@ -52,3 +56,7 @@ CREATE TABLE IF NOT EXISTS raw_fangraphs.team_season (
     war              REAL,
     PRIMARY KEY (team_id, season)
 );
+
+-- Table comments
+COMMENT ON TABLE raw_fangraphs.player_season IS 'Fangraphs player season statistics';
+COMMENT ON TABLE raw_fangraphs.team_season IS 'Fangraphs team season statistics';

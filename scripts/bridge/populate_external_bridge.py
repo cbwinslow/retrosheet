@@ -13,22 +13,22 @@ import psycopg2
 from dotenv import load_dotenv
 from psycopg2 import Error
 
+
 _ = load_dotenv()
 
 
 def get_db_connection():
     """Get PostgreSQL connection from environment variables."""
-    db_url = os.getenv("DATABASE_URL")
+    db_url = os.getenv('DATABASE_URL')
     if db_url:
         return psycopg2.connect(db_url)
-    else:
-        return psycopg2.connect(
-            host=os.getenv("PGHOST", "localhost"),
-            port=os.getenv("PGPORT", "5432"),
-            database=os.getenv("PGDATABASE", "retrosheet"),
-            user=os.getenv("PGUSER", os.getenv("USER")),
-            password=os.getenv("PGPASSWORD"),
-        )
+    return psycopg2.connect(
+        host=os.getenv('PGHOST', 'localhost'),
+        port=os.getenv('PGPORT', '5432'),
+        database=os.getenv('PGDATABASE', 'retrosheet'),
+        user=os.getenv('PGUSER', os.getenv('USER')),
+        password=os.getenv('PGPASSWORD'),
+    )
 
 
 def populate_statcast_player_xref():
@@ -58,7 +58,7 @@ def populate_statcast_player_xref():
 
             batter_count = cur.rowcount
             conn.commit()
-            print(f"Populated {batter_count} Statcast batters in bridge.external_player_xref")
+            print(f'Populated {batter_count} Statcast batters in bridge.external_player_xref')
 
             # Map Statcast pitcher IDs to Retrosheet IDs via bridge.player_xref
             cur.execute("""
@@ -82,11 +82,11 @@ def populate_statcast_player_xref():
 
             pitcher_count = cur.rowcount
             conn.commit()
-            print(f"Populated {pitcher_count} Statcast pitchers in bridge.external_player_xref")
+            print(f'Populated {pitcher_count} Statcast pitchers in bridge.external_player_xref')
 
             return batter_count + pitcher_count
     except Error as e:
-        print(f"Error populating statcast_player_xref: {e}")
+        print(f'Error populating statcast_player_xref: {e}')
         conn.rollback()
         return 0
     finally:
@@ -117,11 +117,11 @@ def populate_bref_player_xref():
             bref_count = cur.rowcount
             conn.commit()
             print(
-                f"Populated {bref_count} Baseball Reference players in bridge.external_player_xref"
+                f'Populated {bref_count} Baseball Reference players in bridge.external_player_xref',
             )
             return bref_count
     except Error as e:
-        print(f"Error populating bref_player_xref: {e}")
+        print(f'Error populating bref_player_xref: {e}')
         conn.rollback()
         return 0
     finally:
@@ -149,10 +149,10 @@ def populate_lahman_player_xref():
 
             lahman_count = cur.rowcount
             conn.commit()
-            print(f"Populated {lahman_count} Lahman players in bridge.external_player_xref")
+            print(f'Populated {lahman_count} Lahman players in bridge.external_player_xref')
             return lahman_count
     except Error as e:
-        print(f"Error populating lahman_player_xref: {e}")
+        print(f'Error populating lahman_player_xref: {e}')
         conn.rollback()
         return 0
     finally:
@@ -160,18 +160,18 @@ def populate_lahman_player_xref():
 
 
 def main():
-    print("Populating external bridge tables...")
+    print('Populating external bridge tables...')
 
     statcast_count = populate_statcast_player_xref()
     bref_count = populate_bref_player_xref()
     lahman_count = populate_lahman_player_xref()
 
-    print("\nSummary:")
-    print(f"  Statcast players: {statcast_count}")
-    print(f"  Baseball Reference players: {bref_count}")
-    print(f"  Lahman players: {lahman_count}")
-    print(f"  Total: {statcast_count + bref_count + lahman_count}")
+    print('\nSummary:')
+    print(f'  Statcast players: {statcast_count}')
+    print(f'  Baseball Reference players: {bref_count}')
+    print(f'  Lahman players: {lahman_count}')
+    print(f'  Total: {statcast_count + bref_count + lahman_count}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

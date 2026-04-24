@@ -1,9 +1,7 @@
--- Database Optimization: Indexes, Constraints, and Performance Improvements
-
--- 1. OPTIMIZE DATA TYPES (keeping text dates as requested)
--- Add season as integer for better indexing where appropriate
-
--- Add season as integer for better indexing (live_games already has text dates)
+-- File: sql/optimization/140_database_optimization.sql
+-- Purpose: Database optimization functions, indexes, and views
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 ALTER TABLE core.live_games ADD COLUMN IF NOT EXISTS season_int integer;
 UPDATE core.live_games SET season_int = season::integer
 WHERE season_int IS NULL AND season IS NOT NULL;
@@ -361,3 +359,7 @@ BEGIN
     END LOOP;
 END;
 $$;
+
+-- Table comments
+COMMENT ON TABLE core.events_y2024 IS 'events y2024 data table';
+COMMENT ON TABLE core.events_y2025 IS 'events y2025 data table';

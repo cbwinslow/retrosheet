@@ -1,3 +1,7 @@
+-- File: sql/core/077_pitch_sequence_model.sql
+-- Purpose: Create pitch sequence model tables, views, and Markov state features
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS features;
 
 DROP VIEW IF EXISTS features.pitch_sequence_validation_summary;
@@ -190,3 +194,4 @@ SELECT
     round(avg((is_terminal_pitch_symbol)::integer)::numeric, 4) AS terminal_pitch_symbol_share,
     count(*) FILTER (WHERE symbol_group = 'unknown_symbol') AS unknown_symbol_rows
 FROM features.pitch_sequence_examples;
+

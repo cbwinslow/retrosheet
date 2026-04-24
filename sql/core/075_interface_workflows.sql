@@ -1,3 +1,7 @@
+-- File: sql/core/075_interface_workflows.sql
+-- Purpose: Create interface workflow tables, views, and chatbot context schema
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS predictions;
 CREATE SCHEMA IF NOT EXISTS chat;
 
@@ -48,3 +52,6 @@ ON chat.query_logs (asked_at DESC);
 
 CREATE INDEX IF NOT EXISTS query_logs_intent_gin_idx
 ON chat.query_logs USING gin (parsed_intent);
+
+-- Table comments
+COMMENT ON TABLE predictions.simulation_runs IS 'simulation runs data table';

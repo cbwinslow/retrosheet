@@ -1,3 +1,7 @@
+-- File: sql/core/070_temporal_and_production_marts.sql
+-- Purpose: Create team schedule context, player/pitcher production, temporal views
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS features;
 
 DROP VIEW IF EXISTS features.plate_appearance_temporal_examples CASCADE;
@@ -290,3 +294,4 @@ SELECT
     count(*)
 FROM features.plate_appearance_temporal_examples
 WHERE season = 2025;
+

@@ -1,32 +1,7 @@
--- ============================================================================
--- PITCH-LEVEL FLEXIBLE FEATURE MART SCHEMA
--- ============================================================================
--- CRISP-DM Phase: Data Preparation (Phase 3)
--- Epic: #78 - Pitch-Level Model Pipeline
--- Sub-Issue: #78.1 - Flexible Feature Mart Schema Design
--- 
--- DESIGN PRINCIPLE: "All fields available, selective inclusion"
--- 
--- Rather than creating separate tables for each model, we create a normalized
--- schema where:
---   - All raw fields are preserved in base_features
---   - Feature metadata lives in feature_registry (enabling dynamic selection)
---   - Derived features are in separate tables (joined as needed)
---   - Each model queries exactly the fields it needs via metadata-driven SQL
---
--- This enables:
---   - Complete data lineage and reproducibility
---   - Flexible feature engineering without migrations
---   - Metadata-driven model training queries
---   - Multiple model families sharing the same base data
--- ============================================================================
-
--- =============================================================================
--- 1. BASE FEATURES TABLE - Preserves ALL 118 Statcast fields
--- =============================================================================
--- This table mirrors features_pitch.locations but adds versioning and 
--- metadata for reproducibility. ALL 118 fields from Statcast are preserved.
-
+-- File: sql/features/003_pitch_flexible_mart.sql
+-- Purpose: Create flexible feature mart schema for pitch-level data
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE TABLE IF NOT EXISTS features_pitch.base_features (
     -- ========================================================================
     -- IDENTITY & LINKAGE
@@ -1191,3 +1166,4 @@ Enables sequence-level analysis and sequence outcome prediction.';
 -- ============================================================================
 -- END OF SCHEMA
 -- ============================================================================
+

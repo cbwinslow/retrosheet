@@ -1,6 +1,7 @@
--- Phase 1 Feature Mart: Pitcher Arsenal Features
--- Statcast derived pitcher metrics: arsenal mix, velocity, spin rate, fatigue indicators
-
+-- File: sql/features/010_pitcher_arsenal_features.sql
+-- Purpose: Create pitcher arsenal features materialized view
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE MATERIALIZED VIEW features.pitcher_arsenal_features AS
 WITH pitch_stats AS (
     SELECT
@@ -59,3 +60,4 @@ CREATE UNIQUE INDEX idx_pitcher_arsenal_season ON features.pitcher_arsenal_featu
 CREATE INDEX idx_pitcher_arsenal_season_feature ON features.pitcher_arsenal_features (feature_season);
 
 ANALYZE features.pitcher_arsenal_features;
+

@@ -9,43 +9,43 @@ import subprocess
 import time
 from pathlib import Path
 
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def run_command(cmd: str, description: str) -> bool:
     """Run a command and return success status."""
-    print(f"🔄 {description}")
+    print(f'🔄 {description}')
     try:
         result = subprocess.run(cmd, shell=True, cwd=ROOT, capture_output=True, text=True)
         if result.returncode == 0:
-            print(f"✅ {description} completed")
+            print(f'✅ {description} completed')
             return True
-        else:
-            print(f"❌ {description} failed: {result.stderr}")
-            return False
+        print(f'❌ {description} failed: {result.stderr}')
+        return False
     except Exception as e:
-        print(f"❌ {description} error: {e}")
+        print(f'❌ {description} error: {e}')
         return False
 
 
 def download_season_data(season: int) -> bool:
     """Download both schedules and game feeds for a season."""
     print(f"\n{'=' * 60}")
-    print(f"🏏 Processing MLB {season} Season")
+    print(f'🏏 Processing MLB {season} Season')
     print(f"{'=' * 60}")
 
     # Download schedules
     success = run_command(
-        f"python3 scripts/download_mlb_bulk.py --start-season {season} --end-season {season} --mode schedules --workers 8 --delay 0.5",
-        f"Download {season} schedules",
+        f'python3 scripts/download_mlb_bulk.py --start-season {season} --end-season {season} --mode schedules --workers 8 --delay 0.5',
+        f'Download {season} schedules',
     )
     if not success:
         return False
 
     # Download game feeds
     success = run_command(
-        f"python3 scripts/download_mlb_bulk.py --start-season {season} --end-season {season} --mode games --workers 8 --delay 0.5",
-        f"Download {season} game feeds",
+        f'python3 scripts/download_mlb_bulk.py --start-season {season} --end-season {season} --mode games --workers 8 --delay 0.5',
+        f'Download {season} game feeds',
     )
     if not success:
         return False
@@ -55,7 +55,7 @@ def download_season_data(season: int) -> bool:
 
 def transform_season_data(season: int) -> bool:
     """Transform all downloaded game feeds for a season."""
-    print(f"\n🔄 Transforming {season} season data...")
+    print(f'\n🔄 Transforming {season} season data...')
 
     # Get untransformed game PKs for the season
     cmd = f"""
@@ -73,16 +73,16 @@ def transform_season_data(season: int) -> bool:
     try:
         result = subprocess.run(cmd, shell=True, cwd=ROOT, capture_output=True, text=True)
         if result.returncode != 0:
-            print(f"❌ Failed to get game PKs for {season}: {result.stderr}")
+            print(f'❌ Failed to get game PKs for {season}: {result.stderr}')
             return False
 
-        game_pks = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
+        game_pks = [line.strip() for line in result.stdout.strip().split('\n') if line.strip()]
 
         if not game_pks:
-            print(f"✅ No games to transform for {season}")
+            print(f'✅ No games to transform for {season}')
             return True
 
-        print(f"📊 Found {len(game_pks)} games to transform for {season}")
+        print(f'📊 Found {len(game_pks)} games to transform for {season}')
 
         # Transform in batches of 10
         batch_size = 10
@@ -91,21 +91,21 @@ def transform_season_data(season: int) -> bool:
         for i in range(0, len(game_pks), batch_size):
             batch = game_pks[i : i + batch_size]
             print(
-                f"   Transforming batch {i // batch_size + 1}/{(len(game_pks) + batch_size - 1) // batch_size}"
+                f'   Transforming batch {i // batch_size + 1}/{(len(game_pks) + batch_size - 1) // batch_size}',
             )
 
             for pk in batch:
                 if run_command(
-                    f"python3 scripts/transform_live_game.py --game-pk {pk}",
-                    f"Transform game {pk}",
+                    f'python3 scripts/transform_live_game.py --game-pk {pk}',
+                    f'Transform game {pk}',
                 ):
                     transformed += 1
 
-        print(f"✅ Transformed {transformed}/{len(game_pks)} games for {season}")
+        print(f'✅ Transformed {transformed}/{len(game_pks)} games for {season}')
         return True
 
     except Exception as e:
-        print(f"❌ Error transforming {season}: {e}")
+        print(f'❌ Error transforming {season}: {e}')
         return False
 
 
@@ -128,40 +128,40 @@ def get_missing_seasons() -> list[int]:
     try:
         result = subprocess.run(cmd, shell=True, cwd=ROOT, capture_output=True, text=True)
         existing_seasons = [
-            int(line.strip()) for line in result.stdout.strip().split("\n") if line.strip()
+            int(line.strip()) for line in result.stdout.strip().split('\n') if line.strip()
         ]
 
         missing_seasons = [s for s in target_seasons if s not in existing_seasons]
         return missing_seasons
 
     except Exception as e:
-        print(f"❌ Error getting missing seasons: {e}")
+        print(f'❌ Error getting missing seasons: {e}')
         return target_seasons  # Assume all missing if error
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Comprehensive MLB data ingestion")
+    parser = argparse.ArgumentParser(description='Comprehensive MLB data ingestion')
     parser.add_argument(
-        "--seasons",
-        nargs="*",
+        '--seasons',
+        nargs='*',
         type=int,
-        help="Specific seasons to process (default: missing seasons)",
+        help='Specific seasons to process (default: missing seasons)',
     )
     parser.add_argument(
-        "--download-only",
-        action="store_true",
+        '--download-only',
+        action='store_true',
         help="Only download data, don't transform",
     )
     parser.add_argument(
-        "--transform-only", action="store_true", help="Only transform existing data"
+        '--transform-only', action='store_true', help='Only transform existing data',
     )
-    parser.add_argument("--workers", type=int, default=8, help="Number of parallel workers")
-    parser.add_argument("--delay", type=float, default=0.5, help="Delay between requests")
+    parser.add_argument('--workers', type=int, default=8, help='Number of parallel workers')
+    parser.add_argument('--delay', type=float, default=0.5, help='Delay between requests')
 
     args = parser.parse_args()
 
-    print("🚀 MLB Historical Data Ingestion")
-    print("=" * 50)
+    print('🚀 MLB Historical Data Ingestion')
+    print('=' * 50)
 
     if args.seasons:
         seasons_to_process = args.seasons
@@ -169,35 +169,35 @@ def main():
         seasons_to_process = get_missing_seasons()
 
     if not seasons_to_process:
-        print("✅ All seasons appear to have data. Use --seasons to specify specific seasons.")
+        print('✅ All seasons appear to have data. Use --seasons to specify specific seasons.')
         return
 
-    print(f"📅 Seasons to process: {seasons_to_process}")
+    print(f'📅 Seasons to process: {seasons_to_process}')
 
     total_seasons = len(seasons_to_process)
     completed_seasons = 0
 
     for season in seasons_to_process:
-        print(f"\n🎯 Processing season {season} ({completed_seasons + 1}/{total_seasons})")
+        print(f'\n🎯 Processing season {season} ({completed_seasons + 1}/{total_seasons})')
 
         if not args.transform_only:
             if not download_season_data(season):
-                print(f"❌ Failed to download {season} data")
+                print(f'❌ Failed to download {season} data')
                 continue
 
         if not args.download_only:
             if not transform_season_data(season):
-                print(f"❌ Failed to transform {season} data")
+                print(f'❌ Failed to transform {season} data')
                 continue
 
         completed_seasons += 1
-        print(f"✅ Season {season} completed")
+        print(f'✅ Season {season} completed')
 
         # Brief pause between seasons
         if season != seasons_to_process[-1]:
             time.sleep(5)
 
-    print(f"\n🎉 Completed {completed_seasons}/{total_seasons} seasons")
+    print(f'\n🎉 Completed {completed_seasons}/{total_seasons} seasons')
 
     # Final summary
     run_command(
@@ -210,9 +210,9 @@ def main():
             (SELECT COUNT(*) FROM core.live_events) as live_events
         "
         """,
-        "Final data summary",
+        'Final data summary',
     )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

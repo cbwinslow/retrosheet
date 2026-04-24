@@ -16,7 +16,8 @@ from datetime import datetime
 import psycopg2
 import requests
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
+
+DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://localhost/retrosheet')
 
 
 def get_conn():
@@ -25,23 +26,23 @@ def get_conn():
 
 def fetch_weather(date: str, venue_id: str):
     # NOAA API endpoint (example – replace with actual public endpoint if needed)
-    base_url = "https://www.ncei.noaa.gov/access/services/data/v1"
+    base_url = 'https://www.ncei.noaa.gov/access/services/data/v1'
     params = {
-        "dataset": "daily-summaries",
-        "stations": venue_id,
-        "startDate": date,
-        "endDate": date,
-        "format": "json",
-        "units": "metric",
+        'dataset': 'daily-summaries',
+        'stations': venue_id,
+        'startDate': date,
+        'endDate': date,
+        'format': 'json',
+        'units': 'metric',
     }
     resp = requests.get(base_url, params=params, timeout=30)
     if resp.status_code != 200:
-        print(f"❌ NOAA request failed: {resp.status_code}", file=sys.stderr)
+        print(f'❌ NOAA request failed: {resp.status_code}', file=sys.stderr)
         sys.exit(1)
 
     data = resp.json()
     if not data:
-        print("⚠️  No weather data returned", file=sys.stderr)
+        print('⚠️  No weather data returned', file=sys.stderr)
         return
 
     record = data[0]
@@ -64,36 +65,36 @@ def fetch_weather(date: str, venue_id: str):
                 (
                     date,
                     venue_id,
-                    float(record.get("TMP") or 0),
-                    float(record.get("WDF2") or 0),
-                    float(record.get("PRCP") or 0),
+                    float(record.get('TMP') or 0),
+                    float(record.get('WDF2') or 0),
+                    float(record.get('PRCP') or 0),
                 ),
             )
         conn.commit()
-        print(f"✅ Stored weather for {venue_id} on {date}")
+        print(f'✅ Stored weather for {venue_id} on {date}')
     finally:
         conn.close()
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Fetch NOAA weather")
-    parser.add_argument("--date", type=str, required=True, help="Observation date (YYYY‑MM‑DD)")
+    parser = argparse.ArgumentParser(description='Fetch NOAA weather')
+    parser.add_argument('--date', type=str, required=True, help='Observation date (YYYY‑MM‑DD)')
     parser.add_argument(
-        "--venue-id",
+        '--venue-id',
         type=str,
         required=True,
-        help="Venue/station identifier (e.g., SFG for San Francisco)",
+        help='Venue/station identifier (e.g., SFG for San Francisco)',
     )
     args = parser.parse_args()
     # Validate date
     try:
-        datetime.strptime(args.date, "%Y-%m-%d")
+        datetime.strptime(args.date, '%Y-%m-%d')
     except ValueError:
-        print("❌ Invalid date format", file=sys.stderr)
+        print('❌ Invalid date format', file=sys.stderr)
         sys.exit(1)
 
     fetch_weather(args.date, args.venue_id)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

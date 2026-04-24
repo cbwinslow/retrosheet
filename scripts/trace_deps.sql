@@ -1,7 +1,7 @@
--- trace_deps.sql
--- Utility script to list objects that depend on a given relation (table, view, materialized view).
--- Usage: psql -v ON_ERROR_STOP=1 -d retrosheet -f scripts/trace_deps.sql -v target='features.game_outcome_examples'
-
+-- File: scripts/trace_deps.sql
+-- Purpose: List database objects that depend on a given relation
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 \set ON_ERROR_STOP on
 
 -- Resolve the target relation OID
@@ -28,3 +28,4 @@ WHERE d.objid = (SELECT oid FROM target_oid)
 ORDER BY object_type, schema, object_name;
 
 -- End of script
+

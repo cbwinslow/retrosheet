@@ -9,11 +9,11 @@ import psycopg2
 
 def database_kwargs() -> dict[str, str]:
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
@@ -23,14 +23,14 @@ def print_table(headers: Sequence[str], rows: Sequence[Sequence[object]]) -> Non
         for index, value in enumerate(row):
             widths[index] = max(widths[index], len(str(value)))
 
-    header_line = " | ".join(
+    header_line = ' | '.join(
         str(header).ljust(widths[index]) for index, header in enumerate(headers)
     )
-    divider = "-+-".join("-" * width for width in widths)
+    divider = '-+-'.join('-' * width for width in widths)
     print(header_line)
     print(divider)
     for row in rows:
-        print(" | ".join(str(value).ljust(widths[index]) for index, value in enumerate(row)))
+        print(' | '.join(str(value).ljust(widths[index]) for index, value in enumerate(row)))
 
 
 def main() -> None:
@@ -47,7 +47,7 @@ def main() -> None:
                     (SELECT COUNT(*) FROM raw_mlb.reference_snapshots),
                     (SELECT COUNT(*) FROM core.live_games),
                     (SELECT COUNT(*) FROM core.live_events)
-                """
+                """,
             )
             totals = cur.fetchone()
 
@@ -61,7 +61,7 @@ def main() -> None:
                 WHERE COALESCE(season, EXTRACT(YEAR FROM game_date)::integer) BETWEEN 2000 AND 2025
                 GROUP BY 1
                 ORDER BY 1
-                """
+                """,
             )
             live_feed_by_season = cur.fetchall()
 
@@ -74,44 +74,44 @@ def main() -> None:
                 FROM raw_mlb.reference_snapshots
                 GROUP BY 1
                 ORDER BY 1
-                """
+                """,
             )
             reference_by_family = cur.fetchall()
     finally:
         conn.close()
 
-    print("Raw MLB Backfill Status")
-    print("")
+    print('Raw MLB Backfill Status')
+    print('')
     print_table(
         (
-            "metric",
-            "value",
+            'metric',
+            'value',
         ),
         (
-            ("schedule_snapshots", totals[0]),
-            ("schedule_snapshots_http_200", totals[1]),
-            ("live_feed_snapshots", totals[2]),
-            ("live_feed_snapshots_http_200", totals[3]),
-            ("reference_snapshots", totals[4]),
-            ("core.live_games", totals[5]),
-            ("core.live_events", totals[6]),
+            ('schedule_snapshots', totals[0]),
+            ('schedule_snapshots_http_200', totals[1]),
+            ('live_feed_snapshots', totals[2]),
+            ('live_feed_snapshots_http_200', totals[3]),
+            ('reference_snapshots', totals[4]),
+            ('core.live_games', totals[5]),
+            ('core.live_events', totals[6]),
         ),
     )
 
-    print("")
-    print("Live Feed Coverage By Season")
+    print('')
+    print('Live Feed Coverage By Season')
     print_table(
-        ("season", "total_snapshots", "successful_snapshots"),
+        ('season', 'total_snapshots', 'successful_snapshots'),
         [(season, total, successful) for season, total, successful in live_feed_by_season],
     )
 
-    print("")
-    print("Reference Snapshot Coverage")
+    print('')
+    print('Reference Snapshot Coverage')
     print_table(
-        ("endpoint_family", "snapshot_count", "distinct_seasons"),
+        ('endpoint_family', 'snapshot_count', 'distinct_seasons'),
         [(family, count, season_count) for family, count, season_count in reference_by_family],
     )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

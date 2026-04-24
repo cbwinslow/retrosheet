@@ -12,22 +12,22 @@ import psycopg2
 from dotenv import load_dotenv
 from psycopg2 import Error
 
+
 load_dotenv()
 
 
 def get_db_connection():
     """Get PostgreSQL connection from environment variables."""
-    db_url = os.getenv("DATABASE_URL")
+    db_url = os.getenv('DATABASE_URL')
     if db_url:
         return psycopg2.connect(db_url)
-    else:
-        return psycopg2.connect(
-            host=os.getenv("PGHOST", "localhost"),
-            port=os.getenv("PGPORT", "5432"),
-            database=os.getenv("PGDATABASE", "retrosheet"),
-            user=os.getenv("PGUSER", os.getenv("USER")),
-            password=os.getenv("PGPASSWORD"),
-        )
+    return psycopg2.connect(
+        host=os.getenv('PGHOST', 'localhost'),
+        port=os.getenv('PGPORT', '5432'),
+        database=os.getenv('PGDATABASE', 'retrosheet'),
+        user=os.getenv('PGUSER', os.getenv('USER')),
+        password=os.getenv('PGPASSWORD'),
+    )
 
 
 def populate_game_xref():
@@ -95,7 +95,7 @@ def populate_game_xref():
 
             matched_count = cur.rowcount
             conn.commit()
-            print(f"Matched and inserted {matched_count} games in bridge.game_xref")
+            print(f'Matched and inserted {matched_count} games in bridge.game_xref')
 
             # Check for unmatched games
             cur.execute("""
@@ -108,7 +108,7 @@ def populate_game_xref():
                 )
             """)
             unmatched_mlb = cur.fetchone()[0]
-            print(f"Unmatched MLB games: {unmatched_mlb}")
+            print(f'Unmatched MLB games: {unmatched_mlb}')
 
             cur.execute("""
                 SELECT COUNT(*) 
@@ -120,12 +120,12 @@ def populate_game_xref():
             """)
             result = cur.fetchone()
             unmatched_retrosheet = result[0] if result else 0
-            print(f"Unmatched Retrosheet games (2026+): {unmatched_retrosheet}")
+            print(f'Unmatched Retrosheet games (2026+): {unmatched_retrosheet}')
 
             return matched_count
 
     except Error as e:
-        print(f"Error populating game_xref: {e}")
+        print(f'Error populating game_xref: {e}')
         conn.rollback()
         return 0
     finally:
@@ -133,10 +133,10 @@ def populate_game_xref():
 
 
 def main():
-    print("Populating bridge.game_xref...")
+    print('Populating bridge.game_xref...')
     count = populate_game_xref()
-    print(f"\nTotal games matched: {count}")
+    print(f'\nTotal games matched: {count}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

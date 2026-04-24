@@ -1,9 +1,7 @@
--- =============================================================================
--- NOAA Weather Data Raw Table
--- =============================================================================
--- Daily weather observations for each venue (temperature, wind, precipitation).
--- =============================================================================
-
+-- File: sql/external/215_weather_raw.sql
+-- Purpose: Create weather raw table for daily conditions by venue
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS raw_weather;
 
 CREATE TABLE IF NOT EXISTS raw_weather.daily (
@@ -14,3 +12,6 @@ CREATE TABLE IF NOT EXISTS raw_weather.daily (
     precipitation_mm REAL,
     PRIMARY KEY (observation_date, venue_id)
 );
+
+-- Table comments
+COMMENT ON TABLE raw_weather.daily IS 'Daily weather conditions by venue';

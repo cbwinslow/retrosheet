@@ -1,6 +1,7 @@
--- Phase 3 Final Enhanced Feature View
--- Complete combined feature set including all Phase 1, 2, and 3 features
-
+-- File: sql/features/099_phase3_final_enhanced_view.sql
+-- Purpose: Add matchup stats and stadium physics to feature set
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE VIEW features.plate_appearance_final_features AS
 SELECT
     pa.*,
@@ -27,3 +28,4 @@ LEFT JOIN features.stadium_physics_features AS stadium
     ON
         pa.park_id = stadium.park_id
         AND pa.season = stadium.feature_season;
+

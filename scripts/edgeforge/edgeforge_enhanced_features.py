@@ -13,17 +13,17 @@ from psycopg2.extras import execute_values
 
 def database_kwargs():
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
 def extract_statcast_features():
     """Extract high-value Statcast features for betting analysis."""
-    print("⚾ EdgeForge: Extracting Statcast features for betting edge...")
+    print('⚾ EdgeForge: Extracting Statcast features for betting edge...')
 
     conn = psycopg2.connect(**database_kwargs())
 
@@ -101,16 +101,16 @@ def extract_statcast_features():
 
             conn.commit()
 
-            print(f"✅ Extracted {len(df)} Statcast pitches")
-            print(".1f")
+            print(f'✅ Extracted {len(df)} Statcast pitches')
+            print('.1f')
             # Show pitch type distribution
-            pitch_dist = df["pitch_type"].value_counts().head(5)
-            print("Top pitch types:")
+            pitch_dist = df['pitch_type'].value_counts().head(5)
+            print('Top pitch types:')
             for pitch_type, count in pitch_dist.items():
-                print(f"  {pitch_type}: {count}")
+                print(f'  {pitch_type}: {count}')
 
         else:
-            print("❌ No Statcast data found")
+            print('❌ No Statcast data found')
 
     finally:
         conn.close()
@@ -118,7 +118,7 @@ def extract_statcast_features():
 
 def build_matchup_features():
     """Build batter-pitcher matchup features for edge analysis."""
-    print("🤝 Building matchup features for betting edges...")
+    print('🤝 Building matchup features for betting edges...')
 
     conn = psycopg2.connect(**database_kwargs())
 
@@ -176,10 +176,10 @@ def build_matchup_features():
             """)
 
             # Get matchup counts
-            cur.execute("SELECT COUNT(*) FROM mlb_enhanced.batter_pitcher_history;")
+            cur.execute('SELECT COUNT(*) FROM mlb_enhanced.batter_pitcher_history;')
             matchup_count = cur.fetchone()[0]
 
-            print(f"✅ Built {matchup_count} batter-pitcher matchups")
+            print(f'✅ Built {matchup_count} batter-pitcher matchups')
 
             # Show some high-value matchups
             cur.execute("""
@@ -190,9 +190,9 @@ def build_matchup_features():
                 LIMIT 5;
             """)
 
-            print("Top batter-pitcher matchups:")
+            print('Top batter-pitcher matchups:')
             for row in cur.fetchall():
-                print(".3f")
+                print('.3f')
 
         conn.commit()
 
@@ -202,7 +202,7 @@ def build_matchup_features():
 
 def create_betting_features_dataset():
     """Create enhanced dataset optimized for betting edge analysis."""
-    print("🎯 Creating betting-optimized feature dataset...")
+    print('🎯 Creating betting-optimized feature dataset...')
 
     conn = psycopg2.connect(**database_kwargs())
 
@@ -286,8 +286,8 @@ def create_betting_features_dataset():
             """)
 
             stats = cur.fetchone()
-            print(f"✅ Created betting dataset: {stats[0]} samples")
-            print(".3f")
+            print(f'✅ Created betting dataset: {stats[0]} samples')
+            print('.3f')
         conn.commit()
 
     finally:
@@ -295,28 +295,28 @@ def create_betting_features_dataset():
 
 
 def main():
-    print("🎯 EdgeForge: Building MLB Betting Intelligence Platform")
-    print("=" * 60)
-    print("📊 Focus: Calibrated edges over hype")
-    print("🎲 Features: Statcast + matchups + situational factors")
-    print("💰 Goal: Monetizable betting intelligence")
+    print('🎯 EdgeForge: Building MLB Betting Intelligence Platform')
+    print('=' * 60)
+    print('📊 Focus: Calibrated edges over hype')
+    print('🎲 Features: Statcast + matchups + situational factors')
+    print('💰 Goal: Monetizable betting intelligence')
 
     # Extract enhanced features
     extract_statcast_features()
     build_matchup_features()
     create_betting_features_dataset()
 
-    print("\n" + "=" * 60)
-    print("✅ ENHANCED BETTING FEATURES READY")
-    print("=" * 60)
-    print("• Statcast pitch physics extracted")
-    print("• Batter-pitcher matchup edges calculated")
-    print("• Betting-optimized feature set created")
-    print("• Ready for model training and market comparison")
+    print('\n' + '=' * 60)
+    print('✅ ENHANCED BETTING FEATURES READY')
+    print('=' * 60)
+    print('• Statcast pitch physics extracted')
+    print('• Batter-pitcher matchup edges calculated')
+    print('• Betting-optimized feature set created')
+    print('• Ready for model training and market comparison')
 
-    print("\n🎲 Next: Train enhanced model + market calibration")
-    print("💰 Path to monetization: Premium picks + edge alerts")
+    print('\n🎲 Next: Train enhanced model + market calibration')
+    print('💰 Path to monetization: Premium picks + edge alerts')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

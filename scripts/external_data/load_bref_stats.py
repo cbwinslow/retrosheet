@@ -19,7 +19,8 @@ import pandas as pd
 import psycopg2
 from psycopg2.extras import execute_values
 
-DB_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
+
+DB_URL = os.getenv('DATABASE_URL', 'postgresql://localhost/retrosheet')
 
 
 def get_conn():
@@ -28,11 +29,11 @@ def get_conn():
 
 def load_bref_batting(csv_path: Path) -> bool:
     """Load Baseball Reference batting stats."""
-    print(f"Loading batting stats from {csv_path}")
+    print(f'Loading batting stats from {csv_path}')
 
     try:
         df = pd.read_csv(csv_path)
-        print(f"  Read {len(df)} rows")
+        print(f'  Read {len(df)} rows')
 
         conn = get_conn()
         cur = conn.cursor()
@@ -72,29 +73,29 @@ def load_bref_batting(csv_path: Path) -> bool:
             # Map columns based on pybaseball batting_stats_bref output
             data.append(
                 (
-                    row.get("Season"),
-                    row.get("player_id", ""),
-                    row.get("Name", ""),
-                    row.get("Age"),
-                    row.get("Tm", ""),
-                    row.get("Lg", ""),
-                    row.get("G"),
-                    row.get("AB"),
-                    row.get("R"),
-                    row.get("H"),
-                    row.get("2B"),
-                    row.get("3B"),
-                    row.get("HR"),
-                    row.get("RBI"),
-                    row.get("SB"),
-                    row.get("CS"),
-                    row.get("BB"),
-                    row.get("SO"),
-                    row.get("BA"),
-                    row.get("OBP"),
-                    row.get("SLG"),
-                    row.get("OPS"),
-                )
+                    row.get('Season'),
+                    row.get('player_id', ''),
+                    row.get('Name', ''),
+                    row.get('Age'),
+                    row.get('Tm', ''),
+                    row.get('Lg', ''),
+                    row.get('G'),
+                    row.get('AB'),
+                    row.get('R'),
+                    row.get('H'),
+                    row.get('2B'),
+                    row.get('3B'),
+                    row.get('HR'),
+                    row.get('RBI'),
+                    row.get('SB'),
+                    row.get('CS'),
+                    row.get('BB'),
+                    row.get('SO'),
+                    row.get('BA'),
+                    row.get('OBP'),
+                    row.get('SLG'),
+                    row.get('OPS'),
+                ),
             )
 
         # Insert data
@@ -131,24 +132,24 @@ def load_bref_batting(csv_path: Path) -> bool:
         )
 
         conn.commit()
-        print(f"  ✅ Loaded {len(data)} rows")
+        print(f'  ✅ Loaded {len(data)} rows')
         return True
 
     except Exception as e:
-        print(f"  ❌ Error: {e}")
+        print(f'  ❌ Error: {e}')
         return False
     finally:
-        if "conn" in locals():
+        if 'conn' in locals():
             conn.close()
 
 
 def load_bref_pitching(csv_path: Path) -> bool:
     """Load Baseball Reference pitching stats."""
-    print(f"Loading pitching stats from {csv_path}")
+    print(f'Loading pitching stats from {csv_path}')
 
     try:
         df = pd.read_csv(csv_path)
-        print(f"  Read {len(df)} rows")
+        print(f'  Read {len(df)} rows')
 
         conn = get_conn()
         cur = conn.cursor()
@@ -186,27 +187,27 @@ def load_bref_pitching(csv_path: Path) -> bool:
             # Convert all values to strings to handle any data format
             data.append(
                 (
-                    str(row.get("Season", "")) if pd.notna(row.get("Season")) else None,
-                    str(row.get("player_id", "")) if pd.notna(row.get("player_id")) else None,
-                    str(row.get("Name", "")) if pd.notna(row.get("Name")) else None,
-                    str(row.get("Age", "")) if pd.notna(row.get("Age")) else None,
-                    str(row.get("Tm", "")) if pd.notna(row.get("Tm")) else None,
-                    str(row.get("Lg", "")) if pd.notna(row.get("Lg")) else None,
-                    str(row.get("G", "")) if pd.notna(row.get("G")) else None,
-                    str(row.get("GS", "")) if pd.notna(row.get("GS")) else None,
-                    str(row.get("W", "")) if pd.notna(row.get("W")) else None,
-                    str(row.get("L", "")) if pd.notna(row.get("L")) else None,
-                    str(row.get("SV", "")) if pd.notna(row.get("SV")) else None,
-                    str(row.get("IP", "")) if pd.notna(row.get("IP")) else None,
-                    str(row.get("H", "")) if pd.notna(row.get("H")) else None,
-                    str(row.get("R", "")) if pd.notna(row.get("R")) else None,
-                    str(row.get("ER", "")) if pd.notna(row.get("ER")) else None,
-                    str(row.get("HR", "")) if pd.notna(row.get("HR")) else None,
-                    str(row.get("BB", "")) if pd.notna(row.get("BB")) else None,
-                    str(row.get("SO", "")) if pd.notna(row.get("SO")) else None,
-                    str(row.get("ERA", "")) if pd.notna(row.get("ERA")) else None,
-                    str(row.get("WHIP", "")) if pd.notna(row.get("WHIP")) else None,
-                )
+                    str(row.get('Season', '')) if pd.notna(row.get('Season')) else None,
+                    str(row.get('player_id', '')) if pd.notna(row.get('player_id')) else None,
+                    str(row.get('Name', '')) if pd.notna(row.get('Name')) else None,
+                    str(row.get('Age', '')) if pd.notna(row.get('Age')) else None,
+                    str(row.get('Tm', '')) if pd.notna(row.get('Tm')) else None,
+                    str(row.get('Lg', '')) if pd.notna(row.get('Lg')) else None,
+                    str(row.get('G', '')) if pd.notna(row.get('G')) else None,
+                    str(row.get('GS', '')) if pd.notna(row.get('GS')) else None,
+                    str(row.get('W', '')) if pd.notna(row.get('W')) else None,
+                    str(row.get('L', '')) if pd.notna(row.get('L')) else None,
+                    str(row.get('SV', '')) if pd.notna(row.get('SV')) else None,
+                    str(row.get('IP', '')) if pd.notna(row.get('IP')) else None,
+                    str(row.get('H', '')) if pd.notna(row.get('H')) else None,
+                    str(row.get('R', '')) if pd.notna(row.get('R')) else None,
+                    str(row.get('ER', '')) if pd.notna(row.get('ER')) else None,
+                    str(row.get('HR', '')) if pd.notna(row.get('HR')) else None,
+                    str(row.get('BB', '')) if pd.notna(row.get('BB')) else None,
+                    str(row.get('SO', '')) if pd.notna(row.get('SO')) else None,
+                    str(row.get('ERA', '')) if pd.notna(row.get('ERA')) else None,
+                    str(row.get('WHIP', '')) if pd.notna(row.get('WHIP')) else None,
+                ),
             )
 
         # Insert data
@@ -222,27 +223,27 @@ def load_bref_pitching(csv_path: Path) -> bool:
         )
 
         conn.commit()
-        print(f"  ✅ Loaded {len(data)} rows")
+        print(f'  ✅ Loaded {len(data)} rows')
         return True
 
     except Exception as e:
-        print(f"  ❌ Error: {e}")
+        print(f'  ❌ Error: {e}')
         return False
     finally:
-        if "conn" in locals():
+        if 'conn' in locals():
             conn.close()
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Load Baseball Reference stats from pybaseball")
-    parser.add_argument("--file", type=Path, help="Single CSV file to load")
-    parser.add_argument("--dir", type=Path, help="Directory containing CSV files")
+    parser = argparse.ArgumentParser(description='Load Baseball Reference stats from pybaseball')
+    parser.add_argument('--file', type=Path, help='Single CSV file to load')
+    parser.add_argument('--dir', type=Path, help='Directory containing CSV files')
     args = parser.parse_args()
 
     # Create schema
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("CREATE SCHEMA IF NOT EXISTS raw_bref")
+    cur.execute('CREATE SCHEMA IF NOT EXISTS raw_bref')
     conn.commit()
     conn.close()
 
@@ -251,28 +252,28 @@ def main():
     if args.file:
         files_to_load.append(args.file)
     elif args.dir:
-        files_to_load.extend(args.dir.glob("*.csv"))
+        files_to_load.extend(args.dir.glob('*.csv'))
     else:
-        print("Error: Must specify --file or --dir")
+        print('Error: Must specify --file or --dir')
         sys.exit(1)
 
     results = {}
     for csv_path in files_to_load:
-        if "batting" in csv_path.name:
+        if 'batting' in csv_path.name:
             success = load_bref_batting(csv_path)
             results[csv_path.name] = success
-        elif "pitching" in csv_path.name:
+        elif 'pitching' in csv_path.name:
             success = load_bref_pitching(csv_path)
             results[csv_path.name] = success
 
-    print("\n" + "=" * 60)
-    print("LOAD SUMMARY")
-    print("=" * 60)
+    print('\n' + '=' * 60)
+    print('LOAD SUMMARY')
+    print('=' * 60)
     for file_name, success in results.items():
-        status = "✅" if success else "❌"
-        print(f"{status} {file_name}")
-    print("=" * 60)
+        status = '✅' if success else '❌'
+        print(f'{status} {file_name}')
+    print('=' * 60)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

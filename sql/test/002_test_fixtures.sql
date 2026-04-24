@@ -1,13 +1,7 @@
-/*
-File: sql/test/002_test_fixtures.sql
-Purpose: Create minimal test data for E2E validation
-Author: Agent Cascade
-Date: 2026-04-24
-Called By: scripts/test/e2e_test_runner.sh
-
-Creates small test datasets from real data for fast testing.
-100 games instead of 62,000 - tests run in seconds not hours.
-*/
+-- File: sql/test/002_test_fixtures.sql
+-- Purpose: Create minimal test data for E2E validation
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 
 -- Create test game data (subset of real data)
 CREATE TABLE test.sample_games AS

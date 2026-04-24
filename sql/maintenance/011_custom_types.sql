@@ -1,8 +1,7 @@
--- Implement PostgreSQL custom types (domains) for baseball-specific data
--- Research-backed: Domains enforce data integrity and business rules
--- Use Cases: Pitch types, event types, hand types, league types
-
--- Create pitch type domain
+-- File: sql/maintenance/011_custom_types.sql
+-- Purpose: Create domain types for baseball-specific data validation
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE DOMAIN pitch_type AS TEXT
 CHECK (value IN ('FF', 'SL', 'CH', 'CU', 'FC', 'FS', 'SI', 'KN', 'EP', 'UN'));
 
@@ -52,3 +51,4 @@ SELECT 'E'::DIVISION_TYPE;
 
 -- ALTER TABLE features.plate_appearance_examples
 -- ALTER COLUMN pitcher_hand TYPE hand_type USING pitcher_hand::hand_type;
+

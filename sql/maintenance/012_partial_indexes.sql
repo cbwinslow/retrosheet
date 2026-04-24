@@ -1,8 +1,7 @@
--- Implement PostgreSQL partial indexes for conditional queries
--- Research-backed: Partial indexes improve performance and reduce storage
--- Use Cases: Recent games, active players, high-leverage situations
-
--- Partial index on recent games (2023 and later)
+-- File: sql/maintenance/012_partial_indexes.sql
+-- Purpose: Create partial indexes for conditional query optimization
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_recent_games
 ON core.games (game_date)
 WHERE season >= 2023;
@@ -50,3 +49,4 @@ SELECT
 FROM pg_indexes
 WHERE tablename IN ('games', 'people', 'plate_appearance_examples', 'statcast')
 ORDER BY pg_relation_size(indexname::regclass) DESC;
+

@@ -1,8 +1,7 @@
--- Ingest Run Tracking Enhancement
--- Purpose: Add comprehensive run tracking for data ingestion scripts
--- Enables reproducibility, debugging, and audit trail for all data loads
-
--- Expand ingest_runs table with additional tracking fields
+-- File: sql/external/225_ingest_run_tracking.sql
+-- Purpose: Track data ingestion runs with metadata, progress, and errors
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 ALTER TABLE raw_retrosheet.ingest_runs
 ADD COLUMN IF NOT EXISTS script_name text,
 ADD COLUMN IF NOT EXISTS script_version text,
@@ -222,3 +221,4 @@ COMMENT ON FUNCTION raw_retrosheet.fail_ingest_run IS 'Mark an ingest run as fai
 COMMENT ON FUNCTION raw_retrosheet.compute_checksum IS 'Compute SHA256 checksum for JSON data';
 COMMENT ON VIEW raw_retrosheet.recent_ingest_runs IS 'Summary of recent 100 ingest runs';
 COMMENT ON VIEW raw_retrosheet.ingest_run_stats_by_script IS 'Statistics grouped by script name';
+

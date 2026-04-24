@@ -1,5 +1,7 @@
--- Ingestion functions for all additional MLB live endpoints
-
+-- File: sql/live/005_additional_endpoint_functions.sql
+-- Purpose: Functions to ingest additional MLB API endpoints per game
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE FUNCTION raw_mlb.ingest_endpoint(game_pk bigint, endpoint_suffix text, target_table text)
 RETURNS void AS $$
     import httpx
@@ -53,3 +55,4 @@ BEGIN
     RETURN count;
 END;
 $$ LANGUAGE plpgsql;
+

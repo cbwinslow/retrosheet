@@ -1,6 +1,7 @@
--- Phase 3 Feature Mart: Batter/Pitcher Head-to-Head Matchup Features
--- Historical performance metrics for specific batter vs pitcher matchups
-
+-- File: sql/features/060_batter_pitcher_matchup_features.sql
+-- Purpose: Batter-pitcher matchup rates and contact quality features
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE MATERIALIZED VIEW features.batter_pitcher_matchup_features AS
 WITH historical_matchups AS (
     SELECT
@@ -49,3 +50,4 @@ CREATE INDEX idx_matchup_pitcher_season ON features.batter_pitcher_matchup_featu
 CREATE INDEX idx_matchup_batter_season ON features.batter_pitcher_matchup_features (batter_id, feature_season);
 
 ANALYZE features.batter_pitcher_matchup_features;
+

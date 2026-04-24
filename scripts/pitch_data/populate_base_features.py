@@ -26,20 +26,19 @@ Date: 2026-04-24
 import argparse
 import sys
 from datetime import datetime
-from typing import List
 
 import psycopg2
 
 
 def get_connection():
     """Get database connection."""
-    return psycopg2.connect(host="localhost", database="retrosheet", port=5432)
+    return psycopg2.connect(host='localhost', database='retrosheet', port=5432)
 
 
-def get_row_count(conn, table: str, schema: str = "features_pitch") -> int:
+def get_row_count(conn, table: str, schema: str = 'features_pitch') -> int:
     """Get row count for a table."""
     with conn.cursor() as cur:
-        cur.execute(f"SELECT COUNT(*) FROM {schema}.{table}")
+        cur.execute(f'SELECT COUNT(*) FROM {schema}.{table}')
         return cur.fetchone()[0]
 
 
@@ -129,10 +128,10 @@ def populate_all_seasons(conn, dry_run: bool = False) -> int:
         with conn.cursor() as cur:
             cur.execute(count_query)
             count = cur.fetchone()[0]
-            print(f"[DRY RUN] Would insert {count:,} rows into base_features")
+            print(f'[DRY RUN] Would insert {count:,} rows into base_features')
             return count
 
-    print("Populating base_features from locations...")
+    print('Populating base_features from locations...')
     start_time = datetime.now()
 
     with conn.cursor() as cur:
@@ -142,13 +141,13 @@ def populate_all_seasons(conn, dry_run: bool = False) -> int:
     conn.commit()
     elapsed = (datetime.now() - start_time).total_seconds()
 
-    print(f"✓ Inserted {rows_inserted:,} rows in {elapsed:.1f}s")
-    print(f"  Rate: {rows_inserted / elapsed:,.0f} rows/sec")
+    print(f'✓ Inserted {rows_inserted:,} rows in {elapsed:.1f}s')
+    print(f'  Rate: {rows_inserted / elapsed:,.0f} rows/sec')
 
     return rows_inserted
 
 
-def populate_seasons(conn, seasons: List[int], dry_run: bool = False) -> int:
+def populate_seasons(conn, seasons: list[int], dry_run: bool = False) -> int:
     """Populate base_features for specific seasons."""
     total_inserted = 0
 
@@ -237,11 +236,11 @@ def populate_seasons(conn, seasons: List[int], dry_run: bool = False) -> int:
             with conn.cursor() as cur:
                 cur.execute(count_query, (season,))
                 count = cur.fetchone()[0]
-                print(f"[DRY RUN] Season {season}: would insert {count:,} rows")
+                print(f'[DRY RUN] Season {season}: would insert {count:,} rows')
                 total_inserted += count
             continue
 
-        print(f"Processing season {season}...")
+        print(f'Processing season {season}...')
         start_time = datetime.now()
 
         with conn.cursor() as cur:
@@ -251,7 +250,7 @@ def populate_seasons(conn, seasons: List[int], dry_run: bool = False) -> int:
         conn.commit()
         elapsed = (datetime.now() - start_time).total_seconds()
 
-        print(f"  ✓ Inserted {rows_inserted:,} rows in {elapsed:.1f}s")
+        print(f'  ✓ Inserted {rows_inserted:,} rows in {elapsed:.1f}s')
         total_inserted += rows_inserted
 
     return total_inserted
@@ -259,19 +258,19 @@ def populate_seasons(conn, seasons: List[int], dry_run: bool = False) -> int:
 
 def verify_population(conn) -> bool:
     """Verify that base_features matches locations."""
-    print("\n=== Verification ===")
+    print('\n=== Verification ===')
 
     # Check row counts
-    locations_count = get_row_count(conn, "locations")
-    base_count = get_row_count(conn, "base_features")
+    locations_count = get_row_count(conn, 'locations')
+    base_count = get_row_count(conn, 'base_features')
 
-    print(f"locations:     {locations_count:,} rows")
-    print(f"base_features: {base_count:,} rows")
+    print(f'locations:     {locations_count:,} rows')
+    print(f'base_features: {base_count:,} rows')
 
     if locations_count == base_count:
-        print("✓ Row counts match")
+        print('✓ Row counts match')
     else:
-        print(f"✗ Mismatch: {locations_count - base_count:,} rows missing")
+        print(f'✗ Mismatch: {locations_count - base_count:,} rows missing')
         return False
 
     # Check season distribution
@@ -284,28 +283,28 @@ def verify_population(conn) -> bool:
         """)
         seasons = cur.fetchall()
 
-        print("\nSeason distribution in base_features:")
+        print('\nSeason distribution in base_features:')
         for year, count in seasons:
-            print(f"  {year}: {count:,} rows")
+            print(f'  {year}: {count:,} rows')
 
     return True
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Populate features_pitch.base_features from locations"
+        description='Populate features_pitch.base_features from locations',
     )
-    parser.add_argument("--all", action="store_true", help="Populate all seasons at once")
+    parser.add_argument('--all', action='store_true', help='Populate all seasons at once')
     parser.add_argument(
-        "--seasons", nargs="+", type=int, help="Specific seasons to populate (e.g., 2020 2021 2022)"
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be inserted without actually inserting",
+        '--seasons', nargs='+', type=int, help='Specific seasons to populate (e.g., 2020 2021 2022)',
     )
     parser.add_argument(
-        "--verify", action="store_true", help="Verify population by comparing row counts"
+        '--dry-run',
+        action='store_true',
+        help='Show what would be inserted without actually inserting',
+    )
+    parser.add_argument(
+        '--verify', action='store_true', help='Verify population by comparing row counts',
     )
 
     args = parser.parse_args()
@@ -339,5 +338,5 @@ def main():
         conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

@@ -1,3 +1,7 @@
+-- File: sql/mlb/122_live_pa_feature_parity.sql
+-- Purpose: Live plate appearance features matching historical schema
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS features;
 
 DROP VIEW IF EXISTS features.live_plate_appearance_advanced_count_examples;
@@ -181,3 +185,4 @@ LEFT JOIN features.pa_count_state_context_prior_season_rates AS context_count
         AND live_pa.start_bases = context_count.start_bases
         AND live_pa.balls = context_count.balls
         AND live_pa.strikes = context_count.strikes;
+

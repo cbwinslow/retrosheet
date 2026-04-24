@@ -1,7 +1,7 @@
--- Additional MLB Live Endpoints Raw Schema
--- All tables immutable, append only, idempotent inserts
-
--- Play By Play endpoint raw data
+-- File: sql/live/004_additional_endpoints_schema.sql
+-- Purpose: Tables for additional MLB API endpoints (boxscore, plays, etc)
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE TABLE IF NOT EXISTS raw_mlb.play_by_play_snapshots (
     id bigserial PRIMARY KEY,
     game_pk bigint NOT NULL,
@@ -56,3 +56,9 @@ CREATE TABLE IF NOT EXISTS raw_mlb.boxscore_snapshots (
 
 CREATE INDEX IF NOT EXISTS idx_mlb_boxscore_game ON raw_mlb.boxscore_snapshots (game_pk);
 CREATE INDEX IF NOT EXISTS idx_mlb_boxscore_fetched ON raw_mlb.boxscore_snapshots (fetched_at);
+
+-- Table comments
+COMMENT ON TABLE raw_mlb.play_by_play_snapshots IS 'MLB play-by-play endpoint raw snapshots';
+COMMENT ON TABLE raw_mlb.pitch_metrics_snapshots IS 'MLB pitch metrics endpoint raw snapshots';
+COMMENT ON TABLE raw_mlb.win_probability_snapshots IS 'MLB win probability endpoint raw snapshots';
+COMMENT ON TABLE raw_mlb.boxscore_snapshots IS 'MLB boxscore endpoint raw snapshots';

@@ -1,6 +1,7 @@
--- Optimized inference views for fast prediction lookups
--- These views pre-compute and index the most common prediction scenarios
-
+-- File: sql/mlb/120_inference_optimization.sql
+-- Purpose: Optimized tables and indexes for model inference
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS inference;
 
 CREATE MATERIALIZED VIEW inference.plate_appearance_features AS
@@ -103,3 +104,4 @@ ON inference.plate_appearance_features (batter_id, season);
 
 CREATE INDEX plate_appearance_features_pitcher_idx
 ON inference.plate_appearance_features (pitcher_id, season);
+

@@ -1,6 +1,7 @@
--- Phase 2 Enhanced Feature View
--- Combines Phase 2 features into the training set
-
+-- File: sql/features/099_phase2_enhanced_feature_view.sql
+-- Purpose: Add team momentum and postseason flags to plate appearances
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE VIEW features.plate_appearance_phase2_features AS
 SELECT
     pa.*,
@@ -29,3 +30,4 @@ LEFT JOIN features.team_momentum_features AS away_team
         AND pa.away_team_id = away_team.team_id
 LEFT JOIN features.postseason_clutch_features AS post
     ON pa.game_id = post.game_id;
+

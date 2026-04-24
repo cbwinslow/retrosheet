@@ -9,11 +9,11 @@ import os
 def database_kwargs() -> dict[str, str]:
     """Get database connection kwargs from environment."""
     return {
-        "host": os.getenv("PGHOST", "localhost"),
-        "port": int(os.getenv("PGPORT", 5432)),
-        "database": os.getenv("PGDATABASE", "retrosheet"),
-        "user": os.getenv("PGUSER", os.getenv("USER")),
-        "password": os.getenv("PGPASSWORD", ""),
+        'host': os.getenv('PGHOST', 'localhost'),
+        'port': int(os.getenv('PGPORT', 5432)),
+        'database': os.getenv('PGDATABASE', 'retrosheet'),
+        'user': os.getenv('PGUSER', os.getenv('USER')),
+        'password': os.getenv('PGPASSWORD', ''),
     }
 
 
@@ -26,4 +26,4 @@ def database_url() -> str:
     )
 
 
-__all__ = ["database_kwargs", "database_url"]
+__all__ = ['database_kwargs', 'database_url']

@@ -17,44 +17,45 @@ from pathlib import Path
 
 import psycopg2
 
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def database_kwargs() -> dict[str, str]:
     return {
-        "host": "localhost",
-        "port": "5432",
-        "dbname": "retrosheet",
-        "user": "postgres",
-        "password": "",
+        'host': 'localhost',
+        'port': '5432',
+        'dbname': 'retrosheet',
+        'user': 'postgres',
+        'password': '',
     }
 
 
 def run_sql_file(file_path: Path, description: str) -> bool:
     """Run a SQL file and report results."""
-    print(f"\n🔧 {description}")
-    print(f"Running {file_path.name}...")
+    print(f'\n🔧 {description}')
+    print(f'Running {file_path.name}...')
 
     try:
         conn = psycopg2.connect(**database_kwargs())
         with conn.cursor() as cur:
-            with file_path.open("r") as f:
+            with file_path.open('r') as f:
                 sql = f.read()
             cur.execute(sql)
         conn.commit()
-        print(f"✅ {description} completed successfully")
+        print(f'✅ {description} completed successfully')
         return True
     except Exception as e:
-        print(f"❌ Error in {description}: {e}")
+        print(f'❌ Error in {description}: {e}')
         return False
     finally:
-        if "conn" in locals():
+        if 'conn' in locals():
             conn.close()
 
 
 def test_query_performance(query: str, description: str) -> float:
     """Test query performance and return execution time."""
-    print(f"\n⚡ Testing: {description}")
+    print(f'\n⚡ Testing: {description}')
 
     try:
         conn = psycopg2.connect(**database_kwargs())
@@ -65,53 +66,53 @@ def test_query_performance(query: str, description: str) -> float:
             end_time = time.time()
 
             execution_time = end_time - start_time
-            print(f"   Query returned {len(result)} rows in {execution_time:.3f} seconds")
+            print(f'   Query returned {len(result)} rows in {execution_time:.3f} seconds')
             return execution_time
     except Exception as e:
-        print(f"   Error: {e}")
-        return float("inf")
+        print(f'   Error: {e}')
+        return float('inf')
     finally:
-        if "conn" in locals():
+        if 'conn' in locals():
             conn.close()
 
 
 def run_performance_tests() -> None:
     """Run performance tests before and after optimizations."""
-    print("🧪 RUNNING PERFORMANCE TESTS")
+    print('🧪 RUNNING PERFORMANCE TESTS')
 
     test_queries = [
         (
             "SELECT COUNT(*) FROM analysis.combined_games WHERE game_date >= '2024-01-01'",
-            "Combined games date filter",
+            'Combined games date filter',
         ),
         (
             "SELECT COUNT(*) FROM core.events WHERE season = '2024' AND batter_id LIKE 'trou%'",
-            "Events with season + batter filter",
+            'Events with season + batter filter',
         ),
         (
             "SELECT batter_id, COUNT(*) as pa FROM analysis.combined_plate_appearances WHERE season = '2024' GROUP BY batter_id ORDER BY pa DESC LIMIT 10",
-            "Top batters by plate appearances",
+            'Top batters by plate appearances',
         ),
         (
-            "SELECT * FROM analysis.get_data_source_stats()",
-            "Data source statistics function",
+            'SELECT * FROM analysis.get_data_source_stats()',
+            'Data source statistics function',
         ),
         (
-            "SELECT game_id, COUNT(*) as events FROM analysis.combined_events GROUP BY game_id ORDER BY events DESC LIMIT 5",
-            "Games with most events",
+            'SELECT game_id, COUNT(*) as events FROM analysis.combined_events GROUP BY game_id ORDER BY events DESC LIMIT 5',
+            'Games with most events',
         ),
     ]
 
     for query, description in test_queries:
         execution_time = test_query_performance(query, description)
         if execution_time < 1.0:
-            status = "🚀"
+            status = '🚀'
         elif execution_time < 5.0:
-            status = "✅"
+            status = '✅'
         else:
-            status = "⚠️"
+            status = '⚠️'
 
-        print(f"   {status} {execution_time:.3f}s")
+        print(f'   {status} {execution_time:.3f}s')
 
 
 def apply_materialized_views() -> bool:
@@ -146,13 +147,13 @@ CREATE INDEX IF NOT EXISTS player_career_stats_pa_idx ON analysis.player_career_
         with conn.cursor() as cur:
             cur.execute(mv_sql)
         conn.commit()
-        print("✅ Materialized views created successfully")
+        print('✅ Materialized views created successfully')
         return True
     except Exception as e:
-        print(f"❌ Error creating materialized views: {e}")
+        print(f'❌ Error creating materialized views: {e}')
         return False
     finally:
-        if "conn" in locals():
+        if 'conn' in locals():
             conn.close()
 
 
@@ -170,13 +171,13 @@ ALTER TABLE core.live_games CLUSTER ON live_games_date_parsed_idx;
         with conn.cursor() as cur:
             cur.execute(cluster_sql)
         conn.commit()
-        print("✅ Table clustering applied successfully")
+        print('✅ Table clustering applied successfully')
         return True
     except Exception as e:
-        print(f"❌ Error applying table clustering: {e}")
+        print(f'❌ Error applying table clustering: {e}')
         return False
     finally:
-        if "conn" in locals():
+        if 'conn' in locals():
             conn.close()
 
 
@@ -238,30 +239,30 @@ $$;
         with conn.cursor() as cur:
             cur.execute(monitoring_sql)
         conn.commit()
-        print("✅ Monitoring functions created successfully")
+        print('✅ Monitoring functions created successfully')
         return True
     except Exception as e:
-        print(f"❌ Error creating monitoring functions: {e}")
+        print(f'❌ Error creating monitoring functions: {e}')
         return False
     finally:
-        if "conn" in locals():
+        if 'conn' in locals():
             conn.close()
 
 
 def run_vacuum_analyze() -> bool:
     """Run VACUUM ANALYZE on all tables for better query planning."""
-    print("\n🧹 Running VACUUM ANALYZE on all tables...")
+    print('\n🧹 Running VACUUM ANALYZE on all tables...')
 
     # VACUUM can't run in transactions, so we'll run individual commands
     vacuum_commands = [
-        "VACUUM ANALYZE core.games;",
-        "VACUUM ANALYZE core.events;",
-        "VACUUM ANALYZE core.live_games;",
-        "VACUUM ANALYZE core.live_events;",
-        "VACUUM ANALYZE core.plate_appearances;",
-        "VACUUM ANALYZE analysis.combined_games;",
-        "VACUUM ANALYZE analysis.combined_events;",
-        "VACUUM ANALYZE analysis.combined_plate_appearances;",
+        'VACUUM ANALYZE core.games;',
+        'VACUUM ANALYZE core.events;',
+        'VACUUM ANALYZE core.live_games;',
+        'VACUUM ANALYZE core.live_events;',
+        'VACUUM ANALYZE core.plate_appearances;',
+        'VACUUM ANALYZE analysis.combined_games;',
+        'VACUUM ANALYZE analysis.combined_events;',
+        'VACUUM ANALYZE analysis.combined_plate_appearances;',
     ]
 
     success_count = 0
@@ -273,29 +274,28 @@ def run_vacuum_analyze() -> bool:
                 cur.execute(cmd)
             success_count += 1
         except Exception as e:
-            print(f"   Warning: Failed to VACUUM {cmd.split()[2]}: {e}")
+            print(f'   Warning: Failed to VACUUM {cmd.split()[2]}: {e}')
         finally:
-            if "conn" in locals():
+            if 'conn' in locals():
                 conn.close()
 
     if success_count > 0:
-        print(f"✅ VACUUM ANALYZE completed on {success_count}/{len(vacuum_commands)} tables")
+        print(f'✅ VACUUM ANALYZE completed on {success_count}/{len(vacuum_commands)} tables')
         return True
-    else:
-        print("❌ VACUUM ANALYZE failed on all tables")
-        return False
+    print('❌ VACUUM ANALYZE failed on all tables')
+    return False
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Apply advanced database optimizations")
-    parser.add_argument("--all", action="store_true", help="Apply all optimizations")
+    parser = argparse.ArgumentParser(description='Apply advanced database optimizations')
+    parser.add_argument('--all', action='store_true', help='Apply all optimizations')
     parser.add_argument(
-        "--materialized-views", action="store_true", help="Create materialized views"
+        '--materialized-views', action='store_true', help='Create materialized views',
     )
-    parser.add_argument("--clustering", action="store_true", help="Apply table clustering")
-    parser.add_argument("--monitoring", action="store_true", help="Set up monitoring functions")
-    parser.add_argument("--vacuum", action="store_true", help="Run VACUUM ANALYZE")
-    parser.add_argument("--test-performance", action="store_true", help="Run performance tests")
+    parser.add_argument('--clustering', action='store_true', help='Apply table clustering')
+    parser.add_argument('--monitoring', action='store_true', help='Set up monitoring functions')
+    parser.add_argument('--vacuum', action='store_true', help='Run VACUUM ANALYZE')
+    parser.add_argument('--test-performance', action='store_true', help='Run performance tests')
 
     args = parser.parse_args()
 
@@ -307,17 +307,17 @@ def main():
             args.monitoring,
             args.vacuum,
             args.test_performance,
-        ]
+        ],
     ):
         parser.print_help()
         return
 
-    print("🚀 ADVANCED DATABASE OPTIMIZATION SCRIPT")
-    print("=" * 50)
+    print('🚀 ADVANCED DATABASE OPTIMIZATION SCRIPT')
+    print('=' * 50)
 
     # Run performance tests first (baseline)
     if args.test_performance or args.all:
-        print("\n📊 BASELINE PERFORMANCE TESTS")
+        print('\n📊 BASELINE PERFORMANCE TESTS')
         run_performance_tests()
 
     # Apply optimizations
@@ -346,26 +346,26 @@ def main():
 
     # Run performance tests again (after optimizations)
     if args.test_performance or args.all:
-        print("\n📊 POST-OPTIMIZATION PERFORMANCE TESTS")
+        print('\n📊 POST-OPTIMIZATION PERFORMANCE TESTS')
         run_performance_tests()
 
-    print("\n" + "=" * 50)
+    print('\n' + '=' * 50)
     print(
-        f"🎯 OPTIMIZATION COMPLETE: {success_count}/{total_count} optimizations applied successfully"
+        f'🎯 OPTIMIZATION COMPLETE: {success_count}/{total_count} optimizations applied successfully',
     )
 
     if success_count == total_count:
-        print("✅ All optimizations completed successfully!")
+        print('✅ All optimizations completed successfully!')
     else:
-        print(f"⚠️  {total_count - success_count} optimizations failed - check logs above")
+        print(f'⚠️  {total_count - success_count} optimizations failed - check logs above')
 
-    print("\n💡 Next Steps:")
-    print("• Monitor query performance with: SELECT * FROM monitoring.get_index_usage();")
-    print("• Check for slow queries with: SELECT * FROM monitoring.get_slow_queries();")
+    print('\n💡 Next Steps:')
+    print('• Monitor query performance with: SELECT * FROM monitoring.get_index_usage();')
+    print('• Check for slow queries with: SELECT * FROM monitoring.get_slow_queries();')
     print(
-        "• Refresh materialized views periodically: SELECT maintenance.refresh_all_materialized_views();"
+        '• Refresh materialized views periodically: SELECT maintenance.refresh_all_materialized_views();',
     )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

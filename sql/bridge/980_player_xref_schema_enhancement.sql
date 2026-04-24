@@ -1,7 +1,7 @@
--- Player Xref Schema Enhancement
--- Add missing ID columns from Chadwick Bureau Register
-
--- Add Baseball Reference ID column
+-- File: sql/bridge/980_player_xref_schema_enhancement.sql
+-- Purpose: Enhance player_xref with Baseball Reference IDs and indexes
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 ALTER TABLE bridge.player_xref
 ADD COLUMN IF NOT EXISTS bbref_id TEXT;
 
@@ -34,3 +34,4 @@ COMMENT ON COLUMN bridge.player_xref.bbref_id IS 'Baseball Reference player ID f
 COMMENT ON COLUMN bridge.player_xref.fangraphs_id IS 'FanGraphs player ID from Chadwick Bureau Register';
 COMMENT ON COLUMN bridge.player_xref.mlb_played_first IS 'MLB debut year from Chadwick Bureau Register';
 COMMENT ON COLUMN bridge.player_xref.birth_year IS 'Player birth year from Chadwick Bureau Register';
+

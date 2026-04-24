@@ -24,25 +24,26 @@ from llama_index import (
 )
 from tqdm import tqdm
 
-KB_ROOT = Path(__file__).resolve().parents[1] / "kb"
-INDEX_DIR = KB_ROOT / "index"
+
+KB_ROOT = Path(__file__).resolve().parents[1] / 'kb'
+INDEX_DIR = KB_ROOT / 'index'
 
 
 def build_index():
     # Load all supported documents from the kb folder (PDF, txt, md, html)
     reader = SimpleDirectoryReader(input_dir=str(KB_ROOT), recursive=True)
     documents = []
-    for doc in tqdm(reader.load_data(), desc="Loading documents"):
+    for doc in tqdm(reader.load_data(), desc='Loading documents'):
         documents.append(doc)
 
     # Configure the LLM predictor – using OpenAI gpt‑4 by default
-    llm = OpenAI(model="gpt-4", temperature=0.0)
+    llm = OpenAI(model='gpt-4', temperature=0.0)
     predictor = LLMPredictor(llm=llm)
     service_context = ServiceContext.from_defaults(llm_predictor=predictor)
 
     index = VectorStoreIndex.from_documents(documents, service_context=service_context)
     index.storage_context.persist(persist_dir=str(INDEX_DIR))
-    print(f"✅ Index persisted to {INDEX_DIR}")
+    print(f'✅ Index persisted to {INDEX_DIR}')
 
 
 def query_index(query: str, top_k: int = 5):
@@ -51,7 +52,7 @@ def query_index(query: str, top_k: int = 5):
     storage_context = StorageContext.from_defaults(persist_dir=str(INDEX_DIR))
     index = load_index_from_storage(storage_context)
     response = index.as_query_engine().query(query)
-    print("--- Query Result ---")
+    print('--- Query Result ---')
     print(response)
 
 
@@ -61,9 +62,9 @@ def main():
         build_index()
     else:
         # Treat the rest of the command line as a query
-        query = " ".join(sys.argv[1:])
+        query = ' '.join(sys.argv[1:])
         query_index(query)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

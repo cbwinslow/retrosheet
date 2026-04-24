@@ -23,7 +23,7 @@ from .pytorch_nn import PyTorchEngine
 from .xgboost_gpu import XGBoostGPUEngine
 
 
-def get_engine(preferred: str = "auto"):
+def get_engine(preferred: str = 'auto'):
     """Return an instantiated :class:`ModelEngine`.
 
     Parameters
@@ -35,7 +35,7 @@ def get_engine(preferred: str = "auto"):
         "logreg" – force the original logistic‑regression engine.
     """
 
-    if preferred == "auto":
+    if preferred == 'auto':
         # Prefer XGBoost GPU if CUDA is present
         try:
             import xgboost as xgb  # noqa: F401
@@ -52,11 +52,11 @@ def get_engine(preferred: str = "auto"):
         # Fallback to pure CPU logistic regression
         return LogisticRegressionEngine()
 
-    if preferred == "xgboost":
+    if preferred == 'xgboost':
         return XGBoostGPUEngine()
-    if preferred == "pytorch":
+    if preferred == 'pytorch':
         return PyTorchEngine()
-    if preferred == "logreg":
+    if preferred == 'logreg':
         return LogisticRegressionEngine()
 
-    raise ValueError(f"Unknown engine request: {preferred}")
+    raise ValueError(f'Unknown engine request: {preferred}')

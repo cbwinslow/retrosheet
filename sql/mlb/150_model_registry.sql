@@ -1,6 +1,7 @@
--- 150_model_registry.sql
--- Migration to create a central model registry table for tracking ML model artifacts.
-
+-- File: sql/mlb/150_model_registry.sql
+-- Purpose: Central registry for ML model artifacts and versions
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE TABLE IF NOT EXISTS models.model_registry (
     model_id SERIAL PRIMARY KEY,
     model_name TEXT NOT NULL,
@@ -32,3 +33,4 @@ BEFORE UPDATE ON models.model_registry
 FOR EACH ROW EXECUTE FUNCTION models.update_timestamp();
 
 COMMENT ON TABLE models.model_registry IS 'Central registry for ML model artifacts, versions, and metadata.';
+

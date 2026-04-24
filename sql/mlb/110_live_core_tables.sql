@@ -1,6 +1,7 @@
--- Live game and event tables for real-time MLB data
--- These mirror the structure of core.games and core.events but for live data
-
+-- File: sql/mlb/110_live_core_tables.sql
+-- Purpose: Live MLB game data transformed into core schema
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE TABLE IF NOT EXISTS core.live_games (
     game_id TEXT PRIMARY KEY,
     season INTEGER,
@@ -87,3 +88,4 @@ CREATE UNIQUE INDEX IF NOT EXISTS live_events_game_event_uidx ON core.live_event
 
 COMMENT ON TABLE core.live_games IS 'Live MLB game data transformed into core schema';
 COMMENT ON TABLE core.live_events IS 'Live MLB play-by-play data transformed into core schema';
+

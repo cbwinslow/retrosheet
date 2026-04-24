@@ -1,6 +1,7 @@
--- Universal Data Dictionary Table
--- Central registry of all tables, columns, and descriptions for AI agents
-
+-- File: sql/maintenance/020_data_dictionary.sql
+-- Purpose: Create data dictionary schema for table and column documentation
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS metadata;
 
 CREATE TABLE IF NOT EXISTS metadata.table_dictionary (
@@ -91,3 +92,7 @@ SELECT metadata.refresh_data_dictionary();
 
 -- Schedule daily refresh
 SELECT cron.schedule('data-dictionary-refresh', '0 1 * * *', $$ SELECT metadata.refresh_data_dictionary(); $$);
+
+-- Table comments
+COMMENT ON TABLE metadata.table_dictionary IS 'Data dictionary of all warehouse tables';
+COMMENT ON TABLE metadata.column_dictionary IS 'Data dictionary of all warehouse columns';

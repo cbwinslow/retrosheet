@@ -1,9 +1,7 @@
--- Install pgvector extension for vector similarity search
--- This is critical for player embeddings, similarity search, and fast lookup
--- Research-backed: Widely adopted for RAG applications and AI/ML workloads
--- Source: https://www.tigerdata.com/learn/postgresql-extensions-pgvector
-
--- Create extension
+-- File: sql/maintenance/005_install_pgvector.sql
+-- Purpose: Install pgvector extension with similarity search test
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Validate installation: Create test embedding table
@@ -36,3 +34,6 @@ SELECT
     extversion
 FROM pg_extension
 WHERE extname = 'vector';
+
+-- Table comments
+COMMENT ON TABLE test_embeddings IS 'Test table for pgvector embedding storage';

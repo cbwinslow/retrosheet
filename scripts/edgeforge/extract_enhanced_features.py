@@ -11,17 +11,17 @@ import psycopg2
 
 def database_kwargs():
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
 def extract_statcast_pitches():
     """Extract Statcast pitch data from existing MLB game feeds."""
-    print("⚾ Extracting Statcast pitch data from existing feeds...")
+    print('⚾ Extracting Statcast pitch data from existing feeds...')
 
     conn = psycopg2.connect(**database_kwargs())
     try:
@@ -60,10 +60,10 @@ def extract_statcast_pitches():
             """)
 
             # Check how many pitches we extracted
-            cur.execute("SELECT COUNT(*) FROM mlb_enhanced.statcast_pitches;")
+            cur.execute('SELECT COUNT(*) FROM mlb_enhanced.statcast_pitches;')
             pitch_count = cur.fetchone()[0]
 
-            print(f"✅ Extracted {pitch_count} Statcast pitches")
+            print(f'✅ Extracted {pitch_count} Statcast pitches')
 
             if pitch_count > 0:
                 # Show some statistics
@@ -81,10 +81,10 @@ def extract_statcast_pitches():
 
                 stats = cur.fetchone()
                 if stats:
-                    print(f"   Average velocity: {stats[1]} mph")
-                    print(f"   Average spin rate: {stats[2]} rpm")
-                    print(f"   Unique pitch types: {stats[3]}")
-                    print(f"   Average plate position: ({stats[4]}, {stats[5]})")
+                    print(f'   Average velocity: {stats[1]} mph')
+                    print(f'   Average spin rate: {stats[2]} rpm')
+                    print(f'   Unique pitch types: {stats[3]}')
+                    print(f'   Average plate position: ({stats[4]}, {stats[5]})')
 
         conn.commit()
 
@@ -94,7 +94,7 @@ def extract_statcast_pitches():
 
 def extract_matchup_history():
     """Extract batter-pitcher matchup history from existing events."""
-    print("🤝 Extracting batter-pitcher matchup history...")
+    print('🤝 Extracting batter-pitcher matchup history...')
 
     conn = psycopg2.connect(**database_kwargs())
     try:
@@ -160,10 +160,10 @@ def extract_matchup_history():
             """)
 
             # Check matchup stats
-            cur.execute("SELECT COUNT(*) FROM mlb_enhanced.batter_pitcher_history;")
+            cur.execute('SELECT COUNT(*) FROM mlb_enhanced.batter_pitcher_history;')
             matchup_count = cur.fetchone()[0]
 
-            print(f"✅ Extracted {matchup_count} batter-pitcher matchups")
+            print(f'✅ Extracted {matchup_count} batter-pitcher matchups')
 
         conn.commit()
 
@@ -173,7 +173,7 @@ def extract_matchup_history():
 
 def create_enhanced_training_dataset():
     """Create enhanced training dataset with new features."""
-    print("🔬 Creating enhanced training dataset...")
+    print('🔬 Creating enhanced training dataset...')
 
     conn = psycopg2.connect(**database_kwargs())
     try:
@@ -246,10 +246,10 @@ def create_enhanced_training_dataset():
             """)
 
             # Check enhanced dataset size
-            cur.execute("SELECT COUNT(*) FROM mlb_enhanced.win_probability_training_enhanced;")
+            cur.execute('SELECT COUNT(*) FROM mlb_enhanced.win_probability_training_enhanced;')
             enhanced_count = cur.fetchone()[0]
 
-            print(f"✅ Created enhanced dataset with {enhanced_count} samples")
+            print(f'✅ Created enhanced dataset with {enhanced_count} samples')
 
         conn.commit()
 
@@ -258,26 +258,26 @@ def create_enhanced_training_dataset():
 
 
 def main():
-    print("🚀 MLB Enhanced Features Extraction")
-    print("=" * 50)
-    print("📍 Separate schema: mlb_enhanced (no impact on current pipeline)")
+    print('🚀 MLB Enhanced Features Extraction')
+    print('=' * 50)
+    print('📍 Separate schema: mlb_enhanced (no impact on current pipeline)')
 
     # Extract enhanced features
     extract_statcast_pitches()
     extract_matchup_history()
     create_enhanced_training_dataset()
 
-    print("\n" + "=" * 50)
-    print("✅ ENHANCED FEATURES READY")
-    print("=" * 50)
-    print("• Statcast pitch physics extracted")
-    print("• Batter-pitcher matchup history built")
-    print("• Enhanced training dataset created")
-    print("• Current pipeline completely unaffected")
+    print('\n' + '=' * 50)
+    print('✅ ENHANCED FEATURES READY')
+    print('=' * 50)
+    print('• Statcast pitch physics extracted')
+    print('• Batter-pitcher matchup history built')
+    print('• Enhanced training dataset created')
+    print('• Current pipeline completely unaffected')
 
-    print("\n🎯 Ready to train enhanced model!")
-    print("Next: Train new model with 20+ features vs current 15")
+    print('\n🎯 Ready to train enhanced model!')
+    print('Next: Train new model with 20+ features vs current 15')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

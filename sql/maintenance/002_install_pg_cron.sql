@@ -1,8 +1,7 @@
--- Install pg_cron extension for job scheduling
--- This is critical for automated pipeline (live game discovery, MV refresh)
--- Research-backed: Standard extension for scheduled tasks in PostgreSQL
-
--- Create extension
+-- File: sql/maintenance/002_install_pg_cron.sql
+-- Purpose: Install pg_cron extension for scheduled database jobs
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
 -- Validate installation: Create test job
@@ -25,3 +24,4 @@ SELECT
     extversion
 FROM pg_extension
 WHERE extname = 'cron';
+

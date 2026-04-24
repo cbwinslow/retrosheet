@@ -17,11 +17,11 @@ import psycopg2
 
 def database_kwargs() -> dict[str, str]:
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
@@ -78,7 +78,7 @@ def create_live_plate_appearances(conn):
         events_data = cur.fetchall()
 
         if not events_data:
-            print("No live events found to convert to plate appearances")
+            print('No live events found to convert to plate appearances')
             return 0
 
         # Group events by game for plate appearance numbering
@@ -134,7 +134,7 @@ def create_live_plate_appearances(conn):
                 ) = event
 
                 game_pa_counter += 1
-                half_inning_key = f"{inning}_{is_bottom_inning}"
+                half_inning_key = f'{inning}_{is_bottom_inning}'
                 half_inning_pa_counters[half_inning_key] += 1
 
                 # Calculate additional fields
@@ -154,7 +154,7 @@ def create_live_plate_appearances(conn):
                     half_inning_pa_counters[half_inning_key],
                     season,
                     game_date,
-                    "mlb_live",
+                    'mlb_live',
                     event_sequence,
                     inning,
                     is_bottom_inning,
@@ -233,10 +233,10 @@ def create_live_plate_appearances(conn):
                             pa_record[:34],
                         )
                     except Exception as e:
-                        print(f"Warning: Failed to insert PA record {i}: {e}")
+                        print(f'Warning: Failed to insert PA record {i}: {e}')
                         continue
 
-            print(f"Created {len(pa_records)} live plate appearance records")
+            print(f'Created {len(pa_records)} live plate appearance records')
             return len(pa_records)
 
         return 0
@@ -244,9 +244,9 @@ def create_live_plate_appearances(conn):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Create live plate appearances from existing live events"
+        description='Create live plate appearances from existing live events',
     )
-    parser.add_argument("--game-id", help="Specific game ID to process (optional)")
+    parser.add_argument('--game-id', help='Specific game ID to process (optional)')
 
     args = parser.parse_args()
 
@@ -257,7 +257,7 @@ def main():
         conn.commit()
 
         if count > 0:
-            print(f"✅ Successfully created {count} live plate appearance records")
+            print(f'✅ Successfully created {count} live plate appearance records')
 
             # Show summary
             with conn.cursor() as cur:
@@ -272,18 +272,18 @@ def main():
                     FROM core.live_plate_appearances
                 """)
                 games, pas, hits, hrs, ks, walks = cur.fetchone()
-                print(f"📊 Summary: {games} games, {pas} plate appearances")
-                print(f"   Hits: {hits}, Home runs: {hrs}, Strikeouts: {ks}, Walks: {walks}")
+                print(f'📊 Summary: {games} games, {pas} plate appearances')
+                print(f'   Hits: {hits}, Home runs: {hrs}, Strikeouts: {ks}, Walks: {walks}')
         else:
-            print("ℹ️  No plate appearances to create")
+            print('ℹ️  No plate appearances to create')
 
     except Exception as e:
-        print(f"❌ Error creating live plate appearances: {e}")
+        print(f'❌ Error creating live plate appearances: {e}')
         conn.rollback()
         raise
     finally:
         conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

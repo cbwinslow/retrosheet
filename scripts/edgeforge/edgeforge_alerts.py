@@ -13,11 +13,11 @@ import psycopg2
 
 def database_kwargs():
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
@@ -62,63 +62,63 @@ class EdgeForgeAlerts:
         if raw_feeds >= 25000 and (not self.last_status or self.last_status[0] < 25000):
             alerts.append(
                 {
-                    "priority": "HIGH",
-                    "title": "🎯 25K Games Milestone Reached",
-                    "message": f"Raw game feeds: {raw_feeds:,} | Platform scaling successfully",
-                    "impact": "Core dataset now substantial for commercial modeling",
-                }
+                    'priority': 'HIGH',
+                    'title': '🎯 25K Games Milestone Reached',
+                    'message': f'Raw game feeds: {raw_feeds:,} | Platform scaling successfully',
+                    'impact': 'Core dataset now substantial for commercial modeling',
+                },
             )
 
         if processed_games >= 20000 and (not self.last_status or self.last_status[1] < 20000):
             alerts.append(
                 {
-                    "priority": "HIGH",
-                    "title": "🏟️ 20K Processed Games Complete",
-                    "message": f"Processed games: {processed_games:,} | Transformation pipeline optimized",
-                    "impact": "Ready for advanced feature engineering",
-                }
+                    'priority': 'HIGH',
+                    'title': '🏟️ 20K Processed Games Complete',
+                    'message': f'Processed games: {processed_games:,} | Transformation pipeline optimized',
+                    'impact': 'Ready for advanced feature engineering',
+                },
             )
 
         if seasons_downloaded >= 15 and (not self.last_status or self.last_status[2] < 15):
             alerts.append(
                 {
-                    "priority": "CRITICAL",
-                    "title": "📅 50% Historical Coverage Achieved",
-                    "message": f"Seasons downloaded: {seasons_downloaded}/27 | 15+ years of market data",
-                    "impact": "Multi-era analysis now possible",
-                }
+                    'priority': 'CRITICAL',
+                    'title': '📅 50% Historical Coverage Achieved',
+                    'message': f'Seasons downloaded: {seasons_downloaded}/27 | 15+ years of market data',
+                    'impact': 'Multi-era analysis now possible',
+                },
             )
 
         # Model readiness milestones
         if betting_samples >= 1000000 and (not self.last_status or self.last_status[3] < 1000000):
             alerts.append(
                 {
-                    "priority": "CRITICAL",
-                    "title": "🤖 1M Training Samples Ready",
-                    "message": f"Enhanced training set: {betting_samples:,} samples",
-                    "impact": "Enterprise-grade model training capacity achieved",
-                }
+                    'priority': 'CRITICAL',
+                    'title': '🤖 1M Training Samples Ready',
+                    'message': f'Enhanced training set: {betting_samples:,} samples',
+                    'impact': 'Enterprise-grade model training capacity achieved',
+                },
             )
 
         if statcast_pitches >= 500000 and (not self.last_status or self.last_status[4] < 500000):
             alerts.append(
                 {
-                    "priority": "HIGH",
-                    "title": "⚾ Statcast Data Scale Achieved",
-                    "message": f"Statcast pitches: {statcast_pitches:,} | Advanced pitch modeling ready",
-                    "impact": "Commercial edge in pitch-by-pitch predictions",
-                }
+                    'priority': 'HIGH',
+                    'title': '⚾ Statcast Data Scale Achieved',
+                    'message': f'Statcast pitches: {statcast_pitches:,} | Advanced pitch modeling ready',
+                    'impact': 'Commercial edge in pitch-by-pitch predictions',
+                },
             )
 
         # Completion milestones
         if seasons_downloaded >= 27 and (not self.last_status or self.last_status[2] < 27):
             alerts.append(
                 {
-                    "priority": "CRITICAL",
-                    "title": "🎉 COMPLETE HISTORICAL DATA INGESTION",
-                    "message": "All 27 MLB seasons (2000-2026) fully downloaded and processed",
-                    "impact": "EdgeForge platform at full commercial capability",
-                }
+                    'priority': 'CRITICAL',
+                    'title': '🎉 COMPLETE HISTORICAL DATA INGESTION',
+                    'message': 'All 27 MLB seasons (2000-2026) fully downloaded and processed',
+                    'impact': 'EdgeForge platform at full commercial capability',
+                },
             )
 
         # Progress alerts (less frequent)
@@ -126,11 +126,11 @@ class EdgeForgeAlerts:
             if not self.last_status or self.last_status[2] != seasons_downloaded:
                 alerts.append(
                     {
-                        "priority": "MEDIUM",
-                        "title": f"📊 {seasons_downloaded} Seasons Downloaded",
-                        "message": f"Progress: {seasons_downloaded}/27 seasons | {seasons_downloaded / 27 * 100:.1f}% complete",
-                        "impact": "Platform expanding rapidly",
-                    }
+                        'priority': 'MEDIUM',
+                        'title': f'📊 {seasons_downloaded} Seasons Downloaded',
+                        'message': f'Progress: {seasons_downloaded}/27 seasons | {seasons_downloaded / 27 * 100:.1f}% complete',
+                        'impact': 'Platform expanding rapidly',
+                    },
                 )
 
         return alerts
@@ -143,17 +143,17 @@ class EdgeForgeAlerts:
         import subprocess
 
         result = subprocess.run(
-            ["pgrep", "-f", "complete_mlb_ingestion"], capture_output=True, text=True
+            ['pgrep', '-f', 'complete_mlb_ingestion'], capture_output=True, text=True,
         )
 
         if result.returncode != 0:
             alerts.append(
                 {
-                    "priority": "HIGH",
-                    "title": "⚠️ Ingestion Process Stopped",
-                    "message": "MLB data ingestion script is not running",
-                    "impact": "Historical data collection paused - manual restart required",
-                }
+                    'priority': 'HIGH',
+                    'title': '⚠️ Ingestion Process Stopped',
+                    'message': 'MLB data ingestion script is not running',
+                    'impact': 'Historical data collection paused - manual restart required',
+                },
             )
 
         # Check database connectivity
@@ -163,26 +163,26 @@ class EdgeForgeAlerts:
         except Exception as e:
             alerts.append(
                 {
-                    "priority": "CRITICAL",
-                    "title": "🚨 Database Connection Failed",
-                    "message": f"Database connectivity issue: {str(e)}",
-                    "impact": "Platform operations compromised",
-                }
+                    'priority': 'CRITICAL',
+                    'title': '🚨 Database Connection Failed',
+                    'message': f'Database connectivity issue: {e!s}',
+                    'impact': 'Platform operations compromised',
+                },
             )
 
         return alerts
 
     def send_alert(self, alert):
         """Send alert via email/console (configurable for production)."""
-        priority = alert["priority"]
-        title = alert["title"]
-        message = alert["message"]
-        impact = alert["impact"]
+        priority = alert['priority']
+        title = alert['title']
+        message = alert['message']
+        impact = alert['impact']
 
         # Priority indicators
-        priority_icons = {"CRITICAL": "🚨", "HIGH": "⚠️", "MEDIUM": "📢", "LOW": "ℹ️"}
+        priority_icons = {'CRITICAL': '🚨', 'HIGH': '⚠️', 'MEDIUM': '📢', 'LOW': 'ℹ️'}
 
-        icon = priority_icons.get(priority, "📢")
+        icon = priority_icons.get(priority, '📢')
 
         # Format alert message
         alert_msg = f"""
@@ -203,18 +203,18 @@ class EdgeForgeAlerts:
 
         # In production, this would send email/Slack/etc.
         # For now, print to console and log
-        print("\n" + "=" * 60)
+        print('\n' + '=' * 60)
         print(alert_msg)
-        print("=" * 60)
+        print('=' * 60)
 
         # Log to file
-        with open("/tmp/edgeforge_alerts.log", "a") as f:
-            f.write(f"[{datetime.now().isoformat()}] {priority}: {title}\n")
+        with open('/tmp/edgeforge_alerts.log', 'a') as f:
+            f.write(f'[{datetime.now().isoformat()}] {priority}: {title}\n')
 
     def run_alert_system(self):
         """Main alert monitoring loop."""
-        print("🎯 EdgeForge Alert System Activated")
-        print("💰 Monitoring betting intelligence platform...")
+        print('🎯 EdgeForge Alert System Activated')
+        print('💰 Monitoring betting intelligence platform...')
 
         while True:
             try:
@@ -243,10 +243,10 @@ class EdgeForgeAlerts:
                 time.sleep(300)
 
             except KeyboardInterrupt:
-                print("\n👋 EdgeForge Alert System deactivated")
+                print('\n👋 EdgeForge Alert System deactivated')
                 break
             except Exception as e:
-                print(f"❌ Alert system error: {e}")
+                print(f'❌ Alert system error: {e}')
                 time.sleep(60)  # Wait a minute before retrying
 
 
@@ -256,5 +256,5 @@ def main():
     alert_system.run_alert_system()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

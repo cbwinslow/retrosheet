@@ -13,22 +13,22 @@ import psycopg2
 from dotenv import load_dotenv
 from psycopg2 import Error
 
+
 load_dotenv()
 
 
 def get_db_connection():
     """Get PostgreSQL connection from environment variables."""
-    db_url = os.getenv("DATABASE_URL")
+    db_url = os.getenv('DATABASE_URL')
     if db_url:
         return psycopg2.connect(db_url)
-    else:
-        return psycopg2.connect(
-            host=os.getenv("PGHOST", "localhost"),
-            port=os.getenv("PGPORT", 5432),
-            database=os.getenv("PGDATABASE", "retrosheet"),
-            user=os.getenv("PGUSER", os.getenv("USER")),
-            password=os.getenv("PGPASSWORD"),
-        )
+    return psycopg2.connect(
+        host=os.getenv('PGHOST', 'localhost'),
+        port=os.getenv('PGPORT', 5432),
+        database=os.getenv('PGDATABASE', 'retrosheet'),
+        user=os.getenv('PGUSER', os.getenv('USER')),
+        password=os.getenv('PGPASSWORD'),
+    )
 
 
 def populate_coach_xref():
@@ -59,11 +59,11 @@ def populate_coach_xref():
             coach_count = cur.rowcount
             conn.commit()
             print(
-                f"Populated {coach_count} coaches in bridge.coach_xref with names from biofile_legacy"
+                f'Populated {coach_count} coaches in bridge.coach_xref with names from biofile_legacy',
             )
             return coach_count
     except Error as e:
-        print(f"Error populating coach_xref: {e}")
+        print(f'Error populating coach_xref: {e}')
         conn.rollback()
         return 0
     finally:
@@ -105,11 +105,11 @@ def populate_umpire_xref():
             umpire_count = cur.rowcount
             conn.commit()
             print(
-                f"Populated {umpire_count} umpires in bridge.umpire_xref with biofile_legacy cross-reference"
+                f'Populated {umpire_count} umpires in bridge.umpire_xref with biofile_legacy cross-reference',
             )
             return umpire_count
     except Error as e:
-        print(f"Error populating umpire_xref: {e}")
+        print(f'Error populating umpire_xref: {e}')
         conn.rollback()
         return 0
     finally:
@@ -117,16 +117,16 @@ def populate_umpire_xref():
 
 
 def main():
-    print("Populating coach and umpire bridge tables...")
+    print('Populating coach and umpire bridge tables...')
 
     coach_count = populate_coach_xref()
     umpire_count = populate_umpire_xref()
 
-    print("\nSummary:")
-    print(f"  Coaches: {coach_count}")
-    print(f"  Umpires: {umpire_count}")
-    print(f"  Total: {coach_count + umpire_count}")
+    print('\nSummary:')
+    print(f'  Coaches: {coach_count}')
+    print(f'  Umpires: {umpire_count}')
+    print(f'  Total: {coach_count + umpire_count}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

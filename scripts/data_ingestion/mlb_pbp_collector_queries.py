@@ -16,22 +16,23 @@ import sys
 
 import pandas as pd
 
+
 # ── optional pretty-print
 try:
     from tabulate import tabulate
 
-    def show(df: pd.DataFrame, n: int = 20, title: str = "") -> None:
+    def show(df: pd.DataFrame, n: int = 20, title: str = '') -> None:
         if title:
             print(f"\n{'=' * 60}\n{title}\n{'=' * 60}")
-        print(tabulate(df.head(n), headers="keys", tablefmt="psql", showindex=False))
-        print(f"  ... ({len(df):,} total rows)\n")
+        print(tabulate(df.head(n), headers='keys', tablefmt='psql', showindex=False))
+        print(f'  ... ({len(df):,} total rows)\n')
 except ImportError:
 
-    def show(df: pd.DataFrame, n: int = 20, title: str = "") -> None:
+    def show(df: pd.DataFrame, n: int = 20, title: str = '') -> None:
         if title:
             print(f"\n{'=' * 60}\n{title}\n{'=' * 60}")
         print(df.head(n).to_string(index=False))
-        print(f"  ... ({len(df):,} total rows)\n")
+        print(f'  ... ({len(df):,} total rows)\n')
 
 
 from mlb_pbp_collector import (
@@ -39,6 +40,7 @@ from mlb_pbp_collector import (
     get_game_ids_for_team,
     query_game,
 )
+
 
 # ---------------------------------------------------------------------------
 # Example 1 — Single game by gamePk (fastest path)
@@ -53,30 +55,30 @@ def example_single_game(game_pk: int) -> pd.DataFrame:
         https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2025-04-10
     and find the gamePk in the JSON.
     """
-    print(f"\n[Example 1] Single game: gamePk={game_pk}")
+    print(f'\n[Example 1] Single game: gamePk={game_pk}')
     df = query_game(game_pk)
 
     if df.empty:
-        print("  No data returned — game may not have played yet.")
+        print('  No data returned — game may not have played yet.')
         return df
 
     # Show key columns
     view_cols = [
-        "inning",
-        "inning_half",
-        "outs_before",
-        "batter_name",
-        "pitcher_name",
-        "event_type",
-        "pitch_sequence",
-        "runner_1b",
-        "runner_2b",
-        "runner_3b",
-        "release_speed",
-        "launch_speed",
-        "launch_angle",
+        'inning',
+        'inning_half',
+        'outs_before',
+        'batter_name',
+        'pitcher_name',
+        'event_type',
+        'pitch_sequence',
+        'runner_1b',
+        'runner_2b',
+        'runner_3b',
+        'release_speed',
+        'launch_speed',
+        'launch_angle',
     ]
-    show(df[[c for c in view_cols if c in df.columns]], title=f"Game {game_pk} — Full Play-by-Play")
+    show(df[[c for c in view_cols if c in df.columns]], title=f'Game {game_pk} — Full Play-by-Play')
     return df
 
 
@@ -87,22 +89,22 @@ def example_single_game(game_pk: int) -> pd.DataFrame:
 
 def example_extra_base_hits(df: pd.DataFrame) -> pd.DataFrame:
     """Show all XBH events with Statcast data from a PBP DataFrame."""
-    xbh_events = {"double", "triple", "home_run"}
-    xbh = df[df["event_type"].str.lower().isin(xbh_events)].copy()
+    xbh_events = {'double', 'triple', 'home_run'}
+    xbh = df[df['event_type'].str.lower().isin(xbh_events)].copy()
 
     cols = [
-        "game_date",
-        "batter_name",
-        "pitcher_name",
-        "event_type",
-        "launch_speed",
-        "launch_angle",
-        "hit_distance_sc",
-        "estimated_woba_using_speedangle",
-        "inning",
-        "inning_half",
+        'game_date',
+        'batter_name',
+        'pitcher_name',
+        'event_type',
+        'launch_speed',
+        'launch_angle',
+        'hit_distance_sc',
+        'estimated_woba_using_speedangle',
+        'inning',
+        'inning_half',
     ]
-    show(xbh[[c for c in cols if c in xbh.columns]], title="Extra-Base Hits with Statcast Metrics")
+    show(xbh[[c for c in cols if c in xbh.columns]], title='Extra-Base Hits with Statcast Metrics')
     return xbh
 
 
@@ -114,7 +116,7 @@ def example_extra_base_hits(df: pd.DataFrame) -> pd.DataFrame:
 def example_pitcher_pitch_mix(df: pd.DataFrame, pitcher_name: str) -> pd.DataFrame:
     """Aggregate pitch type usage for a specific pitcher."""
     pitcher_df = df[
-        df["pitcher_name"].str.lower().str.contains(pitcher_name.lower(), na=False)
+        df['pitcher_name'].str.lower().str.contains(pitcher_name.lower(), na=False)
     ].copy()
 
     if pitcher_df.empty:
@@ -122,17 +124,17 @@ def example_pitcher_pitch_mix(df: pd.DataFrame, pitcher_name: str) -> pd.DataFra
         return pd.DataFrame()
 
     mix = (
-        pitcher_df.groupby("pitch_type")
+        pitcher_df.groupby('pitch_type')
         .agg(
-            count=("pitch_type", "size"),
-            avg_velo=("release_speed", lambda x: pd.to_numeric(x, errors="coerce").mean()),
-            avg_spin=("spin_rate", lambda x: pd.to_numeric(x, errors="coerce").mean()),
+            count=('pitch_type', 'size'),
+            avg_velo=('release_speed', lambda x: pd.to_numeric(x, errors='coerce').mean()),
+            avg_spin=('spin_rate', lambda x: pd.to_numeric(x, errors='coerce').mean()),
         )
         .reset_index()
-        .sort_values("count", ascending=False)
+        .sort_values('count', ascending=False)
     )
-    mix["pct"] = (mix["count"] / mix["count"].sum() * 100).round(1)
-    show(mix, title=f"Pitch Mix — {pitcher_name}")
+    mix['pct'] = (mix['count'] / mix['count'].sum() * 100).round(1)
+    show(mix, title=f'Pitch Mix — {pitcher_name}')
     return mix
 
 
@@ -148,27 +150,27 @@ def example_runner_situations(df: pd.DataFrame) -> pd.DataFrame:
     """
 
     def base_state(row) -> str:
-        b1 = "1" if str(row.get("runner_1b", "")).strip() else "_"
-        b2 = "2" if str(row.get("runner_2b", "")).strip() else "_"
-        b3 = "3" if str(row.get("runner_3b", "")).strip() else "_"
+        b1 = '1' if str(row.get('runner_1b', '')).strip() else '_'
+        b2 = '2' if str(row.get('runner_2b', '')).strip() else '_'
+        b3 = '3' if str(row.get('runner_3b', '')).strip() else '_'
         return b1 + b2 + b3
 
     df = df.copy()
-    df["base_state"] = df.apply(base_state, axis=1)
-    df["outs_before"] = pd.to_numeric(df["outs_before"], errors="coerce")
+    df['base_state'] = df.apply(base_state, axis=1)
+    df['outs_before'] = pd.to_numeric(df['outs_before'], errors='coerce')
 
     situation = (
-        df.groupby(["base_state", "outs_before"])
+        df.groupby(['base_state', 'outs_before'])
         .agg(
-            plate_appearances=("batter_id", "count"),
-            runs_scored=("runs_scored", lambda x: pd.to_numeric(x, errors="coerce").sum()),
-            hr=("event_type", lambda x: (x.str.lower() == "home_run").sum()),
-            k=("event_type", lambda x: (x.str.lower() == "strikeout").sum()),
+            plate_appearances=('batter_id', 'count'),
+            runs_scored=('runs_scored', lambda x: pd.to_numeric(x, errors='coerce').sum()),
+            hr=('event_type', lambda x: (x.str.lower() == 'home_run').sum()),
+            k=('event_type', lambda x: (x.str.lower() == 'strikeout').sum()),
         )
         .reset_index()
-        .sort_values("plate_appearances", ascending=False)
+        .sort_values('plate_appearances', ascending=False)
     )
-    show(situation, n=24, title="Event Counts by Base-Out State (Retrosheet-style)")
+    show(situation, n=24, title='Event Counts by Base-Out State (Retrosheet-style)')
     return situation
 
 
@@ -177,13 +179,13 @@ def example_runner_situations(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 
-def example_one_day(game_date: str = "2025-04-10") -> pd.DataFrame:
+def example_one_day(game_date: str = '2025-04-10') -> pd.DataFrame:
     """
     Pull every game on a given date and save a structured CSV.
     Demonstrates the full collect_season() pipeline.
     """
-    print(f"\n[Example 5] All games on {game_date}")
-    out_path = f"mlb_pbp_{game_date}.csv"
+    print(f'\n[Example 5] All games on {game_date}')
+    out_path = f'mlb_pbp_{game_date}.csv'
     df = collect_season(
         season=2025,
         start_date=game_date,
@@ -192,20 +194,20 @@ def example_one_day(game_date: str = "2025-04-10") -> pd.DataFrame:
         merge_statcast=True,
     )
     if not df.empty:
-        print(f"  Saved {len(df):,} rows to {out_path}")
+        print(f'  Saved {len(df):,} rows to {out_path}')
         show(
             df[
                 [
-                    "game_date",
-                    "home_team",
-                    "away_team",
-                    "inning",
-                    "batter_name",
-                    "event_type",
-                    "retro_event_code",
+                    'game_date',
+                    'home_team',
+                    'away_team',
+                    'inning',
+                    'batter_name',
+                    'event_type',
+                    'retro_event_code',
                 ]
             ].head(30),
-            title="Sample rows from collected day",
+            title='Sample rows from collected day',
         )
     return df
 
@@ -216,24 +218,24 @@ def example_one_day(game_date: str = "2025-04-10") -> pd.DataFrame:
 
 
 def example_team_games(
-    team_name: str = "Yankees", start_date: str = "2025-04-01", end_date: str = "2025-04-15"
+    team_name: str = 'Yankees', start_date: str = '2025-04-01', end_date: str = '2025-04-15',
 ) -> pd.DataFrame:
     """
     Collect PBP for all games involving a specific team in a date window.
     """
-    print(f"\n[Example 6] {team_name} games {start_date} → {end_date}")
+    print(f'\n[Example 6] {team_name} games {start_date} → {end_date}')
     games = get_game_ids_for_team(team_name, 2025, start_date, end_date)
     if not games:
-        print("  No games found.")
+        print('  No games found.')
         return pd.DataFrame()
 
-    print(f"  Found {len(games)} games:")
+    print(f'  Found {len(games)} games:')
     for g in games:
         print(f"    gamePk={g['game_pk']}  {g['away_team']} @ {g['home_team']}  ({g['game_date']})")
 
     all_dfs = []
     for g in games:
-        df = query_game(g["game_pk"])
+        df = query_game(g['game_pk'])
         if not df.empty:
             all_dfs.append(df)
 
@@ -241,18 +243,18 @@ def example_team_games(
         return pd.DataFrame()
 
     combined = pd.concat(all_dfs, ignore_index=True)
-    out_path = f"mlb_{team_name}_{start_date}_{end_date}.csv"
+    out_path = f'mlb_{team_name}_{start_date}_{end_date}.csv'
     combined.to_csv(out_path, index=False)
-    print(f"  Saved {len(combined):,} rows → {out_path}")
+    print(f'  Saved {len(combined):,} rows → {out_path}')
 
     # Quick team stats
     team_hits = combined[
-        combined["event_type"].str.lower().isin(["single", "double", "triple", "home_run"])
+        combined['event_type'].str.lower().isin(['single', 'double', 'triple', 'home_run'])
     ]
-    print(f"\n  {team_name} hits in window: {len(team_hits)}")
+    print(f'\n  {team_name} hits in window: {len(team_hits)}')
     show(
-        team_hits[["game_date", "batter_name", "event_type", "launch_speed", "inning"]],
-        title=f"{team_name} — All Hits",
+        team_hits[['game_date', 'batter_name', 'event_type', 'launch_speed', 'inning']],
+        title=f'{team_name} — All Hits',
     )
     return combined
 
@@ -270,33 +272,33 @@ def example_high_leverage(df: pd.DataFrame) -> pd.DataFrame:
     - At least one runner on base
     """
     df = df.copy()
-    df["outs_before"] = pd.to_numeric(df["outs_before"], errors="coerce")
-    df["inning"] = pd.to_numeric(df["inning"], errors="coerce")
+    df['outs_before'] = pd.to_numeric(df['outs_before'], errors='coerce')
+    df['inning'] = pd.to_numeric(df['inning'], errors='coerce')
 
     has_runner = (
-        df["runner_1b"].astype(str).str.strip().ne("")
-        | df["runner_2b"].astype(str).str.strip().ne("")
-        | df["runner_3b"].astype(str).str.strip().ne("")
+        df['runner_1b'].astype(str).str.strip().ne('')
+        | df['runner_2b'].astype(str).str.strip().ne('')
+        | df['runner_3b'].astype(str).str.strip().ne('')
     )
 
-    high_lev = df[(df["inning"] >= 7) & (df["outs_before"] == 2) & has_runner].copy()
+    high_lev = df[(df['inning'] >= 7) & (df['outs_before'] == 2) & has_runner].copy()
 
     cols = [
-        "game_date",
-        "inning",
-        "inning_half",
-        "batter_name",
-        "pitcher_name",
-        "runner_1b",
-        "runner_2b",
-        "runner_3b",
-        "event_type",
-        "pitch_sequence",
-        "runs_scored",
+        'game_date',
+        'inning',
+        'inning_half',
+        'batter_name',
+        'pitcher_name',
+        'runner_1b',
+        'runner_2b',
+        'runner_3b',
+        'event_type',
+        'pitch_sequence',
+        'runs_scored',
     ]
     show(
         high_lev[[c for c in cols if c in high_lev.columns]],
-        title="High-Leverage At-Bats (7th+, 2 outs, runners on)",
+        title='High-Leverage At-Bats (7th+, 2 outs, runners on)',
     )
     return high_lev
 
@@ -306,7 +308,7 @@ def example_high_leverage(df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 
-def example_load_and_filter(csv_path: str, event_filter: str = "home_run") -> pd.DataFrame:
+def example_load_and_filter(csv_path: str, event_filter: str = 'home_run') -> pd.DataFrame:
     """
     Load a previously saved CSV and filter by event type.
     Demonstrates downstream analysis workflow.
@@ -316,23 +318,23 @@ def example_load_and_filter(csv_path: str, event_filter: str = "home_run") -> pd
     import os
 
     if not os.path.exists(csv_path):
-        print(f"  File not found: {csv_path}")
+        print(f'  File not found: {csv_path}')
         return pd.DataFrame()
 
     df = pd.read_csv(csv_path, dtype=str)
-    filtered = df[df["event_type"].str.lower() == event_filter.lower()]
+    filtered = df[df['event_type'].str.lower() == event_filter.lower()]
 
     show(
         filtered[
             [
-                "game_date",
-                "batter_name",
-                "pitcher_name",
-                "event_type",
-                "launch_speed",
-                "launch_angle",
-                "hit_distance_sc",
-                "inning",
+                'game_date',
+                'batter_name',
+                'pitcher_name',
+                'event_type',
+                'launch_speed',
+                'launch_angle',
+                'hit_distance_sc',
+                'inning',
             ]
         ],
         title=f"Filtered: event_type == '{event_filter}' from {csv_path}",
@@ -417,14 +419,14 @@ RETROSHEET MAPPING
 
 
 def main():
-    parser = argparse.ArgumentParser(description="MLB Play-by-Play sample queries")
-    parser.add_argument("--game", type=int, help="Run single-game example with this gamePk")
-    parser.add_argument("--team", type=str, help="Run team-games example with this team name")
+    parser = argparse.ArgumentParser(description='MLB Play-by-Play sample queries')
+    parser.add_argument('--game', type=int, help='Run single-game example with this gamePk')
+    parser.add_argument('--team', type=str, help='Run team-games example with this team name')
     parser.add_argument(
-        "--date", type=str, default="2025-04-10", help="Date for one-day batch example (YYYY-MM-DD)"
+        '--date', type=str, default='2025-04-10', help='Date for one-day batch example (YYYY-MM-DD)',
     )
-    parser.add_argument("--csv", type=str, help="Path to existing CSV to load and filter")
-    parser.add_argument("--schema", action="store_true", help="Print column reference")
+    parser.add_argument('--csv', type=str, help='Path to existing CSV to load and filter')
+    parser.add_argument('--schema', action='store_true', help='Print column reference')
     args = parser.parse_args()
 
     if args.schema:
@@ -455,5 +457,5 @@ def main():
         example_high_leverage(df)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

@@ -1,9 +1,7 @@
--- Knowledge Base Vector Schema for RAG
--- Creates schema, tables, and indexes for storing document chunks with pgvector embeddings
--- Depends on: pgvector extension (see 005_install_pgvector.sql)
--- Run after: pgvector is installed and verified
-
--- Create KB schema
+-- File: sql/maintenance/030_kb_vector_schema.sql
+-- Purpose: Vector-enabled knowledge base schema for semantic search
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS kb;
 
 -- Document chunks table with vector embeddings
@@ -152,3 +150,4 @@ $$ LANGUAGE plpgsql;
 --
 -- SELECT * FROM kb.similar_chunks('[...]'::vector, 0.7, 5, 'modeling');
 -- SELECT * FROM kb.chunk_summary;
+

@@ -19,6 +19,7 @@ import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine, text
 
+
 ROOT = Path(__file__).resolve().parents[1]
 STATCAST_YEARS = list(range(2008, 2026))  # Statcast available from 2008
 
@@ -26,148 +27,148 @@ STATCAST_YEARS = list(range(2008, 2026))  # Statcast available from 2008
 def get_db_connection():
     """Get database connection."""
     return psycopg2.connect(
-        host=os.getenv("PGHOST", "localhost"),
-        port=int(os.getenv("PGPORT", 5432)),
-        database=os.getenv("PGDATABASE", "retrosheet"),
-        user=os.getenv("PGUSER", os.getenv("USER")),
+        host=os.getenv('PGHOST', 'localhost'),
+        port=int(os.getenv('PGPORT', 5432)),
+        database=os.getenv('PGDATABASE', 'retrosheet'),
+        user=os.getenv('PGUSER', os.getenv('USER')),
     )
 
 
 def get_database_url():
     """Get SQLAlchemy database URL."""
     # Use psycopg2 driver
-    user = os.getenv("PGUSER", os.getenv("USER", "cbwinslow"))
-    host = os.getenv("PGHOST", "localhost")
-    port = os.getenv("PGPORT", "5432")
-    db = os.getenv("PGDATABASE", "retrosheet")
-    return f"postgresql+psycopg2://{user}@{host}:{port}/{db}"
+    user = os.getenv('PGUSER', os.getenv('USER', 'cbwinslow'))
+    host = os.getenv('PGHOST', 'localhost')
+    port = os.getenv('PGPORT', '5432')
+    db = os.getenv('PGDATABASE', 'retrosheet')
+    return f'postgresql+psycopg2://{user}@{host}:{port}/{db}'
 
 
 # Full Statcast schema based on Baseball Savant documentation
 STATCAST_COLUMNS = {
     # Identifiers
-    "game_pk": "INTEGER",
-    "game_date": "TEXT",
-    "game_year": "INTEGER",
-    "game_type": "TEXT",
+    'game_pk': 'INTEGER',
+    'game_date': 'TEXT',
+    'game_year': 'INTEGER',
+    'game_type': 'TEXT',
     # Pitch identifiers
-    "at_bat_number": "INTEGER",
-    "pitch_number": "INTEGER",
-    "sv_id": "TEXT",  # Non-unique play ID
+    'at_bat_number': 'INTEGER',
+    'pitch_number': 'INTEGER',
+    'sv_id': 'TEXT',  # Non-unique play ID
     # Player IDs
-    "batter": "INTEGER",
-    "pitcher": "INTEGER",
-    "fielder_2": "INTEGER",  # Catcher
-    "fielder_3": "INTEGER",  # 1B
-    "fielder_4": "INTEGER",  # 2B
-    "fielder_5": "INTEGER",  # 3B
-    "fielder_6": "INTEGER",  # SS
-    "fielder_7": "INTEGER",  # LF
-    "fielder_8": "INTEGER",  # CF
-    "fielder_9": "INTEGER",  # RF
+    'batter': 'INTEGER',
+    'pitcher': 'INTEGER',
+    'fielder_2': 'INTEGER',  # Catcher
+    'fielder_3': 'INTEGER',  # 1B
+    'fielder_4': 'INTEGER',  # 2B
+    'fielder_5': 'INTEGER',  # 3B
+    'fielder_6': 'INTEGER',  # SS
+    'fielder_7': 'INTEGER',  # LF
+    'fielder_8': 'INTEGER',  # CF
+    'fielder_9': 'INTEGER',  # RF
     # Pitch type
-    "pitch_type": "TEXT",
-    "pitch_name": "TEXT",
+    'pitch_type': 'TEXT',
+    'pitch_name': 'TEXT',
     # Release point
-    "release_speed": "REAL",
-    "release_spin_rate": "REAL",
-    "release_extension": "REAL",
-    "release_pos_x": "REAL",
-    "release_pos_y": "REAL",
-    "release_pos_z": "REAL",
+    'release_speed': 'REAL',
+    'release_spin_rate': 'REAL',
+    'release_extension': 'REAL',
+    'release_pos_x': 'REAL',
+    'release_pos_y': 'REAL',
+    'release_pos_z': 'REAL',
     # Movement (pfx = pitch f/x)
-    "pfx_x": "REAL",
-    "pfx_z": "REAL",
+    'pfx_x': 'REAL',
+    'pfx_z': 'REAL',
     # Velocity components
-    "vx0": "REAL",
-    "vy0": "REAL",
-    "vz0": "REAL",
+    'vx0': 'REAL',
+    'vy0': 'REAL',
+    'vz0': 'REAL',
     # Acceleration
-    "ax": "REAL",
-    "ay": "REAL",
-    "az": "REAL",
+    'ax': 'REAL',
+    'ay': 'REAL',
+    'az': 'REAL',
     # Plate location
-    "plate_x": "REAL",  # Horizontal from catcher's view (-17 to +17 inches)
-    "plate_z": "REAL",  # Vertical (feet)
+    'plate_x': 'REAL',  # Horizontal from catcher's view (-17 to +17 inches)
+    'plate_z': 'REAL',  # Vertical (feet)
     # Strike zone (per batter)
-    "sz_top": "REAL",
-    "sz_bot": "REAL",
-    "zone": "TEXT",
+    'sz_top': 'REAL',
+    'sz_bot': 'REAL',
+    'zone': 'TEXT',
     # Count
-    "balls": "INTEGER",
-    "strikes": "INTEGER",
+    'balls': 'INTEGER',
+    'strikes': 'INTEGER',
     # Result
-    "type": "TEXT",  # B=ball, S=strike, X=in play
-    "description": "TEXT",  # Full description
-    "events": "TEXT",  # Event result
+    'type': 'TEXT',  # B=ball, S=strike, X=in play
+    'description': 'TEXT',  # Full description
+    'events': 'TEXT',  # Event result
     # Batted ball (if in play)
-    "bb_type": "TEXT",  # ground_ball, line_drive, fly_ball, popup
-    "hit_distance_sc": "REAL",
-    "launch_speed": "REAL",
-    "launch_angle": "REAL",
-    "hc_x": "REAL",  # Hit coordinate X
-    "hc_y": "REAL",  # Hit coordinate Y
+    'bb_type': 'TEXT',  # ground_ball, line_drive, fly_ball, popup
+    'hit_distance_sc': 'REAL',
+    'launch_speed': 'REAL',
+    'launch_angle': 'REAL',
+    'hc_x': 'REAL',  # Hit coordinate X
+    'hc_y': 'REAL',  # Hit coordinate Y
     # Run values (Statcast)
-    "woba_value": "REAL",
-    "woba_denom": "REAL",
-    "babip_value": "REAL",
-    "iso_value": "REAL",
-    "estimated_ba_using_speedangle": "REAL",
-    "estimated_woba_using_speedangle": "REAL",
-    "launch_speed_angle": "REAL",
+    'woba_value': 'REAL',
+    'woba_denom': 'REAL',
+    'babip_value': 'REAL',
+    'iso_value': 'REAL',
+    'estimated_ba_using_speedangle': 'REAL',
+    'estimated_woba_using_speedangle': 'REAL',
+    'launch_speed_angle': 'REAL',
     # Game state
-    "outs_when_up": "INTEGER",
-    "inning": "INTEGER",
-    "inning_topbot": "TEXT",  # Top or bottom
+    'outs_when_up': 'INTEGER',
+    'inning': 'INTEGER',
+    'inning_topbot': 'TEXT',  # Top or bottom
     # Score
-    "home_score": "INTEGER",
-    "away_score": "INTEGER",
-    "bat_score": "INTEGER",
-    "fld_score": "INTEGER",
-    "post_home_score": "INTEGER",
-    "post_away_score": "INTEGER",
-    "post_bat_score": "INTEGER",
-    "post_fld_score": "INTEGER",
+    'home_score': 'INTEGER',
+    'away_score': 'INTEGER',
+    'bat_score': 'INTEGER',
+    'fld_score': 'INTEGER',
+    'post_home_score': 'INTEGER',
+    'post_away_score': 'INTEGER',
+    'post_bat_score': 'INTEGER',
+    'post_fld_score': 'INTEGER',
     # Teams
-    "home_team": "TEXT",
-    "away_team": "TEXT",
+    'home_team': 'TEXT',
+    'away_team': 'TEXT',
     # Run expectancy changes
-    "delta_home_win_exp": "REAL",
-    "delta_run_exp": "REAL",
-    "delta_pitcher_run_exp": "REAL",
+    'delta_home_win_exp': 'REAL',
+    'delta_run_exp': 'REAL',
+    'delta_pitcher_run_exp': 'REAL',
     # Player info
-    "stand": "TEXT",  # Batter stance: L or R
-    "p_throws": "TEXT",  # Pitcher hand: L or R
+    'stand': 'TEXT',  # Batter stance: L or R
+    'p_throws': 'TEXT',  # Pitcher hand: L or R
     # Runners
-    "on_1b": "INTEGER",
-    "on_2b": "INTEGER",
-    "on_3b": "INTEGER",
+    'on_1b': 'INTEGER',
+    'on_2b': 'INTEGER',
+    'on_3b': 'INTEGER',
     # Alignment
-    "if_fielding_alignment": "TEXT",
-    "of_fielding_alignment": "TEXT",
+    'if_fielding_alignment': 'TEXT',
+    'of_fielding_alignment': 'TEXT',
     # Advanced (2017+)
-    "spin_axis": "REAL",
-    "effective_speed": "REAL",
+    'spin_axis': 'REAL',
+    'effective_speed': 'REAL',
     # Pitch tracking (2017+)
-    "bat_speed": "REAL",
-    "swing_length": "REAL",
-    "attack_angle": "REAL",
-    "attack_direction": "REAL",
-    "arm_angle": "REAL",
+    'bat_speed': 'REAL',
+    'swing_length': 'REAL',
+    'attack_angle': 'REAL',
+    'attack_direction': 'REAL',
+    'arm_angle': 'REAL',
     # Deprecated but sometimes present
-    "spin_dir": "REAL",
-    "spin_rate_deprecated": "REAL",
-    "break_angle_deprecated": "REAL",
-    "break_length_deprecated": "REAL",
+    'spin_dir': 'REAL',
+    'spin_rate_deprecated': 'REAL',
+    'break_angle_deprecated': 'REAL',
+    'break_length_deprecated': 'REAL',
 }
 
 
-def create_statcast_table(engine, schema: str = "features_pitch"):
+def create_statcast_table(engine, schema: str = 'features_pitch'):
     """Create the statcast pitch table with PostGIS geometry."""
 
     columns_sql = []
     for col, dtype in STATCAST_COLUMNS.items():
-        columns_sql.append(f"{col} {dtype}")
+        columns_sql.append(f'{col} {dtype}')
 
     sql = f"""
     CREATE SCHEMA IF NOT EXISTS {schema};
@@ -200,11 +201,11 @@ def create_statcast_table(engine, schema: str = "features_pitch"):
         conn.execute(text(sql))
         conn.commit()
 
-    print(f"Created table {schema}.statcast_pitches")
+    print(f'Created table {schema}.statcast_pitches')
 
 
 def load_statcast_data(
-    engine, seasons: list[int] = None, limit: int = None, batch_size: int = 100000
+    engine, seasons: list[int] = None, limit: int = None, batch_size: int = 100000,
 ):
     """
     Load statcast data from raw_mlb.statcast into normalized table.
@@ -215,8 +216,8 @@ def load_statcast_data(
         limit: Limit number of rows per season
         batch_size: Batch size for inserts
     """
-    schema = "features_pitch"
-    source_table = "raw_mlb.statcast"
+    schema = 'features_pitch'
+    source_table = 'raw_mlb.statcast'
 
     if seasons is None:
         seasons = STATCAST_YEARS
@@ -224,7 +225,7 @@ def load_statcast_data(
     total_loaded = 0
 
     for year in seasons:
-        print(f"\n=== Loading season {year} ===")
+        print(f'\n=== Loading season {year} ===')
 
         # Query from source
         query = f"""
@@ -232,30 +233,30 @@ def load_statcast_data(
             WHERE game_year = {year}
         """
         if limit:
-            query += f" LIMIT {limit}"
+            query += f' LIMIT {limit}'
 
         # Read in chunks
         chunks = pd.read_sql(query, engine, chunksize=batch_size)
 
         for i, chunk in enumerate(chunks):
             # Add geometry columns
-            if "plate_x" in chunk.columns and "plate_z" in chunk.columns:
-                chunk["location_point"] = chunk.apply(
+            if 'plate_x' in chunk.columns and 'plate_z' in chunk.columns:
+                chunk['location_point'] = chunk.apply(
                     lambda r: (
                         f"SRID=4326;POINT({r['plate_x']} {r['plate_z']})"
-                        if pd.notna(r["plate_x"]) and pd.notna(r["plate_z"])
+                        if pd.notna(r['plate_x']) and pd.notna(r['plate_z'])
                         else None
                     ),
                     axis=1,
                 )
 
             # Load to table
-            chunk.to_sql("statcast_pitches", engine, schema=schema, if_exists="append", index=False)
+            chunk.to_sql('statcast_pitches', engine, schema=schema, if_exists='append', index=False)
 
             total_loaded += len(chunk)
-            print(f"  Loaded {len(chunk)} rows (total: {total_loaded})")
+            print(f'  Loaded {len(chunk)} rows (total: {total_loaded})')
 
-    print(f"\n=== Total loaded: {total_loaded} ===")
+    print(f'\n=== Total loaded: {total_loaded} ===')
     return total_loaded
 
 
@@ -319,16 +320,16 @@ def create_analysis_views(engine):
             conn.execute(text(sql))
         conn.commit()
 
-    print("Created analysis views in eda schema")
+    print('Created analysis views in eda schema')
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Load Statcast pitch data")
-    parser.add_argument("--seasons", type=str, help='Comma-separated seasons (e.g., "2023,2024")')
-    parser.add_argument("--all", action="store_true", help="Load all available seasons")
-    parser.add_argument("--limit", type=int, default=None, help="Limit rows per season")
+    parser = argparse.ArgumentParser(description='Load Statcast pitch data')
+    parser.add_argument('--seasons', type=str, help='Comma-separated seasons (e.g., "2023,2024")')
+    parser.add_argument('--all', action='store_true', help='Load all available seasons')
+    parser.add_argument('--limit', type=int, default=None, help='Limit rows per season')
     parser.add_argument(
-        "--create-only", action="store_true", help="Only create table, do not load data"
+        '--create-only', action='store_true', help='Only create table, do not load data',
     )
     args = parser.parse_args()
 
@@ -338,7 +339,7 @@ def main():
     if args.all:
         seasons = STATCAST_YEARS
     elif args.seasons:
-        seasons = [int(y.strip()) for y in args.seasons.split(",")]
+        seasons = [int(y.strip()) for y in args.seasons.split(',')]
     else:
         seasons = [2024]  # Default to latest
 
@@ -352,12 +353,12 @@ def main():
         # Create views
         create_analysis_views(engine)
 
-    print("\nDone!")
-    print("Data available in: features_pitch.statcast_pitches")
+    print('\nDone!')
+    print('Data available in: features_pitch.statcast_pitches')
     print(
-        "EDA views: eda.statcast_pitches_by_type, eda.statcast_pitcher_arsenal, eda.statcast_batter_outcomes"
+        'EDA views: eda.statcast_pitches_by_type, eda.statcast_pitcher_arsenal, eda.statcast_batter_outcomes',
     )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

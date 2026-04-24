@@ -1,8 +1,7 @@
--- Coach and Umpire Bridge Tables
--- Cross-reference tables for coaches and umpires across data sources
--- Related to GitHub Issue #43
-
--- Drop existing tables if they exist (for clean migration)
+-- File: sql/core/040_coach_umpire_bridge_tables.sql
+-- Purpose: Create cross-reference tables for coaches and umpires across sources
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 DROP TABLE IF EXISTS bridge.coach_xref CASCADE;
 DROP TABLE IF EXISTS bridge.umpire_xref CASCADE;
 
@@ -83,3 +82,4 @@ EXECUTE FUNCTION bridge.update_updated_at_column();
 -- Comments
 COMMENT ON TABLE bridge.coach_xref IS 'Cross-reference table for coaches across Retrosheet, MLB, Lahman, and ESPN data sources';
 COMMENT ON TABLE bridge.umpire_xref IS 'Cross-reference table for umpires across Retrosheet, MLB, Lahman, and ESPN data sources';
+

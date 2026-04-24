@@ -1,11 +1,7 @@
--- Data Validation Views
--- Purpose: Comprehensive data quality validation across all data sources
--- Validates tables, rows, counts, columns, quality, duplicates, errors, nulls, date ranges, overlap
-
--- ============================================
--- Create validation schema first
--- ============================================
-
+-- File: sql/external/230_data_validation_views.sql
+-- Purpose: Row count and maintenance statistics for all warehouse tables
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS validation;
 
 -- ============================================
@@ -326,3 +322,4 @@ END;
 $$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION validation.refresh_data_quality_summary IS 'Refresh the materialized data quality summary view';
+

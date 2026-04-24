@@ -1,13 +1,7 @@
--- =============================================================================
--- External Data Mart Definitions
--- =============================================================================
--- This file defines schemas and tables for supplemental free data sources that
--- are ingested into their own data marts. The tables are kept separate from
--- the core Retrosheet warehouse and later joined via bridge tables or view
--- definitions.
--- =============================================================================
-
--- 1. Statcast raw data (pitch‑level metrics)
+-- File: sql/external/200_external_data.sql
+-- Purpose: Create schemas and tables for Statcast, play-by-play, and ID bridges
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS raw_mlb;
 CREATE TABLE IF NOT EXISTS raw_mlb.statcast (
     pitch_type TEXT,
@@ -170,3 +164,10 @@ CREATE TABLE IF NOT EXISTS bridge.external_team_xref (
     retrosheet_team_id INT NOT NULL,
     PRIMARY KEY (external_source, external_team_id)
 );
+
+-- Table comments
+COMMENT ON TABLE raw_mlb.statcast IS 'statcast data table';
+COMMENT ON TABLE raw_external.baseball_data_com IS 'baseball data com data table';
+COMMENT ON TABLE raw_mlb.gameday_xml IS 'gameday xml data table';
+COMMENT ON TABLE bridge.external_player_xref IS 'Cross-reference mapping table for external player xref';
+COMMENT ON TABLE bridge.external_team_xref IS 'Cross-reference mapping table for external team xref';

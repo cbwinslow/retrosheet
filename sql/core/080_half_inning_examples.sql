@@ -1,3 +1,7 @@
+-- File: sql/core/080_half_inning_examples.sql
+-- Purpose: Create half-inning run expectancy examples and feature views
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS features;
 
 DROP MATERIALIZED VIEW IF EXISTS features.half_inning_examples;
@@ -86,3 +90,4 @@ ON features.half_inning_examples (season, batting_team_id, fielding_team_id);
 
 CREATE INDEX half_inning_examples_state_idx
 ON features.half_inning_examples (season, start_outs, start_bases, start_score_diff);
+

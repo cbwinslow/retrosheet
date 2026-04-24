@@ -1,4 +1,7 @@
--- Table to store detailed MLB play‑by‑play data from StatsAPI & Statcast
+-- File: sql/core/080_mlb_pbp.sql
+-- Purpose: Create MLB play-by-play tables and live feed integration views
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS core;
 
 CREATE TABLE IF NOT EXISTS core.mlb_pbp (
@@ -53,3 +56,6 @@ CREATE TABLE IF NOT EXISTS core.mlb_pbp (
 CREATE INDEX IF NOT EXISTS mlb_pbp_game_idx ON core.mlb_pbp (game_pk, inning, inning_half);
 CREATE INDEX IF NOT EXISTS mlb_pbp_player_idx ON core.mlb_pbp (batter_id, pitcher_id);
 CREATE INDEX IF NOT EXISTS mlb_pbp_date_idx ON core.mlb_pbp (game_date);
+
+-- Table comments
+COMMENT ON TABLE core.mlb_pbp IS 'mlb pbp data table';

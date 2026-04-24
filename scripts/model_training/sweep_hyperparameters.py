@@ -18,18 +18,19 @@ from sqlalchemy import create_engine
 # package (as defined by ``scripts/__init__.py``).
 from . import train_models
 
+
 ROOT = Path(__file__).resolve().parents[1]
-MODEL_DIR = ROOT / "data" / "models"
+MODEL_DIR = ROOT / 'data' / 'models'
 
 
 def feature_columns(target_id: str, feature_set: str) -> tuple[list[str], list[str]]:
-    if target_id == "game_home_win":
-        if feature_set == "advanced":
+    if target_id == 'game_home_win':
+        if feature_set == 'advanced':
             return (
                 train_models.GAME_ADVANCED_NUMERIC_FEATURES,
                 train_models.GAME_ADVANCED_CATEGORICAL_FEATURES,
             )
-        if feature_set == "enriched":
+        if feature_set == 'enriched':
             return (
                 train_models.GAME_ENRICHED_NUMERIC_FEATURES,
                 train_models.GAME_ENRICHED_CATEGORICAL_FEATURES,
@@ -37,19 +38,19 @@ def feature_columns(target_id: str, feature_set: str) -> tuple[list[str], list[s
         return train_models.GAME_NUMERIC_FEATURES, train_models.GAME_CATEGORICAL_FEATURES
 
     if target_id in train_models.PA_TARGETS:
-        if feature_set == "advanced":
+        if feature_set == 'advanced':
             return (
                 train_models.PA_ADVANCED_NUMERIC_FEATURES,
                 train_models.PA_ADVANCED_CATEGORICAL_FEATURES,
             )
-        if feature_set == "enriched":
+        if feature_set == 'enriched':
             return (
                 train_models.PA_ENRICHED_NUMERIC_FEATURES,
                 train_models.PA_ENRICHED_CATEGORICAL_FEATURES,
             )
         return train_models.PA_NUMERIC_FEATURES, train_models.PA_CATEGORICAL_FEATURES
 
-    raise ValueError(f"Unknown target_id: {target_id}")
+    raise ValueError(f'Unknown target_id: {target_id}')
 
 
 def hgb_candidates() -> list[tuple[str, HistGradientBoostingClassifier]]:
@@ -95,25 +96,25 @@ def train_candidate(
     pipeline = Pipeline(
         [
             (
-                "preprocess",
+                'preprocess',
                 train_models.preprocessor(
                     numeric_features=numeric_features,
                     categorical_features=categorical_features,
                     scale_numeric=isinstance(model, LogisticRegression),
                 ),
             ),
-            ("model", model),
-        ]
+            ('model', model),
+        ],
     )
-    pipeline.fit(train_frame[numeric_features + categorical_features], train_frame["target"])
+    pipeline.fit(train_frame[numeric_features + categorical_features], train_frame['target'])
     metrics = {
-        "train": train_models.metrics_for(
+        'train': train_models.metrics_for(
             pipeline,
             train_frame,
             numeric_features=numeric_features,
             categorical_features=categorical_features,
         ),
-        "validation": train_models.metrics_for(
+        'validation': train_models.metrics_for(
             pipeline,
             validation_frame,
             numeric_features=numeric_features,
@@ -125,21 +126,21 @@ def train_candidate(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run a reproducible hyperparameter sweep against warehouse examples."
+        description='Run a reproducible hyperparameter sweep against warehouse examples.',
     )
-    parser.add_argument("--target-id", required=True)
+    parser.add_argument('--target-id', required=True)
     parser.add_argument(
-        "--feature-set", choices=["basic", "enriched", "advanced"], default="advanced"
+        '--feature-set', choices=['basic', 'enriched', 'advanced'], default='advanced',
     )
-    parser.add_argument("--min-season", type=int, default=2000)
-    parser.add_argument("--max-season", type=int, default=2025)
-    parser.add_argument("--train-through", type=int, default=2022)
-    parser.add_argument("--sample-rate", type=float, default=0.05)
+    parser.add_argument('--min-season', type=int, default=2000)
+    parser.add_argument('--max-season', type=int, default=2025)
+    parser.add_argument('--train-through', type=int, default=2022)
+    parser.add_argument('--sample-rate', type=float, default=0.05)
     parser.add_argument(
-        "--families", nargs="+", choices=["hgb", "logistic"], default=["hgb", "logistic"]
+        '--families', nargs='+', choices=['hgb', 'logistic'], default=['hgb', 'logistic'],
     )
-    parser.add_argument("--max-candidates", type=int, default=12)
-    parser.add_argument("--activate", action="store_true")
+    parser.add_argument('--max-candidates', type=int, default=12)
+    parser.add_argument('--activate', action='store_true')
     args = parser.parse_args()
 
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -155,18 +156,18 @@ def main() -> None:
             sample_rate=args.sample_rate,
             feature_set=args.feature_set,
         )
-        train_frame = frame[frame["season"] <= args.train_through].copy()
-        validation_frame = frame[frame["season"] > args.train_through].copy()
+        train_frame = frame[frame['season'] <= args.train_through].copy()
+        validation_frame = frame[frame['season'] > args.train_through].copy()
         if train_frame.empty or validation_frame.empty:
-            raise SystemExit("Need both training and validation rows.")
+            raise SystemExit('Need both training and validation rows.')
 
         candidates = []
-        if "hgb" in args.families:
+        if 'hgb' in args.families:
             candidates.extend(hgb_candidates())
-        if "logistic" in args.families:
+        if 'logistic' in args.families:
             candidates.extend(logistic_candidates())
         candidates = candidates[: args.max_candidates]
-        version = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        version = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
 
         leaderboard = []
         for candidate_name, model in candidates:
@@ -177,24 +178,24 @@ def main() -> None:
                 train_frame=train_frame,
                 validation_frame=validation_frame,
             )
-            model_name = f"sweep_{candidate_name}"
-            artifact_path = MODEL_DIR / f"{args.target_id}_{model_name}_{version}.joblib"
+            model_name = f'sweep_{candidate_name}'
+            artifact_path = MODEL_DIR / f'{args.target_id}_{model_name}_{version}.joblib'
             joblib.dump(pipeline, artifact_path)
             feature_spec = {
-                "numeric_features": numeric_features,
-                "categorical_features": categorical_features,
-                "target": "target",
-                "feature_set": args.feature_set,
-                "sweep": True,
+                'numeric_features': numeric_features,
+                'categorical_features': categorical_features,
+                'target': 'target',
+                'feature_set': args.feature_set,
+                'sweep': True,
             }
             metrics.update(
                 {
-                    "sample_rate": args.sample_rate,
-                    "min_season": args.min_season,
-                    "max_season": args.max_season,
-                    "train_through": args.train_through,
-                    "candidate_name": candidate_name,
-                }
+                    'sample_rate': args.sample_rate,
+                    'min_season': args.min_season,
+                    'max_season': args.max_season,
+                    'train_through': args.train_through,
+                    'candidate_name': candidate_name,
+                },
             )
             train_models.register_model(
                 conn,
@@ -210,19 +211,19 @@ def main() -> None:
             leaderboard.append(
                 (
                     candidate_name,
-                    metrics["validation"]["roc_auc"],
-                    metrics["validation"]["log_loss"],
-                )
+                    metrics['validation']['roc_auc'],
+                    metrics['validation']['log_loss'],
+                ),
             )
             print(f"trained {candidate_name}: {json.dumps(metrics['validation'], sort_keys=True)}")
 
-        print("\nLeaderboard:")
+        print('\nLeaderboard:')
         for name, roc_auc, loss in sorted(leaderboard, key=lambda row: row[1], reverse=True):
-            print(f"{name}\troc_auc={roc_auc:.6f}\tlog_loss={loss:.6f}")
+            print(f'{name}\troc_auc={roc_auc:.6f}\tlog_loss={loss:.6f}')
     finally:
         engine.dispose()
         conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

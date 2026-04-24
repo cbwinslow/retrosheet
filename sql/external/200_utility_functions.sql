@@ -1,7 +1,7 @@
--- Utility functions for the Retrosheet warehouse
--- These functions encapsulate common repeatable queries and maintenance tasks.
-
--- 1. Refresh all materialized views in the features schema
+-- File: sql/external/200_utility_functions.sql
+-- Purpose: Create utility functions for view refresh, health checks, and backups
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE FUNCTION features.refresh_all_materialized_views()
 RETURNS void LANGUAGE plpgsql AS $$
 DECLARE
@@ -113,3 +113,6 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION warehouse.generate_backup_sql(boolean) TO public;
+
+-- Table comments
+COMMENT ON TABLE IF IS 'IF data table';

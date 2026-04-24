@@ -10,25 +10,24 @@ from __future__ import annotations
 
 import os
 from datetime import date
-from typing import Optional
 
 import psycopg2
 
 
 def database_kwargs() -> dict[str, str]:
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
 def complete_game_xref(
-    season: Optional[int] = None,
-    min_date: Optional[date] = None,
-    max_date: Optional[date] = None,
+    season: int | None = None,
+    min_date: date | None = None,
+    max_date: date | None = None,
     dry_run: bool = False,
 ) -> None:
     """
@@ -48,7 +47,7 @@ def complete_game_xref(
             params: dict[str, any] = {}
 
             if season is not None:
-                where_conditions.append(f"season = {season}")
+                where_conditions.append(f'season = {season}')
 
             if min_date is not None:
                 where_conditions.append(f"game_date >= '{min_date}'")
@@ -75,7 +74,7 @@ def complete_game_xref(
 
             # Add filters if provided
             if season is not None:
-                query += f" AND g.season::int = {season}"
+                query += f' AND g.season::int = {season}'
             if min_date is not None:
                 query += f" AND g.game_date::date >= '{min_date}'"
             if max_date is not None:
@@ -90,10 +89,10 @@ def complete_game_xref(
             cur.execute(query)
             mlb_games = cur.fetchall()
 
-            print(f"Found {len(mlb_games)} MLB games without game_xref mappings")
+            print(f'Found {len(mlb_games)} MLB games without game_xref mappings')
 
             if dry_run:
-                print("DRY RUN - No inserts will be performed")
+                print('DRY RUN - No inserts will be performed')
 
             matched = 0
             unmatched = []
@@ -111,24 +110,24 @@ def complete_game_xref(
 
                 # Extract numeric team ID from MLB text ID (e.g., "MLB146" -> 146)
                 try:
-                    home_team_id_int = int(home_team_id.replace("MLB", ""))
+                    home_team_id_int = int(home_team_id.replace('MLB', ''))
                 except (ValueError, AttributeError):
                     home_team_id_int = None
 
                 try:
-                    away_team_id_int = int(away_team_id.replace("MLB", ""))
+                    away_team_id_int = int(away_team_id.replace('MLB', ''))
                 except (ValueError, AttributeError):
                     away_team_id_int = None
 
                 if not home_team_id_int or not away_team_id_int:
                     unmatched.append(
                         {
-                            "game_pk": game_pk,
-                            "game_date": str(game_date),
-                            "reason": "invalid team ID format",
-                            "home_team": home_team_name,
-                            "away_team": away_team_name,
-                        }
+                            'game_pk': game_pk,
+                            'game_date': str(game_date),
+                            'reason': 'invalid team ID format',
+                            'home_team': home_team_name,
+                            'away_team': away_team_name,
+                        },
                     )
                     continue
 
@@ -158,12 +157,12 @@ def complete_game_xref(
                 if not home_retro or not away_retro:
                     unmatched.append(
                         {
-                            "game_pk": game_pk,
-                            "game_date": str(game_date),
-                            "reason": "missing team mapping",
-                            "home_team": home_team_name,
-                            "away_team": away_team_name,
-                        }
+                            'game_pk': game_pk,
+                            'game_date': str(game_date),
+                            'reason': 'missing team mapping',
+                            'home_team': home_team_name,
+                            'away_team': away_team_name,
+                        },
                     )
                     continue
 
@@ -199,27 +198,27 @@ def complete_game_xref(
                 if existing_mapping:
                     unmatched.append(
                         {
-                            "game_pk": game_pk,
-                            "game_date": str(game_date),
-                            "reason": "retrosheet game already mapped",
-                            "existing_mlb_pk": existing_mapping[0],
-                            "home_team": home_team_name,
-                            "away_team": away_team_name,
-                        }
+                            'game_pk': game_pk,
+                            'game_date': str(game_date),
+                            'reason': 'retrosheet game already mapped',
+                            'existing_mlb_pk': existing_mapping[0],
+                            'home_team': home_team_name,
+                            'away_team': away_team_name,
+                        },
                     )
                     continue
 
                 if not retro_game:
                     unmatched.append(
                         {
-                            "game_pk": game_pk,
-                            "game_date": str(game_date),
-                            "reason": "no matching retrosheet game",
-                            "home_retro": home_retro_id,
-                            "away_retro": away_retro_id,
-                            "home_team": home_team_name,
-                            "away_team": away_team_name,
-                        }
+                            'game_pk': game_pk,
+                            'game_date': str(game_date),
+                            'reason': 'no matching retrosheet game',
+                            'home_retro': home_retro_id,
+                            'away_retro': away_retro_id,
+                            'home_team': home_team_name,
+                            'away_team': away_team_name,
+                        },
                     )
                     continue
 
@@ -227,7 +226,7 @@ def complete_game_xref(
 
                 if dry_run:
                     print(
-                        f"Would match: MLB {game_pk} -> Retrosheet {retro_game_id} on {game_date}"
+                        f'Would match: MLB {game_pk} -> Retrosheet {retro_game_id} on {game_date}',
                     )
                 else:
                     cur.execute(
@@ -246,20 +245,20 @@ def complete_game_xref(
 
                 matched += 1
                 if matched % 100 == 0:
-                    print(f"Matched {matched} games...")
+                    print(f'Matched {matched} games...')
 
             conn.commit()
-            print(f"Total games matched: {matched}")
-            print(f"Total games unmatched: {len(unmatched)}")
+            print(f'Total games matched: {matched}')
+            print(f'Total games unmatched: {len(unmatched)}')
 
             if unmatched and len(unmatched) <= 20:
-                print("Unmatched games:")
+                print('Unmatched games:')
                 for item in unmatched:
-                    print(f"  {item}")
+                    print(f'  {item}')
             elif unmatched:
-                print("First 20 unmatched games:")
+                print('First 20 unmatched games:')
                 for item in unmatched[:20]:
-                    print(f"  {item}")
+                    print(f'  {item}')
 
     finally:
         conn.close()
@@ -269,12 +268,12 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Complete bridge.game_xref population by matching MLB games to Retrosheet games."
+        description='Complete bridge.game_xref population by matching MLB games to Retrosheet games.',
     )
-    parser.add_argument("--season", type=int, help="Filter by season")
-    parser.add_argument("--min-date", type=str, help="Minimum game date (YYYY-MM-DD)")
-    parser.add_argument("--max-date", type=str, help="Maximum game date (YYYY-MM-DD)")
-    parser.add_argument("--dry-run", action="store_true", help="Print matches without inserting")
+    parser.add_argument('--season', type=int, help='Filter by season')
+    parser.add_argument('--min-date', type=str, help='Minimum game date (YYYY-MM-DD)')
+    parser.add_argument('--max-date', type=str, help='Maximum game date (YYYY-MM-DD)')
+    parser.add_argument('--dry-run', action='store_true', help='Print matches without inserting')
 
     args = parser.parse_args()
 
@@ -289,5 +288,5 @@ def main() -> None:
     )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

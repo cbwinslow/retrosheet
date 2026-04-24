@@ -20,22 +20,22 @@ import psycopg2
 from dotenv import load_dotenv
 from psycopg2 import Error
 
+
 load_dotenv()
 
 
 def get_db_connection():
     """Get PostgreSQL connection from environment variables."""
-    db_url = os.getenv("DATABASE_URL")
+    db_url = os.getenv('DATABASE_URL')
     if db_url:
         return psycopg2.connect(db_url)
-    else:
-        return psycopg2.connect(
-            host=os.getenv("PGHOST", "localhost"),
-            port=os.getenv("PGPORT", "5432"),
-            database=os.getenv("PGDATABASE", "retrosheet"),
-            user=os.getenv("PGUSER", os.getenv("USER")),
-            password=os.getenv("PGPASSWORD"),
-        )
+    return psycopg2.connect(
+        host=os.getenv('PGHOST', 'localhost'),
+        port=os.getenv('PGPORT', '5432'),
+        database=os.getenv('PGDATABASE', 'retrosheet'),
+        user=os.getenv('PGUSER', os.getenv('USER')),
+        password=os.getenv('PGPASSWORD'),
+    )
 
 
 def populate_espn_player_xref():
@@ -77,10 +77,10 @@ def populate_espn_player_xref():
 
             player_count = cur.rowcount
             conn.commit()
-            print(f"Populated {player_count} ESPN player mappings in bridge.external_player_xref")
+            print(f'Populated {player_count} ESPN player mappings in bridge.external_player_xref')
             return player_count
     except Error as e:
-        print(f"Error populating ESPN player_xref: {e}")
+        print(f'Error populating ESPN player_xref: {e}')
         conn.rollback()
         return 0
     finally:
@@ -121,10 +121,10 @@ def populate_espn_team_xref():
 
             team_count = cur.rowcount
             conn.commit()
-            print(f"Populated {team_count} ESPN team mappings in bridge.external_team_xref")
+            print(f'Populated {team_count} ESPN team mappings in bridge.external_team_xref')
             return team_count
     except Error as e:
-        print(f"Error populating ESPN team_xref: {e}")
+        print(f'Error populating ESPN team_xref: {e}')
         conn.rollback()
         return 0
     finally:
@@ -137,7 +137,7 @@ def populate_espn_coach_xref():
     Note: ESPN coach data location in JSON needs to be determined.
     This is a placeholder for future implementation.
     """
-    print("ESPN coach ID mapping not yet implemented - JSON structure needs investigation")
+    print('ESPN coach ID mapping not yet implemented - JSON structure needs investigation')
     return 0
 
 
@@ -147,25 +147,25 @@ def populate_espn_umpire_xref():
     Note: ESPN umpire data location in JSON needs to be determined.
     This is a placeholder for future implementation.
     """
-    print("ESPN umpire ID mapping not yet implemented - JSON structure needs investigation")
+    print('ESPN umpire ID mapping not yet implemented - JSON structure needs investigation')
     return 0
 
 
 def main():
-    print("Populating ESPN bridge tables...")
+    print('Populating ESPN bridge tables...')
 
     player_count = populate_espn_player_xref()
     team_count = populate_espn_team_xref()
     coach_count = populate_espn_coach_xref()
     umpire_count = populate_espn_umpire_xref()
 
-    print("\nSummary:")
-    print(f"  Players: {player_count}")
-    print(f"  Teams: {team_count}")
-    print(f"  Coaches: {coach_count}")
-    print(f"  Umpires: {umpire_count}")
-    print(f"  Total: {player_count + team_count + coach_count + umpire_count}")
+    print('\nSummary:')
+    print(f'  Players: {player_count}')
+    print(f'  Teams: {team_count}')
+    print(f'  Coaches: {coach_count}')
+    print(f'  Umpires: {umpire_count}')
+    print(f'  Total: {player_count + team_count + coach_count + umpire_count}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

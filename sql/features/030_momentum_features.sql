@@ -1,6 +1,7 @@
--- Phase 2 Feature Mart: Momentum & Streak Features
--- Rolling window metrics for team and player recent performance
-
+-- File: sql/features/030_momentum_features.sql
+-- Purpose: Create team momentum features materialized view
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE MATERIALIZED VIEW features.team_momentum_features AS
 WITH team_game_results AS (
     SELECT
@@ -58,3 +59,4 @@ CREATE UNIQUE INDEX idx_team_momentum_game_team ON features.team_momentum_featur
 CREATE INDEX idx_team_momentum_game ON features.team_momentum_features (game_id);
 
 ANALYZE features.team_momentum_features;
+

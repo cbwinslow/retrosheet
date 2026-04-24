@@ -1,3 +1,7 @@
+-- File: sql/core/081_probability_calibration_artifacts.sql
+-- Purpose: Create calibration artifact tables and model reliability views
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 ALTER TABLE predictions.calibration_reports
 ADD COLUMN IF NOT EXISTS artifact_uri text;
 
@@ -23,3 +27,4 @@ SELECT
     summary
 FROM predictions.calibration_reports
 ORDER BY created_at DESC;
+

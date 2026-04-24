@@ -32,31 +32,31 @@ class PAOutcomeDistributionPredictor(Predictor[pd.DataFrame, np.ndarray]):
 
         # Try to load calibration
         calib_path = artifact_path.with_name(
-            artifact_path.stem.replace("_multiclass", "") + "_calibration.joblib"
+            artifact_path.stem.replace('_multiclass', '') + '_calibration.joblib',
         )
         if not calib_path.exists():
             # Try standard calibration path
             calib_path = (
                 artifact_path.parent
-                / "calibration"
-                / "pa_outcome_distribution"
+                / 'calibration'
+                / 'pa_outcome_distribution'
                 / (
-                    artifact_path.stem.replace("pa_outcome_distribution_", "")
-                    + "_isotonic_artifact.joblib"
+                    artifact_path.stem.replace('pa_outcome_distribution_', '')
+                    + '_isotonic_artifact.joblib'
                 )
             )
 
         if calib_path.exists():
             calib_data = joblib.load(calib_path)
-            self._calibration = calib_data.get("calibrators", [])
-            self._calibration_classes = calib_data.get("classes", [])
+            self._calibration = calib_data.get('calibrators', [])
+            self._calibration_classes = calib_data.get('classes', [])
         else:
             self._calibration = None
 
     def predict_raw(self, features: pd.DataFrame) -> np.ndarray:
         """Raw prediction before calibration."""
         if self._model is None:
-            raise ValueError("Model not loaded")
+            raise ValueError('Model not loaded')
         return self._model.predict_proba(features)
 
     def predict(self, features: pd.DataFrame) -> np.ndarray:
@@ -82,7 +82,7 @@ class PAOutcomeDistributionPredictor(Predictor[pd.DataFrame, np.ndarray]):
     def format_prediction(self, features: pd.DataFrame) -> str:
         """Format prediction as readable string."""
         top_classes, top_probs = self.predict_top_k(features)
-        lines = ["Top predictions:"]
+        lines = ['Top predictions:']
         for cls, prob in zip(top_classes, top_probs):
-            lines.append(f"  {cls}: {prob:.1%}")
-        return "\n".join(lines)
+            lines.append(f'  {cls}: {prob:.1%}')
+        return '\n'.join(lines)

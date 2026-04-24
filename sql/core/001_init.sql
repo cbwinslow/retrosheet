@@ -1,47 +1,7 @@
-/*
-File: sql/core/001_init.sql
-Purpose: Initialize core database schemas and raw landing tables
-Author: Agent Cascade
-Date: 2026-04-24
-Depends On: None - this is the first file to run
-Called By: scripts/rebuild_warehouse.sh, docs/agents/PROCEDURES.md Full Warehouse Rebuild
-
-Schemas Created:
-- raw_retrosheet: Landing zone for Retrosheet/Chadwick data
-- raw_mlb: Landing zone for MLB Stats API data
-- bridge: ID cross-reference tables between data sources
-- core: Canonical baseball entities (games, events, plate appearances)
-- features: ML-ready feature marts for model training
-- models: Trained model metadata and artifacts
-- predictions: Model outputs, backtests, live predictions
-- raw_markets: Prediction market data from Kalshi/Polymarket
-- market_edges: Market comparison and edge analysis
-- chat: Chatbot conversation history and context
-
-Tables Created:
-- raw_retrosheet.ingest_runs: Tracks data ingestion runs with status and metadata
-- raw_retrosheet.chadwick_event_raw: Raw Chadwick event output (source-preserved)
-- raw_mlb.live_feed_snapshots: MLB API live game snapshots
-- bridge.player_xref: Player ID crosswalk (Retrosheet ↔ MLB ↔ Lahman)
-- bridge.team_xref: Team ID crosswalk (Retrosheet ↔ MLB)
-- bridge.park_xref: Park/Venue ID crosswalk (Retrosheet ↔ MLB)
-- bridge.game_xref: Game ID crosswalk (Retrosheet ↔ MLB)
-
-Row Counts (as of 2026-04-24):
-- ingest_runs: ~50 runs tracked
-- chadwick_event_raw: ~4.9M event records
-- live_feed_snapshots: ~125K snapshots
-- player_xref: ~3,500 players mapped
-- team_xref: ~35 teams mapped
-- park_xref: ~60 parks mapped
-- game_xref: ~62,598 games mapped
-
-Notes:
-- This is the foundation SQL - must run first before any other SQL files
-- Uses IF NOT EXISTS for idempotency (safe to re-run)
-- Creates indexes for common query patterns
-- Preserves all raw data without transformation
-*/
+-- File: sql/core/001_init.sql
+-- Purpose: Initialize core database schemas and raw landing tables
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 
 CREATE SCHEMA IF NOT EXISTS raw_retrosheet;
 CREATE SCHEMA IF NOT EXISTS raw_mlb;

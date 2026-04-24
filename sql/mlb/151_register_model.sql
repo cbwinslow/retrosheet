@@ -1,6 +1,7 @@
--- 151_register_model.sql
--- Procedure to register trained model artifacts
-
+-- File: sql/mlb/151_register_model.sql
+-- Purpose: Register a trained model artifact in the model registry
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE FUNCTION models.register_model(
     p_target_id TEXT,
     p_model_name TEXT,
@@ -102,3 +103,4 @@ WHERE mr.is_active = TRUE
 ORDER BY pt.target_id ASC, mr.created_at DESC;
 
 COMMENT ON VIEW models.v_active_models IS 'Currently active models with target info.';
+

@@ -15,7 +15,8 @@ from pathlib import Path
 
 import psycopg2
 
-DB_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
+
+DB_URL = os.getenv('DATABASE_URL', 'postgresql://localhost/retrosheet')
 
 
 def get_conn():
@@ -23,18 +24,18 @@ def get_conn():
 
 
 def create_staging(cur, name, columns):
-    cur.execute(f"DROP TABLE IF EXISTS raw_fangraphs.stg_{name}")
-    col_defs = ", ".join([f"{c} TEXT" for c in columns])
-    cur.execute(f"CREATE TABLE raw_fangraphs.stg_{name} ({col_defs})")
+    cur.execute(f'DROP TABLE IF EXISTS raw_fangraphs.stg_{name}')
+    col_defs = ', '.join([f'{c} TEXT' for c in columns])
+    cur.execute(f'CREATE TABLE raw_fangraphs.stg_{name} ({col_defs})')
 
 
 def copy_to_staging(cur, csv_path, name):
     # Read the CSV and filter out any completely empty lines that can break COPY
     # Detect and skip HTML content that may be mistakenly named .csv
-    with open(csv_path, "r", newline="") as raw_f:
+    with open(csv_path, newline='') as raw_f:
         first_line = raw_f.readline()
-        if first_line.lstrip().startswith("<"):
-            print(f"Skipping HTML file for {name}: {csv_path}")
+        if first_line.lstrip().startswith('<'):
+            print(f'Skipping HTML file for {name}: {csv_path}')
             return False
         # Reset to start and filter empty lines
         raw_f.seek(0)
@@ -42,7 +43,7 @@ def copy_to_staging(cur, csv_path, name):
     # Use a temporary in‑memory file-like object for COPY
     from io import StringIO
 
-    filtered = StringIO("".join(lines))
+    filtered = StringIO(''.join(lines))
     cur.copy_expert(f"COPY raw_fangraphs.stg_{name} FROM STDIN WITH CSV HEADER NULL ''", filtered)
     return True
 
@@ -146,80 +147,80 @@ def upsert_team(cur):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Load Fangraphs CSVs")
-    parser.add_argument("--player", type=Path, required=True, help="Player season CSV")
-    parser.add_argument("--team", type=Path, required=True, help="Team season CSV")
+    parser = argparse.ArgumentParser(description='Load Fangraphs CSVs')
+    parser.add_argument('--player', type=Path, required=True, help='Player season CSV')
+    parser.add_argument('--team', type=Path, required=True, help='Team season CSV')
     args = parser.parse_args()
 
     player_cols = [
-        "player_id",
-        "season",
-        "team_id",
-        "age",
-        "g",
-        "pa",
-        "ab",
-        "r",
-        "h",
-        "double",
-        "triple",
-        "hr",
-        "rbi",
-        "sb",
-        "cs",
-        "bb",
-        "ibb",
-        "hbp",
-        "so",
-        "avg",
-        "obp",
-        "slg",
-        "ops",
-        "woba",
-        "woba_plus",
-        "wrc_plus",
-        "war",
+        'player_id',
+        'season',
+        'team_id',
+        'age',
+        'g',
+        'pa',
+        'ab',
+        'r',
+        'h',
+        'double',
+        'triple',
+        'hr',
+        'rbi',
+        'sb',
+        'cs',
+        'bb',
+        'ibb',
+        'hbp',
+        'so',
+        'avg',
+        'obp',
+        'slg',
+        'ops',
+        'woba',
+        'woba_plus',
+        'wrc_plus',
+        'war',
     ]
     team_cols = [
-        "team_id",
-        "season",
-        "g",
-        "w",
-        "l",
-        "r",
-        "ra",
-        "era",
-        "woba",
-        "woba_plus",
-        "wrc_plus",
-        "war",
+        'team_id',
+        'season',
+        'g',
+        'w',
+        'l',
+        'r',
+        'ra',
+        'era',
+        'woba',
+        'woba_plus',
+        'wrc_plus',
+        'war',
     ]
 
     conn = get_conn()
     try:
         cur = conn.cursor()
         # Player season
-        create_staging(cur, "player_season", player_cols)
-        if str(args.player).lower().endswith(".csv"):
-            if copy_to_staging(cur, args.player, "player_season"):
+        create_staging(cur, 'player_season', player_cols)
+        if str(args.player).lower().endswith('.csv'):
+            if copy_to_staging(cur, args.player, 'player_season'):
                 upsert_player(cur)
         else:
-            print(f"Skipping non‑CSV player file: {args.player}")
+            print(f'Skipping non‑CSV player file: {args.player}')
 
         # Team season
-        create_staging(cur, "team_season", team_cols)
-        if str(args.team).lower().endswith(".csv"):
-            if copy_to_staging(cur, args.team, "team_season"):
+        create_staging(cur, 'team_season', team_cols)
+        if str(args.team).lower().endswith('.csv'):
+            if copy_to_staging(cur, args.team, 'team_season'):
                 upsert_team(cur)
         else:
-            print(f"Skipping non‑CSV team file: {args.team}")
+            print(f'Skipping non‑CSV team file: {args.team}')
 
         conn.commit()
-        print("✅ Loaded Fangraphs player and team season data")
+        print('✅ Loaded Fangraphs player and team season data')
     finally:
         cur.close()
         conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

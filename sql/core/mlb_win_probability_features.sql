@@ -1,32 +1,7 @@
--- MLB Win Probability Feature Engineering Plan
--- Combining Retrosheet historical data with MLB modern analytics
-
--- ================================================================================
--- FEATURE CATEGORIES NEEDED FOR WIN PROBABILITY MODELING
--- ================================================================================
-
--- 1. BASIC GAME STATE FEATURES (Available in both sources)
--- inning, is_bottom_inning, outs_before, balls, strikes, score_diff, runners_on_base
-
--- 2. PLAYER PERFORMANCE FEATURES (Enhanced with MLB data)
--- batter_season_avg, pitcher_season_era, batter_career_stats, pitcher_career_stats
-
--- 3. STATCAST PITCH FEATURES (MLB exclusive - major advantage)
--- pitch_velocity, pitch_spin_rate, pitch_movement, pitch_location, pitch_type_confidence
-
--- 4. TEAM PERFORMANCE FEATURES (Season and recent form)
--- team_win_pct, team_run_differential, recent_10_game_record
-
--- 5. SITUATIONAL CONTEXT FEATURES
--- home/away, park_factors, weather, matchup_history
-
--- 6. ADVANCED ANALYTICS (MLB enhanced)
--- launch_angle, exit_velocity, sprint_speed, arm_strength
-
--- ================================================================================
--- IMPLEMENTATION PLAN
--- ================================================================================
-
+-- File: sql/core/mlb_win_probability_features.sql
+-- Purpose: Create MLB win probability features tables and in-game state views
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS mlb_features;
 
 -- Base game state features table (combines Retrosheet + MLB)
@@ -480,3 +455,11 @@ SET win_probability = batting_team_wins::int;
 -- ✅ Player seasonal performance + team context
 -- ✅ Park factors + matchup history
 -- ✅ Ready for win probability model training
+
+-- Table comments
+COMMENT ON TABLE mlb_features.game_state_features IS 'ML feature table for game state features';
+COMMENT ON TABLE mlb_features.player_season_stats IS 'player season stats data table';
+COMMENT ON TABLE mlb_features.team_season_stats IS 'team season stats data table';
+COMMENT ON TABLE mlb_features.park_factors IS 'park factors data table';
+COMMENT ON TABLE mlb_features.batter_pitcher_matchups IS 'batter pitcher matchups data table';
+COMMENT ON TABLE mlb_features.win_probability_training IS 'win probability training data table';

@@ -15,17 +15,17 @@ def database_kwargs():
     import os
 
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
 def download_schedule_for_date(date_str: str):
     """Download MLB schedule for a specific date."""
-    url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}"
+    url = f'https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}'
 
     try:
         start_time = time.time()
@@ -34,27 +34,26 @@ def download_schedule_for_date(date_str: str):
             response_time_ms = int((end_time - start_time) * 1000)
 
             if response.status == 200:
-                data = json.loads(response.read().decode("utf-8"))
+                data = json.loads(response.read().decode('utf-8'))
                 return {
-                    "success": True,
-                    "data": data,
-                    "http_status": response.status,
-                    "response_time_ms": response_time_ms,
+                    'success': True,
+                    'data': data,
+                    'http_status': response.status,
+                    'response_time_ms': response_time_ms,
                 }
-            else:
-                return {
-                    "success": False,
-                    "error": f"HTTP {response.status}",
-                    "http_status": response.status,
-                    "response_time_ms": response_time_ms,
-                }
+            return {
+                'success': False,
+                'error': f'HTTP {response.status}',
+                'http_status': response.status,
+                'response_time_ms': response_time_ms,
+            }
 
     except Exception as e:
         return {
-            "success": False,
-            "error": str(e),
-            "http_status": None,
-            "response_time_ms": None,
+            'success': False,
+            'error': str(e),
+            'http_status': None,
+            'response_time_ms': None,
         }
 
 
@@ -74,12 +73,12 @@ def store_schedule(date_str: str, result: dict):
             """,
                 (
                     date_str,
-                    f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}",
-                    Json(result.get("data", {})) if result.get("success") else Json({}),
-                    Json({"sportId": 1, "date": date_str}),
-                    result.get("http_status"),
-                    result.get("response_time_ms"),
-                    result.get("error") if not result.get("success") else None,
+                    f'https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}',
+                    Json(result.get('data', {})) if result.get('success') else Json({}),
+                    Json({'sportId': 1, 'date': date_str}),
+                    result.get('http_status'),
+                    result.get('response_time_ms'),
+                    result.get('error') if not result.get('success') else None,
                 ),
             )
 
@@ -110,20 +109,20 @@ def main():
     finally:
         conn.close()
 
-    print(f"Found {len(missing_dates)} missing dates for 2023")
+    print(f'Found {len(missing_dates)} missing dates for 2023')
 
     for date_str in missing_dates:
-        print(f"Downloading {date_str}...")
+        print(f'Downloading {date_str}...')
         result = download_schedule_for_date(date_str)
-        if result["success"]:
+        if result['success']:
             store_schedule(date_str, result)
-            print(f"  ✅ Stored {date_str}")
+            print(f'  ✅ Stored {date_str}')
         else:
             print(f"  ❌ Failed {date_str}: {result.get('error', 'Unknown error')}")
         time.sleep(1)  # Rate limiting
 
-    print("Done!")
+    print('Done!')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

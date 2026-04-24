@@ -22,8 +22,9 @@ import psycopg2
 
 from .db import database_kwargs
 
-T = TypeVar("T")
-R = TypeVar("R")
+
+T = TypeVar('T')
+R = TypeVar('R')
 
 
 @dataclass
@@ -48,7 +49,7 @@ class PredictionTarget:
             )
             row = cur.fetchone()
             if not row:
-                raise ValueError(f"Target {target_id} not found")
+                raise ValueError(f'Target {target_id} not found')
             return cls(row[0], row[1], row[2], row[3])
 
 
@@ -77,17 +78,14 @@ class Predictor(ABC, Generic[T, R]):
     @abstractmethod
     def load(self, artifact_path: Path) -> None:
         """Load model from disk."""
-        pass
 
     @abstractmethod
     def predict(self, features: pd.DataFrame) -> np.ndarray:
         """Make prediction. Returns probability distribution."""
-        pass
 
     @abstractmethod
     def predict_raw(self, features: pd.DataFrame) -> np.ndarray:
         """Raw prediction before calibration."""
-        pass
 
     def calibrate(self, probabilities: np.ndarray) -> np.ndarray:
         """Apply calibration if available."""
@@ -103,7 +101,6 @@ class Predictor(ABC, Generic[T, R]):
     @abstractmethod
     def classes(self) -> list[str]:
         """Class labels."""
-        pass
 
 
 class PredictorRegistry:
@@ -177,7 +174,7 @@ class PredictorRegistry:
                 row = cur.fetchone()
                 if not row:
                     return None
-                return {"uri": row[0], "type": row[1]}
+                return {'uri': row[0], 'type': row[1]}
         finally:
             conn.close()
 

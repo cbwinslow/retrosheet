@@ -13,17 +13,17 @@ import psycopg2
 
 def database_kwargs():
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
 def clear_screen():
     """Clear terminal screen for clean dashboard display."""
-    os.system("clear" if os.name != "nt" else "cls")
+    os.system('clear' if os.name != 'nt' else 'cls')
 
 
 def get_ingestion_status():
@@ -87,10 +87,10 @@ def get_ingestion_status():
             model_status = cur.fetchone()
 
             return {
-                "overall": overall,
-                "seasons": seasons,
-                "missing_seasons": missing_seasons,
-                "model_status": model_status,
+                'overall': overall,
+                'seasons': seasons,
+                'missing_seasons': missing_seasons,
+                'model_status': model_status,
             }
 
     finally:
@@ -106,7 +106,7 @@ def calculate_progress_metrics(status):
         seasons_downloaded,
         statcast_pitches,
         betting_samples,
-    ) = status["overall"]
+    ) = status['overall']
 
     # Progress calculations
     total_target_seasons = 27  # 2000-2025 + 2026
@@ -125,23 +125,23 @@ def calculate_progress_metrics(status):
     statcast_coverage = statcast_pitches / max(processed_events, 1) * 100
 
     return {
-        "percent_complete": percent_complete,
-        "seasons_remaining": seasons_remaining,
-        "projected_total_games": projected_total_games,
-        "projected_total_events": projected_total_events,
-        "betting_coverage_years": betting_coverage_years,
-        "ml_training_samples": ml_training_samples,
-        "statcast_coverage": statcast_coverage,
+        'percent_complete': percent_complete,
+        'seasons_remaining': seasons_remaining,
+        'projected_total_games': projected_total_games,
+        'projected_total_events': projected_total_events,
+        'betting_coverage_years': betting_coverage_years,
+        'ml_training_samples': ml_training_samples,
+        'statcast_coverage': statcast_coverage,
     }
 
 
 def display_header():
     """Display EdgeForge dashboard header."""
-    print("🎯 EdgeForge MLB Data Ingestion Dashboard")
-    print("💰 Professional Sports Betting Intelligence Platform")
-    print("=" * 70)
+    print('🎯 EdgeForge MLB Data Ingestion Dashboard')
+    print('💰 Professional Sports Betting Intelligence Platform')
+    print('=' * 70)
     print(f"📊 Live Status | Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
-    print("=" * 70)
+    print('=' * 70)
 
 
 def display_overall_progress(status, metrics):
@@ -153,142 +153,142 @@ def display_overall_progress(status, metrics):
         seasons_downloaded,
         statcast_pitches,
         betting_samples,
-    ) = status["overall"]
+    ) = status['overall']
 
-    print("\n📈 OVERALL PROGRESS")
-    print("-" * 50)
+    print('\n📈 OVERALL PROGRESS')
+    print('-' * 50)
 
     # Progress bar
-    progress_bar = "█" * int(metrics["percent_complete"] / 5) + "░" * int(
-        (100 - metrics["percent_complete"]) / 5
+    progress_bar = '█' * int(metrics['percent_complete'] / 5) + '░' * int(
+        (100 - metrics['percent_complete']) / 5,
     )
-    print(".1f")
+    print('.1f')
     # Key metrics
-    print("\n🎮 Data Volume:")
-    print("22")
-    print("22")
-    print("22")
-    print("22")
-    print("22")
+    print('\n🎮 Data Volume:')
+    print('22')
+    print('22')
+    print('22')
+    print('22')
+    print('22')
 
-    print("\n💰 Betting Intelligence:")
-    print("22")
-    print("22")
-    print("22")
+    print('\n💰 Betting Intelligence:')
+    print('22')
+    print('22')
+    print('22')
 
 
 def display_season_breakdown(status):
     """Display season-by-season breakdown."""
-    print("\n📅 SEASON BREAKDOWN (Latest 10)")
-    print("-" * 50)
+    print('\n📅 SEASON BREAKDOWN (Latest 10)')
+    print('-' * 50)
 
-    print("Season | Games | Date Range")
-    print("-" * 35)
+    print('Season | Games | Date Range')
+    print('-' * 35)
 
-    for season, game_feeds, earliest, latest in status["seasons"][:10]:
+    for season, game_feeds, earliest, latest in status['seasons'][:10]:
         # Handle date formatting for string dates from PostgreSQL
         try:
             if earliest and latest:
                 # Convert string dates to date objects for formatting
-                earliest_date = datetime.strptime(str(earliest)[:10], "%Y-%m-%d").date()
-                latest_date = datetime.strptime(str(latest)[:10], "%Y-%m-%d").date()
+                earliest_date = datetime.strptime(str(earliest)[:10], '%Y-%m-%d').date()
+                latest_date = datetime.strptime(str(latest)[:10], '%Y-%m-%d').date()
                 date_range = f"{earliest_date.strftime('%m/%d')}-{latest_date.strftime('%m/%d')}"
             else:
-                date_range = "N/A"
+                date_range = 'N/A'
         except:
-            date_range = "N/A"
+            date_range = 'N/A'
 
-        print("6")
+        print('6')
 
 
 def display_missing_seasons(status):
     """Display remaining seasons to download."""
-    missing = status["missing_seasons"]
+    missing = status['missing_seasons']
 
-    print("\n🎯 REMAINING SEASONS")
-    print("-" * 50)
+    print('\n🎯 REMAINING SEASONS')
+    print('-' * 50)
 
     if not missing:
-        print("✅ ALL HISTORICAL SEASONS DOWNLOADED!")
-        print("🎉 Ready for complete EdgeForge deployment!")
+        print('✅ ALL HISTORICAL SEASONS DOWNLOADED!')
+        print('🎉 Ready for complete EdgeForge deployment!')
     else:
-        print(f"📋 Seasons to download: {len(missing)}")
+        print(f'📋 Seasons to download: {len(missing)}')
         print(f"🎯 Target: {missing[:10]}{'...' if len(missing) > 10 else ''}")
 
         # Estimated completion
         avg_season_time = 1.5  # hours per season
         estimated_hours = len(missing) * avg_season_time
-        print(".1f")
+        print('.1f')
 
 
 def display_model_status(status):
     """Display EdgeForge model training status."""
-    model_status, basic_samples, enhanced_samples = status["model_status"]
+    model_status, basic_samples, enhanced_samples = status['model_status']
 
-    print("\n🤖 EdgeForge MODEL STATUS")
-    print("-" * 50)
+    print('\n🤖 EdgeForge MODEL STATUS')
+    print('-' * 50)
 
-    print(f"📊 Model Status: {model_status}")
-    print("22")
-    print("22")
+    print(f'📊 Model Status: {model_status}')
+    print('22')
+    print('22')
 
     if enhanced_samples > 0:
-        print("\n✅ ENHANCED FEATURES ACTIVE:")
-        print("  • Statcast pitch physics")
-        print("  • Batter-pitcher matchup history")
-        print("  • Situational betting factors")
-        print("  • Multi-era training data")
+        print('\n✅ ENHANCED FEATURES ACTIVE:')
+        print('  • Statcast pitch physics')
+        print('  • Batter-pitcher matchup history')
+        print('  • Situational betting factors')
+        print('  • Multi-era training data')
 
         # Projected performance
-        print("\n🎯 PROJECTED PERFORMANCE:")
-        print("  • Current AUC: 0.889")
-        print("  • With full data: 0.91-0.93")
-        print("  • Betting edges: 8-12% advantage")
+        print('\n🎯 PROJECTED PERFORMANCE:')
+        print('  • Current AUC: 0.889')
+        print('  • With full data: 0.91-0.93')
+        print('  • Betting edges: 8-12% advantage')
     else:
-        print("⏳ Waiting for enhanced features...")
+        print('⏳ Waiting for enhanced features...')
 
 
 def display_monetization_readiness(metrics):
     """Display monetization readiness assessment."""
-    print("\n💰 MONETIZATION READINESS")
-    print("-" * 50)
+    print('\n💰 MONETIZATION READINESS')
+    print('-' * 50)
 
-    readiness_score = min(100, metrics["percent_complete"] * 2)  # Scale to 200% max
+    readiness_score = min(100, metrics['percent_complete'] * 2)  # Scale to 200% max
 
     if readiness_score >= 80:
-        status = "🚀 PRODUCTION READY"
-        color = "🟢"
+        status = '🚀 PRODUCTION READY'
+        color = '🟢'
     elif readiness_score >= 60:
-        status = "⚡ BETA READY"
-        color = "🟡"
+        status = '⚡ BETA READY'
+        color = '🟡'
     elif readiness_score >= 40:
-        status = "🔧 MVP READY"
-        color = "🟠"
+        status = '🔧 MVP READY'
+        color = '🟠'
     else:
-        status = "🏗️  BUILDING"
-        color = "🔴"
+        status = '🏗️  BUILDING'
+        color = '🔴'
 
-    print(f"{color} Status: {status} ({readiness_score:.0f}%)")
+    print(f'{color} Status: {status} ({readiness_score:.0f}%)')
 
-    print("\n📊 Platform Capabilities:")
+    print('\n📊 Platform Capabilities:')
     features = [
-        ("Live win probability feeds", metrics["ml_training_samples"] > 100000),
-        ("Statcast-enhanced predictions", metrics["statcast_coverage"] > 50),
-        ("25+ year backtesting", metrics["betting_coverage_years"] >= 10),
-        ("Multi-era strategy optimization", metrics["seasons_remaining"] == 0),
-        ("Commercial betting edges", metrics["ml_training_samples"] > 1000000),
+        ('Live win probability feeds', metrics['ml_training_samples'] > 100000),
+        ('Statcast-enhanced predictions', metrics['statcast_coverage'] > 50),
+        ('25+ year backtesting', metrics['betting_coverage_years'] >= 10),
+        ('Multi-era strategy optimization', metrics['seasons_remaining'] == 0),
+        ('Commercial betting edges', metrics['ml_training_samples'] > 1000000),
     ]
 
     for feature, available in features:
-        check = "✅" if available else "⏳"
-        print(f"  {check} {feature}")
+        check = '✅' if available else '⏳'
+        print(f'  {check} {feature}')
 
     if readiness_score >= 80:
-        print("\n🎉 READY FOR LAUNCH:")
-        print("  • Premium subscription service")
-        print("  • Live betting alerts")
-        print("  • Professional backtesting suite")
-        print("  • API for betting applications")
+        print('\n🎉 READY FOR LAUNCH:')
+        print('  • Premium subscription service')
+        print('  • Live betting alerts')
+        print('  • Professional backtesting suite')
+        print('  • API for betting applications')
 
 
 def check_for_alerts(status, metrics):
@@ -296,32 +296,32 @@ def check_for_alerts(status, metrics):
     alerts = []
 
     # Completion milestones
-    if metrics["percent_complete"] >= 25 and metrics["percent_complete"] < 30:
-        alerts.append("🎯 25% Complete: Core dataset ready for initial modeling")
-    elif metrics["percent_complete"] >= 50 and metrics["percent_complete"] < 55:
-        alerts.append("⚡ 50% Complete: Enhanced features now available")
-    elif metrics["percent_complete"] >= 75 and metrics["percent_complete"] < 80:
-        alerts.append("🚀 75% Complete: Production platform ready")
-    elif metrics["percent_complete"] >= 90:
-        alerts.append("🎉 90% Complete: Full EdgeForge deployment imminent")
+    if metrics['percent_complete'] >= 25 and metrics['percent_complete'] < 30:
+        alerts.append('🎯 25% Complete: Core dataset ready for initial modeling')
+    elif metrics['percent_complete'] >= 50 and metrics['percent_complete'] < 55:
+        alerts.append('⚡ 50% Complete: Enhanced features now available')
+    elif metrics['percent_complete'] >= 75 and metrics['percent_complete'] < 80:
+        alerts.append('🚀 75% Complete: Production platform ready')
+    elif metrics['percent_complete'] >= 90:
+        alerts.append('🎉 90% Complete: Full EdgeForge deployment imminent')
 
     # Data milestones
-    if status["overall"][5] >= 1000000:  # 1M betting samples
-        alerts.append("📈 1M Training Samples: Enterprise-grade model capacity")
-    elif status["overall"][4] >= 100000:  # 100K statcast pitches
-        alerts.append("⚾ Statcast Data Rich: Advanced pitch modeling available")
+    if status['overall'][5] >= 1000000:  # 1M betting samples
+        alerts.append('📈 1M Training Samples: Enterprise-grade model capacity')
+    elif status['overall'][4] >= 100000:  # 100K statcast pitches
+        alerts.append('⚾ Statcast Data Rich: Advanced pitch modeling available')
 
     # Model readiness
-    if status["model_status"][2] >= 500000:  # 500K enhanced samples
-        alerts.append("🤖 Enhanced Model Ready: Retrain with full feature set")
+    if status['model_status'][2] >= 500000:  # 500K enhanced samples
+        alerts.append('🤖 Enhanced Model Ready: Retrain with full feature set')
 
     return alerts
 
 
 def main():
     """Main dashboard loop."""
-    print("🎯 EdgeForge Live Dashboard starting...")
-    print("💰 Press Ctrl+C to exit")
+    print('🎯 EdgeForge Live Dashboard starting...')
+    print('💰 Press Ctrl+C to exit')
 
     try:
         while True:
@@ -341,20 +341,20 @@ def main():
             # Check for alerts
             alerts = check_for_alerts(status, metrics)
             if alerts:
-                print("\n🚨 ALERTS:")
+                print('\n🚨 ALERTS:')
                 for alert in alerts:
-                    print(f"  {alert}")
+                    print(f'  {alert}')
 
             # Footer
-            print("\n🔄 Auto-refreshing every 30 seconds...")
-            print("💡 EdgeForge: Where data meets betting intelligence")
+            print('\n🔄 Auto-refreshing every 30 seconds...')
+            print('💡 EdgeForge: Where data meets betting intelligence')
             # Wait before next update
             time.sleep(30)
 
     except KeyboardInterrupt:
-        print("\n\n👋 EdgeForge Dashboard closed")
-        print("💰 Thanks for monitoring your betting intelligence platform!")
+        print('\n\n👋 EdgeForge Dashboard closed')
+        print('💰 Thanks for monitoring your betting intelligence platform!')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

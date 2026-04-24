@@ -1,3 +1,7 @@
+-- File: sql/core/076_plate_appearance_outcome_model.sql
+-- Purpose: Create PA outcome model tables, views, and prediction targets
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS features;
 CREATE SCHEMA IF NOT EXISTS predictions;
 
@@ -170,3 +174,4 @@ SELECT
     ROUND(AVG((pitch_seq_tx IS NOT NULL AND pitch_seq_tx <> '')::integer)::numeric, 4) AS pitch_sequence_coverage,
     ROUND(AVG((battedball_cd IS NOT NULL AND battedball_cd <> '')::integer)::numeric, 4) AS batted_ball_coverage
 FROM features.plate_appearance_outcome_examples;
+

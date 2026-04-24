@@ -1,6 +1,7 @@
--- Phase 2 Feature Mart: Postseason & Clutch Metrics
--- Postseason, elimination game, and high leverage situation flags
-
+-- File: sql/features/050_postseason_clutch_features.sql
+-- Purpose: Flag postseason, high-leverage, weekend, and doubleheader games
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE MATERIALIZED VIEW features.postseason_clutch_features AS
 SELECT
     game_id,
@@ -24,3 +25,4 @@ WITH DATA;
 CREATE UNIQUE INDEX idx_postseason_game ON features.postseason_clutch_features (game_id);
 
 ANALYZE features.postseason_clutch_features;
+

@@ -1,3 +1,7 @@
+-- File: sql/core/050_feature_marts.sql
+-- Purpose: Create prior-season rate feature marts for batters, pitchers, teams, PA
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS features;
 
 DROP MATERIALIZED VIEW IF EXISTS features.pa_context_prior_season_rates CASCADE;
@@ -226,3 +230,4 @@ SELECT
     'features.half_inning_outcome_summary',
     count(*)
 FROM features.half_inning_outcome_summary;
+

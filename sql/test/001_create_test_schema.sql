@@ -1,13 +1,7 @@
-/*
-File: sql/test/001_create_test_schema.sql
-Purpose: Create isolated test schema for E2E validation
-Author: Agent Cascade
-Date: 2026-04-24
-Called By: scripts/test/e2e_test_runner.sh
-
-This creates a test schema in the existing PostgreSQL database.
-No Docker, no cloud - completely free local testing.
-*/
+-- File: sql/test/001_create_test_schema.sql
+-- Purpose: Create isolated test schema for E2E validation
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 
 -- Drop and recreate test schema
 DROP SCHEMA IF EXISTS test CASCADE;

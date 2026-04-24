@@ -1,6 +1,7 @@
--- MLB Historical Data Schema (2000-present)
--- Comprehensive tables for bulk MLB data ingestion and analysis
-
+-- File: sql/mlb/145_mlb_historical_schema.sql
+-- Purpose: MLB historical data tables complementing Retrosheet
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS mlb;
 
 -- MLB Games (comprehensive game metadata)
@@ -328,3 +329,4 @@ COMMENT ON TABLE mlb.pitches IS 'Individual pitch measurements with physics data
 COMMENT ON TABLE mlb.players IS 'MLB player biographical and performance data';
 COMMENT ON TABLE mlb.teams IS 'MLB team information and organization';
 COMMENT ON TABLE mlb.venues IS 'MLB ballpark information and dimensions';
+

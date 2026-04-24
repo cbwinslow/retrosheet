@@ -39,7 +39,7 @@ def _connect() -> psycopg2.extensions.connection:
     The project already uses ``psql`` commands that rely on the ``DATABASE_URL``
     environment variable, so we honour that here.
     """
-    db_url = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
+    db_url = os.getenv('DATABASE_URL', 'postgresql://localhost/retrosheet')
     return psycopg2.connect(db_url)
 
 
@@ -48,7 +48,7 @@ def _insert_dataframe(conn, df: pd.DataFrame) -> None:
     """Insert rows into ``core.mlb_pbp`` using ``execute_values`` for speed."""
     cols = list(df.columns)
     # Convert empty strings to None for nullable columns
-    records = [tuple(None if v == "" else v for v in row) for row in df.values]
+    records = [tuple(None if v == '' else v for v in row) for row in df.values]
     with conn.cursor() as cur:
         sql = f"INSERT INTO core.mlb_pbp ({', '.join(cols)}) VALUES %s"
         execute_values(cur, sql, records, page_size=1000)
@@ -57,13 +57,13 @@ def _insert_dataframe(conn, df: pd.DataFrame) -> None:
 
 # ---------------------------------------------------------------------------
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Ingest MLB PBP CSVs into Postgres")
-    parser.add_argument("--csv", type=str, help="Path to a single CSV file")
-    parser.add_argument("--dir", type=str, help="Directory containing CSV files")
+    parser = argparse.ArgumentParser(description='Ingest MLB PBP CSVs into Postgres')
+    parser.add_argument('--csv', type=str, help='Path to a single CSV file')
+    parser.add_argument('--dir', type=str, help='Directory containing CSV files')
     args = parser.parse_args()
 
     if not args.csv and not args.dir:
-        print("Specify --csv or --dir", file=sys.stderr)
+        print('Specify --csv or --dir', file=sys.stderr)
         sys.exit(1)
 
     conn = _connect()
@@ -71,15 +71,15 @@ def main() -> None:
         if args.csv:
             df = _load_csv(Path(args.csv))
             _insert_dataframe(conn, df)
-            print(f"Inserted {len(df)} rows from {args.csv}")
+            print(f'Inserted {len(df)} rows from {args.csv}')
         else:
-            for p in Path(args.dir).glob("*.csv"):
+            for p in Path(args.dir).glob('*.csv'):
                 df = _load_csv(p)
                 _insert_dataframe(conn, df)
-                print(f"Inserted {len(df)} rows from {p}")
+                print(f'Inserted {len(df)} rows from {p}')
     finally:
         conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

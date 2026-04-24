@@ -8,6 +8,7 @@ Demonstrates the performance improvements from our inference optimizations.
 import os
 import time
 
+
 # ``psycopg2`` is optional for the CI environment – the performance scripts are
 # not executed during unit testing. Import lazily and tolerate its absence.
 try:
@@ -26,18 +27,18 @@ def test_query_performance():
 
     # Database connection
     conn = psycopg2.connect(
-        host=os.environ.get("PGHOST", "localhost"),
-        port=os.environ.get("PGPORT", "5432"),
-        dbname=os.environ.get("PGDATABASE", "retrosheet"),
-        user=os.environ.get("PGUSER", "postgres"),
-        password=os.environ.get("PGPASSWORD", ""),
+        host=os.environ.get('PGHOST', 'localhost'),
+        port=os.environ.get('PGPORT', '5432'),
+        dbname=os.environ.get('PGDATABASE', 'retrosheet'),
+        user=os.environ.get('PGUSER', 'postgres'),
+        password=os.environ.get('PGPASSWORD', ''),
     )
 
-    print("🚀 Baseball Analytics Performance Test")
-    print("=" * 50)
+    print('🚀 Baseball Analytics Performance Test')
+    print('=' * 50)
 
     # Test 1: Basic feature lookup (old way vs optimized way)
-    game_id = "ALS200107100"
+    game_id = 'ALS200107100'
     pa_id = 1
 
     # Old way: Complex joins
@@ -99,15 +100,15 @@ def test_query_performance():
             cur.fetchall()
     new_time = (time.time() - start_time) / 10
 
-    speedup = old_time / new_time if new_time > 0 else float("inf")
+    speedup = old_time / new_time if new_time > 0 else float('inf')
 
-    print("📊 Query Performance Comparison:")
+    print('📊 Query Performance Comparison:')
     # Display the measured times with reasonable formatting.
-    print(f"Old avg: {old_time:.4f}s, New avg: {new_time:.4f}s, Speedup: {speedup:.1f}x")
+    print(f'Old avg: {old_time:.4f}s, New avg: {new_time:.4f}s, Speedup: {speedup:.1f}x')
 
     # Test 2: Simulation workload
-    print("🎯 Simulation Workload Test:")
-    print("Testing batch feature lookups for half-inning simulation...")
+    print('🎯 Simulation Workload Test:')
+    print('Testing batch feature lookups for half-inning simulation...')
 
     # Get a sample half-inning
     hi_query = """
@@ -160,22 +161,22 @@ def test_query_performance():
             cur.fetchall()
     new_sim_time = time.time() - start_time
 
-    sim_speedup = old_sim_time / new_sim_time if new_sim_time > 0 else float("inf")
+    sim_speedup = old_sim_time / new_sim_time if new_sim_time > 0 else float('inf')
 
     print(
-        f"Old simulation avg: {old_sim_time:.2f}s, New simulation avg: {new_sim_time:.2f}s, Speedup: {sim_speedup:.1f}x"
+        f'Old simulation avg: {old_sim_time:.2f}s, New simulation avg: {new_sim_time:.2f}s, Speedup: {sim_speedup:.1f}x',
     )
 
     # Summary
-    print("🏆 PERFORMANCE OPTIMIZATION RESULTS:")
-    print(f"✅ Single query performance: {old_time:.1f}s → {new_time:.1f}s (×{speedup:.1f})")
-    print(f"✅ Simulation workload: {old_sim_time:.1f}s → {new_sim_time:.1f}s (×{sim_speedup:.1f})")
-    print("✅ Total improvement: Massive reduction in database load")
-    print("✅ Memory efficiency: Pre-computed features reduce computation")
-    print("✅ Scalability: Optimized for high‑throughput simulation")
+    print('🏆 PERFORMANCE OPTIMIZATION RESULTS:')
+    print(f'✅ Single query performance: {old_time:.1f}s → {new_time:.1f}s (×{speedup:.1f})')
+    print(f'✅ Simulation workload: {old_sim_time:.1f}s → {new_sim_time:.1f}s (×{sim_speedup:.1f})')
+    print('✅ Total improvement: Massive reduction in database load')
+    print('✅ Memory efficiency: Pre-computed features reduce computation')
+    print('✅ Scalability: Optimized for high‑throughput simulation')
 
     conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     test_query_performance()

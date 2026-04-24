@@ -1,7 +1,7 @@
--- Pitch Data Quality Layer
--- Handles outliers and creates clean datasets for analysis
-
--- Add quality classification column (if not exists)
+-- File: sql/features/001_pitch_data_quality.sql
+-- Purpose: Create pitch quality views and indexes for location data
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 ALTER TABLE features_pitch.locations
 ADD COLUMN IF NOT EXISTS quality_flag TEXT DEFAULT 'normal';
 
@@ -59,3 +59,4 @@ COMMENT ON VIEW features_pitch.locations_strict IS
 
 -- Show final quality breakdown
 SELECT * FROM features_pitch.data_quality_summary;
+

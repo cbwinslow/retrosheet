@@ -8,13 +8,14 @@ This script loads comprehensive Statcast batter metrics from Baseball Savant.
 import argparse
 import sys
 
+
 try:
     import pandas as pd
     from psycopg2 import sql
     from psycopg2.extras import execute_values
 except ImportError:
-    print("Error: Required libraries not installed.")
-    print("Install with: pip install pandas psycopg2-binary")
+    print('Error: Required libraries not installed.')
+    print('Install with: pip install pandas psycopg2-binary')
     sys.exit(1)
 
 
@@ -26,43 +27,43 @@ def get_conn():
     import psycopg2
 
     # Try DATABASE_URL first, then fall back to PG* variables
-    db_url = os.getenv("DATABASE_URL")
+    db_url = os.getenv('DATABASE_URL')
     if db_url:
         parsed = urlparse(db_url)
         return psycopg2.connect(
             host=parsed.hostname,
             port=parsed.port or 5432,
-            database=parsed.path.lstrip("/"),
+            database=parsed.path.lstrip('/'),
             user=parsed.username,
             password=parsed.password,
         )
 
     # Fall back to PG* variables
     return psycopg2.connect(
-        host=os.getenv("PGHOST", "localhost"),
-        port=os.getenv("PGPORT", 5432),
-        database=os.getenv("PGDATABASE", "retrosheet"),
-        user=os.getenv("PGUSER", os.getenv("USER")),
-        password=os.getenv("PGPASSWORD", ""),
+        host=os.getenv('PGHOST', 'localhost'),
+        port=os.getenv('PGPORT', 5432),
+        database=os.getenv('PGDATABASE', 'retrosheet'),
+        user=os.getenv('PGUSER', os.getenv('USER')),
+        password=os.getenv('PGPASSWORD', ''),
     )
 
 
 def load_total_stats(csv_path: str) -> bool:
     """Load total_stats.csv into the database."""
-    print(f"Loading total_stats from {csv_path}")
+    print(f'Loading total_stats from {csv_path}')
 
     try:
         df = pd.read_csv(csv_path)
-        print(f"  Read {len(df)} rows")
+        print(f'  Read {len(df)} rows')
 
         # Create schema if not exists
         conn = get_conn()
         cur = conn.cursor()
 
-        cur.execute("CREATE SCHEMA IF NOT EXISTS baseball_savant")
+        cur.execute('CREATE SCHEMA IF NOT EXISTS baseball_savant')
 
         # Drop table if exists
-        cur.execute("DROP TABLE IF EXISTS baseball_savant.total_stats")
+        cur.execute('DROP TABLE IF EXISTS baseball_savant.total_stats')
 
         # Create table with TEXT columns to handle any data format
         cur.execute("""
@@ -269,38 +270,38 @@ def load_total_stats(csv_path: str) -> bool:
         # Insert data
         execute_values(
             cur,
-            sql.SQL("INSERT INTO baseball_savant.total_stats ({}) VALUES %s").format(
-                sql.SQL(", ").join([sql.Identifier(col) for col in columns])
+            sql.SQL('INSERT INTO baseball_savant.total_stats ({}) VALUES %s').format(
+                sql.SQL(', ').join([sql.Identifier(col) for col in columns]),
             ),
             data,
         )
 
         conn.commit()
-        print(f"  ✅ Loaded {len(df)} rows")
+        print(f'  ✅ Loaded {len(df)} rows')
         return True
 
     except Exception as e:
-        print(f"  ❌ Error: {e}")
+        print(f'  ❌ Error: {e}')
         return False
     finally:
-        if "conn" in locals():
+        if 'conn' in locals():
             conn.close()
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Load Baseball Savant total_stats.csv")
-    parser.add_argument("--csv", default="total_stats.csv", help="Path to total_stats.csv")
+    parser = argparse.ArgumentParser(description='Load Baseball Savant total_stats.csv')
+    parser.add_argument('--csv', default='total_stats.csv', help='Path to total_stats.csv')
     args = parser.parse_args()
 
     success = load_total_stats(args.csv)
 
     if success:
-        print("\n✅ Baseball Savant data loaded successfully")
+        print('\n✅ Baseball Savant data loaded successfully')
         sys.exit(0)
     else:
-        print("\n❌ Failed to load Baseball Savant data")
+        print('\n❌ Failed to load Baseball Savant data')
         sys.exit(1)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

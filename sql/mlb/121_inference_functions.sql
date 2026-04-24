@@ -1,6 +1,7 @@
--- Fast prediction functions for simulation workloads
-
--- Custom data type for game state
+-- File: sql/mlb/121_inference_functions.sql
+-- Purpose: Functions for model inference and prediction scoring
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE TYPE inference.game_state AS (
     inning integer,
     is_bottom_inning boolean,
@@ -261,3 +262,6 @@ BEGIN
     WHERE s.simulation_id = p_simulation_id;
 END;
 $$ LANGUAGE plpgsql STABLE;
+
+-- Table comments
+COMMENT ON TABLE inference.simulation_states IS 'simulation states data table';

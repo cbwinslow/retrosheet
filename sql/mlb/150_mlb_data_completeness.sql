@@ -1,6 +1,7 @@
--- mlb_data_completeness.sql
--- Provides views to track which MLB seasons have been ingested
-
+-- File: sql/mlb/150_mlb_data_completeness.sql
+-- Purpose: Views and functions for MLB data completeness monitoring
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS mlb;
 
 -- Expected seasons (adjust range as needed)
@@ -62,3 +63,4 @@ BEGIN
     END IF;
 END;
 $$;
+

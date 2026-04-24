@@ -1,3 +1,7 @@
+-- File: sql/mlb/095_mlb_reference_views.sql
+-- Purpose: Parse MLB API reference snapshots into relational views
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS core;
 
 CREATE OR REPLACE VIEW core.mlb_api_teams AS
@@ -164,3 +168,4 @@ SELECT
 FROM latest
 CROSS JOIN LATERAL JSONB_ARRAY_ELEMENTS(latest.payload -> 'records') AS record
 CROSS JOIN LATERAL JSONB_ARRAY_ELEMENTS(record -> 'teamRecords') AS team_record;
+

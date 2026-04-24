@@ -1,7 +1,7 @@
--- Performance Optimization: Critical Missing Indexes
--- Run these separately as CONCURRENTLY to avoid blocking
-
--- Events table additional indexes
+-- File: sql/optimization/141_performance_indexes.sql
+-- Purpose: Performance indexes on core events, games, players, teams
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE INDEX CONCURRENTLY IF NOT EXISTS events_game_id_idx ON core.events (game_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS events_season_idx ON core.events (season);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS events_game_event_idx ON core.events (game_id, event_id);
@@ -24,3 +24,4 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS teams_retrosheet_id_idx ON core.teams (r
 
 -- Game filtering indexes
 CREATE INDEX CONCURRENTLY IF NOT EXISTS games_source_type_idx ON core.games (source_type);
+

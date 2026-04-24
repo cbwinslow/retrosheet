@@ -1,9 +1,7 @@
--- GIS Pitch Analysis Views
--- PostGIS-enabled views for strike zone analysis, pitch location heatmaps,
--- and pitcher/batter spatial patterns
-
--- View 1: Strike Zone Classification
--- Classifies each pitch by its location relative to the strike zone
+-- File: sql/eda/030_gis_pitch_views.sql
+-- Purpose: GIS views classifying pitch locations relative to strike zone
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE OR REPLACE VIEW eda.pitch_zone_classification AS
 SELECT
     id,
@@ -212,3 +210,4 @@ COMMENT ON VIEW eda.batter_zone_performance IS 'Batter performance by pitch loca
 COMMENT ON VIEW eda.pitch_movement_analysis IS 'Pitch movement patterns using pfx_x/pfx_z with outcome rates';
 COMMENT ON VIEW eda.strike_zone_density IS '1-inch binned strike zone density for GIS heatmaps';
 COMMENT ON VIEW eda.matchup_location_patterns IS 'Pitcher-batter specific location tendencies and outcomes';
+

@@ -1,3 +1,7 @@
+-- File: sql/core/079_probability_evaluation_reports.sql
+-- Purpose: Create probability evaluation report tables and model comparison views
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS predictions;
 
 CREATE TABLE IF NOT EXISTS predictions.calibration_reports (
@@ -81,3 +85,7 @@ SELECT
     summary
 FROM predictions.bootstrap_reports
 ORDER BY created_at DESC;
+
+-- Table comments
+COMMENT ON TABLE predictions.calibration_reports IS 'calibration reports data table';
+COMMENT ON TABLE predictions.bootstrap_reports IS 'bootstrap reports data table';

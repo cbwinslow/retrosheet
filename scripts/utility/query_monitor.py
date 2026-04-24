@@ -14,10 +14,11 @@ import os
 import asyncpg
 from fastapi import FastAPI
 
+
 app = FastAPI()
 
 
-@app.get("/progress")
+@app.get('/progress')
 async def progress():
     """Return a list of active PostgreSQL queries with their duration.
 
@@ -26,10 +27,10 @@ async def progress():
     because they do not represent work in progress.
     """
     conn = await asyncpg.connect(
-        host=os.getenv("PGHOST", "localhost"),
-        port=int(os.getenv("PGPORT", "5432")),
-        database=os.getenv("PGDATABASE", "retrosheet"),
-        user=os.getenv("PGUSER", "postgres"),
+        host=os.getenv('PGHOST', 'localhost'),
+        port=int(os.getenv('PGPORT', '5432')),
+        database=os.getenv('PGDATABASE', 'retrosheet'),
+        user=os.getenv('PGUSER', 'postgres'),
     )
     rows = await conn.fetch(
         """
@@ -40,7 +41,7 @@ async def progress():
         FROM pg_stat_activity
         WHERE state <> 'idle'
         ORDER BY query_start;
-        """
+        """,
     )
     await conn.close()
     # Convert asyncpg Record objects to plain dicts for JSON serialization

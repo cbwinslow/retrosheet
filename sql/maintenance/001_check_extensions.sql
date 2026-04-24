@@ -1,4 +1,7 @@
--- Check currently installed PostgreSQL extensions
+-- File: sql/maintenance/001_check_extensions.sql
+-- Purpose: List installed and available PostgreSQL extensions
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 SELECT
     name,
     default_version,
@@ -9,3 +12,4 @@ SELECT
     END AS status
 FROM pg_available_extensions
 ORDER BY name;
+

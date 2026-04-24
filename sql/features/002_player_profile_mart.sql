@@ -1,7 +1,7 @@
--- Player Profile Mart: Rolling pitcher and batter stats from pitch-level data
--- These tables enable dynamic player-level features for PA outcome prediction
-
--- 1. Pitcher Arsenal Profiles
+-- File: sql/features/002_player_profile_mart.sql
+-- Purpose: Pitcher arsenal composition and rolling statistics by game
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 DROP TABLE IF EXISTS features_pitch.pitcher_arsenals CASCADE;
 CREATE TABLE features_pitch.pitcher_arsenals (
     pitcher_id INTEGER NOT NULL,
@@ -147,3 +147,4 @@ CREATE INDEX idx_matchup_pair ON features_pitch.matchup_history (pitcher_id, bat
 
 COMMENT ON SCHEMA features_pitch IS
 'Pitch-level feature engineering schema with player-attributed rolling statistics';
+

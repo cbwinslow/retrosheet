@@ -1,6 +1,7 @@
--- Umpire Strike Zone Tendency Features
--- Built from complete Retrosheet data (no Statcast dependency)
-
+-- File: sql/features/040_umpire_features_retrosheet.sql
+-- Purpose: Create umpire tendency features from Retrosheet data
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE MATERIALIZED VIEW features.umpire_tendency_features AS
 WITH umpire_game_stats AS (
     SELECT
@@ -43,3 +44,4 @@ CREATE UNIQUE INDEX idx_umpire_features_season ON features.umpire_tendency_featu
 CREATE INDEX idx_umpire_features_season_idx ON features.umpire_tendency_features (feature_season);
 
 ANALYZE features.umpire_tendency_features;
+

@@ -1,8 +1,7 @@
--- Panel Data Materialized Views
--- Creates materialized views for player-season, pitcher-season, and player-game panel data
--- Related to GitHub Issue #46
-
--- Player-season batting panel
+-- File: sql/core/046_panel_data_views.sql
+-- Purpose: Create player-season batting, pitching, and game-level panel data MVs
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 DROP MATERIALIZED VIEW IF EXISTS features.player_season_batting CASCADE;
 CREATE MATERIALIZED VIEW features.player_season_batting AS
 SELECT
@@ -92,3 +91,4 @@ CREATE INDEX idx_player_game_panel_season ON features.player_game_panel (season)
 COMMENT ON MATERIALIZED VIEW features.player_season_batting IS 'Player-season aggregated batting statistics for panel data analysis';
 COMMENT ON MATERIALIZED VIEW features.player_season_pitching IS 'Player-season aggregated pitching statistics for panel data analysis';
 COMMENT ON MATERIALIZED VIEW features.player_game_panel IS 'Player-game level panel data for detailed analysis';
+

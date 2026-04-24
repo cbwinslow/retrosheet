@@ -1,5 +1,7 @@
--- Phase 1 Feature Mart: Attendance, Crowd, and Weather Features
-
+-- File: sql/features/020_attendance_weather_features.sql
+-- Purpose: Create attendance and weather features materialized view
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE MATERIALIZED VIEW features.game_attendance_features AS
 WITH game_attendance AS (
     SELECT
@@ -54,3 +56,4 @@ CREATE UNIQUE INDEX idx_game_attendance_pk ON features.game_attendance_features 
 CREATE INDEX idx_game_attendance_season ON features.game_attendance_features (season);
 
 ANALYZE features.game_attendance_features;
+

@@ -1,3 +1,7 @@
+-- File: sql/core/020_plate_appearances.sql
+-- Purpose: Create plate_appearances table, indexes, examples MV, prediction targets
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS core;
 CREATE SCHEMA IF NOT EXISTS features;
 CREATE SCHEMA IF NOT EXISTS predictions;
@@ -269,3 +273,6 @@ SELECT
     count(*),
     count(DISTINCT game_id)
 FROM features.plate_appearance_examples;
+
+-- Table comments
+COMMENT ON TABLE core.plate_appearances IS 'Enriched plate appearance records with game state and outcome flags';

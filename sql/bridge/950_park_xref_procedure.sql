@@ -1,12 +1,7 @@
--- ============================================================================
--- Bridge: Park Cross-Reference Population Procedure
--- ============================================================================
--- Purpose: Populate bridge.park_xref with MLB venue id mappings
--- Dependencies: core.mlb_api_teams, bridge.park_xref
--- Created: 2026-04-21
--- ============================================================================
-
--- Drop procedure if exists
+-- File: sql/bridge/950_park_xref_procedure.sql
+-- Purpose: Populate park cross-reference mapping Retrosheet to MLB venues
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 DROP PROCEDURE IF EXISTS bridge.populate_park_xref();
 
 -- ============================================================================
@@ -132,3 +127,4 @@ COMMENT ON PROCEDURE bridge.populate_park_xref () IS
 -- Grant execute permission
 -- ============================================================================
 GRANT EXECUTE ON PROCEDURE bridge.populate_park_xref() TO postgres;
+

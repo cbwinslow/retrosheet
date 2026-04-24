@@ -1,3 +1,7 @@
+-- File: sql/core/082_count_state_feature_marts.sql
+-- Purpose: Create count-state feature marts and ball-strike transition views
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS features;
 
 DROP VIEW IF EXISTS features.count_state_feature_mart_validation_summary;
@@ -155,3 +159,4 @@ SELECT
     'features.plate_appearance_count_state_advanced_examples',
     count(*)
 FROM features.plate_appearance_count_state_advanced_examples;
+

@@ -1,6 +1,7 @@
--- Phase 3 Feature Mart: Stadium Physics & Park Factor Features
--- Park specific effects, elevation, dimensions, and run environment
-
+-- File: sql/features/070_stadium_physics_features.sql
+-- Purpose: Park factors and per-stadium scoring averages
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE MATERIALIZED VIEW features.stadium_physics_features AS
 WITH park_stats AS (
     SELECT
@@ -43,3 +44,4 @@ CREATE UNIQUE INDEX idx_stadium_park_season ON features.stadium_physics_features
 CREATE INDEX idx_stadium_season ON features.stadium_physics_features (feature_season);
 
 ANALYZE features.stadium_physics_features;
+

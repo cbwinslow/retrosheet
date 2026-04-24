@@ -1,3 +1,7 @@
+-- File: sql/core/060_advanced_feature_marts.sql
+-- Purpose: Create career, matchup, park, rolling form, and coarse context MVs
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS features;
 
 DROP VIEW IF EXISTS features.advanced_feature_mart_validation_summary;
@@ -403,3 +407,4 @@ SELECT
     'features.team_rolling_30_game_summary',
     count(*)
 FROM features.team_rolling_30_game_summary;
+

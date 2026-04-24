@@ -18,11 +18,11 @@ from psycopg2.extras import Json
 def database_kwargs():
     """Database connection parameters."""
     return {
-        "host": os.environ.get("PGHOST", "localhost"),
-        "port": os.environ.get("PGPORT", "5432"),
-        "dbname": os.environ.get("PGDATABASE", "retrosheet"),
-        "user": os.environ.get("PGUSER", "postgres"),
-        "password": os.environ.get("PGPASSWORD", ""),
+        'host': os.environ.get('PGHOST', 'localhost'),
+        'port': os.environ.get('PGPORT', '5432'),
+        'dbname': os.environ.get('PGDATABASE', 'retrosheet'),
+        'user': os.environ.get('PGUSER', 'postgres'),
+        'password': os.environ.get('PGPASSWORD', ''),
     }
 
 
@@ -44,7 +44,7 @@ def download_schedule_for_date(date_str: str) -> dict:
     """Download MLB schedule for a specific date."""
     import urllib.request
 
-    url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}"
+    url = f'https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}'
 
     try:
         start_time = time.time()
@@ -53,27 +53,26 @@ def download_schedule_for_date(date_str: str) -> dict:
             response_time_ms = int((end_time - start_time) * 1000)
 
             if response.status == 200:
-                data = json.loads(response.read().decode("utf-8"))
+                data = json.loads(response.read().decode('utf-8'))
                 return {
-                    "success": True,
-                    "data": data,
-                    "http_status": response.status,
-                    "response_time_ms": response_time_ms,
+                    'success': True,
+                    'data': data,
+                    'http_status': response.status,
+                    'response_time_ms': response_time_ms,
                 }
-            else:
-                return {
-                    "success": False,
-                    "error": f"HTTP {response.status}",
-                    "http_status": response.status,
-                    "response_time_ms": response_time_ms,
-                }
+            return {
+                'success': False,
+                'error': f'HTTP {response.status}',
+                'http_status': response.status,
+                'response_time_ms': response_time_ms,
+            }
 
     except Exception as e:
         return {
-            "success": False,
-            "error": str(e),
-            "http_status": None,
-            "response_time_ms": None,
+            'success': False,
+            'error': str(e),
+            'http_status': None,
+            'response_time_ms': None,
         }
 
 
@@ -101,12 +100,12 @@ def store_schedule_batch(results: list):
                 """,
                     (
                         date_str,
-                        f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}",
-                        Json(result.get("data", {})) if result.get("success") else Json({}),
-                        Json({"sportId": 1, "date": date_str}),
-                        result.get("http_status"),
-                        result.get("response_time_ms"),
-                        result.get("error") if not result.get("success") else None,
+                        f'https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}',
+                        Json(result.get('data', {})) if result.get('success') else Json({}),
+                        Json({'sportId': 1, 'date': date_str}),
+                        result.get('http_status'),
+                        result.get('response_time_ms'),
+                        result.get('error') if not result.get('success') else None,
                         date_str,
                     ),
                 )
@@ -143,7 +142,7 @@ def get_game_days(start_date: str, end_date: str) -> list:
 
 def download_game_feeds_for_season(season: int, max_workers: int = 4) -> int:
     """Download all game feeds for a given season using parallel processing."""
-    print(f"🔄 Downloading game feeds for {season} season")
+    print(f'🔄 Downloading game feeds for {season} season')
 
     # Get all games for the season
     conn = psycopg2.connect(**database_kwargs())
@@ -174,10 +173,10 @@ def download_game_feeds_for_season(season: int, max_workers: int = 4) -> int:
         conn.close()
 
     if not games:
-        print(f"✅ No games to download for {season}")
+        print(f'✅ No games to download for {season}')
         return 0
 
-    print(f"📊 Found {len(games)} games to download for {season}")
+    print(f'📊 Found {len(games)} games to download for {season}')
 
     # Download in parallel batches
     batch_size = 10
@@ -187,7 +186,7 @@ def download_game_feeds_for_season(season: int, max_workers: int = 4) -> int:
         for i in range(0, len(games), batch_size):
             batch = games[i : i + batch_size]
             print(
-                f"📥 Processing batch {i // batch_size + 1}/{(len(games) + batch_size - 1) // batch_size}"
+                f'📥 Processing batch {i // batch_size + 1}/{(len(games) + batch_size - 1) // batch_size}',
             )
 
             # Submit batch for parallel processing
@@ -201,7 +200,7 @@ def download_game_feeds_for_season(season: int, max_workers: int = 4) -> int:
             # Rate limiting between batches
             time.sleep(1)
 
-    print(f"✅ Downloaded {downloaded}/{len(games)} game feeds for {season}")
+    print(f'✅ Downloaded {downloaded}/{len(games)} game feeds for {season}')
     return downloaded
 
 
@@ -209,7 +208,7 @@ def download_and_store_game_feed(game_pk: int) -> bool:
     """Download and store a single game feed."""
     import urllib.request
 
-    url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
+    url = f'https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live'
     conn = None
 
     try:
@@ -219,20 +218,20 @@ def download_and_store_game_feed(game_pk: int) -> bool:
             response_time_ms = int((end_time - start_time) * 1000)
 
             if response.status == 200:
-                data = json.loads(response.read().decode("utf-8"))
-                payload_json = json.dumps(data, separators=(",", ":"))
+                data = json.loads(response.read().decode('utf-8'))
+                payload_json = json.dumps(data, separators=(',', ':'))
 
                 # Extract metadata for indexing
-                game_data = data.get("gameData", {})
-                game_info = game_data.get("game", {})
+                game_data = data.get('gameData', {})
+                game_info = game_data.get('game', {})
                 game_date = (
-                    game_info.get("gameDate", "").split("T")[0]
-                    if game_info.get("gameDate")
+                    game_info.get('gameDate', '').split('T')[0]
+                    if game_info.get('gameDate')
                     else None
                 )
-                season = game_info.get("season")
-                payload_checksum = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
-                request_params = {"game_pk": int(game_pk)}
+                season = game_info.get('season')
+                payload_checksum = hashlib.sha256(payload_json.encode('utf-8')).hexdigest()
+                request_params = {'game_pk': int(game_pk)}
 
                 # Store in database
                 conn = psycopg2.connect(**database_kwargs())
@@ -275,7 +274,7 @@ def download_and_store_game_feed(game_pk: int) -> bool:
                     conn.close()
 
             else:
-                print(f"❌ HTTP {response.status} for game {game_pk}")
+                print(f'❌ HTTP {response.status} for game {game_pk}')
                 conn = psycopg2.connect(**database_kwargs())
                 with conn.cursor() as cur:
                     cur.execute(
@@ -289,10 +288,10 @@ def download_and_store_game_feed(game_pk: int) -> bool:
                             game_pk,
                             url,
                             Json({}),
-                            Json({"game_pk": int(game_pk)}),
+                            Json({'game_pk': int(game_pk)}),
                             response.status,
                             response_time_ms,
-                            f"HTTP {response.status}",
+                            f'HTTP {response.status}',
                             None,
                             None,
                             None,
@@ -302,7 +301,7 @@ def download_and_store_game_feed(game_pk: int) -> bool:
                 return False
 
     except Exception as e:
-        print(f"❌ Error downloading game {game_pk}: {e}")
+        print(f'❌ Error downloading game {game_pk}: {e}')
         try:
             conn = psycopg2.connect(**database_kwargs())
             with conn.cursor() as cur:
@@ -317,7 +316,7 @@ def download_and_store_game_feed(game_pk: int) -> bool:
                         game_pk,
                         url,
                         Json({}),
-                        Json({"game_pk": int(game_pk)}),
+                        Json({'game_pk': int(game_pk)}),
                         None,
                         None,
                         str(e),
@@ -328,7 +327,7 @@ def download_and_store_game_feed(game_pk: int) -> bool:
                 )
             conn.commit()
         except Exception as insert_error:
-            print(f"❌ Failed to persist download error for game {game_pk}: {insert_error}")
+            print(f'❌ Failed to persist download error for game {game_pk}: {insert_error}')
         return False
     finally:
         if conn is not None:
@@ -337,34 +336,34 @@ def download_and_store_game_feed(game_pk: int) -> bool:
 
 def main():
 
-    parser = argparse.ArgumentParser(description="Optimized MLB historical data bulk downloader")
-    parser.add_argument("--start-season", type=int, default=2020, help="Start season year")
-    parser.add_argument("--end-season", type=int, default=2024, help="End season year")
+    parser = argparse.ArgumentParser(description='Optimized MLB historical data bulk downloader')
+    parser.add_argument('--start-season', type=int, default=2020, help='Start season year')
+    parser.add_argument('--end-season', type=int, default=2024, help='End season year')
     parser.add_argument(
-        "--mode",
-        choices=["schedules", "games", "both"],
-        default="both",
-        help="What to download: schedules, games, or both",
+        '--mode',
+        choices=['schedules', 'games', 'both'],
+        default='both',
+        help='What to download: schedules, games, or both',
     )
-    parser.add_argument("--workers", type=int, default=8, help="Number of parallel workers")
-    parser.add_argument("--delay", type=float, default=0.5, help="Delay between requests")
+    parser.add_argument('--workers', type=int, default=8, help='Number of parallel workers')
+    parser.add_argument('--delay', type=float, default=0.5, help='Delay between requests')
 
     args = parser.parse_args()
 
-    print("🚀 MLB Historical Data Bulk Downloader")
-    print(f"   Seasons: {args.start_season} - {args.end_season}")
-    print(f"   Mode: {args.mode}")
-    print(f"   Workers: {args.workers}")
+    print('🚀 MLB Historical Data Bulk Downloader')
+    print(f'   Seasons: {args.start_season} - {args.end_season}')
+    print(f'   Mode: {args.mode}')
+    print(f'   Workers: {args.workers}')
 
     total_downloaded = 0
 
     for season in range(args.start_season, args.end_season + 1):
         print(f"\n{'=' * 50}")
-        print(f"🏏 Processing {season} MLB Season")
+        print(f'🏏 Processing {season} MLB Season')
         print(f"{'=' * 50}")
 
-        if args.mode in ["schedules", "both"]:
-            print(f"\n📅 Downloading {season} schedules...")
+        if args.mode in ['schedules', 'both']:
+            print(f'\n📅 Downloading {season} schedules...')
 
             # Generate all dates for the season (March-November)
             season_dates = []
@@ -375,7 +374,7 @@ def main():
                     days_in_month = 31 if month == 10 else 30
 
                 for day in range(1, days_in_month + 1):
-                    date_str = f"{season}-{month:02d}-{day:02d}"
+                    date_str = f'{season}-{month:02d}-{day:02d}'
                     season_dates.append(date_str)
 
             # Download in batches of 50 dates
@@ -384,26 +383,26 @@ def main():
 
             for i in range(0, len(season_dates), batch_size):
                 batch = season_dates[i : i + batch_size]
-                print(f"   Batch {i // batch_size + 1}: {len(batch)} dates")
+                print(f'   Batch {i // batch_size + 1}: {len(batch)} dates')
 
                 results = download_schedule_batch(batch, args.delay)
-                successful = [r for r in results if r[1].get("success")]
+                successful = [r for r in results if r[1].get('success')]
 
                 if successful:
                     store_schedule_batch(successful)
                     season_downloaded += len(successful)
 
-                print(f"   ✅ {len(successful)}/{len(batch)} schedules downloaded")
+                print(f'   ✅ {len(successful)}/{len(batch)} schedules downloaded')
 
-            print(f"📊 {season} schedules: {season_downloaded} total")
+            print(f'📊 {season} schedules: {season_downloaded} total')
 
-        if args.mode in ["games", "both"]:
+        if args.mode in ['games', 'both']:
             # Download game feeds for the season
             games_downloaded = download_game_feeds_for_season(season, args.workers)
             total_downloaded += games_downloaded
 
-    print("\n🎯 Bulk Download Complete!")
-    print(f"   📊 Total game feeds downloaded: {total_downloaded}")
+    print('\n🎯 Bulk Download Complete!')
+    print(f'   📊 Total game feeds downloaded: {total_downloaded}')
 
     # Summary statistics
     conn = psycopg2.connect(**database_kwargs())
@@ -420,16 +419,16 @@ def main():
 
             schedules, successful_schedules, feeds, successful_feeds = cur.fetchone()
 
-            print("\n📈 Summary:")
-            print(f"   📅 Schedule snapshots: {successful_schedules}/{schedules}")
-            print(f"   🎮 Game feed snapshots: {successful_feeds}/{feeds}")
+            print('\n📈 Summary:')
+            print(f'   📅 Schedule snapshots: {successful_schedules}/{schedules}')
+            print(f'   🎮 Game feed snapshots: {successful_feeds}/{feeds}')
 
             if successful_feeds > 0:
                 success_rate = successful_feeds / feeds * 100
-                print(f"   ✅ Success rate: {success_rate:.1f}%")
+                print(f'   ✅ Success rate: {success_rate:.1f}%')
     finally:
         conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

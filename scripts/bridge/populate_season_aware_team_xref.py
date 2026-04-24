@@ -17,22 +17,22 @@ import psycopg2
 from dotenv import load_dotenv
 from psycopg2 import Error
 
+
 _ = load_dotenv()
 
 
 def get_db_connection():
     """Get PostgreSQL connection from environment variables."""
-    db_url = os.getenv("DATABASE_URL")
+    db_url = os.getenv('DATABASE_URL')
     if db_url:
         return psycopg2.connect(db_url)
-    else:
-        return psycopg2.connect(
-            host=os.getenv("PGHOST", "localhost"),
-            port=os.getenv("PGPORT", "5432"),
-            database=os.getenv("PGDATABASE", "retrosheet"),
-            user=os.getenv("PGUSER", os.getenv("USER")),
-            password=os.getenv("PGPASSWORD"),
-        )
+    return psycopg2.connect(
+        host=os.getenv('PGHOST', 'localhost'),
+        port=os.getenv('PGPORT', '5432'),
+        database=os.getenv('PGDATABASE', 'retrosheet'),
+        user=os.getenv('PGUSER', os.getenv('USER')),
+        password=os.getenv('PGPASSWORD'),
+    )
 
 
 def populate_season_aware_team_xref():
@@ -63,7 +63,7 @@ def populate_season_aware_team_xref():
 
             basic_count = cur.rowcount
             conn.commit()
-            print(f"Updated {basic_count} teams with basic season ranges")
+            print(f'Updated {basic_count} teams with basic season ranges')
 
             # Handle franchise moves by inserting new entries for historical teams
             # Montreal Expos -> Washington Nationals
@@ -99,7 +99,7 @@ def populate_season_aware_team_xref():
             """)
 
             conn.commit()
-            print("Added franchise move entries for MON->WAS and FLO->MIA")
+            print('Added franchise move entries for MON->WAS and FLO->MIA')
 
             # Verify the season ranges
             cur.execute("""
@@ -109,17 +109,17 @@ def populate_season_aware_team_xref():
                 ORDER BY retrosheet_team_id
             """)
 
-            print("\nFranchise move entries:")
+            print('\nFranchise move entries:')
             for row in cur.fetchall():
                 if len(row) >= 5:
                     print(f"  {row[0]} ({row[1]}): {row[3]}-{row[4] if row[4] else 'present'}")
                 else:
-                    print(f"  {row[0]}: insufficient data")
+                    print(f'  {row[0]}: insufficient data')
 
             return basic_count
 
     except Error as e:
-        print(f"Error populating season-aware team_xref: {e}")
+        print(f'Error populating season-aware team_xref: {e}')
         conn.rollback()
         return 0
     finally:
@@ -127,10 +127,10 @@ def populate_season_aware_team_xref():
 
 
 def main():
-    print("Populating season-aware bridge.team_xref...")
+    print('Populating season-aware bridge.team_xref...')
     count = populate_season_aware_team_xref()
-    print(f"\nTotal teams updated: {count}")
+    print(f'\nTotal teams updated: {count}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

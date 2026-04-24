@@ -1,3 +1,7 @@
+-- File: sql/core/078_plate_appearance_outcome_grouped.sql
+-- Purpose: Create grouped PA outcome model views and evaluation tables
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE SCHEMA IF NOT EXISTS features;
 
 DROP VIEW IF EXISTS features.plate_appearance_outcome_grouped_validation_summary;
@@ -116,3 +120,4 @@ SELECT
     round(avg((pitch_seq_tx IS NOT NULL AND pitch_seq_tx <> '')::integer)::numeric, 4) AS pitch_sequence_coverage,
     round(avg((battedball_cd IS NOT NULL AND battedball_cd <> '')::integer)::numeric, 4) AS batted_ball_coverage
 FROM features.plate_appearance_outcome_grouped_examples;
+

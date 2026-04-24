@@ -48,10 +48,10 @@ class PredictionEngine:
     def _load_predictor_classes(self) -> None:
         """Map target families to predictor classes."""
         self._predictor_classes = {
-            "plate_appearance": "PAOutcomeDistributionPredictor",
-            "pa_outcome_distribution": "PAOutcomeDistributionPredictor",
-            "game_outcome": "GameOutcomePredictor",
-            "half_inning": "HalfInningPredictor",
+            'plate_appearance': 'PAOutcomeDistributionPredictor',
+            'pa_outcome_distribution': 'PAOutcomeDistributionPredictor',
+            'game_outcome': 'GameOutcomePredictor',
+            'half_inning': 'HalfInningPredictor',
         }
 
     def get_predictor(self, target_id: str) -> Predictor:
@@ -62,7 +62,7 @@ class PredictionEngine:
         # Get model metadata
         model_meta = self._registry.get_active_model(target_id)
         if not model_meta:
-            raise ValueError(f"No active model for {target_id}")
+            raise ValueError(f'No active model for {target_id}')
 
         # Get target definition
         conn = psycopg2.connect(**self.db_kwargs)
@@ -74,12 +74,12 @@ class PredictionEngine:
         # Load appropriate predictor
         predictor_class = self._predictor_classes.get(target.target_family)
 
-        if predictor_class == "PAOutcomeDistributionPredictor":
+        if predictor_class == 'PAOutcomeDistributionPredictor':
             from .pa_predictor import PAOutcomeDistributionPredictor
 
             predictor = PAOutcomeDistributionPredictor(target, self.root_path)
         else:
-            raise ValueError(f"Unknown predictor family: {target.target_family}")
+            raise ValueError(f'Unknown predictor family: {target.target_family}')
 
         # Load model
         model_path = self.root_path / model_meta.artifact_uri
@@ -93,11 +93,11 @@ class PredictionEngine:
         return self.get_predictor(target_id).predict(features)
 
     def predict_top_k(
-        self, target_id: str, features: pd.DataFrame, k: int = 3
+        self, target_id: str, features: pd.DataFrame, k: int = 3,
     ) -> tuple[list, list]:
         """Get top k predictions."""
         predictor = self.get_predictor(target_id)
-        if hasattr(predictor, "predict_top_k"):
+        if hasattr(predictor, 'predict_top_k'):
             return predictor.predict_top_k(features, k)
         probs = predictor.predict(features)
         if probs.ndim > 1:
@@ -114,4 +114,4 @@ class PredictionEngine:
         return self._registry.get_active_model(target_id)
 
 
-__all__ = ["PredictionEngine", "Predictor", "PredictionTarget", "ModelMetadata"]
+__all__ = ['ModelMetadata', 'PredictionEngine', 'PredictionTarget', 'Predictor']

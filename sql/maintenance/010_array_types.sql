@@ -1,9 +1,7 @@
--- Implement PostgreSQL array types for multi-value features
--- Research-backed: Arrays are efficient for storing sequences and multi-value data
--- Use Cases: Pitch sequences, player rosters, injury history, recent performance
-
--- Add pitch sequence array to plate appearance examples
--- This stores the sequence of pitch types in an at-bat
+-- File: sql/maintenance/010_array_types.sql
+-- Purpose: Add array type columns for multi-value features
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 ALTER TABLE features.plate_appearance_examples 
 ADD COLUMN IF NOT EXISTS pitch_sequence TEXT[];
 
@@ -40,3 +38,4 @@ SELECT pitch_sequence, array_length(pitch_sequence, 1)
 FROM features.plate_appearance_examples
 WHERE pitch_sequence IS NOT NULL
 LIMIT 5;
+

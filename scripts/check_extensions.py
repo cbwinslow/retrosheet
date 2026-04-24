@@ -23,20 +23,20 @@ def main():
         ORDER BY name;
     """)
 
-    print("PostgreSQL Extensions Status:")
-    print("=" * 80)
+    print('PostgreSQL Extensions Status:')
+    print('=' * 80)
     print(f"{'Name':<30} {'Default':<15} {'Installed':<15} {'Status':<15}")
-    print("=" * 80)
+    print('=' * 80)
 
     for row in cur.fetchall():
         name, default_version, installed_version, status = row
         print(
-            f"{name:<30} {default_version or 'N/A':<15} {installed_version or 'N/A':<15} {status:<15}"
+            f"{name:<30} {default_version or 'N/A':<15} {installed_version or 'N/A':<15} {status:<15}",
         )
 
     cur.close()
     conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

@@ -21,7 +21,8 @@ from pathlib import Path
 
 import psycopg2
 
-DB_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
+
+DB_URL = os.getenv('DATABASE_URL', 'postgresql://localhost/retrosheet')
 CHUNK_ROWS = 5_000_000  # rows per chunk for very large files
 
 
@@ -30,7 +31,7 @@ def get_conn():
 
 
 def create_staging(cur):
-    cur.execute("DROP TABLE IF EXISTS raw_mlb.stg_statcast")
+    cur.execute('DROP TABLE IF EXISTS raw_mlb.stg_statcast')
     cur.execute("""
         CREATE TABLE raw_mlb.stg_statcast (
             pitch_type TEXT,
@@ -156,8 +157,8 @@ def create_staging(cur):
 
 
 def copy_to_staging(cur, csv_path):
-    with open(csv_path, "r", newline="") as f:
-        cur.copy_expert("COPY raw_mlb.stg_statcast FROM STDIN WITH CSV HEADER", f)
+    with open(csv_path, newline='') as f:
+        cur.copy_expert('COPY raw_mlb.stg_statcast FROM STDIN WITH CSV HEADER', f)
 
 
 def upsert(cur):
@@ -421,35 +422,35 @@ def upsert(cur):
 
 def split_file(csv_path: Path):
     """Split a large CSV into smaller files with a header line preserved."""
-    prefix = f"{csv_path}_part_"
+    prefix = f'{csv_path}_part_'
     # Use GNU split – keep header in each part
     subprocess.run(
-        f"head -n 1 {csv_path} > {prefix}header && tail -n +2 {csv_path} | split -l {CHUNK_ROWS} - {prefix}",
+        f'head -n 1 {csv_path} > {prefix}header && tail -n +2 {csv_path} | split -l {CHUNK_ROWS} - {prefix}',
         shell=True,
         check=True,
     )
-    parts = sorted(Path(".").glob(f"{prefix}*"))
+    parts = sorted(Path('.').glob(f'{prefix}*'))
     for part in parts:
-        with open(part, "r") as src, open(part, "w") as dst:
-            header = open(f"{prefix}header").read()
+        with open(part) as src, open(part, 'w') as dst:
+            header = open(f'{prefix}header').read()
             dst.write(header)
             dst.write(src.read())
-    os.remove(f"{prefix}header")
+    os.remove(f'{prefix}header')
     return parts
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Load Statcast CSV")
-    parser.add_argument("--file", type=Path, required=True, help="Statcast CSV file")
+    parser = argparse.ArgumentParser(description='Load Statcast CSV')
+    parser.add_argument('--file', type=Path, required=True, help='Statcast CSV file')
     args = parser.parse_args()
 
     if not args.file.is_file():
-        print(f"❌ File not found: {args.file}", file=sys.stderr)
+        print(f'❌ File not found: {args.file}', file=sys.stderr)
         sys.exit(1)
 
     # If file > 500 MB, split into chunks
     if args.file.stat().st_size > 500 * 1024 * 1024:
-        print("⚠️  Large Statcast file detected – splitting into chunks...")
+        print('⚠️  Large Statcast file detected – splitting into chunks...')
         parts = split_file(args.file)
     else:
         parts = [args.file]
@@ -462,12 +463,12 @@ def main():
             copy_to_staging(cur, part)
             upsert(cur)
             conn.commit()
-            print(f"✅ Loaded chunk {part.name}")
-        print(f"✅ Completed Statcast load ({len(parts)} chunk(s))")
+            print(f'✅ Loaded chunk {part.name}')
+        print(f'✅ Completed Statcast load ({len(parts)} chunk(s))')
     finally:
         cur.close()
         conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

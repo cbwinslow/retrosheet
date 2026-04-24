@@ -1,13 +1,7 @@
--- Advanced Database Optimizations: Partitioning, Clustering, and Maintenance
-
--- =============================================================================
--- 1. TABLE PARTITIONING (For Very Large Tables)
--- =============================================================================
-
--- Partition the events table by season for better performance on large datasets
--- This creates separate physical tables for each season
-
--- First, create the partitioned table structure
+-- File: sql/optimization/143_advanced_optimizations.sql
+-- Purpose: Advanced optimizations: partitioning, clustering, monitoring
+-- Author: Agent Cascade
+-- Date: 2026-04-24
 CREATE TABLE core.events_partitioned (
     game_id text NOT NULL,
     event_id integer NOT NULL,
@@ -490,3 +484,13 @@ AS $$
     FROM pg_stat_activity
     WHERE state = 'active' AND now() - query_start > interval '30 seconds';
 $$;
+
+-- Table comments
+COMMENT ON TABLE core.events_partitioned IS 'events partitioned data table';
+COMMENT ON TABLE core.events_2020 IS 'events 2020 data table';
+COMMENT ON TABLE core.events_2021 IS 'events 2021 data table';
+COMMENT ON TABLE core.events_2022 IS 'events 2022 data table';
+COMMENT ON TABLE core.events_2023 IS 'events 2023 data table';
+COMMENT ON TABLE core.events_2024 IS 'events 2024 data table';
+COMMENT ON TABLE core.events_2025 IS 'events 2025 data table';
+COMMENT ON TABLE core.events_default IS 'events default data table';
