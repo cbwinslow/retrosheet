@@ -22,7 +22,7 @@ import pytest
 
 @pytest.mark.skipif(
     pytest.importorskip("llama_index", reason="LlamaIndex not installed") is None,
-    reason="LlamaIndex library not installed"
+    reason="LlamaIndex library not installed",
 )
 def test_build_llamaindex_placeholder_output() -> None:
     """Execute the placeholder ``build_llamaindex`` script and capture its output.

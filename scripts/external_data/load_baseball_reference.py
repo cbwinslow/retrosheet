@@ -19,8 +19,10 @@ import psycopg2
 
 DB_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
 
+
 def get_conn():
     return psycopg2.connect(DB_URL)
+
 
 def create_staging(cur):
     cur.execute("DROP TABLE IF EXISTS raw_baseball_reference.stg_game_logs")
@@ -62,11 +64,11 @@ def create_staging(cur):
         )
     """)
 
+
 def copy_to_staging(cur, csv_path):
     with open(csv_path, "r", newline="") as f:
-        cur.copy_expert(
-            "COPY raw_baseball_reference.stg_game_logs FROM STDIN WITH CSV HEADER", f
-        )
+        cur.copy_expert("COPY raw_baseball_reference.stg_game_logs FROM STDIN WITH CSV HEADER", f)
+
 
 def upsert(cur):
     # Ensure target table exists
@@ -184,6 +186,7 @@ def upsert(cur):
             gidp = EXCLUDED.gidp;
     """)
 
+
 def main():
     parser = argparse.ArgumentParser(description="Load Baseball‑Reference game logs")
     parser.add_argument("--dir", type=Path, required=True, help="Directory with CSV files")
@@ -205,6 +208,7 @@ def main():
     finally:
         cur.close()
         conn.close()
+
 
 if __name__ == "__main__":
     main()

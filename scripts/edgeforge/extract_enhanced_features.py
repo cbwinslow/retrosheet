@@ -5,8 +5,8 @@ This runs separately from the main pipeline.
 """
 
 import os
+
 import psycopg2
-from psycopg2.extras import execute_values
 
 
 def database_kwargs():
@@ -246,9 +246,7 @@ def create_enhanced_training_dataset():
             """)
 
             # Check enhanced dataset size
-            cur.execute(
-                "SELECT COUNT(*) FROM mlb_enhanced.win_probability_training_enhanced;"
-            )
+            cur.execute("SELECT COUNT(*) FROM mlb_enhanced.win_probability_training_enhanced;")
             enhanced_count = cur.fetchone()[0]
 
             print(f"✅ Created enhanced dataset with {enhanced_count} samples")

@@ -5,7 +5,8 @@
 
 -- Add season as integer for better indexing (live_games already has text dates)
 ALTER TABLE core.live_games ADD COLUMN IF NOT EXISTS season_int integer;
-UPDATE core.live_games SET season_int = season::integer WHERE season_int IS NULL AND season IS NOT NULL;
+UPDATE core.live_games SET season_int = season::integer
+WHERE season_int IS NULL AND season IS NOT NULL;
 CREATE INDEX CONCURRENTLY IF NOT EXISTS live_games_season_int_idx ON core.live_games (season_int);
 
 -- 2. CORE TABLE INDEXES
@@ -53,11 +54,11 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS teams_retrosheet_id_idx ON core.teams (r
 
 -- Games table foreign keys
 ALTER TABLE core.games ADD CONSTRAINT games_home_team_fk
-    FOREIGN KEY (home_team_id) REFERENCES core.teams (retrosheet_team_id);
+FOREIGN KEY (home_team_id) REFERENCES core.teams (retrosheet_team_id);
 ALTER TABLE core.games ADD CONSTRAINT games_away_team_fk
-    FOREIGN KEY (away_team_id) REFERENCES core.teams (retrosheet_team_id);
+FOREIGN KEY (away_team_id) REFERENCES core.teams (retrosheet_team_id);
 ALTER TABLE core.games ADD CONSTRAINT games_park_fk
-    FOREIGN KEY (park_id) REFERENCES core.parks (retrosheet_park_id);
+FOREIGN KEY (park_id) REFERENCES core.parks (retrosheet_park_id);
 
 -- Events table foreign keys (careful - these can be expensive to add)
 -- Consider adding these after initial load
@@ -70,17 +71,17 @@ ALTER TABLE core.games ADD CONSTRAINT games_park_fk
 -- Add data validation constraints
 
 ALTER TABLE core.games ADD CONSTRAINT games_scores_positive
-    CHECK (home_score >= 0 AND away_score >= 0);
+CHECK (home_score >= 0 AND away_score >= 0);
 ALTER TABLE core.games ADD CONSTRAINT games_season_valid
-    CHECK (season ~ '^[0-9]{4}$');
+CHECK (season ~ '^[0-9]{4}$');
 
 ALTER TABLE core.live_games ADD CONSTRAINT live_games_scores_positive
-    CHECK (home_score >= 0 AND away_score >= 0);
+CHECK (home_score >= 0 AND away_score >= 0);
 
 ALTER TABLE core.events ADD CONSTRAINT events_inning_valid
-    CHECK (inning >= 1 AND inning <= 25);
+CHECK (inning >= 1 AND inning <= 25);
 ALTER TABLE core.events ADD CONSTRAINT events_event_sequence_positive
-    CHECK (event_sequence > 0);
+CHECK (event_sequence > 0);
 
 -- 5. OPTIMIZE MATERIALIZED VIEWS
 -- Add more comprehensive indexes to existing materialized views
@@ -143,7 +144,7 @@ SELECT
     source_type,
     created_at
 FROM core.live_events
-WHERE is_plate_appearance = true;
+WHERE is_plate_appearance = TRUE;
 
 -- Better indexes on the materialized view
 CREATE INDEX combined_pa_season_idx ON analysis.combined_plate_appearances (season);
@@ -156,7 +157,7 @@ CREATE INDEX combined_pa_game_season_batter_idx ON analysis.combined_plate_appea
 
 CREATE OR REPLACE FUNCTION analysis.get_player_game_stats(
     player_id text,
-    start_date date DEFAULT CURRENT_DATE - INTERVAL '30 days',
+    start_date date DEFAULT CURRENT_DATE - interval '30 days',
     end_date date DEFAULT CURRENT_DATE
 )
 RETURNS TABLE (
@@ -280,39 +281,39 @@ SELECT
     season,
     source_type,
     game_date,
-    NULL::smallint as game_number,
-    NULL::text as day_of_week,
-    NULL::text as start_time,
-    NULL::text as doubleheader_flag,
-    NULL::text as day_night,
+    NULL::smallint AS game_number,
+    NULL::text AS day_of_week,
+    NULL::text AS start_time,
+    NULL::text AS doubleheader_flag,
+    NULL::text AS day_night,
     away_team_id,
     home_team_id,
     park_id,
-    NULL::text as away_starting_pitcher_id,
-    NULL::text as home_starting_pitcher_id,
-    NULL::integer as attendance,
-    NULL::integer as temperature_f,
-    NULL::text as wind_direction,
-    NULL::integer as wind_speed_mph,
-    NULL::text as field_condition,
-    NULL::text as precipitation,
-    NULL::text as sky_condition,
-    NULL::integer as duration_minutes,
-    NULL::integer as innings,
+    NULL::text AS away_starting_pitcher_id,
+    NULL::text AS home_starting_pitcher_id,
+    NULL::integer AS attendance,
+    NULL::integer AS temperature_f,
+    NULL::text AS wind_direction,
+    NULL::integer AS wind_speed_mph,
+    NULL::text AS field_condition,
+    NULL::text AS precipitation,
+    NULL::text AS sky_condition,
+    NULL::integer AS duration_minutes,
+    NULL::integer AS innings,
     away_score,
     home_score,
-    NULL::integer as away_hits,
-    NULL::integer as home_hits,
-    NULL::integer as away_errors,
-    NULL::integer as home_errors,
-    NULL::integer as away_lob,
-    NULL::integer as home_lob,
-    NULL::text as winning_team_id,
-    (home_score > away_score) as home_win,
-    NULL::text as win_pitcher_id,
-    NULL::text as loss_pitcher_id,
-    NULL::text as save_pitcher_id,
-    NULL::timestamptz as raw_loaded_at,
+    NULL::integer AS away_hits,
+    NULL::integer AS home_hits,
+    NULL::integer AS away_errors,
+    NULL::integer AS home_errors,
+    NULL::integer AS away_lob,
+    NULL::integer AS home_lob,
+    NULL::text AS winning_team_id,
+    (home_score > away_score) AS home_win,
+    NULL::text AS win_pitcher_id,
+    NULL::text AS loss_pitcher_id,
+    NULL::text AS save_pitcher_id,
+    NULL::timestamptz AS raw_loaded_at,
     created_at,
     updated_at
 FROM core.live_games;

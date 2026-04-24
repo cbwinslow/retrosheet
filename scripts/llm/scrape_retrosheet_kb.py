@@ -15,9 +15,9 @@ It writes a JSON log (``kb/download_log.json``) that records the source URL,
 local path, HTTP status and any error messages.
 """
 
-import os
-import json
 import hashlib
+import json
+import os
 import sys
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
@@ -33,6 +33,7 @@ LOG_PATH = KB_ROOT / "download_log.json"
 
 ARTICLES_DIR.mkdir(parents=True, exist_ok=True)
 
+
 def sha256_of_file(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -40,10 +41,12 @@ def sha256_of_file(path: Path) -> str:
             h.update(chunk)
     return h.hexdigest()
 
+
 def log_entry(entry: dict):
     # Append a JSON line to the log file
     with LOG_PATH.open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
 
 def download_file(url: str, dest: Path) -> dict:
     try:
@@ -69,6 +72,7 @@ def download_file(url: str, dest: Path) -> dict:
         print(f"❌ Failed {url}: {e}")
         return entry
 
+
 def is_valid_link(href: str) -> bool:
     # Accept absolute URLs or relative URLs that stay on retrosheet.org
     if not href:
@@ -77,6 +81,7 @@ def is_valid_link(href: str) -> bool:
     if parsed.scheme and parsed.netloc:
         return parsed.netloc.endswith("retrosheet.org")
     return True
+
 
 def main():
     print(f"🔎 Crawling {PUBLICATIONS_PAGE}")
@@ -101,10 +106,10 @@ def main():
         if not filename:
             continue
         lower = filename.lower()
-        if lower.endswith('.pdf'):
+        if lower.endswith(".pdf"):
             dest = ARTICLES_DIR / filename
             download_file(full_url, dest)
-        elif lower.endswith('.htm') or lower.endswith('.html'):
+        elif lower.endswith(".htm") or lower.endswith(".html"):
             # Save raw HTML and also extract text version
             dest_html = ARTICLES_DIR / filename
             entry = download_file(full_url, dest_html)
@@ -115,10 +120,16 @@ def main():
                     html_resp.raise_for_status()
                     article_soup = BeautifulSoup(html_resp.text, "html.parser")
                     # Simple heuristic: grab <article> or main <div>
-                    article = article_soup.find('article') or article_soup.find('div', {'class': 'content'})
-                    text = article.get_text(separator='\n', strip=True) if article else article_soup.get_text(separator='\n', strip=True)
-                    txt_path = ARTICLES_DIR / (filename.rsplit('.', 1)[0] + '.txt')
-                    txt_path.write_text(text, encoding='utf-8')
+                    article = article_soup.find("article") or article_soup.find(
+                        "div", {"class": "content"}
+                    )
+                    text = (
+                        article.get_text(separator="\n", strip=True)
+                        if article
+                        else article_soup.get_text(separator="\n", strip=True)
+                    )
+                    txt_path = ARTICLES_DIR / (filename.rsplit(".", 1)[0] + ".txt")
+                    txt_path.write_text(text, encoding="utf-8")
                     print(f"📝 Extracted text to {txt_path}")
                 except Exception as e:
                     print(f"⚠️ Could not extract text from {full_url}: {e}")

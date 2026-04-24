@@ -7,9 +7,10 @@ using date and team IDs, with bridge.team_xref for team ID translation.
 """
 
 import os
+
 import psycopg2
-from psycopg2 import Error
 from dotenv import load_dotenv
+from psycopg2 import Error
 
 load_dotenv()
 
@@ -91,11 +92,11 @@ def populate_game_xref():
                     mlb_home_team_id = EXCLUDED.mlb_home_team_id,
                     mlb_away_team_id = EXCLUDED.mlb_away_team_id
             """)
-            
+
             matched_count = cur.rowcount
             conn.commit()
             print(f"Matched and inserted {matched_count} games in bridge.game_xref")
-            
+
             # Check for unmatched games
             cur.execute("""
                 SELECT COUNT(*) 
@@ -108,7 +109,7 @@ def populate_game_xref():
             """)
             unmatched_mlb = cur.fetchone()[0]
             print(f"Unmatched MLB games: {unmatched_mlb}")
-            
+
             cur.execute("""
                 SELECT COUNT(*) 
                 FROM core.games 
@@ -120,9 +121,9 @@ def populate_game_xref():
             result = cur.fetchone()
             unmatched_retrosheet = result[0] if result else 0
             print(f"Unmatched Retrosheet games (2026+): {unmatched_retrosheet}")
-            
+
             return matched_count
-            
+
     except Error as e:
         print(f"Error populating game_xref: {e}")
         conn.rollback()

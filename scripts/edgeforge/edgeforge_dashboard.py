@@ -6,9 +6,9 @@ Professional betting intelligence monitoring system
 
 import os
 import time
+from datetime import datetime
+
 import psycopg2
-from datetime import datetime, timedelta
-import pandas as pd
 
 
 def database_kwargs():
@@ -74,9 +74,7 @@ def get_ingestion_status():
                 ) as missing_seasons
             """)
             missing_result = cur.fetchone()
-            missing_seasons = (
-                missing_result[0] if missing_result and missing_result[0] else []
-            )
+            missing_seasons = missing_result[0] if missing_result and missing_result[0] else []
 
             # EdgeForge model status
             cur.execute("""
@@ -142,9 +140,7 @@ def display_header():
     print("🎯 EdgeForge MLB Data Ingestion Dashboard")
     print("💰 Professional Sports Betting Intelligence Platform")
     print("=" * 70)
-    print(
-        f"📊 Live Status | Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}"
-    )
+    print(f"📊 Live Status | Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
     print("=" * 70)
 
 
@@ -196,9 +192,7 @@ def display_season_breakdown(status):
                 # Convert string dates to date objects for formatting
                 earliest_date = datetime.strptime(str(earliest)[:10], "%Y-%m-%d").date()
                 latest_date = datetime.strptime(str(latest)[:10], "%Y-%m-%d").date()
-                date_range = (
-                    f"{earliest_date.strftime('%m/%d')}-{latest_date.strftime('%m/%d')}"
-                )
+                date_range = f"{earliest_date.strftime('%m/%d')}-{latest_date.strftime('%m/%d')}"
             else:
                 date_range = "N/A"
         except:

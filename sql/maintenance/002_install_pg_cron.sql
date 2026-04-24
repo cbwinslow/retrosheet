@@ -20,4 +20,8 @@ SELECT * FROM cron.job;
 -- SELECT cron.unschedule('test-job');
 
 -- Verify extension is installed
-SELECT extname, extversion FROM pg_extension WHERE extname = 'cron';
+SELECT
+    extname,
+    extversion
+FROM pg_extension
+WHERE extname = 'cron';

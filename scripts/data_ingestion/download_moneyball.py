@@ -10,10 +10,11 @@ Usage::
     python3 scripts/download_moneyball.py
 """
 
-import sys
-from pathlib import Path
 import hashlib
 import json
+import sys
+from pathlib import Path
+
 import requests
 
 KB_ROOT = Path(__file__).resolve().parents[1] / "kb"
@@ -29,6 +30,7 @@ MIRROR_URLS = [
     "https://archive.org/download/moneyball_202006/Moneyball.pdf",
 ]
 
+
 def sha256_of_file(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -36,9 +38,11 @@ def sha256_of_file(path: Path) -> str:
             h.update(chunk)
     return h.hexdigest()
 
+
 def log(entry: dict):
     with LOG_PATH.open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
 
 def download(url: str, dest: Path) -> bool:
     try:
@@ -61,6 +65,7 @@ def download(url: str, dest: Path) -> bool:
         log({"url": url, "error": str(e)})
         print(f"❌ Failed {url}: {e}")
         return False
+
 
 def main():
     dest = BOOKS_DIR / "moneyball.pdf"

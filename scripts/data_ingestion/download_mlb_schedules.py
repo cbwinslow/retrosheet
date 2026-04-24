@@ -7,9 +7,9 @@ Downloads schedules from start_date to end_date with rate limiting and deduplica
 import argparse
 import json
 import time
-from datetime import datetime, timedelta
-from pathlib import Path
 import urllib.request
+from datetime import datetime, timedelta
+
 import psycopg2
 from psycopg2.extras import Json
 
@@ -132,9 +132,7 @@ def main():
         default=True,
         help="Skip dates we already have data for",
     )
-    parser.add_argument(
-        "--dry-run", action="store_true", help="Show what would be downloaded"
-    )
+    parser.add_argument("--dry-run", action="store_true", help="Show what would be downloaded")
     parser.add_argument(
         "--delay",
         type=float,
@@ -195,7 +193,7 @@ def main():
         if i < len(dates_to_process) - 1:  # Don't delay on last request
             time.sleep(args.delay)
 
-    print(f"\n🎯 Download Complete:")
+    print("\n🎯 Download Complete:")
     print(f"   ✅ Successful: {successful}")
     print(f"   ❌ Failed: {failed}")
     print(f"   📊 Total processed: {len(dates_to_process)}")

@@ -42,14 +42,14 @@
 -- PHASE 5: Final Validation
 -- ============================================================================
 \echo 'Final validation: Checking installed extensions...'
-SELECT 
+SELECT
     name,
     default_version,
     installed_version,
-    CASE 
+    CASE
         WHEN installed_version IS NOT NULL THEN 'INSTALLED'
         ELSE 'AVAILABLE'
-    END as status
+    END AS status
 FROM pg_available_extensions
 WHERE name IN ('cron', 'pg_stat_statements', 'plpython3u', 'vector')
 ORDER BY name;

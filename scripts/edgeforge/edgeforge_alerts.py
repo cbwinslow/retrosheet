@@ -5,12 +5,10 @@ Professional betting intelligence notifications
 """
 
 import os
-import smtplib
-import psycopg2
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from datetime import datetime, timedelta
 import time
+from datetime import datetime, timedelta
+
+import psycopg2
 
 
 def database_kwargs():
@@ -27,9 +25,7 @@ class EdgeForgeAlerts:
     """Professional betting intelligence alert system."""
 
     def __init__(self):
-        self.last_alert_time = datetime.now() - timedelta(
-            hours=1
-        )  # Allow immediate first alert
+        self.last_alert_time = datetime.now() - timedelta(hours=1)  # Allow immediate first alert
         self.last_status = None
 
     def get_current_status(self):
@@ -73,9 +69,7 @@ class EdgeForgeAlerts:
                 }
             )
 
-        if processed_games >= 20000 and (
-            not self.last_status or self.last_status[1] < 20000
-        ):
+        if processed_games >= 20000 and (not self.last_status or self.last_status[1] < 20000):
             alerts.append(
                 {
                     "priority": "HIGH",
@@ -85,9 +79,7 @@ class EdgeForgeAlerts:
                 }
             )
 
-        if seasons_downloaded >= 15 and (
-            not self.last_status or self.last_status[2] < 15
-        ):
+        if seasons_downloaded >= 15 and (not self.last_status or self.last_status[2] < 15):
             alerts.append(
                 {
                     "priority": "CRITICAL",
@@ -98,9 +90,7 @@ class EdgeForgeAlerts:
             )
 
         # Model readiness milestones
-        if betting_samples >= 1000000 and (
-            not self.last_status or self.last_status[3] < 1000000
-        ):
+        if betting_samples >= 1000000 and (not self.last_status or self.last_status[3] < 1000000):
             alerts.append(
                 {
                     "priority": "CRITICAL",
@@ -110,9 +100,7 @@ class EdgeForgeAlerts:
                 }
             )
 
-        if statcast_pitches >= 500000 and (
-            not self.last_status or self.last_status[4] < 500000
-        ):
+        if statcast_pitches >= 500000 and (not self.last_status or self.last_status[4] < 500000):
             alerts.append(
                 {
                     "priority": "HIGH",
@@ -123,9 +111,7 @@ class EdgeForgeAlerts:
             )
 
         # Completion milestones
-        if seasons_downloaded >= 27 and (
-            not self.last_status or self.last_status[2] < 27
-        ):
+        if seasons_downloaded >= 27 and (not self.last_status or self.last_status[2] < 27):
             alerts.append(
                 {
                     "priority": "CRITICAL",
@@ -245,9 +231,7 @@ class EdgeForgeAlerts:
                 all_alerts = milestone_alerts + system_alerts
                 for alert in all_alerts:
                     # Rate limiting - don't spam alerts
-                    time_since_last = (
-                        datetime.now() - self.last_alert_time
-                    ).total_seconds()
+                    time_since_last = (datetime.now() - self.last_alert_time).total_seconds()
                     if time_since_last > 300:  # 5 minutes between alerts
                         self.send_alert(alert)
                         self.last_alert_time = datetime.now()

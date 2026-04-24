@@ -22,8 +22,10 @@ import requests
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
 
+
 def get_conn():
     return psycopg2.connect(DATABASE_URL)
+
 
 def fetch_and_store(snapshot_date: str):
     # MLB Stats API endpoint for rosters (public, no key needed)
@@ -53,10 +55,10 @@ def fetch_and_store(snapshot_date: str):
     finally:
         conn.close()
 
+
 def main():
     parser = argparse.ArgumentParser(description="Fetch MLB rosters")
-    parser.add_argument("--date", type=str, required=True,
-                        help="Snapshot date (YYYY‑MM‑DD)")
+    parser.add_argument("--date", type=str, required=True, help="Snapshot date (YYYY‑MM‑DD)")
     args = parser.parse_args()
     # Validate date format
     try:
@@ -66,6 +68,7 @@ def main():
         sys.exit(1)
 
     fetch_and_store(args.date)
+
 
 if __name__ == "__main__":
     main()

@@ -10,8 +10,8 @@ raising an ``ImportError``. The method returns a simple dictionary indicating
 that the LangChain backend is a placeholder.
 """
 
-from typing import Any, Dict
 import os
+from typing import Any, Dict
 
 # Optional Prometheus metrics integration. The project already uses OpenTelemetry
 # elsewhere; this addition provides a simple counter for the number of queries
@@ -23,6 +23,7 @@ import os
 try:
     from prometheus_client import Counter as PrometheusCounter
 except Exception:  # pragma: no cover
+
     class _NoOpCounter:
         def __init__(self, *_, **__):
             pass

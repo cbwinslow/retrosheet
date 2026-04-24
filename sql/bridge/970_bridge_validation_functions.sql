@@ -169,7 +169,7 @@ COMMENT ON FUNCTION bridge.validate_data_quality() IS 'Returns true if no data q
 
 -- Function: Master validation function (runs all checks)
 CREATE OR REPLACE FUNCTION bridge.validate_all_bridge_tables()
-RETURNS TABLE(
+RETURNS TABLE (
     check_name TEXT,
     passed BOOLEAN,
     details TEXT

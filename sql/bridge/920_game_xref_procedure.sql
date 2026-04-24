@@ -89,7 +89,7 @@ $$;
 -- ============================================================================
 -- Comment on procedure
 -- ============================================================================
-COMMENT ON PROCEDURE bridge.populate_game_xref() IS 
+COMMENT ON PROCEDURE bridge.populate_game_xref () IS
 'Populate bridge.game_xref by matching games between Retrosheet and MLB using date, team IDs, and game number.';
 
 -- ============================================================================

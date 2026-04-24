@@ -26,19 +26,14 @@ Date: 2026-04-24
 import argparse
 import sys
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
 import psycopg2
-from psycopg2.extras import RealDictCursor
 
 
 def get_connection():
     """Get database connection."""
-    return psycopg2.connect(
-        host="localhost",
-        database="retrosheet",
-        port=5432
-    )
+    return psycopg2.connect(host="localhost", database="retrosheet", port=5432)
 
 
 def get_row_count(conn, table: str, schema: str = "features_pitch") -> int:
@@ -121,7 +116,7 @@ def populate_all_seasons(conn, dry_run: bool = False) -> int:
             AND bf.sv_id = l.sv_id
         )
     """
-    
+
     if dry_run:
         count_query = """
             SELECT COUNT(*) 
@@ -136,27 +131,27 @@ def populate_all_seasons(conn, dry_run: bool = False) -> int:
             count = cur.fetchone()[0]
             print(f"[DRY RUN] Would insert {count:,} rows into base_features")
             return count
-    
+
     print("Populating base_features from locations...")
     start_time = datetime.now()
-    
+
     with conn.cursor() as cur:
         cur.execute(query)
         rows_inserted = cur.rowcount
-    
+
     conn.commit()
     elapsed = (datetime.now() - start_time).total_seconds()
-    
+
     print(f"✓ Inserted {rows_inserted:,} rows in {elapsed:.1f}s")
-    print(f"  Rate: {rows_inserted/elapsed:,.0f} rows/sec")
-    
+    print(f"  Rate: {rows_inserted / elapsed:,.0f} rows/sec")
+
     return rows_inserted
 
 
 def populate_seasons(conn, seasons: List[int], dry_run: bool = False) -> int:
     """Populate base_features for specific seasons."""
     total_inserted = 0
-    
+
     for season in seasons:
         query = """
             INSERT INTO features_pitch.base_features (
@@ -228,7 +223,7 @@ def populate_seasons(conn, seasons: List[int], dry_run: bool = False) -> int:
                 WHERE bf.game_pk = l.game_pk AND bf.sv_id = l.sv_id
             )
         """
-        
+
         if dry_run:
             count_query = """
                 SELECT COUNT(*) 
@@ -245,40 +240,40 @@ def populate_seasons(conn, seasons: List[int], dry_run: bool = False) -> int:
                 print(f"[DRY RUN] Season {season}: would insert {count:,} rows")
                 total_inserted += count
             continue
-        
+
         print(f"Processing season {season}...")
         start_time = datetime.now()
-        
+
         with conn.cursor() as cur:
             cur.execute(query, (season,))
             rows_inserted = cur.rowcount
-        
+
         conn.commit()
         elapsed = (datetime.now() - start_time).total_seconds()
-        
+
         print(f"  ✓ Inserted {rows_inserted:,} rows in {elapsed:.1f}s")
         total_inserted += rows_inserted
-    
+
     return total_inserted
 
 
 def verify_population(conn) -> bool:
     """Verify that base_features matches locations."""
     print("\n=== Verification ===")
-    
+
     # Check row counts
     locations_count = get_row_count(conn, "locations")
     base_count = get_row_count(conn, "base_features")
-    
+
     print(f"locations:     {locations_count:,} rows")
     print(f"base_features: {base_count:,} rows")
-    
+
     if locations_count == base_count:
         print("✓ Row counts match")
     else:
         print(f"✗ Mismatch: {locations_count - base_count:,} rows missing")
         return False
-    
+
     # Check season distribution
     with conn.cursor() as cur:
         cur.execute("""
@@ -288,11 +283,11 @@ def verify_population(conn) -> bool:
             ORDER BY game_year
         """)
         seasons = cur.fetchall()
-        
+
         print("\nSeason distribution in base_features:")
         for year, count in seasons:
             print(f"  {year}: {count:,} rows")
-    
+
     return True
 
 
@@ -300,55 +295,46 @@ def main():
     parser = argparse.ArgumentParser(
         description="Populate features_pitch.base_features from locations"
     )
+    parser.add_argument("--all", action="store_true", help="Populate all seasons at once")
     parser.add_argument(
-        "--all",
-        action="store_true",
-        help="Populate all seasons at once"
-    )
-    parser.add_argument(
-        "--seasons",
-        nargs="+",
-        type=int,
-        help="Specific seasons to populate (e.g., 2020 2021 2022)"
+        "--seasons", nargs="+", type=int, help="Specific seasons to populate (e.g., 2020 2021 2022)"
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Show what would be inserted without actually inserting"
+        help="Show what would be inserted without actually inserting",
     )
     parser.add_argument(
-        "--verify",
-        action="store_true",
-        help="Verify population by comparing row counts"
+        "--verify", action="store_true", help="Verify population by comparing row counts"
     )
-    
+
     args = parser.parse_args()
-    
+
     if not any([args.all, args.seasons, args.verify]):
         parser.print_help()
         sys.exit(1)
-    
+
     conn = get_connection()
-    
+
     try:
         if args.verify:
             success = verify_population(conn)
             sys.exit(0 if success else 1)
-        
+
         if args.all:
             rows = populate_all_seasons(conn, dry_run=args.dry_run)
             print(f"\n{'Would insert' if args.dry_run else 'Inserted'} {rows:,} total rows")
-            
+
             if not args.dry_run:
                 verify_population(conn)
-        
+
         elif args.seasons:
             rows = populate_seasons(conn, args.seasons, dry_run=args.dry_run)
             print(f"\n{'Would insert' if args.dry_run else 'Inserted'} {rows:,} total rows")
-            
+
             if not args.dry_run:
                 verify_population(conn)
-    
+
     finally:
         conn.close()
 

@@ -54,41 +54,41 @@ SELECT
     season::integer,
     source_type,
     game_date::date,
-    NULL::smallint as game_number,
-    NULL::text as day_of_week,
-    NULL::text as start_time,
-    NULL::text as doubleheader_flag,
-    NULL::text as day_night,
+    NULL::smallint AS game_number,
+    NULL::text AS day_of_week,
+    NULL::text AS start_time,
+    NULL::text AS doubleheader_flag,
+    NULL::text AS day_night,
     away_team_id,
     home_team_id,
     park_id,
-    NULL::text as away_starting_pitcher_id,
-    NULL::text as home_starting_pitcher_id,
-    NULL::integer as attendance,
-    NULL::integer as temperature_f,
-    NULL::text as wind_direction,
-    NULL::integer as wind_speed_mph,
-    NULL::text as field_condition,
-    NULL::text as precipitation,
-    NULL::text as sky_condition,
-    NULL::integer as duration_minutes,
-    NULL::integer as innings,
+    NULL::text AS away_starting_pitcher_id,
+    NULL::text AS home_starting_pitcher_id,
+    NULL::integer AS attendance,
+    NULL::integer AS temperature_f,
+    NULL::text AS wind_direction,
+    NULL::integer AS wind_speed_mph,
+    NULL::text AS field_condition,
+    NULL::text AS precipitation,
+    NULL::text AS sky_condition,
+    NULL::integer AS duration_minutes,
+    NULL::integer AS innings,
     away_score,
     home_score,
-    NULL::integer as away_hits,
-    NULL::integer as home_hits,
-    NULL::integer as away_errors,
-    NULL::integer as home_errors,
-    NULL::integer as away_lob,
-    NULL::integer as home_lob,
-    NULL::text as winning_team_id,
-    (home_score > away_score) as home_win,
-    NULL::text as win_pitcher_id,
-    NULL::text as loss_pitcher_id,
-    NULL::text as save_pitcher_id,
-    NULL::timestamptz as raw_loaded_at,
-    now()::timestamptz as created_at,
-    now()::timestamptz as updated_at
+    NULL::integer AS away_hits,
+    NULL::integer AS home_hits,
+    NULL::integer AS away_errors,
+    NULL::integer AS home_errors,
+    NULL::integer AS away_lob,
+    NULL::integer AS home_lob,
+    NULL::text AS winning_team_id,
+    (home_score > away_score) AS home_win,
+    NULL::text AS win_pitcher_id,
+    NULL::text AS loss_pitcher_id,
+    NULL::text AS save_pitcher_id,
+    NULL::timestamptz AS raw_loaded_at,
+    now()::timestamptz AS created_at,
+    now()::timestamptz AS updated_at
 FROM core.live_games;
 
 -- Combined events view - unions historical and live events
@@ -121,7 +121,7 @@ SELECT
     rbi,
     source_type,
     created_at,
-    created_at as updated_at
+    created_at AS updated_at
 FROM core.events
 
 UNION ALL
@@ -153,8 +153,8 @@ SELECT
     runs_on_play,
     rbi,
     source_type,
-    now()::timestamptz as created_at,
-    now()::timestamptz as updated_at
+    now()::timestamptz AS created_at,
+    now()::timestamptz AS updated_at
 FROM core.live_events;
 
 -- Materialized view for combined plate appearances (refreshed periodically)
@@ -185,8 +185,8 @@ SELECT
     runs_on_play,
     rbi,
     source_type,
-    now()::timestamptz as created_at,
-    now()::timestamptz as updated_at
+    now()::timestamptz AS created_at,
+    now()::timestamptz AS updated_at
 FROM core.plate_appearances
 
 UNION ALL
@@ -216,18 +216,18 @@ SELECT
     runs_on_play,
     rbi,
     source_type,
-    now()::timestamptz as created_at,
-    now()::timestamptz as updated_at
+    now()::timestamptz AS created_at,
+    now()::timestamptz AS updated_at
 FROM core.live_events
-WHERE is_plate_appearance = true;
+WHERE is_plate_appearance = TRUE;
 
 -- Create indexes on the materialized view (if they do not already exist)
 CREATE INDEX IF NOT EXISTS combined_plate_appearances_season_idx
-    ON analysis.combined_plate_appearances (season);
+ON analysis.combined_plate_appearances (season);
 CREATE INDEX IF NOT EXISTS combined_plate_appearances_batter_idx
-    ON analysis.combined_plate_appearances (batter_id);
+ON analysis.combined_plate_appearances (batter_id);
 CREATE INDEX IF NOT EXISTS combined_plate_appearances_game_idx
-    ON analysis.combined_plate_appearances (game_id);
+ON analysis.combined_plate_appearances (game_id);
 
 -- Function to refresh combined data views
 CREATE OR REPLACE FUNCTION analysis.refresh_combined_data()

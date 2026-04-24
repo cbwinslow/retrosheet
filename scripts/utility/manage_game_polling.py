@@ -26,11 +26,11 @@ Game Hours (ET):
 - Night games: 8pm - 11pm
 - Extra innings: Can extend past midnight
 """
+
 import argparse
 import os
-import sys
 from datetime import datetime
-from typing import List, Tuple, Optional
+from typing import List
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -39,10 +39,10 @@ from psycopg2.extras import RealDictCursor
 def get_connection():
     """Get PostgreSQL connection."""
     return psycopg2.connect(
-        host=os.getenv('PGHOST', 'localhost'),
-        port=int(os.getenv('PGPORT', 5432)),
-        database=os.getenv('PGDATABASE', 'retrosheet'),
-        user=os.getenv('PGUSER', os.getenv('USER', 'postgres'))
+        host=os.getenv("PGHOST", "localhost"),
+        port=int(os.getenv("PGPORT", 5432)),
+        database=os.getenv("PGDATABASE", "retrosheet"),
+        user=os.getenv("PGUSER", os.getenv("USER", "postgres")),
     )
 
 
@@ -78,7 +78,7 @@ def enable_game_hours_polling(conn):
         # Unschedule old jobs
         cur.execute("SELECT cron.unschedule('live-game-poll-10s')")
         cur.execute("SELECT cron.unschedule('all-endpoints-poll-15s')")
-        
+
         # Schedule conditional wrappers
         cur.execute("""
             SELECT cron.schedule(
@@ -104,7 +104,7 @@ def enable_24_7_polling(conn):
         # Unschedule conditional jobs
         cur.execute("SELECT cron.unschedule('live-game-poll-conditional')")
         cur.execute("SELECT cron.unschedule('endpoints-poll-conditional')")
-        
+
         # Schedule unconditional polling
         cur.execute("""
             SELECT cron.schedule(
@@ -128,10 +128,10 @@ def disable_polling(conn):
     """Disable all game polling jobs."""
     with conn.cursor() as cur:
         job_names = [
-            'live-game-poll-10s',
-            'all-endpoints-poll-15s',
-            'live-game-poll-conditional',
-            'endpoints-poll-conditional'
+            "live-game-poll-10s",
+            "all-endpoints-poll-15s",
+            "live-game-poll-conditional",
+            "endpoints-poll-conditional",
         ]
         for job in job_names:
             try:
@@ -144,76 +144,78 @@ def disable_polling(conn):
 
 def show_status(conn):
     """Display current polling status."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("MLB Game Polling Status")
-    print("="*60)
-    
+    print("=" * 60)
+
     # Current time info
     now = datetime.now()
-    et_hour = datetime.now().astimezone().strftime('%H:%M %Z')
+    et_hour = datetime.now().astimezone().strftime("%H:%M %Z")
     print(f"\nCurrent Time: {now.strftime('%Y-%m-%d %H:%M:%S')} ({et_hour})")
-    
+
     # Season conditions
     conditions = check_season_conditions(conn)
-    print(f"\nSeason Conditions:")
+    print("\nSeason Conditions:")
     print(f"  Is MLB Season (Feb-Oct):     {'✅ YES' if conditions['is_season'] else '❌ NO'}")
     print(f"  Is Game Hours (11am-1am ET): {'✅ YES' if conditions['is_game_hours'] else '❌ NO'}")
-    print(f"  Has Games Scheduled Today:   {'✅ YES' if conditions['has_games_today'] else '❌ NO / Unknown'}")
+    print(
+        f"  Has Games Scheduled Today:   {'✅ YES' if conditions['has_games_today'] else '❌ NO / Unknown'}"
+    )
     print(f"  Should Poll:                 {'✅ YES' if conditions['should_poll'] else '❌ NO'}")
-    
+
     # Cron jobs
     jobs = get_polling_status(conn)
-    print(f"\nActive Cron Jobs:")
+    print("\nActive Cron Jobs:")
     if jobs:
         for job in jobs:
-            status = "🟢 Active" if job['active'] else "🔴 Inactive"
+            status = "🟢 Active" if job["active"] else "🔴 Inactive"
             print(f"  [{job['jobid']}] {job['jobname']}")
             print(f"      Schedule: {job['schedule']}")
             print(f"      Status: {status}")
             print(f"      Command: {job['command_preview']}...")
     else:
         print("  No game polling jobs found")
-    
+
     # Recommendation
-    print(f"\nRecommendation:")
-    if conditions['is_season'] and conditions['is_game_hours']:
+    print("\nRecommendation:")
+    if conditions["is_season"] and conditions["is_game_hours"]:
         print("  🟢 Current conditions: Polling should be active")
-    elif not conditions['is_season']:
+    elif not conditions["is_season"]:
         print("  ⚠️  Offseason detected: Consider disabling or using game-hours mode")
     else:
         print("  ⚠️  Outside game hours: Polling may be unnecessary")
-    
-    print("="*60 + "\n")
+
+    print("=" * 60 + "\n")
 
 
 def test_season_check(conn):
     """Test the season/game hours functions."""
     print("\nTesting Season Check Functions:")
-    
+
     with conn.cursor() as cur:
         # Test each function
         cur.execute("SELECT metadata.is_mlb_season() as result")
         is_season = cur.fetchone()[0]
         print(f"  metadata.is_mlb_season(): {is_season}")
-        
+
         cur.execute("SELECT metadata.is_game_hours() as result")
         is_hours = cur.fetchone()[0]
         print(f"  metadata.is_game_hours(): {is_hours}")
-        
+
         cur.execute("SELECT metadata.should_poll_games() as result")
         should_poll = cur.fetchone()[0]
         print(f"  metadata.should_poll_games(): {should_poll}")
-        
+
         cur.execute("SELECT metadata.has_scheduled_games_today() as result")
         has_games = cur.fetchone()[0]
         print(f"  metadata.has_scheduled_games_today(): {has_games}")
-    
+
     print("\n✅ All functions working correctly")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Manage MLB game polling schedule',
+        description="Manage MLB game polling schedule",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -222,36 +224,36 @@ Examples:
     %(prog)s enable-24-7         # Use unconditional polling (24/7)
     %(prog)s disable             # Stop all polling
     %(prog)s test-season-check   # Test the season check functions
-        """
+        """,
     )
-    
+
     parser.add_argument(
-        'command',
-        choices=['status', 'enable-game-hours', 'enable-24-7', 'disable', 'test-season-check'],
-        help='Command to execute'
+        "command",
+        choices=["status", "enable-game-hours", "enable-24-7", "disable", "test-season-check"],
+        help="Command to execute",
     )
-    
+
     args = parser.parse_args()
-    
+
     conn = get_connection()
-    
+
     try:
-        if args.command == 'status':
+        if args.command == "status":
             show_status(conn)
-        elif args.command == 'enable-game-hours':
+        elif args.command == "enable-game-hours":
             enable_game_hours_polling(conn)
             show_status(conn)
-        elif args.command == 'enable-24-7':
+        elif args.command == "enable-24-7":
             enable_24_7_polling(conn)
             show_status(conn)
-        elif args.command == 'disable':
+        elif args.command == "disable":
             disable_polling(conn)
             show_status(conn)
-        elif args.command == 'test-season-check':
+        elif args.command == "test-season-check":
             test_season_check(conn)
     finally:
         conn.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

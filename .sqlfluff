@@ -1,0 +1,48 @@
+[sqlfluff]
+dialect = postgres
+templater = raw
+max_line_length = 100
+
+# Exclude overly strict rules that conflict with practical SQL development
+exclude_rules =
+    L016,   -- Line too long (we have max_line_length instead)
+    L034,   -- Use wildcard in SELECT (intentional for exploration queries)
+    L044,   -- Nested CASE/WHEN (sometimes necessary)
+    L031,   -- Avoid table aliases (often clearer with aliases)
+    L046,   -- Jinja tags should have whitespace (not using Jinja)
+
+[sqlfluff:indentation]
+tab_width = 2
+indent_unit = space
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.identifiers]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = upper
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = upper
+
+[sqlfluff:rules:convention.terminator]
+require_final_semicolon = true
+
+[sqlfluff:layout:type]
+spacing_within = single
+
+# Exclude certain directories
+[sqlfluff:exclude]
+paths =
+    .git,
+    .venv,
+    node_modules,
+    .next,
+    venv,
+    __pycache__,
+    .pytest_cache,
+    .mypy_cache,
+    .ruff_cache,
+    *.min.js

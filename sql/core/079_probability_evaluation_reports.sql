@@ -18,13 +18,13 @@ CREATE TABLE IF NOT EXISTS predictions.calibration_reports (
 );
 
 CREATE INDEX IF NOT EXISTS calibration_reports_target_created_idx
-    ON predictions.calibration_reports (target_id, created_at DESC);
+ON predictions.calibration_reports (target_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS calibration_reports_model_created_idx
-    ON predictions.calibration_reports (model_id, created_at DESC);
+ON predictions.calibration_reports (model_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS calibration_reports_summary_gin_idx
-    ON predictions.calibration_reports USING gin (summary);
+ON predictions.calibration_reports USING gin (summary);
 
 CREATE TABLE IF NOT EXISTS predictions.bootstrap_reports (
     bootstrap_report_id bigserial PRIMARY KEY,
@@ -42,13 +42,13 @@ CREATE TABLE IF NOT EXISTS predictions.bootstrap_reports (
 );
 
 CREATE INDEX IF NOT EXISTS bootstrap_reports_target_created_idx
-    ON predictions.bootstrap_reports (target_id, created_at DESC);
+ON predictions.bootstrap_reports (target_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS bootstrap_reports_model_created_idx
-    ON predictions.bootstrap_reports (model_id, created_at DESC);
+ON predictions.bootstrap_reports (model_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS bootstrap_reports_summary_gin_idx
-    ON predictions.bootstrap_reports USING gin (summary);
+ON predictions.bootstrap_reports USING gin (summary);
 
 CREATE OR REPLACE VIEW predictions.recent_calibration_reports AS
 SELECT

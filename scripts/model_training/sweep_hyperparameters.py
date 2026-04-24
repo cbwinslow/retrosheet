@@ -8,16 +8,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import joblib
-from sqlalchemy import create_engine
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+from sqlalchemy import create_engine
 
 # Import the sibling ``train_models`` module using a relative import so that the
 # package can be resolved correctly when the ``scripts`` directory is a Python
 # package (as defined by ``scripts/__init__.py``).
 from . import train_models
-
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / "data" / "models"
@@ -129,12 +128,16 @@ def main() -> None:
         description="Run a reproducible hyperparameter sweep against warehouse examples."
     )
     parser.add_argument("--target-id", required=True)
-    parser.add_argument("--feature-set", choices=["basic", "enriched", "advanced"], default="advanced")
+    parser.add_argument(
+        "--feature-set", choices=["basic", "enriched", "advanced"], default="advanced"
+    )
     parser.add_argument("--min-season", type=int, default=2000)
     parser.add_argument("--max-season", type=int, default=2025)
     parser.add_argument("--train-through", type=int, default=2022)
     parser.add_argument("--sample-rate", type=float, default=0.05)
-    parser.add_argument("--families", nargs="+", choices=["hgb", "logistic"], default=["hgb", "logistic"])
+    parser.add_argument(
+        "--families", nargs="+", choices=["hgb", "logistic"], default=["hgb", "logistic"]
+    )
     parser.add_argument("--max-candidates", type=int, default=12)
     parser.add_argument("--activate", action="store_true")
     args = parser.parse_args()
@@ -204,7 +207,13 @@ def main() -> None:
                 metrics=metrics,
                 activate=args.activate,
             )
-            leaderboard.append((candidate_name, metrics["validation"]["roc_auc"], metrics["validation"]["log_loss"]))
+            leaderboard.append(
+                (
+                    candidate_name,
+                    metrics["validation"]["roc_auc"],
+                    metrics["validation"]["log_loss"],
+                )
+            )
             print(f"trained {candidate_name}: {json.dumps(metrics['validation'], sort_keys=True)}")
 
         print("\nLeaderboard:")

@@ -46,13 +46,13 @@ CREATE TABLE IF NOT EXISTS raw_retrosheet.chadwick_event_raw (
 );
 
 ALTER TABLE raw_retrosheet.chadwick_event_raw
-    ADD COLUMN IF NOT EXISTS c160 text;
+ADD COLUMN IF NOT EXISTS c160 text;
 
 CREATE INDEX IF NOT EXISTS chadwick_event_raw_game_idx
-    ON raw_retrosheet.chadwick_event_raw (game_id);
+ON raw_retrosheet.chadwick_event_raw (game_id);
 
 CREATE INDEX IF NOT EXISTS chadwick_event_raw_event_idx
-    ON raw_retrosheet.chadwick_event_raw (season, game_id, event_id);
+ON raw_retrosheet.chadwick_event_raw (season, game_id, event_id);
 
 CREATE TABLE IF NOT EXISTS raw_mlb.live_feed_snapshots (
     snapshot_id bigserial PRIMARY KEY,
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS raw_mlb.live_feed_snapshots (
 );
 
 CREATE INDEX IF NOT EXISTS live_feed_snapshots_game_idx
-    ON raw_mlb.live_feed_snapshots (game_pk, fetched_at DESC);
+ON raw_mlb.live_feed_snapshots (game_pk, fetched_at DESC);
 
 CREATE TABLE IF NOT EXISTS bridge.player_xref (
     player_xref_id bigserial PRIMARY KEY,
@@ -111,4 +111,4 @@ SELECT DISTINCT ON (game_pk)
     endpoint,
     payload
 FROM raw_mlb.live_feed_snapshots
-ORDER BY game_pk, fetched_at DESC;
+ORDER BY game_pk ASC, fetched_at DESC;

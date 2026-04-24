@@ -125,7 +125,7 @@ $$;
 -- ============================================================================
 -- Comment on procedure
 -- ============================================================================
-COMMENT ON PROCEDURE bridge.populate_park_xref() IS 
+COMMENT ON PROCEDURE bridge.populate_park_xref () IS
 'Populate bridge.park_xref with MLB venue id mappings using static mapping table for 2000-2025 venues.';
 
 -- ============================================================================

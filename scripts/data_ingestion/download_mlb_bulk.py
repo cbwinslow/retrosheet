@@ -10,7 +10,7 @@ import hashlib
 import json
 import os
 import time
-from datetime import datetime, timedelta
+
 import psycopg2
 from psycopg2.extras import Json
 
@@ -102,9 +102,7 @@ def store_schedule_batch(results: list):
                     (
                         date_str,
                         f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={date_str}",
-                        Json(result.get("data", {}))
-                        if result.get("success")
-                        else Json({}),
+                        Json(result.get("data", {})) if result.get("success") else Json({}),
                         Json({"sportId": 1, "date": date_str}),
                         result.get("http_status"),
                         result.get("response_time_ms"),
@@ -193,10 +191,7 @@ def download_game_feeds_for_season(season: int, max_workers: int = 4) -> int:
             )
 
             # Submit batch for parallel processing
-            futures = [
-                executor.submit(download_and_store_game_feed, game_pk)
-                for game_pk in batch
-            ]
+            futures = [executor.submit(download_and_store_game_feed, game_pk) for game_pk in batch]
 
             # Wait for batch completion
             for future in concurrent.futures.as_completed(futures):
@@ -341,14 +336,9 @@ def download_and_store_game_feed(game_pk: int) -> bool:
 
 
 def main():
-    import os
 
-    parser = argparse.ArgumentParser(
-        description="Optimized MLB historical data bulk downloader"
-    )
-    parser.add_argument(
-        "--start-season", type=int, default=2020, help="Start season year"
-    )
+    parser = argparse.ArgumentParser(description="Optimized MLB historical data bulk downloader")
+    parser.add_argument("--start-season", type=int, default=2020, help="Start season year")
     parser.add_argument("--end-season", type=int, default=2024, help="End season year")
     parser.add_argument(
         "--mode",
@@ -356,12 +346,8 @@ def main():
         default="both",
         help="What to download: schedules, games, or both",
     )
-    parser.add_argument(
-        "--workers", type=int, default=8, help="Number of parallel workers"
-    )
-    parser.add_argument(
-        "--delay", type=float, default=0.5, help="Delay between requests"
-    )
+    parser.add_argument("--workers", type=int, default=8, help="Number of parallel workers")
+    parser.add_argument("--delay", type=float, default=0.5, help="Delay between requests")
 
     args = parser.parse_args()
 
@@ -384,9 +370,7 @@ def main():
             season_dates = []
             for month in range(3, 12):  # March to November
                 if month <= 9:
-                    days_in_month = (
-                        31 if month in [3, 5, 7, 8] else 30 if month != 2 else 28
-                    )
+                    days_in_month = 31 if month in [3, 5, 7, 8] else 30 if month != 2 else 28
                 else:
                     days_in_month = 31 if month == 10 else 30
 
@@ -418,7 +402,7 @@ def main():
             games_downloaded = download_game_feeds_for_season(season, args.workers)
             total_downloaded += games_downloaded
 
-    print(f"\n🎯 Bulk Download Complete!")
+    print("\n🎯 Bulk Download Complete!")
     print(f"   📊 Total game feeds downloaded: {total_downloaded}")
 
     # Summary statistics

@@ -16,13 +16,14 @@ WITH game_attendance AS (
     FROM core.games
     WHERE attendance IS NOT NULL
 )
+
 SELECT
     game_pk,
     home_team_id,
     season,
-    season + 1 AS feature_season,
-    -- Attendance metrics
     attendance AS game_attendance,
+    -- Attendance metrics
+    season + 1 AS feature_season,
     -- Temperature effects
     CASE
         WHEN temperature_f >= 90 THEN 1.0

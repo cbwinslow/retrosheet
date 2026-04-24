@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 from typing import Any
 
 import joblib
@@ -11,14 +10,12 @@ import numpy as np
 import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine, text
-
 from train_pa_outcome_distribution import (
     ROOT,
     TARGET_ID,
     database_kwargs,
     database_url,
 )
-
 
 DEFAULT_MODEL_NAME = "hist_gradient_boosting_multiclass"
 
@@ -160,7 +157,8 @@ def feature_query(feature_set: str) -> str:
             if feature_set == "advanced_count"
             else "features.plate_appearance_advanced_examples"
         )
-        return """
+        return (
+            """
             SELECT
                 outcome.game_id,
                 outcome.plate_appearance_id,
@@ -212,7 +210,8 @@ def feature_query(feature_set: str) -> str:
                 advanced.fielding_team_rolling_30_games,
                 advanced.fielding_team_rolling_30_win_rate,
                 advanced.fielding_team_rolling_30_runs_scored_per_game,
-                advanced.fielding_team_rolling_30_runs_allowed_per_game""" + (
+                advanced.fielding_team_rolling_30_runs_allowed_per_game"""
+            + (
                 """
                 ,
                 advanced.batter_count_state_prior_pa,
@@ -236,15 +235,21 @@ def feature_query(feature_set: str) -> str:
                 advanced.count_state_context_prior_home_run_rate,
                 advanced.count_state_context_prior_reach_base_rate,
                 advanced.count_state_context_prior_extra_base_hit_rate
-                """ if feature_set == "advanced_count" else ""
-            ) + """
+                """
+                if feature_set == "advanced_count"
+                else ""
+            )
+            + """
             FROM features.plate_appearance_outcome_examples outcome
-            JOIN """ + advanced_relation + """ advanced
+            JOIN """
+            + advanced_relation
+            + """ advanced
               ON advanced.game_id = outcome.game_id
              AND advanced.plate_appearance_id = outcome.plate_appearance_id
             WHERE outcome.game_id = :game_id
               AND outcome.plate_appearance_id = :plate_appearance_id
         """
+        )
     return """
         SELECT
             game_id,

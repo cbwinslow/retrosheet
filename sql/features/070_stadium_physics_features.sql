@@ -13,17 +13,23 @@ WITH park_stats AS (
         AVG(away_hits + home_hits) AS avg_total_hits,
         AVG(away_errors + home_errors) AS avg_total_errors,
         -- Park factors
-        (AVG(home_score + away_score) / (SELECT AVG(home_score + away_score) FROM core.games WHERE season = g.season)) AS park_run_factor
-    FROM core.games g
-    WHERE park_id IS NOT NULL
-    AND season IS NOT NULL
+        (AVG(
+            home_score + away_score) / (
+            SELECT AVG(home_score + away_score) FROM core.games
+            WHERE season = g.season
+        )) AS park_run_factor
+    FROM core.games AS g
+    WHERE
+        park_id IS NOT NULL
+        AND season IS NOT NULL
     GROUP BY park_id, season
 )
+
 SELECT
     park_id,
     season,
-    season + 1 AS feature_season,
     total_games,
+    season + 1 AS feature_season,
     ROUND(avg_total_runs_per_game::numeric, 2) AS avg_total_runs_per_game,
     ROUND(park_run_factor::numeric, 4) AS park_run_factor,
     -- Park effect flags

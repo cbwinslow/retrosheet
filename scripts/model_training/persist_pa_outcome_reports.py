@@ -10,9 +10,7 @@ from pathlib import Path
 
 import psycopg2
 from psycopg2.extras import Json
-
 from train_pa_outcome_distribution import TARGET_ID, database_kwargs
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -70,8 +68,12 @@ def main() -> None:
     args = parser.parse_args()
 
     model_id, metrics = model_row(model_name=args.model_name, model_version=args.model_version)
-    validation_window = parse_year_window([int(metrics["train_through"]) + 1, int(metrics["max_season"])])
-    calibration_window = parse_year_window([int(metrics["train_through"]) + 1, args.calibration_through])
+    validation_window = parse_year_window(
+        [int(metrics["train_through"]) + 1, int(metrics["max_season"])]
+    )
+    calibration_window = parse_year_window(
+        [int(metrics["train_through"]) + 1, args.calibration_through]
+    )
     heldout_window = parse_year_window([args.evaluation_season, args.evaluation_season])
 
     raw_report = run_json_command(

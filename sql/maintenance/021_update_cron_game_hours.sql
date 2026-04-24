@@ -32,7 +32,7 @@ SELECT cron.schedule(
 -- No change needed: '0 1 * * *' - metadata.refresh_data_dictionary();
 
 -- Verify updated jobs
-SELECT 
+SELECT
     jobid,
     jobname,
     schedule,

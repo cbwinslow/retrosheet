@@ -13,7 +13,6 @@ import os
 from collections import defaultdict
 
 import psycopg2
-from psycopg2.extras import execute_values, Json
 
 
 def database_kwargs() -> dict[str, str]:
@@ -217,9 +216,7 @@ def create_live_plate_appearances(conn):
         # Insert plate appearances (simplified approach)
         if pa_records:
             with conn.cursor() as cur:
-                for i, pa_record in enumerate(
-                    pa_records[:5]
-                ):  # Just first 5 for testing
+                for i, pa_record in enumerate(pa_records[:5]):  # Just first 5 for testing
                     try:
                         cur.execute(
                             """
@@ -276,9 +273,7 @@ def main():
                 """)
                 games, pas, hits, hrs, ks, walks = cur.fetchone()
                 print(f"📊 Summary: {games} games, {pas} plate appearances")
-                print(
-                    f"   Hits: {hits}, Home runs: {hrs}, Strikeouts: {ks}, Walks: {walks}"
-                )
+                print(f"   Hits: {hits}, Home runs: {hrs}, Strikeouts: {ks}, Walks: {walks}")
         else:
             print("ℹ️  No plate appearances to create")
 

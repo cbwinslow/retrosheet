@@ -1,11 +1,11 @@
 -- Check currently installed PostgreSQL extensions
-SELECT 
+SELECT
     name,
     default_version,
     installed_version,
-    CASE 
+    CASE
         WHEN installed_version IS NOT NULL THEN 'INSTALLED'
         ELSE 'AVAILABLE'
-    END as status
+    END AS status
 FROM pg_available_extensions
 ORDER BY name;

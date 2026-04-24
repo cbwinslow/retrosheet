@@ -18,8 +18,10 @@ import requests
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
 
+
 def get_conn():
     return psycopg2.connect(DATABASE_URL)
+
 
 def fetch_weather(date: str, venue_id: str):
     # NOAA API endpoint (example – replace with actual public endpoint if needed)
@@ -30,7 +32,7 @@ def fetch_weather(date: str, venue_id: str):
         "startDate": date,
         "endDate": date,
         "format": "json",
-        "units": "metric"
+        "units": "metric",
     }
     resp = requests.get(base_url, params=params, timeout=30)
     if resp.status_code != 200:
@@ -57,24 +59,31 @@ def fetch_weather(date: str, venue_id: str):
                     wind_speed_mps = EXCLUDED.wind_speed_mps,
                     precipitation_mm = EXCLUDED.precipitation_mm;
             """
-            cur.execute(sql, (
-                date,
-                venue_id,
-                float(record.get("TMP") or 0),
-                float(record.get("WDF2") or 0),
-                float(record.get("PRCP") or 0)
-            ))
+            cur.execute(
+                sql,
+                (
+                    date,
+                    venue_id,
+                    float(record.get("TMP") or 0),
+                    float(record.get("WDF2") or 0),
+                    float(record.get("PRCP") or 0),
+                ),
+            )
         conn.commit()
         print(f"✅ Stored weather for {venue_id} on {date}")
     finally:
         conn.close()
 
+
 def main():
     parser = argparse.ArgumentParser(description="Fetch NOAA weather")
-    parser.add_argument("--date", type=str, required=True,
-                        help="Observation date (YYYY‑MM‑DD)")
-    parser.add_argument("--venue-id", type=str, required=True,
-                        help="Venue/station identifier (e.g., SFG for San Francisco)")
+    parser.add_argument("--date", type=str, required=True, help="Observation date (YYYY‑MM‑DD)")
+    parser.add_argument(
+        "--venue-id",
+        type=str,
+        required=True,
+        help="Venue/station identifier (e.g., SFG for San Francisco)",
+    )
     args = parser.parse_args()
     # Validate date
     try:
@@ -84,6 +93,7 @@ def main():
         sys.exit(1)
 
     fetch_weather(args.date, args.venue_id)
+
 
 if __name__ == "__main__":
     main()

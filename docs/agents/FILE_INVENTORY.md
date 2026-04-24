@@ -138,6 +138,28 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `sql/maintenance/030_kb_vector_schema.sql` | KB vector schema: `kb.document_chunks` with pgvector embeddings, indexes, semantic search functions, ingestion tracking. | RAG infrastructure. Run after pgvector is installed. |
 | `sql/maintenance/999_master_installation.sql` | Master orchestrator for installing all PostgreSQL extensions and advanced features. | Complete extension installation. |
 
+## Test SQL (E2E Testing Infrastructure)
+
+| File | Purpose | Canonical Position |
+|---|---|---|
+| `sql/test/001_create_test_schema.sql` | Creates isolated `test` schema with test tracking tables. | E2E test setup. Run first before tests. |
+| `sql/test/002_test_fixtures.sql` | Creates small test datasets (100 games) from real data for fast testing. | E2E test data setup. Run after test schema. |
+
+## Test Scripts (E2E Validation)
+
+| File | Purpose | Notes |
+|---|---|---|
+| `scripts/test/e2e_test_runner.sh` | Main E2E test runner. Validates SQL headers, table comments, row counts. | Executable. Usage: `./scripts/test/e2e_test_runner.sh --quick` |
+| `scripts/test/validate_sql_files.sh` | Validates all SQL files have proper headers. | Executable. Fast check (5 minutes). |
+| `scripts/test/verify_rebuild.sh` | Validates warehouse rebuild procedures work correctly. | Executable. Full check (30 minutes). |
+
+**Test Infrastructure Notes:**
+- Free local setup - uses existing PostgreSQL (no Docker, no cloud)
+- Test schema `test` is isolated from production data
+- Small test fixtures (100 games vs 62,000) for fast execution
+- AI Agent Gap-Fill Loop: Run tests → find gaps → create missing files → re-run
+- All scripts must be executable: `chmod +x scripts/test/*.sh`
+
 ## Knowledge Base Documents
 
 | File | Purpose | Canonical Position |

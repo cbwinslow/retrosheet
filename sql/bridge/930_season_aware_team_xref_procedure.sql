@@ -77,7 +77,7 @@ $$;
 -- ============================================================================
 -- Comment on procedure
 -- ============================================================================
-COMMENT ON PROCEDURE bridge.populate_season_aware_team_xref() IS 
+COMMENT ON PROCEDURE bridge.populate_season_aware_team_xref () IS
 'Populate bridge.team_xref with valid_from_season and valid_to_season based on core.games data, including franchise move handling.';
 
 -- ============================================================================

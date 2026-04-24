@@ -4,12 +4,12 @@ Demonstrate enhanced win probability model features and expected improvements.
 """
 
 import os
+
 import pandas as pd
 import psycopg2
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score
-import joblib
+from sklearn.model_selection import train_test_split
 
 
 def database_kwargs():
@@ -133,14 +133,10 @@ def train_and_compare_models(df):
     Xb_train, Xb_test, y_train, y_test = train_test_split(
         X_basic, y, test_size=0.2, random_state=42
     )
-    Xe_train, Xe_test, _, _ = train_test_split(
-        X_enhanced, y, test_size=0.2, random_state=42
-    )
+    Xe_train, Xe_test, _, _ = train_test_split(X_enhanced, y, test_size=0.2, random_state=42)
 
     # Train basic model
-    basic_model = RandomForestClassifier(
-        n_estimators=100, max_depth=10, random_state=42, n_jobs=-1
-    )
+    basic_model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, n_jobs=-1)
     basic_model.fit(Xb_train, y_train)
     basic_pred = basic_model.predict_proba(Xb_test)[:, 1]
     basic_auc = roc_auc_score(y_test, basic_pred)

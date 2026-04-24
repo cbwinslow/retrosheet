@@ -8,7 +8,6 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 TRAINER = ROOT / "scripts" / "train_pa_outcome_distribution.py"
 
@@ -47,11 +46,19 @@ def run_candidate(command: list[str]) -> list[dict]:
             }
         )
     if not results:
-        raise RuntimeError(f"No model metrics found in trainer output.\n{completed.stdout}\n{completed.stderr}")
+        raise RuntimeError(
+            f"No model metrics found in trainer output.\n{completed.stdout}\n{completed.stderr}"
+        )
     return results
 
 
-def policy_label(*, recent_window: int | None, season_half_life: float | None, exclude_2020: bool, downweight_2020: float | None) -> str:
+def policy_label(
+    *,
+    recent_window: int | None,
+    season_half_life: float | None,
+    exclude_2020: bool,
+    downweight_2020: float | None,
+) -> str:
     parts: list[str] = []
     parts.append(f"window_{recent_window}" if recent_window is not None else "window_all")
     parts.append(
@@ -66,7 +73,9 @@ def policy_label(*, recent_window: int | None, season_half_life: float | None, e
     return "__".join(parts)
 
 
-def build_command(args: argparse.Namespace, *, recent_window: int | None, season_half_life: float | None) -> list[str]:
+def build_command(
+    args: argparse.Namespace, *, recent_window: int | None, season_half_life: float | None
+) -> list[str]:
     command = [
         sys.executable,
         str(TRAINER),
@@ -189,7 +198,9 @@ def main() -> None:
         if not output_path.is_absolute():
             output_path = ROOT / output_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        output_path.write_text(
+            json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
 
 if __name__ == "__main__":

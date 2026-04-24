@@ -23,7 +23,9 @@ def print_table(headers: Sequence[str], rows: Sequence[Sequence[object]]) -> Non
         for index, value in enumerate(row):
             widths[index] = max(widths[index], len(str(value)))
 
-    header_line = " | ".join(str(header).ljust(widths[index]) for index, header in enumerate(headers))
+    header_line = " | ".join(
+        str(header).ljust(widths[index]) for index, header in enumerate(headers)
+    )
     divider = "-+-".join("-" * width for width in widths)
     print(header_line)
     print(divider)

@@ -98,7 +98,7 @@ $$;
 -- ============================================================================
 -- Comment on procedure
 -- ============================================================================
-COMMENT ON PROCEDURE bridge.populate_player_xref() IS 
+COMMENT ON PROCEDURE bridge.populate_player_xref () IS
 'Populate bridge.player_xref from temp_table.chadwick_player_data containing parsed Chadwick Bureau Register data.';
 
 -- ============================================================================

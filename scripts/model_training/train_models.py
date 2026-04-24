@@ -10,7 +10,6 @@ from pathlib import Path
 import joblib
 import pandas as pd
 import psycopg2
-from sqlalchemy import URL, create_engine, text
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.impute import SimpleImputer
@@ -18,7 +17,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, brier_score_loss, log_loss, roc_auc_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-
+from sqlalchemy import URL, create_engine, text
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / "data" / "models"
@@ -808,9 +807,7 @@ def train(args: argparse.Namespace) -> None:
                 "max_season": args.max_season,
                 "train_through": args.train_through,
             }
-            artifact_path = (
-                MODEL_DIR / f"{args.target_id}_{model_name}_{version}.joblib"
-            )
+            artifact_path = MODEL_DIR / f"{args.target_id}_{model_name}_{version}.joblib"
             joblib.dump(model, artifact_path)
             register_model(
                 conn,
@@ -823,9 +820,7 @@ def train(args: argparse.Namespace) -> None:
                 metrics=metrics,
                 activate=not args.no_activate,
             )
-            print(
-                f"trained {model_name}: {json.dumps(metrics['validation'], sort_keys=True)}"
-            )
+            print(f"trained {model_name}: {json.dumps(metrics['validation'], sort_keys=True)}")
             print(f"artifact: {artifact_path}")
     finally:
         engine.dispose()

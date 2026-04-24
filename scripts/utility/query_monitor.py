@@ -10,8 +10,9 @@ are respected (defaulting to the typical local development values).
 """
 
 import os
-from fastapi import FastAPI
+
 import asyncpg
+from fastapi import FastAPI
 
 app = FastAPI()
 
@@ -44,4 +45,3 @@ async def progress():
     await conn.close()
     # Convert asyncpg Record objects to plain dicts for JSON serialization
     return [dict(row) for row in rows]
-

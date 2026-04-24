@@ -1,9 +1,9 @@
 ALTER TABLE predictions.calibration_reports
-    ADD COLUMN IF NOT EXISTS artifact_uri text;
+ADD COLUMN IF NOT EXISTS artifact_uri text;
 
 CREATE INDEX IF NOT EXISTS calibration_reports_artifact_created_idx
-    ON predictions.calibration_reports (model_id, created_at DESC)
-    WHERE artifact_uri IS NOT NULL;
+ON predictions.calibration_reports (model_id, created_at DESC)
+WHERE artifact_uri IS NOT NULL;
 
 DROP VIEW IF EXISTS predictions.recent_calibration_reports;
 

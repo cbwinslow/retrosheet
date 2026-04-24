@@ -18,12 +18,10 @@ import joblib
 import numpy as np
 import pandas as pd
 import psycopg2
-from sklearn.model_selection import cross_val_score, StratifiedKFold
-from sklearn.metrics import roc_auc_score, accuracy_score, log_loss, brier_score_loss
-from sqlalchemy import create_engine
-
 import train_models
-
+from sklearn.metrics import accuracy_score, brier_score_loss, log_loss, roc_auc_score
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sqlalchemy import create_engine
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / "data" / "models"
@@ -162,9 +160,7 @@ def evaluate_model_cv(
     return results
 
 
-def run_cross_validation(
-    target_id: str, sample_rate: float = 0.1, cv_folds: int = 5
-) -> Dict:
+def run_cross_validation(target_id: str, sample_rate: float = 0.1, cv_folds: int = 5) -> Dict:
     """Run cross-validation evaluation for all active models of a target."""
 
     print(f"Running {cv_folds}-fold cross-validation for {target_id}")
@@ -217,11 +213,11 @@ def print_summary(results: Dict) -> None:
             else:
                 mean_val = metric_data["mean"]
                 std_val = metric_data["std"]
-                if metric_name in ["roc_auc", "accuracy"]:
-                    print(".4f")
-                elif metric_name in ["neg_log_loss"]:
-                    print(".4f")
-                elif metric_name in ["brier_score"]:
+                if (
+                    metric_name in ["roc_auc", "accuracy"]
+                    or metric_name in ["neg_log_loss"]
+                    or metric_name in ["brier_score"]
+                ):
                     print(".4f")
 
 
@@ -237,9 +233,7 @@ def main():
     parser.add_argument(
         "--sample-rate", type=float, default=0.05, help="Sample rate for training data"
     )
-    parser.add_argument(
-        "--cv-folds", type=int, default=5, help="Number of cross-validation folds"
-    )
+    parser.add_argument("--cv-folds", type=int, default=5, help="Number of cross-validation folds")
     parser.add_argument("--output-json", type=str, help="Save results to JSON file")
 
     args = parser.parse_args()

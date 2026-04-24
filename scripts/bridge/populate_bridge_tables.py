@@ -19,7 +19,6 @@ from typing import Dict, List
 
 import psycopg2
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 # bridge.team_xref is currently seasonless, so franchise moves/renames that share a
@@ -126,9 +125,7 @@ def database_kwargs() -> dict[str, str]:
 
 def download_chadwick_register() -> List[Path]:
     """Download all Chadwick Bureau Register data files."""
-    base_url = (
-        "https://github.com/chadwickbureau/register/raw/master/data/people-{}.csv"
-    )
+    base_url = "https://github.com/chadwickbureau/register/raw/master/data/people-{}.csv"
     temp_dir = Path(tempfile.mkdtemp())
     files = []
 

@@ -26,7 +26,6 @@ from typing import List, Optional
 
 import psycopg2
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -138,15 +137,11 @@ def main():
         action="store_true",
         help="Show what would be ingested without actually doing it",
     )
-    parser.add_argument(
-        "--active", action="store_true", help="Ingest currently active/live games"
-    )
+    parser.add_argument("--active", action="store_true", help="Ingest currently active/live games")
     parser.add_argument(
         "--schedule", action="store_true", help="Ingest all games from today's schedule"
     )
-    parser.add_argument(
-        "--game-pk", type=int, help="Ingest a specific game by MLB game PK"
-    )
+    parser.add_argument("--game-pk", type=int, help="Ingest a specific game by MLB game PK")
     parser.add_argument(
         "--date", help="Date to fetch schedule for (YYYY-MM-DD format, default: today)"
     )

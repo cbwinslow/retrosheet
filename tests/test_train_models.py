@@ -9,8 +9,7 @@ PostgreSQL instance – and are covered by integration tests elsewhere.
 
 import pandas as pd
 
-from scripts.model_training import train_models
-from scripts.model_training import sweep_hyperparameters
+from scripts.model_training import sweep_hyperparameters, train_models
 
 
 def test_preprocessor_structure() -> None:
@@ -49,9 +48,7 @@ def test_build_models_returns_pipelines() -> None:
     """Check that ``build_models`` creates two pipelines with expected estimators."""
     numeric = ["num"]
     categorical = []
-    models = train_models.build_models(
-        numeric_features=numeric, categorical_features=categorical
-    )
+    models = train_models.build_models(numeric_features=numeric, categorical_features=categorical)
     assert set(models.keys()) == {"logistic_regression", "hist_gradient_boosting"}
     # Each value should be a sklearn Pipeline instance.
     for name, pipeline in models.items():
@@ -82,9 +79,9 @@ def test_metrics_for_computes_expected_keys() -> None:
         }
     )
     # Build a minimal logistic regression model.
-    model = train_models.build_models(
-        numeric_features=["num"], categorical_features=["cat"]
-    )["logistic_regression"]
+    model = train_models.build_models(numeric_features=["num"], categorical_features=["cat"])[
+        "logistic_regression"
+    ]
     model.fit(df[["num", "cat"]], df["target"])
     metrics = train_models.metrics_for(
         model,
@@ -98,8 +95,8 @@ def test_metrics_for_computes_expected_keys() -> None:
     # Basic sanity checks on types and ranges.
     assert metrics["rows"] == len(df)
     assert 0.0 <= metrics["accuracy"] <= 1.0
-    assert 0.0 <= metrics["log_loss"]
-    assert 0.0 <= metrics["brier_score"]
+    assert metrics["log_loss"] >= 0.0
+    assert metrics["brier_score"] >= 0.0
     assert 0.0 <= metrics["roc_auc"] <= 1.0
 
 
@@ -127,4 +124,3 @@ def test_feature_columns_mapping() -> None:
 
     with pytest.raises(ValueError):
         sweep_hyperparameters.feature_columns(target_id="unknown", feature_set="basic")
-

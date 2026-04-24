@@ -9,7 +9,6 @@ from pathlib import Path
 
 import psycopg2
 
-
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE_DIR = ROOT / "data" / "raw" / "retrosheet" / "reference"
 SQL_PATH = ROOT / "sql" / "030_reference_metadata.sql"

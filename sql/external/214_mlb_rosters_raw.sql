@@ -9,8 +9,8 @@
 CREATE SCHEMA IF NOT EXISTS raw_mlb_rosters;
 
 CREATE TABLE IF NOT EXISTS raw_mlb_rosters.roster_snapshots (
-    snapshot_date   DATE NOT NULL,
-    team_id         TEXT NOT NULL,
-    json_payload    JSONB,
+    snapshot_date DATE NOT NULL,
+    team_id TEXT NOT NULL,
+    json_payload JSONB,
     PRIMARY KEY (snapshot_date, team_id)
 );

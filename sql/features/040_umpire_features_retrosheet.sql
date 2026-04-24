@@ -11,18 +11,20 @@ WITH umpire_game_stats AS (
         SUM(CASE WHEN event_type IN ('K', 'KS') THEN 1 ELSE 0 END) AS strikeouts,
         SUM(CASE WHEN event_type IN ('W', 'IW', 'HP') THEN 1 ELSE 0 END) AS walks,
         SUM(CASE WHEN event_type IN ('HR') THEN 1 ELSE 0 END) AS home_runs
-    FROM core.events e
-    JOIN core.games g ON e.game_id = g.game_id
-    JOIN bridge.umpire_xref ux ON g.home_plate_umpire_id = ux.retrosheet_umpire_id
-    WHERE umpire_id IS NOT NULL
-    AND game_year IS NOT NULL
+    FROM core.events AS e
+    INNER JOIN core.games AS g ON e.game_id = g.game_id
+    INNER JOIN bridge.umpire_xref AS ux ON g.home_plate_umpire_id = ux.retrosheet_umpire_id
+    WHERE
+        umpire_id IS NOT NULL
+        AND game_year IS NOT NULL
     GROUP BY umpire_id, game_year
 )
+
 SELECT
     umpire_id,
     season,
-    season + 1 AS feature_season,
     total_games,
+    season + 1 AS feature_season,
     -- Umpire tendencies
     ROUND((strikeouts::numeric / NULLIF(total_games, 0))::numeric, 2) AS umpire_strikeouts_per_game,
     ROUND((walks::numeric / NULLIF(total_games, 0))::numeric, 2) AS umpire_walks_per_game,

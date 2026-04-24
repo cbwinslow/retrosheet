@@ -2,15 +2,15 @@
 -- Migration to create a central model registry table for tracking ML model artifacts.
 
 CREATE TABLE IF NOT EXISTS models.model_registry (
-    model_id          SERIAL PRIMARY KEY,
-    model_name        TEXT NOT NULL,
-    model_version     TEXT NOT NULL,
-    is_active         BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    description       TEXT,
-    artifact_path     TEXT,
-    metrics_json      JSONB,
+    model_id SERIAL PRIMARY KEY,
+    model_name TEXT NOT NULL,
+    model_version TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    description TEXT,
+    artifact_path TEXT,
+    metrics_json JSONB,
     CONSTRAINT uq_model_name_version UNIQUE (model_name, model_version)
 );
 

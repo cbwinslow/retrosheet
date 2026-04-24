@@ -23,11 +23,11 @@ SELECT
     g.away_team_id,
     g.home_win AS actual_home_win,
     p.predicted_home_win_prob,
-    CASE WHEN p.predicted_home_win_prob >= 0.5 THEN TRUE ELSE FALSE END AS predicted_home_win,
-    ABS(p.predicted_home_win_prob - (CASE WHEN g.home_win THEN 1 ELSE 0 END)) AS prob_error
-FROM core.games g
-    LEFT JOIN predictions.win_probabilities p
-        ON p.game_id::text = g.game_id
+    coalesce(p.predicted_home_win_prob >= 0.5, FALSE) AS predicted_home_win,
+    abs(p.predicted_home_win_prob - (CASE WHEN g.home_win THEN 1 ELSE 0 END)) AS prob_error
+FROM core.games AS g
+LEFT JOIN predictions.win_probabilities AS p
+    ON p.game_id::text = g.game_id
 WITH DATA;
 
 CREATE UNIQUE INDEX backtest_results_pk ON features.backtest_results (game_id);

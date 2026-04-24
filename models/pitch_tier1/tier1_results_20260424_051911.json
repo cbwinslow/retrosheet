@@ -1,0 +1,125 @@
+{
+  "accuracy": 0.7601,
+  "log_loss": 0.4786412312508086,
+  "accuracy_target_met": false,
+  "classification_report": {
+    "B": {
+      "precision": 0.9298245614035088,
+      "recall": 0.96999699969997,
+      "f1-score": 0.9494860499265786,
+      "support": 3333.0
+    },
+    "S": {
+      "precision": 0.6554955978415223,
+      "recall": 0.6924692469246925,
+      "f1-score": 0.67347534286548,
+      "support": 3333.0
+    },
+    "X": {
+      "precision": 0.6862091938707529,
+      "recall": 0.617876424715057,
+      "f1-score": 0.6502525252525253,
+      "support": 3334.0
+    },
+    "accuracy": 0.7601,
+    "macro avg": {
+      "precision": 0.7571764510385947,
+      "recall": 0.7601142237799065,
+      "f1-score": 0.7577379726815279,
+      "support": 10000.0
+    },
+    "weighted avg": {
+      "precision": 0.7571693543128778,
+      "recall": 0.7601,
+      "f1-score": 0.7577272241367852,
+      "support": 10000.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      3233,
+      54,
+      46
+    ],
+    [
+      129,
+      2308,
+      896
+    ],
+    [
+      115,
+      1159,
+      2060
+    ]
+  ],
+  "feature_importance": [
+    [
+      "is_three_ball",
+      "0.70822114"
+    ],
+    [
+      "balls",
+      "0.068850584"
+    ],
+    [
+      "is_in_zone",
+      "0.04514153"
+    ],
+    [
+      "is_high_leverage",
+      "0.03381938"
+    ],
+    [
+      "is_late_game",
+      "0.030891163"
+    ],
+    [
+      "strikes",
+      "0.013427848"
+    ],
+    [
+      "distance_from_zone_center",
+      "0.011809189"
+    ],
+    [
+      "is_two_strike",
+      "0.007441248"
+    ],
+    [
+      "on_1b",
+      "0.007136947"
+    ],
+    [
+      "is_in_shadow_zone",
+      "0.0061726724"
+    ],
+    [
+      "pa_pitch_count",
+      "0.006023139"
+    ],
+    [
+      "on_2b",
+      "0.005750596"
+    ],
+    [
+      "is_full_count",
+      "0.0055518807"
+    ],
+    [
+      "is_in_chase_zone",
+      "0.0053961705"
+    ],
+    [
+      "on_3b",
+      "0.005227003"
+    ]
+  ],
+  "classes": [
+    "B",
+    "S",
+    "X"
+  ],
+  "n_features": 25,
+  "n_train": 39998,
+  "n_test": 10000
+}

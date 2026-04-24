@@ -92,9 +92,7 @@ def display_status_report(status):
     # Progress summary
     total_target_seasons = 27  # 2000-2026
     percent_complete = (seasons_downloaded / total_target_seasons) * 100
-    progress_bar = "█" * int(percent_complete / 4) + "░" * int(
-        (100 - percent_complete) / 4
-    )
+    progress_bar = "█" * int(percent_complete / 4) + "░" * int((100 - percent_complete) / 4)
 
     print("\n📈 OVERALL PROGRESS")
     print(
@@ -153,9 +151,7 @@ def display_status_report(status):
 
     # Overall assessment
     readiness_score = (
-        sum([model_ready, statcast_ready, historical_ready, matchup_history > 10000])
-        / 4
-        * 100
+        sum([model_ready, statcast_ready, historical_ready, matchup_history > 10000]) / 4 * 100
     )
 
     if readiness_score >= 80:

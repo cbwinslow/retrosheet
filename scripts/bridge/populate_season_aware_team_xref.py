@@ -12,9 +12,10 @@ Usage:
 """
 
 import os
+
 import psycopg2
-from psycopg2 import Error
 from dotenv import load_dotenv
+from psycopg2 import Error
 
 _ = load_dotenv()
 
@@ -59,11 +60,11 @@ def populate_season_aware_team_xref():
                 ) g
                 WHERE tx.retrosheet_team_id = g.team_id
             """)
-            
+
             basic_count = cur.rowcount
             conn.commit()
             print(f"Updated {basic_count} teams with basic season ranges")
-            
+
             # Handle franchise moves by inserting new entries for historical teams
             # Montreal Expos -> Washington Nationals
             cur.execute("""
@@ -73,7 +74,7 @@ def populate_season_aware_team_xref():
                     valid_from_season = EXCLUDED.valid_from_season,
                     valid_to_season = EXCLUDED.valid_to_season
             """)
-            
+
             # Florida Marlins -> Miami Marlins
             cur.execute("""
                 INSERT INTO bridge.team_xref (retrosheet_team_id, mlb_team_id, abbreviation, name, valid_from_season, valid_to_season)
@@ -82,24 +83,24 @@ def populate_season_aware_team_xref():
                     valid_from_season = EXCLUDED.valid_from_season,
                     valid_to_season = EXCLUDED.valid_to_season
             """)
-            
+
             # Update Washington Nationals to show it started in 2005
             cur.execute("""
                 UPDATE bridge.team_xref
                 SET valid_from_season = 2005
                 WHERE retrosheet_team_id = 'WAS'
             """)
-            
+
             # Update Miami Marlins to show it started in 2012
             cur.execute("""
                 UPDATE bridge.team_xref
                 SET valid_from_season = 2012
                 WHERE retrosheet_team_id = 'MIA'
             """)
-            
+
             conn.commit()
             print("Added franchise move entries for MON->WAS and FLO->MIA")
-            
+
             # Verify the season ranges
             cur.execute("""
                 SELECT retrosheet_team_id, abbreviation, name, valid_from_season, valid_to_season
@@ -107,16 +108,16 @@ def populate_season_aware_team_xref():
                 WHERE retrosheet_team_id IN ('MON', 'WAS', 'FLO', 'MIA')
                 ORDER BY retrosheet_team_id
             """)
-            
+
             print("\nFranchise move entries:")
             for row in cur.fetchall():
                 if len(row) >= 5:
                     print(f"  {row[0]} ({row[1]}): {row[3]}-{row[4] if row[4] else 'present'}")
                 else:
                     print(f"  {row[0]}: insufficient data")
-            
+
             return basic_count
-            
+
     except Error as e:
         print(f"Error populating season-aware team_xref: {e}")
         conn.rollback()

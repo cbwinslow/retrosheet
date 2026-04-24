@@ -97,21 +97,21 @@ ALTER TABLE core.live_games CLUSTER ON live_games_date_parsed_idx;
 CREATE MATERIALIZED VIEW analysis.player_career_stats AS
 SELECT
     batter_id,
-    COUNT(*) as plate_appearances,
-    COUNT(*) FILTER (WHERE is_hit) as hits,
-    COUNT(*) FILTER (WHERE is_home_run) as home_runs,
-    SUM(rbi) as rbi,
-    COUNT(*) FILTER (WHERE is_walk) as walks,
-    COUNT(*) FILTER (WHERE is_strikeout) as strikeouts,
-    ROUND(AVG(is_hit::numeric), 3) as batting_average,
-    SUM(runs_on_play) as runs_created,
-    COUNT(DISTINCT game_id) as games_played,
-    MIN(season) as first_season,
-    MAX(season) as last_season
+    count(*) AS plate_appearances,
+    count(*) FILTER (WHERE is_hit) AS hits,
+    count(*) FILTER (WHERE is_home_run) AS home_runs,
+    sum(rbi) AS rbi,
+    count(*) FILTER (WHERE is_walk) AS walks,
+    count(*) FILTER (WHERE is_strikeout) AS strikeouts,
+    round(avg(is_hit::numeric), 3) AS batting_average,
+    sum(runs_on_play) AS runs_created,
+    count(DISTINCT game_id) AS games_played,
+    min(season) AS first_season,
+    max(season) AS last_season
 FROM analysis.combined_plate_appearances
 WHERE is_plate_appearance = true
 GROUP BY batter_id
-HAVING COUNT(*) >= 100; -- Only include players with significant plate appearances
+HAVING count(*) >= 100; -- Only include players with significant plate appearances
 
 -- Indexes for the materialized view
 CREATE INDEX player_career_stats_batter_idx ON analysis.player_career_stats (batter_id);
@@ -121,15 +121,15 @@ CREATE INDEX player_career_stats_pa_idx ON analysis.player_career_stats (plate_a
 CREATE MATERIALIZED VIEW analysis.team_season_stats AS
 SELECT
     season,
-    home_team_id as team_id,
-    COUNT(*) as games_played,
-    COUNT(*) FILTER (WHERE home_win) as wins,
-    COUNT(*) FILTER (WHERE NOT home_win) as losses,
-    ROUND(AVG(home_win::numeric), 3) as win_percentage,
-    SUM(home_score) as runs_scored,
-    SUM(away_score) as runs_allowed,
-    ROUND(AVG(home_score::numeric), 1) as avg_runs_scored,
-    ROUND(AVG(away_score::numeric), 1) as avg_runs_allowed
+    home_team_id AS team_id,
+    count(*) AS games_played,
+    count(*) FILTER (WHERE home_win) AS wins,
+    count(*) FILTER (WHERE NOT home_win) AS losses,
+    round(avg(home_win::numeric), 3) AS win_percentage,
+    sum(home_score) AS runs_scored,
+    sum(away_score) AS runs_allowed,
+    round(avg(home_score::numeric), 1) AS avg_runs_scored,
+    round(avg(away_score::numeric), 1) AS avg_runs_allowed
 FROM analysis.combined_games
 GROUP BY season, home_team_id
 
@@ -137,15 +137,15 @@ UNION ALL
 
 SELECT
     season,
-    away_team_id as team_id,
-    COUNT(*) as games_played,
-    COUNT(*) FILTER (WHERE NOT home_win) as wins,
-    COUNT(*) FILTER (WHERE home_win) as losses,
-    ROUND(AVG((NOT home_win)::numeric), 3) as win_percentage,
-    SUM(away_score) as runs_scored,
-    SUM(home_score) as runs_allowed,
-    ROUND(AVG(away_score::numeric), 1) as avg_runs_scored,
-    ROUND(AVG(home_score::numeric), 1) as avg_runs_allowed
+    away_team_id AS team_id,
+    count(*) AS games_played,
+    count(*) FILTER (WHERE NOT home_win) AS wins,
+    count(*) FILTER (WHERE home_win) AS losses,
+    round(avg((NOT home_win)::numeric), 3) AS win_percentage,
+    sum(away_score) AS runs_scored,
+    sum(home_score) AS runs_allowed,
+    round(avg(away_score::numeric), 1) AS avg_runs_scored,
+    round(avg(home_score::numeric), 1) AS avg_runs_allowed
 FROM analysis.combined_games
 GROUP BY season, away_team_id;
 

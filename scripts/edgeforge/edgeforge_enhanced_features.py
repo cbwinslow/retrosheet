@@ -5,8 +5,9 @@ Focus on high-value features for win probability and prop betting.
 """
 
 import os
-import psycopg2
+
 import pandas as pd
+import psycopg2
 from psycopg2.extras import execute_values
 
 
@@ -87,10 +88,7 @@ def extract_statcast_features():
                             row.velocity,
                             None
                             if pd.isna(row.spin_rate)
-                            or (
-                                isinstance(row.spin_rate, (int, float))
-                                and row.spin_rate > 10000
-                            )
+                            or (isinstance(row.spin_rate, (int, float)) and row.spin_rate > 10000)
                             else row.spin_rate,
                             row.plate_x,
                             row.plate_z,

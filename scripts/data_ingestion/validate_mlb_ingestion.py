@@ -13,6 +13,7 @@ Optional arguments:
 
 import argparse
 import sys
+
 import psycopg2
 
 from scripts.utility.setup_mlb_analytics import database_kwargs
@@ -36,7 +37,7 @@ def run_validation(limit_hours: int = None) -> int:
                     SELECT * FROM core.live_games
                     WHERE fetched_at >= now() - interval '%s hour';
                     """,
-                    (limit_hours,)
+                    (limit_hours,),
                 )
                 # The validation procedure references core.live_games, so we
                 # temporarily rename the table within the session.

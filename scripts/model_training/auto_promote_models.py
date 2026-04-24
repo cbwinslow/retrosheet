@@ -9,15 +9,12 @@ for each target, ensuring we always have the highest-performing active models.
 from __future__ import annotations
 
 import argparse
-import json
 import os
 from pathlib import Path
-from typing import Dict, List, Tuple
-
-import psycopg2
+from typing import List, Tuple
 
 import cross_validate_models
-
+import psycopg2
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -62,13 +59,9 @@ def get_targets_to_evaluate(prefix: str = None) -> List[str]:
         conn.close()
 
 
-def evaluate_and_rank_models(
-    target_id: str, sample_rate: float = 0.05
-) -> List[Tuple[str, float]]:
+def evaluate_and_rank_models(target_id: str, sample_rate: float = 0.05) -> List[Tuple[str, float]]:
     """Evaluate all active models for a target and rank by CV ROC AUC."""
-    cv_results = cross_validate_models.run_cross_validation(
-        target_id, sample_rate, cv_folds=3
-    )
+    cv_results = cross_validate_models.run_cross_validation(target_id, sample_rate, cv_folds=3)
 
     # Extract ROC AUC scores for ranking
     model_scores = []
@@ -94,9 +87,7 @@ def promote_best_models(
         return
 
     best_model_name, best_score = ranked_models[0]
-    print(
-        f"Best model for {target_id}: {best_model_name} (CV ROC AUC: {best_score:.4f})"
-    )
+    print(f"Best model for {target_id}: {best_model_name} (CV ROC AUC: {best_score:.4f})")
 
     conn = psycopg2.connect(**database_kwargs())
     try:
@@ -163,9 +154,7 @@ def main():
                     promote_best_models(target_id, ranked_models)
                 else:
                     best_model_name, best_score = ranked_models[0]
-                    print(
-                        f"Would promote: {best_model_name} (CV ROC AUC: {best_score:.4f})"
-                    )
+                    print(f"Would promote: {best_model_name} (CV ROC AUC: {best_score:.4f})")
             else:
                 print(f"No valid models found for {target_id}")
 

@@ -89,9 +89,7 @@ def get_missing_seasons() -> list[int]:
 
         if result.returncode == 0:
             seasons = [
-                int(line.strip())
-                for line in result.stdout.strip().split("\n")
-                if line.strip()
+                int(line.strip()) for line in result.stdout.strip().split("\n") if line.strip()
             ]
             return seasons
         else:
@@ -194,8 +192,7 @@ def main():
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit all tasks
         future_to_season = {
-            executor.submit(download_season, season): season
-            for season in missing_seasons
+            executor.submit(download_season, season): season for season in missing_seasons
         }
 
         # Process results as they complete
@@ -205,9 +202,7 @@ def main():
                 success = future.result()
                 if success:
                     completed += 1
-                    print(
-                        f"✅ Season {season} completed ({completed}/{len(missing_seasons)})"
-                    )
+                    print(f"✅ Season {season} completed ({completed}/{len(missing_seasons)})")
                 else:
                     failed += 1
                     print(f"❌ Season {season} failed ({failed} failures)")

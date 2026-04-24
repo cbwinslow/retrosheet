@@ -85,18 +85,18 @@ CREATE TABLE IF NOT EXISTS raw_espn.plays_snapshots (
 );
 
 -- Create indexes for common queries
-CREATE INDEX IF NOT EXISTS idx_raw_espn_game_snapshots_game_id ON raw_espn.game_snapshots(game_id);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_game_snapshots_game_date ON raw_espn.game_snapshots(game_date);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_game_snapshots_season ON raw_espn.game_snapshots(season);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_schedule_snapshots_date ON raw_espn.schedule_snapshots(date);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_schedule_snapshots_season ON raw_espn.schedule_snapshots(season);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_player_stats_snapshots_player_id ON raw_espn.player_stats_snapshots(player_id);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_player_stats_snapshots_season ON raw_espn.player_stats_snapshots(season);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_team_stats_snapshots_team_id ON raw_espn.team_stats_snapshots(team_id);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_team_stats_snapshots_season ON raw_espn.team_stats_snapshots(season);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_plays_snapshots_game_id ON raw_espn.plays_snapshots(game_id);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_plays_snapshots_game_date ON raw_espn.plays_snapshots(game_date);
-CREATE INDEX IF NOT EXISTS idx_raw_espn_plays_snapshots_season ON raw_espn.plays_snapshots(season);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_game_snapshots_game_id ON raw_espn.game_snapshots (game_id);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_game_snapshots_game_date ON raw_espn.game_snapshots (game_date);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_game_snapshots_season ON raw_espn.game_snapshots (season);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_schedule_snapshots_date ON raw_espn.schedule_snapshots (date);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_schedule_snapshots_season ON raw_espn.schedule_snapshots (season);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_player_stats_snapshots_player_id ON raw_espn.player_stats_snapshots (player_id);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_player_stats_snapshots_season ON raw_espn.player_stats_snapshots (season);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_team_stats_snapshots_team_id ON raw_espn.team_stats_snapshots (team_id);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_team_stats_snapshots_season ON raw_espn.team_stats_snapshots (season);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_plays_snapshots_game_id ON raw_espn.plays_snapshots (game_id);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_plays_snapshots_game_date ON raw_espn.plays_snapshots (game_date);
+CREATE INDEX IF NOT EXISTS idx_raw_espn_plays_snapshots_season ON raw_espn.plays_snapshots (season);
 
 -- Add comments
 COMMENT ON SCHEMA raw_espn IS 'Source-preserved ESPN API data for MLB games, schedules, and statistics';

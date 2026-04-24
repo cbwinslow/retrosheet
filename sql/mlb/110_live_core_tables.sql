@@ -20,18 +20,18 @@ CREATE TABLE IF NOT EXISTS core.live_games (
 );
 
 ALTER TABLE core.live_games
-    ADD COLUMN IF NOT EXISTS raw_payload JSONB,
-    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    ADD COLUMN IF NOT EXISTS mlb_game_pk INTEGER,
-    ADD COLUMN IF NOT EXISTS snapshot_id INTEGER,
-    ADD COLUMN IF NOT EXISTS snapshot_fetched_at TIMESTAMP WITH TIME ZONE,
-    ADD COLUMN IF NOT EXISTS status_code TEXT,
-    ADD COLUMN IF NOT EXISTS detailed_state TEXT,
-    ADD COLUMN IF NOT EXISTS venue_name TEXT;
+ADD COLUMN IF NOT EXISTS raw_payload JSONB,
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+ADD COLUMN IF NOT EXISTS mlb_game_pk INTEGER,
+ADD COLUMN IF NOT EXISTS snapshot_id INTEGER,
+ADD COLUMN IF NOT EXISTS snapshot_fetched_at TIMESTAMP WITH TIME ZONE,
+ADD COLUMN IF NOT EXISTS status_code TEXT,
+ADD COLUMN IF NOT EXISTS detailed_state TEXT,
+ADD COLUMN IF NOT EXISTS venue_name TEXT;
 
 CREATE TABLE IF NOT EXISTS core.live_events (
-    game_id TEXT REFERENCES core.live_games(game_id),
+    game_id TEXT REFERENCES core.live_games (game_id),
     event_id INTEGER,
     season INTEGER,
     inning INTEGER,
@@ -63,17 +63,17 @@ CREATE TABLE IF NOT EXISTS core.live_events (
 );
 
 ALTER TABLE core.live_events
-    ADD COLUMN IF NOT EXISTS raw_play JSONB,
-    ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    ADD COLUMN IF NOT EXISTS mlb_game_pk INTEGER,
-    ADD COLUMN IF NOT EXISTS snapshot_id INTEGER,
-    ADD COLUMN IF NOT EXISTS plate_appearance_index INTEGER,
-    ADD COLUMN IF NOT EXISTS mlb_event_type TEXT,
-    ADD COLUMN IF NOT EXISTS event_type_description TEXT,
-    ADD COLUMN IF NOT EXISTS trajectory TEXT,
-    ADD COLUMN IF NOT EXISTS home_score_after INTEGER,
-    ADD COLUMN IF NOT EXISTS away_score_after INTEGER,
-    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT now();
+ADD COLUMN IF NOT EXISTS raw_play JSONB,
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+ADD COLUMN IF NOT EXISTS mlb_game_pk INTEGER,
+ADD COLUMN IF NOT EXISTS snapshot_id INTEGER,
+ADD COLUMN IF NOT EXISTS plate_appearance_index INTEGER,
+ADD COLUMN IF NOT EXISTS mlb_event_type TEXT,
+ADD COLUMN IF NOT EXISTS event_type_description TEXT,
+ADD COLUMN IF NOT EXISTS trajectory TEXT,
+ADD COLUMN IF NOT EXISTS home_score_after INTEGER,
+ADD COLUMN IF NOT EXISTS away_score_after INTEGER,
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT now();
 
 CREATE INDEX IF NOT EXISTS live_games_mlb_game_pk_idx ON core.live_games (mlb_game_pk);
 CREATE INDEX IF NOT EXISTS live_games_snapshot_idx ON core.live_games (snapshot_id);

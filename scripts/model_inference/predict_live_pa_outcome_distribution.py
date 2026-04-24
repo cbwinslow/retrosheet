@@ -6,8 +6,6 @@ import json
 from typing import Any
 
 import pandas as pd
-from sqlalchemy import create_engine, text
-
 from predict_pa_outcome_distribution import (
     DEFAULT_MODEL_NAME,
     apply_calibrators,
@@ -15,7 +13,8 @@ from predict_pa_outcome_distribution import (
     load_calibration_artifact,
     load_registered_model,
 )
-from train_pa_outcome_distribution import ROOT, TARGET_ID, database_url
+from sqlalchemy import create_engine, text
+from train_pa_outcome_distribution import TARGET_ID, database_url
 
 
 def live_feature_query(feature_set: str) -> str:

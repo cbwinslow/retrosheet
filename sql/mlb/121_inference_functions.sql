@@ -199,7 +199,7 @@ CREATE OR REPLACE FUNCTION inference.init_simulation(
     p_game_id text,
     p_season integer,
     p_inning integer DEFAULT 1,
-    p_is_bottom_inning boolean DEFAULT false,
+    p_is_bottom_inning boolean DEFAULT FALSE,
     p_batter_id text DEFAULT NULL,
     p_pitcher_id text DEFAULT NULL,
     p_batter_hand text DEFAULT 'R',

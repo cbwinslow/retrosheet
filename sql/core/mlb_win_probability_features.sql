@@ -58,10 +58,10 @@ CREATE TABLE mlb_features.game_state_features (
 
     -- Current pitch data (from MLB Statcast)
     pitch_type_code text,
-    pitch_velocity numeric(5,1),
+    pitch_velocity numeric(5, 1),
     pitch_spin_rate int,
-    pitch_plate_x numeric(6,2),
-    pitch_plate_z numeric(6,2),
+    pitch_plate_x numeric(6, 2),
+    pitch_plate_z numeric(6, 2),
     pitch_zone int,
 
     -- Target variable
@@ -91,27 +91,27 @@ CREATE TABLE mlb_features.player_season_stats (
     rbi int,
     walks int,
     strikeouts int,
-    batting_avg numeric(4,3),
-    on_base_pct numeric(4,3),
-    slugging_pct numeric(4,3),
-    ops numeric(4,3),
+    batting_avg numeric(4, 3),
+    on_base_pct numeric(4, 3),
+    slugging_pct numeric(4, 3),
+    ops numeric(4, 3),
 
     -- Pitching stats (if pitcher)
     games_started int,
-    innings_pitched numeric(6,1),
+    innings_pitched numeric(6, 1),
     earned_runs int,
     pitcher_hits_allowed int,
     pitcher_walks int,
     pitcher_strikeouts int,
     pitcher_home_runs int,
-    era numeric(5,2),
-    whip numeric(4,2),
-    k_per_9 numeric(5,2),
+    era numeric(5, 2),
+    whip numeric(4, 2),
+    k_per_9 numeric(5, 2),
 
     -- Statcast metrics (MLB only)
-    avg_exit_velocity numeric(5,1),
-    avg_launch_angle numeric(4,1),
-    sprint_speed numeric(4,2),
+    avg_exit_velocity numeric(5, 1),
+    avg_launch_angle numeric(4, 1),
+    sprint_speed numeric(4, 2),
     arm_strength text,
 
     created_at timestamptz DEFAULT now(),
@@ -127,7 +127,7 @@ CREATE TABLE mlb_features.team_season_stats (
     games_played int,
     wins int,
     losses int,
-    win_pct numeric(4,3),
+    win_pct numeric(4, 3),
     runs_scored int,
     runs_allowed int,
     run_differential int,
@@ -135,7 +135,7 @@ CREATE TABLE mlb_features.team_season_stats (
     -- Recent form (last 10 games)
     recent_games int,
     recent_wins int,
-    recent_win_pct numeric(4,3),
+    recent_win_pct numeric(4, 3),
 
     -- Home/away splits
     home_games int,
@@ -154,8 +154,8 @@ CREATE TABLE mlb_features.park_factors (
     season int NOT NULL,
 
     -- Run scoring environment
-    park_factor_runs numeric(4,3), -- 1.0 = average, >1.0 = hitter-friendly
-    park_factor_hr numeric(4,3),   -- HR park factor
+    park_factor_runs numeric(4, 3), -- 1.0 = average, >1.0 = hitter-friendly
+    park_factor_hr numeric(4, 3),   -- HR park factor
 
     -- Dimensions (feet)
     left_field_distance int,
@@ -183,12 +183,12 @@ CREATE TABLE mlb_features.batter_pitcher_matchups (
     home_runs int,
     walks int,
     strikeouts int,
-    avg numeric(4,3),
-    slg numeric(4,3),
+    avg numeric(4, 3),
+    slg numeric(4, 3),
 
     -- Statcast vs this pitcher
-    avg_exit_velocity_vs numeric(5,1),
-    avg_launch_angle_vs numeric(4,1),
+    avg_exit_velocity_vs numeric(5, 1),
+    avg_launch_angle_vs numeric(4, 1),
 
     created_at timestamptz DEFAULT now(),
 
@@ -438,29 +438,38 @@ CREATE TABLE mlb_features.win_probability_training AS
 SELECT
     gsf.*,
     -- Join player stats
-    bs.batting_avg as batter_season_avg,
-    ps.era as pitcher_season_era,
+    bs.batting_avg AS batter_season_avg,
+    ps.era AS pitcher_season_era,
     -- Join team stats
-    ts.win_pct as batting_team_win_pct,
+    ts.win_pct AS batting_team_win_pct,
     -- Add park factors
     pf.park_factor_runs,
     -- Add matchup history
-    bpm.avg as batter_vs_pitcher_avg
-FROM mlb_features.game_state_features gsf
-LEFT JOIN mlb_features.player_season_stats bs ON gsf.batter_id = bs.player_id
-    AND gsf.season = bs.season AND bs.is_batter = true
-LEFT JOIN mlb_features.player_season_stats ps ON gsf.pitcher_id = ps.player_id
-    AND gsf.season = ps.season AND ps.is_batter = false
-LEFT JOIN mlb_features.team_season_stats ts ON gsf.batting_team_id = ts.team_id
-    AND gsf.season = ts.season
-LEFT JOIN mlb_features.park_factors pf ON gsf.park_id = pf.park_id
-    AND gsf.season = pf.season
-LEFT JOIN mlb_features.batter_pitcher_matchups bpm ON gsf.batter_id = bpm.batter_id
-    AND gsf.pitcher_id = bpm.pitcher_id AND gsf.season = bpm.season;
+    bpm.avg AS batter_vs_pitcher_avg
+FROM mlb_features.game_state_features AS gsf
+LEFT JOIN mlb_features.player_season_stats AS bs
+    ON
+        gsf.batter_id = bs.player_id
+        AND gsf.season = bs.season AND bs.is_batter = true
+LEFT JOIN mlb_features.player_season_stats AS ps
+    ON
+        gsf.pitcher_id = ps.player_id
+        AND gsf.season = ps.season AND ps.is_batter = false
+LEFT JOIN mlb_features.team_season_stats AS ts
+    ON
+        gsf.batting_team_id = ts.team_id
+        AND gsf.season = ts.season
+LEFT JOIN mlb_features.park_factors AS pf
+    ON
+        gsf.park_id = pf.park_id
+        AND gsf.season = pf.season
+LEFT JOIN mlb_features.batter_pitcher_matchups
+    AS bpm ON gsf.batter_id = bpm.batter_id
+AND gsf.pitcher_id = bpm.pitcher_id AND gsf.season = bpm.season;
 
 -- Add target variable (win probability)
 ALTER TABLE mlb_features.win_probability_training
-ADD COLUMN win_probability numeric(4,3);
+ADD COLUMN win_probability numeric(4, 3);
 
 -- Calculate win probability for each state
 UPDATE mlb_features.win_probability_training

@@ -4,8 +4,8 @@ Populate MLB pitches table from raw game feeds and demonstrate enhanced features
 """
 
 import os
+
 import psycopg2
-from psycopg2.extras import execute_values
 
 
 def database_kwargs():
@@ -167,9 +167,7 @@ def create_enhanced_features():
             """)
 
             # Check enhanced dataset size
-            cur.execute(
-                "SELECT COUNT(*) FROM mlb_models.win_probability_training_enhanced;"
-            )
+            cur.execute("SELECT COUNT(*) FROM mlb_models.win_probability_training_enhanced;")
             enhanced_count = cur.fetchone()[0]
 
             print(f"✅ Created enhanced dataset with {enhanced_count} samples")

@@ -5,12 +5,9 @@ Downloads and transforms all MLB data from 2000-2025.
 """
 
 import argparse
-import os
 import subprocess
-import sys
 import time
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -19,9 +16,7 @@ def run_command(cmd: str, description: str) -> bool:
     """Run a command and return success status."""
     print(f"🔄 {description}")
     try:
-        result = subprocess.run(
-            cmd, shell=True, cwd=ROOT, capture_output=True, text=True
-        )
+        result = subprocess.run(cmd, shell=True, cwd=ROOT, capture_output=True, text=True)
         if result.returncode == 0:
             print(f"✅ {description} completed")
             return True
@@ -76,16 +71,12 @@ def transform_season_data(season: int) -> bool:
     """
 
     try:
-        result = subprocess.run(
-            cmd, shell=True, cwd=ROOT, capture_output=True, text=True
-        )
+        result = subprocess.run(cmd, shell=True, cwd=ROOT, capture_output=True, text=True)
         if result.returncode != 0:
             print(f"❌ Failed to get game PKs for {season}: {result.stderr}")
             return False
 
-        game_pks = [
-            line.strip() for line in result.stdout.strip().split("\n") if line.strip()
-        ]
+        game_pks = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
 
         if not game_pks:
             print(f"✅ No games to transform for {season}")
@@ -135,13 +126,9 @@ def get_missing_seasons() -> list[int]:
     """
 
     try:
-        result = subprocess.run(
-            cmd, shell=True, cwd=ROOT, capture_output=True, text=True
-        )
+        result = subprocess.run(cmd, shell=True, cwd=ROOT, capture_output=True, text=True)
         existing_seasons = [
-            int(line.strip())
-            for line in result.stdout.strip().split("\n")
-            if line.strip()
+            int(line.strip()) for line in result.stdout.strip().split("\n") if line.strip()
         ]
 
         missing_seasons = [s for s in target_seasons if s not in existing_seasons]
@@ -168,12 +155,8 @@ def main():
     parser.add_argument(
         "--transform-only", action="store_true", help="Only transform existing data"
     )
-    parser.add_argument(
-        "--workers", type=int, default=8, help="Number of parallel workers"
-    )
-    parser.add_argument(
-        "--delay", type=float, default=0.5, help="Delay between requests"
-    )
+    parser.add_argument("--workers", type=int, default=8, help="Number of parallel workers")
+    parser.add_argument("--delay", type=float, default=0.5, help="Delay between requests")
 
     args = parser.parse_args()
 
@@ -186,9 +169,7 @@ def main():
         seasons_to_process = get_missing_seasons()
 
     if not seasons_to_process:
-        print(
-            "✅ All seasons appear to have data. Use --seasons to specify specific seasons."
-        )
+        print("✅ All seasons appear to have data. Use --seasons to specify specific seasons.")
         return
 
     print(f"📅 Seasons to process: {seasons_to_process}")
@@ -197,9 +178,7 @@ def main():
     completed_seasons = 0
 
     for season in seasons_to_process:
-        print(
-            f"\n🎯 Processing season {season} ({completed_seasons + 1}/{total_seasons})"
-        )
+        print(f"\n🎯 Processing season {season} ({completed_seasons + 1}/{total_seasons})")
 
         if not args.transform_only:
             if not download_season_data(season):

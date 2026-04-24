@@ -32,21 +32,21 @@ COMMENT ON COLUMN kb.document_chunks.topic IS 'Categorized topic for filtered re
 -- Vector similarity index using ivfflat
 -- ivfflat is good for <1M vectors; hnsw for >1M or higher recall requirements
 CREATE INDEX IF NOT EXISTS idx_kb_chunks_embedding_ivfflat
-    ON kb.document_chunks
-    USING ivfflat (embedding vector_cosine_ops)
-    WITH (lists = 100);
+ON kb.document_chunks
+USING ivfflat (embedding vector_cosine_ops)
+WITH (lists = 100);
 
 -- B-tree indexes for filtering
-CREATE INDEX IF NOT EXISTS idx_kb_chunks_topic ON kb.document_chunks(topic);
-CREATE INDEX IF NOT EXISTS idx_kb_chunks_source_type ON kb.document_chunks(source_type);
-CREATE INDEX IF NOT EXISTS idx_kb_chunks_source_title ON kb.document_chunks(source_title);
-CREATE INDEX IF NOT EXISTS idx_kb_chunks_date_ingested ON kb.document_chunks(date_ingested);
+CREATE INDEX IF NOT EXISTS idx_kb_chunks_topic ON kb.document_chunks (topic);
+CREATE INDEX IF NOT EXISTS idx_kb_chunks_source_type ON kb.document_chunks (source_type);
+CREATE INDEX IF NOT EXISTS idx_kb_chunks_source_title ON kb.document_chunks (source_title);
+CREATE INDEX IF NOT EXISTS idx_kb_chunks_date_ingested ON kb.document_chunks (date_ingested);
 
 -- Composite index for common filtered queries
-CREATE INDEX IF NOT EXISTS idx_kb_chunks_topic_source ON kb.document_chunks(topic, source_type);
+CREATE INDEX IF NOT EXISTS idx_kb_chunks_topic_source ON kb.document_chunks (topic, source_type);
 
 -- GIN index on metadata for flexible JSONB queries
-CREATE INDEX IF NOT EXISTS idx_kb_chunks_metadata_gin ON kb.document_chunks USING GIN (metadata);
+CREATE INDEX IF NOT EXISTS idx_kb_chunks_metadata_gin ON kb.document_chunks USING gin (metadata);
 
 -- Ingestion tracking table
 CREATE TABLE IF NOT EXISTS kb.ingestion_runs (
@@ -66,16 +66,19 @@ CREATE OR REPLACE VIEW kb.chunk_summary AS
 SELECT
     topic,
     source_type,
-    COUNT(*) as chunk_count,
-    MIN(created_at) as first_chunk,
-    MAX(created_at) as last_chunk
+    COUNT(*) AS chunk_count,
+    MIN(created_at) AS first_chunk,
+    MAX(created_at) AS last_chunk
 FROM kb.document_chunks
 GROUP BY topic, source_type
 ORDER BY chunk_count DESC;
 
 -- Validation: check for empty embeddings
 CREATE OR REPLACE VIEW kb.empty_embeddings AS
-SELECT id, source_title, chunk_index
+SELECT
+    id,
+    source_title,
+    chunk_index
 FROM kb.document_chunks
 WHERE embedding IS NULL;
 
@@ -86,7 +89,7 @@ CREATE OR REPLACE FUNCTION kb.similar_chunks(
     match_count INT DEFAULT 5,
     filter_topic TEXT DEFAULT NULL
 )
-RETURNS TABLE(
+RETURNS TABLE (
     id BIGINT,
     chunk_text TEXT,
     source_title TEXT,
@@ -118,7 +121,7 @@ CREATE OR REPLACE FUNCTION kb.keyword_search(
     match_count INT DEFAULT 5,
     filter_topic TEXT DEFAULT NULL
 )
-RETURNS TABLE(
+RETURNS TABLE (
     id BIGINT,
     chunk_text TEXT,
     source_title TEXT,

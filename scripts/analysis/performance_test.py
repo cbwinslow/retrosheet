@@ -7,6 +7,7 @@ Demonstrates the performance improvements from our inference optimizations.
 
 import os
 import time
+
 # ``psycopg2`` is optional for the CI environment – the performance scripts are
 # not executed during unit testing. Import lazily and tolerate its absence.
 try:
@@ -19,6 +20,7 @@ except Exception:  # pragma: no cover
 # Prevent pytest from collecting this script as a test module
 __test__ = False
 
+
 def test_query_performance():
     """Test performance of different query approaches."""
 
@@ -28,14 +30,14 @@ def test_query_performance():
         port=os.environ.get("PGPORT", "5432"),
         dbname=os.environ.get("PGDATABASE", "retrosheet"),
         user=os.environ.get("PGUSER", "postgres"),
-        password=os.environ.get("PGPASSWORD", "")
+        password=os.environ.get("PGPASSWORD", ""),
     )
 
     print("🚀 Baseball Analytics Performance Test")
     print("=" * 50)
 
     # Test 1: Basic feature lookup (old way vs optimized way)
-    game_id = 'ALS200107100'
+    game_id = "ALS200107100"
     pa_id = 1
 
     # Old way: Complex joins
@@ -97,7 +99,7 @@ def test_query_performance():
             cur.fetchall()
     new_time = (time.time() - start_time) / 10
 
-    speedup = old_time / new_time if new_time > 0 else float('inf')
+    speedup = old_time / new_time if new_time > 0 else float("inf")
 
     print("📊 Query Performance Comparison:")
     # Display the measured times with reasonable formatting.
@@ -124,12 +126,15 @@ def test_query_performance():
     for _ in range(5):
         with conn.cursor() as cur:
             # Get all plate appearances in half-inning
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT pa.game_id, pa.plate_appearance_id, pa.batter_id, pa.pitcher_id
                 FROM features.plate_appearance_examples pa
                 WHERE pa.game_id = %s AND pa.inning = %s AND pa.is_bottom_inning = %s
                 ORDER BY pa.plate_appearance_id
-            """, (game_id, inning, is_bottom))
+            """,
+                (game_id, inning, is_bottom),
+            )
 
             pa_list = cur.fetchall()
 
@@ -143,18 +148,23 @@ def test_query_performance():
     start_time = time.time()
     for _ in range(5):
         with conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT game_id, plate_appearance_id, batter_prior_hit_rate, pitcher_prior_hit_allowed_rate
                 FROM inference.plate_appearance_features
                 WHERE game_id = %s AND inning = %s AND is_bottom_inning = %s
                 ORDER BY plate_appearance_id
-            """, (game_id, inning, is_bottom))
+            """,
+                (game_id, inning, is_bottom),
+            )
             cur.fetchall()
     new_sim_time = time.time() - start_time
 
-    sim_speedup = old_sim_time / new_sim_time if new_sim_time > 0 else float('inf')
+    sim_speedup = old_sim_time / new_sim_time if new_sim_time > 0 else float("inf")
 
-    print(f"Old simulation avg: {old_sim_time:.2f}s, New simulation avg: {new_sim_time:.2f}s, Speedup: {sim_speedup:.1f}x")
+    print(
+        f"Old simulation avg: {old_sim_time:.2f}s, New simulation avg: {new_sim_time:.2f}s, Speedup: {sim_speedup:.1f}x"
+    )
 
     # Summary
     print("🏆 PERFORMANCE OPTIMIZATION RESULTS:")

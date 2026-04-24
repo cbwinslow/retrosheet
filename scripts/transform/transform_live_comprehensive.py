@@ -14,11 +14,10 @@ Creates:
 from __future__ import annotations
 
 import argparse
-import json
 import os
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import List
 
 import psycopg2
 from psycopg2.extras import Json, execute_values
@@ -374,14 +373,10 @@ def parse_live_events(
         pitcher = matchup.get("pitcher", {})
 
         batter_id = (
-            lookup_retrosheet_player_id(batter.get("id"), conn)
-            if batter.get("id")
-            else None
+            lookup_retrosheet_player_id(batter.get("id"), conn) if batter.get("id") else None
         )
         pitcher_id = (
-            lookup_retrosheet_player_id(pitcher.get("id"), conn)
-            if pitcher.get("id")
-            else None
+            lookup_retrosheet_player_id(pitcher.get("id"), conn) if pitcher.get("id") else None
         )
 
         # Teams
@@ -497,14 +492,10 @@ def parse_live_events(
             game_data = feed.get("gameData", {})
             teams = game_data.get("teams", {})
             home_team_id = (
-                f"MLB{teams.get('home', {}).get('id')}"
-                if teams.get("home", {}).get("id")
-                else None
+                f"MLB{teams.get('home', {}).get('id')}" if teams.get("home", {}).get("id") else None
             )
             away_team_id = (
-                f"MLB{teams.get('away', {}).get('id')}"
-                if teams.get("away", {}).get("id")
-                else None
+                f"MLB{teams.get('away', {}).get('id')}" if teams.get("away", {}).get("id") else None
             )
 
             pa = LivePlateAppearance(
@@ -513,9 +504,7 @@ def parse_live_events(
                 game_pa_number=game_pa_counter,
                 half_inning_pa_number=half_inning_pa_counters[half_inning_key],
                 season=int(feed.get("gameData", {}).get("game", {}).get("season")),
-                game_date=game_data.get("datetime", {})
-                .get("dateTime", "")
-                .split("T")[0],
+                game_date=game_data.get("datetime", {}).get("dateTime", "").split("T")[0],
                 event_sequence=event_sequence + 1,
                 inning=inning,
                 is_bottom_inning=not is_bottom,
@@ -763,9 +752,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Transform MLB live feed into complete Retrosheet-compatible tables"
     )
-    parser.add_argument(
-        "--game-pk", type=int, required=True, help="MLB game PK to transform"
-    )
+    parser.add_argument("--game-pk", type=int, required=True, help="MLB game PK to transform")
     parser.add_argument(
         "--snapshot-id",
         type=int,
@@ -847,22 +834,16 @@ def main():
         )
 
         # Parse events and plate appearances
-        events, plate_appearances = parse_live_events(
-            feed, game.game_id, snapshot_id, conn
-        )
+        events, plate_appearances = parse_live_events(feed, game.game_id, snapshot_id, conn)
 
-        print(
-            f"Parsed {len(events)} events, {len(plate_appearances)} plate appearances"
-        )
+        print(f"Parsed {len(events)} events, {len(plate_appearances)} plate appearances")
 
         # Insert all data
         insert_live_data(game, events, plate_appearances, conn)
         conn.commit()
 
-        print(
-            f"Successfully transformed MLB game {args.game_pk} into Retrosheet-compatible tables"
-        )
-        print(f"- core.live_games: 1 record")
+        print(f"Successfully transformed MLB game {args.game_pk} into Retrosheet-compatible tables")
+        print("- core.live_games: 1 record")
         print(f"- core.live_events: {len(events)} records")
         print(f"- core.live_plate_appearances: {len(plate_appearances)} records")
 

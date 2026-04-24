@@ -32,12 +32,12 @@ CREATE TABLE IF NOT EXISTS raw_mlb.live_feed_snapshots (
 );
 
 ALTER TABLE raw_mlb.live_feed_snapshots
-    ADD COLUMN IF NOT EXISTS request_params JSONB,
-    ADD COLUMN IF NOT EXISTS http_status INTEGER,
-    ADD COLUMN IF NOT EXISTS error_text TEXT,
-    ADD COLUMN IF NOT EXISTS payload_checksum TEXT,
-    ADD COLUMN IF NOT EXISTS game_date DATE,
-    ADD COLUMN IF NOT EXISTS season INTEGER;
+ADD COLUMN IF NOT EXISTS request_params JSONB,
+ADD COLUMN IF NOT EXISTS http_status INTEGER,
+ADD COLUMN IF NOT EXISTS error_text TEXT,
+ADD COLUMN IF NOT EXISTS payload_checksum TEXT,
+ADD COLUMN IF NOT EXISTS game_date DATE,
+ADD COLUMN IF NOT EXISTS season INTEGER;
 
 CREATE INDEX IF NOT EXISTS live_feed_snapshots_game_pk_idx ON raw_mlb.live_feed_snapshots (game_pk);
 CREATE INDEX IF NOT EXISTS live_feed_snapshots_fetched_at_idx ON raw_mlb.live_feed_snapshots (fetched_at);
@@ -61,27 +61,27 @@ COMMENT ON COLUMN raw_mlb.live_feed_snapshots.season IS 'Season parsed from the 
 CREATE SCHEMA IF NOT EXISTS features;
 
 CREATE TABLE IF NOT EXISTS features.play_snapshot (
-    game_pk      BIGINT NOT NULL,
-    play_id      BIGINT NOT NULL,
-    inning       INT NOT NULL,
-    half_inning  TEXT NOT NULL,
-    outs         INT NOT NULL,
-    balls        INT NOT NULL,
-    strikes      INT NOT NULL,
-    base_state   TEXT,
-    home_score   INT,
-    away_score   INT,
-    score_diff   INT,
+    game_pk BIGINT NOT NULL,
+    play_id BIGINT NOT NULL,
+    inning INT NOT NULL,
+    half_inning TEXT NOT NULL,
+    outs INT NOT NULL,
+    balls INT NOT NULL,
+    strikes INT NOT NULL,
+    base_state TEXT,
+    home_score INT,
+    away_score INT,
+    score_diff INT,
     home_team_id INT,
     away_team_id INT,
-    batter_id    BIGINT,
-    pitcher_id   BIGINT,
-    batter_hand  TEXT,
+    batter_id BIGINT,
+    pitcher_id BIGINT,
+    batter_hand TEXT,
     pitcher_hand TEXT,
     leverage_idx NUMERIC,
-    is_hit       BOOLEAN,
+    is_hit BOOLEAN,
     is_strikeout BOOLEAN,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (game_pk, play_id)
 );
 

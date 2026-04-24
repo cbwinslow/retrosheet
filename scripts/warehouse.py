@@ -13,7 +13,6 @@ import tempfile
 import urllib.request
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 RETROSHEET_REPO = DATA / "raw" / "retrosheet"
@@ -90,7 +89,11 @@ def run_psql_sql(sql: str) -> None:
 
 
 def chadwick_event_columns() -> list[str]:
-    return [line.strip().lower() for line in CHADWICK_EVENT_COLUMNS_PATH.read_text().splitlines() if line.strip()]
+    return [
+        line.strip().lower()
+        for line in CHADWICK_EVENT_COLUMNS_PATH.read_text().splitlines()
+        if line.strip()
+    ]
 
 
 def normalize_column_name(value: str) -> str:
@@ -136,7 +139,9 @@ def check_deps(_: argparse.Namespace) -> None:
         status = "ok" if dep not in missing else "missing"
         print(f"{dep}: {status}")
     if missing:
-        print("\nMissing dependencies. Install Chadwick so its `cw*` tools are on PATH before extracting Retrosheet data.")
+        print(
+            "\nMissing dependencies. Install Chadwick so its `cw*` tools are on PATH before extracting Retrosheet data."
+        )
         sys.exit(1)
 
 
@@ -246,7 +251,9 @@ def year_source_files(year: int, *, include_boxscore: bool = False) -> dict[str,
 
 def extract_events(args: argparse.Namespace) -> None:
     if not (RETROSHEET_REPO / ".git").exists():
-        raise SystemExit("Retrosheet data is missing. Run `python3 scripts/warehouse.py fetch-retrosheet` first.")
+        raise SystemExit(
+            "Retrosheet data is missing. Run `python3 scripts/warehouse.py fetch-retrosheet` first."
+        )
     if not shutil.which("cwevent"):
         raise SystemExit("`cwevent` is missing. Install Chadwick tools before extracting events.")
 
@@ -289,7 +296,9 @@ def extract_chadwick_output(output: str, years: list[int]) -> None:
     spec = CHADWICK_OUTPUTS[output]
     tool = str(spec["tool"])
     if not (RETROSHEET_REPO / ".git").exists():
-        raise SystemExit("Retrosheet data is missing. Run `python3 scripts/warehouse.py fetch-retrosheet` first.")
+        raise SystemExit(
+            "Retrosheet data is missing. Run `python3 scripts/warehouse.py fetch-retrosheet` first."
+        )
     if not shutil.which(tool):
         raise SystemExit(f"`{tool}` is missing. Install Chadwick tools before extracting {output}.")
 
@@ -300,7 +309,9 @@ def extract_chadwick_output(output: str, years: list[int]) -> None:
         team_files = sorted(season_dir.glob("TEAM*"))
         for source_type, files in year_source_files(year).items():
             out_file = out_dir / f"{year}_{source_type}.csv"
-            with tempfile.TemporaryDirectory(prefix=f"retrosheet-{output}-{year}-{source_type}-") as tmp:
+            with tempfile.TemporaryDirectory(
+                prefix=f"retrosheet-{output}-{year}-{source_type}-"
+            ) as tmp:
                 tmp_dir = Path(tmp)
                 for file in files:
                     shutil.copy2(file, tmp_dir / file.name)
@@ -366,7 +377,9 @@ def load_chadwick_csv(output: str, path: Path, year: int, source_type: str) -> N
             rows = 0
             for row_number, row in enumerate(reader, start=1):
                 if len(row) != len(columns):
-                    raise ValueError(f"{path}:{row_number + 1} has {len(row)} columns; expected {len(columns)}")
+                    raise ValueError(
+                        f"{path}:{row_number + 1} has {len(row)} columns; expected {len(columns)}"
+                    )
                 writer.writerow([year, source_type, row_number, *row])
                 rows += 1
 
@@ -397,7 +410,9 @@ def ensure_chadwick_table(table: str, columns: list[str]) -> None:
     column_sql = ",\n    ".join(f"{column} text" for column in columns)
     index_sql = ""
     if "game_id" in columns:
-        index_sql += f"\nCREATE INDEX IF NOT EXISTS {table}_game_idx ON raw_retrosheet.{table} (game_id);\n"
+        index_sql += (
+            f"\nCREATE INDEX IF NOT EXISTS {table}_game_idx ON raw_retrosheet.{table} (game_id);\n"
+        )
     if "player_id" in columns:
         index_sql += f"\nCREATE INDEX IF NOT EXISTS {table}_player_idx ON raw_retrosheet.{table} (player_id);\n"
     run_psql_sql(
@@ -424,10 +439,15 @@ def load_labeled_event_file(path: Path, year: int, source_type: str) -> None:
         writer = csv.writer(fout)
         rows = 0
         for input_row_number, row in enumerate(reader, start=1):
-            if input_row_number == 1 and [normalize_column_name(value) for value in row] == feature_columns:
+            if (
+                input_row_number == 1
+                and [normalize_column_name(value) for value in row] == feature_columns
+            ):
                 continue
             if len(row) != len(feature_columns):
-                raise ValueError(f"{path}:{input_row_number} has {len(row)} columns; expected {len(feature_columns)}")
+                raise ValueError(
+                    f"{path}:{input_row_number} has {len(row)} columns; expected {len(feature_columns)}"
+                )
             row_number = rows + 1
             writer.writerow([year, source_type, row_number, *row])
             rows += 1
@@ -546,19 +566,27 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("fetch-retrosheet").set_defaults(func=fetch_retrosheet)
 
     extract = sub.add_parser("extract-events")
-    extract.add_argument("--years", required=True, help="Year, comma list, or range. Example: 2023 or 2000-2025")
+    extract.add_argument(
+        "--years", required=True, help="Year, comma list, or range. Example: 2023 or 2000-2025"
+    )
     extract.set_defaults(func=extract_events)
 
     load = sub.add_parser("load-events")
-    load.add_argument("--years", required=True, help="Year, comma list, or range. Example: 2023 or 2000-2025")
+    load.add_argument(
+        "--years", required=True, help="Year, comma list, or range. Example: 2023 or 2000-2025"
+    )
     load.set_defaults(func=load_events)
 
     labeled = sub.add_parser("load-labeled-events")
-    labeled.add_argument("--years", required=True, help="Year, comma list, or range. Example: 2023 or 2000-2025")
+    labeled.add_argument(
+        "--years", required=True, help="Year, comma list, or range. Example: 2023 or 2000-2025"
+    )
     labeled.set_defaults(func=load_labeled_events)
 
     extract_chadwick_parser = sub.add_parser("extract-chadwick")
-    extract_chadwick_parser.add_argument("--years", required=True, help="Year, comma list, or range.")
+    extract_chadwick_parser.add_argument(
+        "--years", required=True, help="Year, comma list, or range."
+    )
     extract_chadwick_parser.add_argument(
         "--outputs",
         default="all",

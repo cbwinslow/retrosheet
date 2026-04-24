@@ -15,18 +15,19 @@ Usage:
 
 import argparse
 import os
-import sys
-import math
-from pathlib import Path
 import subprocess
+import sys
+from pathlib import Path
 
 import psycopg2
 
 DB_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
 CHUNK_ROWS = 5_000_000  # rows per chunk for very large files
 
+
 def get_conn():
     return psycopg2.connect(DB_URL)
+
 
 def create_staging(cur):
     cur.execute("DROP TABLE IF EXISTS raw_mlb.stg_statcast")
@@ -153,11 +154,11 @@ def create_staging(cur):
         )
     """)
 
+
 def copy_to_staging(cur, csv_path):
     with open(csv_path, "r", newline="") as f:
-        cur.copy_expert(
-            "COPY raw_mlb.stg_statcast FROM STDIN WITH CSV HEADER", f
-        )
+        cur.copy_expert("COPY raw_mlb.stg_statcast FROM STDIN WITH CSV HEADER", f)
+
 
 def upsert(cur):
     # Deduplicate staging table first to handle duplicate rows within the same CSV
@@ -169,7 +170,7 @@ def upsert(cur):
         AND s1.at_bat_number = s2.at_bat_number
         AND s1.pitch_number = s2.pitch_number;
     """)
-    
+
     cur.execute("""
         INSERT INTO raw_mlb.statcast (
             pitch_type, game_date, release_speed, release_pos_x, release_pos_z, player_name,
@@ -417,6 +418,7 @@ def upsert(cur):
             intercept_ball_minus_batter_pos_y_inches = EXCLUDED.intercept_ball_minus_batter_pos_y_inches;
     """)
 
+
 def split_file(csv_path: Path):
     """Split a large CSV into smaller files with a header line preserved."""
     prefix = f"{csv_path}_part_"
@@ -434,6 +436,7 @@ def split_file(csv_path: Path):
             dst.write(src.read())
     os.remove(f"{prefix}header")
     return parts
+
 
 def main():
     parser = argparse.ArgumentParser(description="Load Statcast CSV")
@@ -464,6 +467,7 @@ def main():
     finally:
         cur.close()
         conn.close()
+
 
 if __name__ == "__main__":
     main()

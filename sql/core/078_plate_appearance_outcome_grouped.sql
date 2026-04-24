@@ -50,6 +50,14 @@ SELECT
     outcome.rbi,
     outcome.outcome_class AS raw_outcome_class,
     outcome.outcome_group AS raw_outcome_group,
+    outcome.on_base_traditional,
+    outcome.reach_base_any,
+    outcome.is_hit_outcome,
+    outcome.is_extra_base_hit_outcome,
+    outcome.is_ball_in_play,
+    outcome.outcome_total_bases,
+    outcome.final_home_win,
+    outcome.final_batting_team_win,
     CASE
         WHEN outcome.outcome_class IN ('single', 'double', 'triple', 'home_run') THEN outcome.outcome_class
         WHEN outcome.outcome_class IN ('walk', 'intentional_walk') THEN 'walk'
@@ -76,35 +84,27 @@ SELECT
             'sacrifice_fly'
         ) THEN 'out'
         ELSE 'other'
-    END AS grouped_outcome_family,
-    outcome.on_base_traditional,
-    outcome.reach_base_any,
-    outcome.is_hit_outcome,
-    outcome.is_extra_base_hit_outcome,
-    outcome.is_ball_in_play,
-    outcome.outcome_total_bases,
-    outcome.final_home_win,
-    outcome.final_batting_team_win
-FROM features.plate_appearance_outcome_examples outcome;
+    END AS grouped_outcome_family
+FROM features.plate_appearance_outcome_examples AS outcome;
 
 CREATE UNIQUE INDEX plate_appearance_outcome_grouped_examples_pk
-    ON features.plate_appearance_outcome_grouped_examples (game_id, plate_appearance_id);
+ON features.plate_appearance_outcome_grouped_examples (game_id, plate_appearance_id);
 
 CREATE INDEX plate_appearance_outcome_grouped_examples_target_idx
-    ON features.plate_appearance_outcome_grouped_examples (
-        season,
-        grouped_outcome_class,
-        batter_hand,
-        pitcher_hand,
-        outs_before,
-        start_bases,
-        balls,
-        strikes
-    );
+ON features.plate_appearance_outcome_grouped_examples (
+    season,
+    grouped_outcome_class,
+    batter_hand,
+    pitcher_hand,
+    outs_before,
+    start_bases,
+    balls,
+    strikes
+);
 
 CREATE INDEX plate_appearance_outcome_grouped_examples_player_idx
-    ON features.plate_appearance_outcome_grouped_examples (season, batter_id, pitcher_id)
-    WHERE batter_id IS NOT NULL AND pitcher_id IS NOT NULL;
+ON features.plate_appearance_outcome_grouped_examples (season, batter_id, pitcher_id)
+WHERE batter_id IS NOT NULL AND pitcher_id IS NOT NULL;
 
 CREATE OR REPLACE VIEW features.plate_appearance_outcome_grouped_validation_summary AS
 SELECT

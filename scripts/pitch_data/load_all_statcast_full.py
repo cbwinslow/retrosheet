@@ -7,6 +7,7 @@ Usage:
     python scripts/pitch_data/load_all_statcast_full.py --seasons 2025
     python scripts/pitch_data/load_all_statcast_full.py --all --force
 """
+
 import argparse
 import logging
 import os
@@ -14,16 +15,16 @@ from typing import List, Tuple
 
 import psycopg2
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
 def get_connection():
     return psycopg2.connect(
-        host=os.getenv('PGHOST', 'localhost'),
-        port=int(os.getenv('PGPORT', 5432)),
-        database=os.getenv('PGDATABASE', 'retrosheet'),
-        user=os.getenv('PGUSER', os.getenv('USER', 'postgres'))
+        host=os.getenv("PGHOST", "localhost"),
+        port=int(os.getenv("PGPORT", 5432)),
+        database=os.getenv("PGDATABASE", "retrosheet"),
+        user=os.getenv("PGUSER", os.getenv("USER", "postgres")),
     )
 
 
@@ -48,16 +49,17 @@ def get_loaded_counts(conn) -> dict:
 def load_season_full(conn, season: int) -> int:
     """Load entire season with ALL 118 fields."""
     logger.info(f"FULL LOAD: Season {season} with ALL 118 Statcast fields...")
-    
+
     with conn.cursor() as cur:
         # Check if already loaded
         cur.execute("SELECT COUNT(*) FROM features_pitch.locations WHERE game_year = %s", (season,))
         if cur.fetchone()[0] > 0:
             logger.warning(f"Season {season} already loaded. Use --force to reload.")
             return 0
-        
+
         # Full INSERT with ALL columns
-        cur.execute("""
+        cur.execute(
+            """
             INSERT INTO features_pitch.locations (
                 -- Core identification
                 game_year, game_pk, game_date, sv_id,
@@ -193,23 +195,28 @@ def load_season_full(conn, season: int) -> int:
             WHERE s.game_year = %s
               AND s.plate_x IS NOT NULL
               AND s.plate_z IS NOT NULL
-        """, (season,))
-        
+        """,
+            (season,),
+        )
+
         inserted = cur.rowcount
         conn.commit()
-        
+
         logger.info(f"Inserted {inserted:,} pitches for season {season}")
-        
+
         # Update geometry
-        logger.info(f"Updating PostGIS geometry...")
-        cur.execute("""
+        logger.info("Updating PostGIS geometry...")
+        cur.execute(
+            """
             UPDATE features_pitch.locations 
             SET location = ST_SetSRID(ST_MakePoint(plate_x, plate_z), 4326)
             WHERE game_year = %s
               AND location IS NULL
-        """, (season,))
+        """,
+            (season,),
+        )
         conn.commit()
-        
+
         logger.info(f"✓ Season {season} complete: {inserted:,} pitches with ALL fields")
         return inserted
 
@@ -225,10 +232,10 @@ def clear_season(conn, season: int):
 
 def verify_load(conn) -> bool:
     """Verify loaded data matches source data exactly."""
-    logger.info("\n" + "="*70)
+    logger.info("\n" + "=" * 70)
     logger.info("VERIFICATION: Checking data integrity...")
-    logger.info("="*70)
-    
+    logger.info("=" * 70)
+
     with conn.cursor() as cur:
         # Check row counts per season
         cur.execute("""
@@ -252,17 +259,17 @@ def verify_load(conn) -> bool:
             LEFT JOIN loaded_counts l ON r.year = l.game_year
             ORDER BY r.year DESC
         """)
-        
+
         results = cur.fetchall()
         all_match = True
-        
+
         for year, raw, loaded, missing in results:
             if missing == 0:
                 logger.info(f"  {year}: {loaded:,} pitches ✅ MATCH")
             else:
                 logger.error(f"  {year}: {loaded:,}/{raw:,} pitches ❌ MISSING {missing:,}")
                 all_match = False
-        
+
         # Check column coverage
         cur.execute("""
             SELECT 
@@ -273,31 +280,41 @@ def verify_load(conn) -> bool:
                 COUNT(location) as has_geometry
             FROM features_pitch.locations
         """)
-        
+
         total, speed, spin, xba, geom = cur.fetchone()
         speed_pct = speed / total * 100 if total > 0 else 0
         spin_pct = spin / total * 100 if total > 0 else 0
-        
-        logger.info(f"\nColumn Coverage:")
+
+        logger.info("\nColumn Coverage:")
         logger.info(f"  Total pitches: {total:,}")
-        logger.info(f"  Core fields (speed, physics): {speed_pct:.1f}% ✅" if speed_pct > 99 else f"  Core fields: {speed_pct:.1f}% ⚠️")
+        logger.info(
+            f"  Core fields (speed, physics): {speed_pct:.1f}% ✅"
+            if speed_pct > 99
+            else f"  Core fields: {speed_pct:.1f}% ⚠️"
+        )
         logger.info(f"  Spin axis: {spin_pct:.1f}%" + (" ✅" if spin_pct > 85 else " ⚠️"))
-        logger.info(f"  Expected stats (xBA): {xba/total*100:.1f}% (only batted balls - correct)")
-        logger.info(f"  PostGIS geometry: {geom/total*100:.1f}% ✅" if geom == total else f"  PostGIS: {geom/total*100:.1f}% ❌")
-    
-    logger.info("="*70)
-    
+        logger.info(
+            f"  Expected stats (xBA): {xba / total * 100:.1f}% (only batted balls - correct)"
+        )
+        logger.info(
+            f"  PostGIS geometry: {geom / total * 100:.1f}% ✅"
+            if geom == total
+            else f"  PostGIS: {geom / total * 100:.1f}% ❌"
+        )
+
+    logger.info("=" * 70)
+
     if all_match:
         logger.info("✅ VERIFICATION PASSED: All data loaded correctly!")
     else:
         logger.error("❌ VERIFICATION FAILED: Data mismatch detected!")
-    
+
     return all_match
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Load ALL 118 Statcast fields into features_pitch.locations',
+        description="Load ALL 118 Statcast fields into features_pitch.locations",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -315,31 +332,33 @@ Examples:
     
     Verify only (check existing data):
         %(prog)s --verify
-        """
+        """,
     )
-    parser.add_argument('--seasons', type=str, help='Seasons to load (e.g., 2015-2025, 2020,2024)')
-    parser.add_argument('--all', action='store_true', help='Load all available seasons')
-    parser.add_argument('--force', action='store_true', help='Force reload even if data exists')
-    parser.add_argument('--dry-run', action='store_true', help='Show what would be loaded without loading')
-    parser.add_argument('--verify', action='store_true', help='Verify existing data integrity')
-    
+    parser.add_argument("--seasons", type=str, help="Seasons to load (e.g., 2015-2025, 2020,2024)")
+    parser.add_argument("--all", action="store_true", help="Load all available seasons")
+    parser.add_argument("--force", action="store_true", help="Force reload even if data exists")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Show what would be loaded without loading"
+    )
+    parser.add_argument("--verify", action="store_true", help="Verify existing data integrity")
+
     args = parser.parse_args()
-    
+
     conn = get_connection()
-    
+
     try:
         # Just verify existing data
         if args.verify:
             verify_load(conn)
             return
-        
+
         available = get_season_counts(conn)
         loaded = get_loaded_counts(conn)
-        
-        logger.info("="*70)
+
+        logger.info("=" * 70)
         logger.info("FULL STATCAST LOADER (All 118 Fields)")
-        logger.info("="*70)
-        
+        logger.info("=" * 70)
+
         logger.info("\nAvailable vs Loaded:")
         total_available = 0
         total_loaded = 0
@@ -349,53 +368,53 @@ Examples:
             total_loaded += loaded_count
             status = "✅" if loaded_count == count else f"⚠️  ({loaded_count:,}/{count:,})"
             logger.info(f"  {year}: {count:,} available, {loaded_count:,} loaded {status}")
-        
+
         logger.info(f"\n  TOTAL: {total_available:,} available, {total_loaded:,} loaded")
-        
+
         if args.dry_run:
             logger.info("\nDry run complete. Use --all to load.")
             return
-        
+
         # Parse seasons
         seasons_to_load = []
         if args.all:
             seasons_to_load = [year for year, _ in available]
         elif args.seasons:
-            for part in args.seasons.split(','):
-                if '-' in part:
-                    start, end = map(int, part.split('-'))
+            for part in args.seasons.split(","):
+                if "-" in part:
+                    start, end = map(int, part.split("-"))
                     seasons_to_load.extend(range(start, end + 1))
                 else:
                     seasons_to_load.append(int(part))
-        
+
         available_years = {year for year, _ in available}
         seasons_to_load = [s for s in seasons_to_load if s in available_years]
-        
+
         if not seasons_to_load:
             logger.error("No valid seasons to load")
             return
-        
+
         logger.info(f"\nLoading {len(seasons_to_load)} season(s): {seasons_to_load}")
-        logger.info("-"*70)
-        
+        logger.info("-" * 70)
+
         total = 0
         for season in seasons_to_load:
             if args.force:
                 clear_season(conn, season)
             count = load_season_full(conn, season)
             total += count
-        
-        logger.info("-"*70)
+
+        logger.info("-" * 70)
         logger.info(f"TOTAL PITCHES LOADED: {total:,}")
-        logger.info("="*70)
-        
+        logger.info("=" * 70)
+
         # Auto-verify after load
         if total > 0:
             verify_load(conn)
-        
+
     finally:
         conn.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

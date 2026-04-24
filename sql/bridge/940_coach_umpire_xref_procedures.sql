@@ -92,10 +92,10 @@ $$;
 -- ============================================================================
 -- Comments on procedures
 -- ============================================================================
-COMMENT ON PROCEDURE bridge.populate_coach_xref() IS 
+COMMENT ON PROCEDURE bridge.populate_coach_xref () IS
 'Populate bridge.coach_xref from raw_retrosheet.coaches with names from biofile_legacy.';
 
-COMMENT ON PROCEDURE bridge.populate_umpire_xref() IS 
+COMMENT ON PROCEDURE bridge.populate_umpire_xref () IS
 'Populate bridge.umpire_xref from raw_retrosheet.season_umpires with biofile_legacy cross-reference.';
 
 -- ============================================================================

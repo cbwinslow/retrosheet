@@ -17,7 +17,6 @@ import pandas as pd
 import psycopg2
 from sqlalchemy import URL, create_engine, text
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / "data" / "models"
 
@@ -75,9 +74,7 @@ def load_model(target_id: str, model_name: str = "hist_gradient_boosting") -> tu
                 )
                 row = cur.fetchone()
             if not row:
-                raise ValueError(
-                    f"No active model found for {target_id} with {model_name}"
-                )
+                raise ValueError(f"No active model found for {target_id} with {model_name}")
 
             artifact_path = ROOT / row[0]
             feature_spec = row[1]
@@ -176,9 +173,7 @@ def predict_plate_appearance(
             params={"game_id": game_id, "plate_appearance_id": plate_appearance_id},
         )
         if df.empty:
-            raise ValueError(
-                f"Plate appearance {game_id}:{plate_appearance_id} not found"
-            )
+            raise ValueError(f"Plate appearance {game_id}:{plate_appearance_id} not found")
 
         predictions = {}
 
@@ -214,16 +209,12 @@ def main():
     parser.add_argument(
         "--plate-appearance-id", type=int, required=True, help="Plate appearance ID"
     )
-    parser.add_argument(
-        "--targets", nargs="*", help="Specific targets to predict (default: all)"
-    )
+    parser.add_argument("--targets", nargs="*", help="Specific targets to predict (default: all)")
 
     args = parser.parse_args()
 
     try:
-        result = predict_plate_appearance(
-            args.game_id, args.plate_appearance_id, args.targets
-        )
+        result = predict_plate_appearance(args.game_id, args.plate_appearance_id, args.targets)
         print(json.dumps(result, indent=2))
     except Exception as e:
         print(f"Error: {e}")

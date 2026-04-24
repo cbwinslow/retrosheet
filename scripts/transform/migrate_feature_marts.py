@@ -21,9 +21,8 @@ from pathlib import Path
 DRY_RUN = "--dry-run" in sys.argv
 
 # Resolve the database URL – fallback to a local default
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://localhost/retrosheet"
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
+
 
 def run_sql_file(sql_path: Path) -> None:
     """Execute a single SQL file using ``psql``.

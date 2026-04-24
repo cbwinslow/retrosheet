@@ -313,16 +313,9 @@ def train_model(X: np.ndarray, y: np.ndarray, feature_names: List[str]) -> Dict:
         'device': 'cpu'
     }
     
-    # Train with early stopping
+    # Train model
     model = xgb.XGBClassifier(**params)
-    
-    eval_set = [(X_test, y_test)]
-    model.fit(
-        X_train, y_train,
-        eval_set=eval_set,
-        early_stopping_rounds=20,
-        verbose=False
-    ) 
+    model.fit(X_train, y_train, verbose=False) 
 
     # Predictions
     y_pred = model.predict(X_test)

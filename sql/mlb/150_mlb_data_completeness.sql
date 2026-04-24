@@ -6,31 +6,31 @@ CREATE SCHEMA IF NOT EXISTS mlb;
 -- Expected seasons (adjust range as needed)
 CREATE OR REPLACE VIEW mlb.expected_seasons AS
 SELECT generate_series AS season
-FROM   generate_series(2000, 2025);
+FROM generate_series(2000, 2025);
 
 -- Seasons present in raw_mlb.live_feed_snapshots
 CREATE OR REPLACE VIEW mlb.ingested_seasons AS
 SELECT DISTINCT season
-FROM   raw_mlb.live_feed_snapshots
-WHERE  season BETWEEN 2000 AND 2025;
+FROM raw_mlb.live_feed_snapshots
+WHERE season BETWEEN 2000 AND 2025;
 
 -- Missing seasons
 CREATE OR REPLACE VIEW mlb.missing_seasons AS
 SELECT e.season
-FROM   mlb.expected_seasons e
-LEFT   JOIN mlb.ingested_seasons i USING (season)
-WHERE  i.season IS NULL
-ORDER  BY e.season;
+FROM mlb.expected_seasons AS e
+LEFT JOIN mlb.ingested_seasons AS i ON e.season = i.season
+WHERE i.season IS NULL
+ORDER BY e.season;
 
 -- Summary view
 CREATE OR REPLACE VIEW mlb.season_completeness AS
 SELECT
-    e.season,
-    CASE WHEN i.season IS NULL THEN FALSE ELSE TRUE END AS has_mlb_snapshot,
-    CASE WHEN i.season IS NULL THEN 'MISSING' ELSE 'OK' END AS status
-FROM   mlb.expected_seasons e
-LEFT   JOIN mlb.ingested_seasons i USING (season)
-ORDER  BY e.season;
+e.season,
+NOT coalesce(i.season IS NULL, FALSE) AS has_mlb_snapshot,
+CASE WHEN i.season IS NULL THEN 'MISSING' ELSE 'OK' END AS status
+FROM mlb.expected_seasons AS e
+LEFT JOIN mlb.ingested_seasons AS i ON e.season = i.season
+ORDER BY e.season;
 
 -- Helper function to check if all seasons are present
 CREATE OR REPLACE FUNCTION mlb.all_seasons_ingested()
@@ -42,7 +42,7 @@ $$;
 
 -- Procedure to report missing seasons (optional strict mode)
 CREATE OR REPLACE PROCEDURE mlb.check_ingestion_completeness(
-    IN strict BOOLEAN DEFAULT FALSE
+IN strict BOOLEAN DEFAULT FALSE
 )
 LANGUAGE plpgsql
 AS $$

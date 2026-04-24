@@ -19,4 +19,8 @@ SELECT test_python_function();
 -- DROP FUNCTION test_python_function();
 
 -- Verify extension is installed
-SELECT extname, extversion FROM pg_extension WHERE extname = 'plpython3u';
+SELECT
+    extname,
+    extversion
+FROM pg_extension
+WHERE extname = 'plpython3u';

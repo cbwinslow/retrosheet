@@ -12,12 +12,10 @@ This script applies various database optimizations including:
 from __future__ import annotations
 
 import argparse
-import sys
 import time
 from pathlib import Path
 
 import psycopg2
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -67,9 +65,7 @@ def test_query_performance(query: str, description: str) -> float:
             end_time = time.time()
 
             execution_time = end_time - start_time
-            print(
-                f"   Query returned {len(result)} rows in {execution_time:.3f} seconds"
-            )
+            print(f"   Query returned {len(result)} rows in {execution_time:.3f} seconds")
             return execution_time
     except Exception as e:
         print(f"   Error: {e}")
@@ -283,9 +279,7 @@ def run_vacuum_analyze() -> bool:
                 conn.close()
 
     if success_count > 0:
-        print(
-            f"✅ VACUUM ANALYZE completed on {success_count}/{len(vacuum_commands)} tables"
-        )
+        print(f"✅ VACUUM ANALYZE completed on {success_count}/{len(vacuum_commands)} tables")
         return True
     else:
         print("❌ VACUUM ANALYZE failed on all tables")
@@ -293,23 +287,15 @@ def run_vacuum_analyze() -> bool:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Apply advanced database optimizations"
-    )
+    parser = argparse.ArgumentParser(description="Apply advanced database optimizations")
     parser.add_argument("--all", action="store_true", help="Apply all optimizations")
     parser.add_argument(
         "--materialized-views", action="store_true", help="Create materialized views"
     )
-    parser.add_argument(
-        "--clustering", action="store_true", help="Apply table clustering"
-    )
-    parser.add_argument(
-        "--monitoring", action="store_true", help="Set up monitoring functions"
-    )
+    parser.add_argument("--clustering", action="store_true", help="Apply table clustering")
+    parser.add_argument("--monitoring", action="store_true", help="Set up monitoring functions")
     parser.add_argument("--vacuum", action="store_true", help="Run VACUUM ANALYZE")
-    parser.add_argument(
-        "--test-performance", action="store_true", help="Run performance tests"
-    )
+    parser.add_argument("--test-performance", action="store_true", help="Run performance tests")
 
     args = parser.parse_args()
 
@@ -371,14 +357,10 @@ def main():
     if success_count == total_count:
         print("✅ All optimizations completed successfully!")
     else:
-        print(
-            f"⚠️  {total_count - success_count} optimizations failed - check logs above"
-        )
+        print(f"⚠️  {total_count - success_count} optimizations failed - check logs above")
 
     print("\n💡 Next Steps:")
-    print(
-        "• Monitor query performance with: SELECT * FROM monitoring.get_index_usage();"
-    )
+    print("• Monitor query performance with: SELECT * FROM monitoring.get_index_usage();")
     print("• Check for slow queries with: SELECT * FROM monitoring.get_slow_queries();")
     print(
         "• Refresh materialized views periodically: SELECT maintenance.refresh_all_materialized_views();"

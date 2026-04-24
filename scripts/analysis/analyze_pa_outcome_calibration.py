@@ -7,17 +7,16 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sqlalchemy import create_engine, text
-
 from predict_pa_outcome_distribution import load_registered_model
+from sqlalchemy import create_engine, text
 from train_pa_outcome_distribution import (
     database_url,
     feature_columns,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL_NAME = "hist_gradient_boosting_multiclass"
+
 
 def load_validation_frame(
     *,
@@ -33,9 +32,7 @@ def load_validation_frame(
         if target_taxonomy == "grouped"
         else "features.plate_appearance_outcome_examples"
     )
-    target_column = (
-        "grouped_outcome_class" if target_taxonomy == "grouped" else "outcome_class"
-    )
+    target_column = "grouped_outcome_class" if target_taxonomy == "grouped" else "outcome_class"
 
     if feature_set in {"advanced", "advanced_count"}:
         advanced_relation = (
@@ -221,7 +218,9 @@ def subgroup_rows(
         "balls_strikes": frame["balls"].astype(str) + "-" + frame["strikes"].astype(str),
         "outs_before": frame["outs_before"].astype(str),
         "start_bases": frame["start_bases"].astype(str),
-        "handedness_matchup": frame["batter_hand"].astype(str) + "v" + frame["pitcher_hand"].astype(str),
+        "handedness_matchup": frame["batter_hand"].astype(str)
+        + "v"
+        + frame["pitcher_hand"].astype(str),
         "season": frame["season"].astype(str),
     }
 
@@ -349,7 +348,9 @@ def main() -> None:
         if not output_path.is_absolute():
             output_path = ROOT / output_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        output_path.write_text(
+            json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
 
     print(json.dumps(report, indent=2, sort_keys=True))
 

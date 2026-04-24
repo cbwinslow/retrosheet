@@ -14,6 +14,35 @@ SELECT
     pa.half_inning_pa_number,
     pa.season,
     pa.game_date,
+    pa.inning,
+    pa.is_bottom_inning,
+    pa.outs_before,
+    pa.away_score_before,
+    pa.home_score_before,
+    pa.batting_team_id,
+    pa.fielding_team_id,
+    pa.home_team_id,
+    pa.away_team_id,
+    pa.batter_id,
+    pa.pitcher_id,
+    pa.event_code,
+    raw.pitch_seq_tx,
+    raw.battedball_cd,
+    raw.battedball_loc_tx,
+    pa.is_at_bat,
+    pa.hit_value,
+    pa.is_hit,
+    pa.is_walk,
+    pa.is_strikeout,
+    pa.is_home_run,
+    pa.is_hit_by_pitch,
+    pa.is_interference,
+    pa.is_reach_base,
+    pa.is_extra_base_hit,
+    pa.runs_on_play,
+    pa.rbi,
+    pa.final_home_win,
+    pa.final_batting_team_win,
     CASE
         WHEN pa.season BETWEEN 2000 AND 2009 THEN '2000_2009'
         WHEN pa.season BETWEEN 2010 AND 2014 THEN '2010_2014'
@@ -28,41 +57,14 @@ SELECT
         WHEN pa.season >= 2023 THEN 'post_2023_rules'
         ELSE 'pre_2020_rules'
     END AS rules_context_era,
-    pa.inning,
-    pa.is_bottom_inning,
-    pa.outs_before,
     COALESCE(pa.start_bases, 0) AS start_bases,
     COALESCE(pa.balls, 0) AS balls,
     COALESCE(pa.strikes, 0) AS strikes,
     pa.home_score_before - pa.away_score_before AS home_score_diff,
-    pa.away_score_before,
-    pa.home_score_before,
-    pa.batting_team_id,
-    pa.fielding_team_id,
-    pa.home_team_id,
-    pa.away_team_id,
-    pa.batter_id,
     COALESCE(pa.batter_hand::text, 'U') AS batter_hand,
-    pa.pitcher_id,
     COALESCE(pa.pitcher_hand::text, 'U') AS pitcher_hand,
-    pa.event_code,
-    raw.pitch_seq_tx,
-    raw.battedball_cd,
-    raw.battedball_loc_tx,
     raw.sh_fl = 'T' AS is_sacrifice_hit,
     raw.sf_fl = 'T' AS is_sacrifice_fly,
-    pa.is_at_bat,
-    pa.hit_value,
-    pa.is_hit,
-    pa.is_walk,
-    pa.is_strikeout,
-    pa.is_home_run,
-    pa.is_hit_by_pitch,
-    pa.is_interference,
-    pa.is_reach_base,
-    pa.is_extra_base_hit,
-    pa.runs_on_play,
-    pa.rbi,
     CASE
         WHEN raw.sh_fl = 'T' THEN 'sacrifice_hit'
         WHEN raw.sf_fl = 'T' THEN 'sacrifice_fly'
@@ -105,32 +107,31 @@ SELECT
         WHEN pa.event_code = 22 THEN 3
         WHEN pa.event_code = 23 THEN 4
         ELSE 0
-    END AS outcome_total_bases,
-    pa.final_home_win,
-    pa.final_batting_team_win
-FROM core.plate_appearances pa
-JOIN raw_retrosheet.chadwick_events raw
-  ON raw.game_id = pa.game_id
- AND raw.event_id::integer = pa.plate_appearance_id;
+    END AS outcome_total_bases
+FROM core.plate_appearances AS pa
+INNER JOIN raw_retrosheet.chadwick_events AS raw
+    ON
+        pa.game_id = raw.game_id
+        AND raw.event_id::integer = pa.plate_appearance_id;
 
 CREATE UNIQUE INDEX plate_appearance_outcome_examples_pk
-    ON features.plate_appearance_outcome_examples (game_id, plate_appearance_id);
+ON features.plate_appearance_outcome_examples (game_id, plate_appearance_id);
 
 CREATE INDEX plate_appearance_outcome_examples_target_idx
-    ON features.plate_appearance_outcome_examples (
-        season,
-        outcome_class,
-        batter_hand,
-        pitcher_hand,
-        outs_before,
-        start_bases,
-        balls,
-        strikes
-    );
+ON features.plate_appearance_outcome_examples (
+    season,
+    outcome_class,
+    batter_hand,
+    pitcher_hand,
+    outs_before,
+    start_bases,
+    balls,
+    strikes
+);
 
 CREATE INDEX plate_appearance_outcome_examples_player_idx
-    ON features.plate_appearance_outcome_examples (season, batter_id, pitcher_id)
-    WHERE batter_id IS NOT NULL AND pitcher_id IS NOT NULL;
+ON features.plate_appearance_outcome_examples (season, batter_id, pitcher_id)
+WHERE batter_id IS NOT NULL AND pitcher_id IS NOT NULL;
 
 INSERT INTO predictions.prediction_targets (
     target_id, target_name, target_family, description, question_template,
@@ -148,23 +149,24 @@ VALUES (
     'multiclass_gradient_boosted_trees'
 )
 ON CONFLICT (target_id) DO UPDATE
-SET target_name = EXCLUDED.target_name,
-    target_family = EXCLUDED.target_family,
-    description = EXCLUDED.description,
-    question_template = EXCLUDED.question_template,
-    required_context = EXCLUDED.required_context,
-    training_label_sql = EXCLUDED.training_label_sql,
-    live_resolution_rule = EXCLUDED.live_resolution_rule,
-    default_model_family = EXCLUDED.default_model_family,
-    is_active = EXCLUDED.is_active,
-    updated_at = now();
+    SET
+        target_name = excluded.target_name,
+        target_family = excluded.target_family,
+        description = excluded.description,
+        question_template = excluded.question_template,
+        required_context = excluded.required_context,
+        training_label_sql = excluded.training_label_sql,
+        live_resolution_rule = excluded.live_resolution_rule,
+        default_model_family = excluded.default_model_family,
+        is_active = excluded.is_active,
+        updated_at = NOW();
 
 CREATE OR REPLACE VIEW features.plate_appearance_outcome_validation_summary AS
 SELECT
     'features.plate_appearance_outcome_examples' AS object_name,
-    count(*) AS row_count,
-    count(DISTINCT game_id) AS distinct_games,
-    count(DISTINCT outcome_class) AS distinct_outcome_classes,
-    round(avg((pitch_seq_tx IS NOT NULL AND pitch_seq_tx <> '')::integer)::numeric, 4) AS pitch_sequence_coverage,
-    round(avg((battedball_cd IS NOT NULL AND battedball_cd <> '')::integer)::numeric, 4) AS batted_ball_coverage
+    COUNT(*) AS row_count,
+    COUNT(DISTINCT game_id) AS distinct_games,
+    COUNT(DISTINCT outcome_class) AS distinct_outcome_classes,
+    ROUND(AVG((pitch_seq_tx IS NOT NULL AND pitch_seq_tx <> '')::integer)::numeric, 4) AS pitch_sequence_coverage,
+    ROUND(AVG((battedball_cd IS NOT NULL AND battedball_cd <> '')::integer)::numeric, 4) AS batted_ball_coverage
 FROM features.plate_appearance_outcome_examples;

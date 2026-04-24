@@ -8,11 +8,11 @@ DROP MATERIALIZED VIEW IF EXISTS features.batter_count_state_prior_pa_summary;
 
 CREATE MATERIALIZED VIEW features.batter_count_state_prior_pa_summary AS
 SELECT
-    season + 1 AS feature_season,
     batter_id,
     balls,
     strikes,
     count(*)::integer AS prior_pa,
+    season + 1 AS feature_season,
     round(avg(is_hit::integer)::numeric, 4) AS prior_hit_rate,
     round(avg(is_walk::integer)::numeric, 4) AS prior_walk_rate,
     round(avg(is_strikeout::integer)::numeric, 4) AS prior_strikeout_rate,
@@ -25,18 +25,18 @@ GROUP BY season, batter_id, balls, strikes
 WITH DATA;
 
 CREATE UNIQUE INDEX batter_count_state_prior_pa_summary_pk
-    ON features.batter_count_state_prior_pa_summary (feature_season, batter_id, balls, strikes);
+ON features.batter_count_state_prior_pa_summary (feature_season, batter_id, balls, strikes);
 
 CREATE INDEX batter_count_state_prior_pa_summary_pa_idx
-    ON features.batter_count_state_prior_pa_summary (feature_season, balls, strikes, prior_pa DESC);
+ON features.batter_count_state_prior_pa_summary (feature_season, balls, strikes, prior_pa DESC);
 
 CREATE MATERIALIZED VIEW features.pitcher_count_state_prior_pa_summary AS
 SELECT
-    season + 1 AS feature_season,
     pitcher_id,
     balls,
     strikes,
     count(*)::integer AS prior_batters_faced,
+    season + 1 AS feature_season,
     round(avg(is_hit::integer)::numeric, 4) AS prior_hit_allowed_rate,
     round(avg(is_walk::integer)::numeric, 4) AS prior_walk_allowed_rate,
     round(avg(is_strikeout::integer)::numeric, 4) AS prior_strikeout_rate,
@@ -49,14 +49,13 @@ GROUP BY season, pitcher_id, balls, strikes
 WITH DATA;
 
 CREATE UNIQUE INDEX pitcher_count_state_prior_pa_summary_pk
-    ON features.pitcher_count_state_prior_pa_summary (feature_season, pitcher_id, balls, strikes);
+ON features.pitcher_count_state_prior_pa_summary (feature_season, pitcher_id, balls, strikes);
 
 CREATE INDEX pitcher_count_state_prior_pa_summary_bf_idx
-    ON features.pitcher_count_state_prior_pa_summary (feature_season, balls, strikes, prior_batters_faced DESC);
+ON features.pitcher_count_state_prior_pa_summary (feature_season, balls, strikes, prior_batters_faced DESC);
 
 CREATE MATERIALIZED VIEW features.pa_count_state_context_prior_season_rates AS
 SELECT
-    season + 1 AS feature_season,
     batter_hand,
     pitcher_hand,
     outs_before,
@@ -64,6 +63,7 @@ SELECT
     balls,
     strikes,
     count(*)::integer AS prior_pa,
+    season + 1 AS feature_season,
     round(avg(is_hit::integer)::numeric, 4) AS prior_hit_rate,
     round(avg(is_walk::integer)::numeric, 4) AS prior_walk_rate,
     round(avg(is_strikeout::integer)::numeric, 4) AS prior_strikeout_rate,
@@ -75,18 +75,18 @@ GROUP BY season, batter_hand, pitcher_hand, outs_before, start_bases, balls, str
 WITH DATA;
 
 CREATE UNIQUE INDEX pa_count_state_context_prior_season_rates_pk
-    ON features.pa_count_state_context_prior_season_rates (
-        feature_season,
-        batter_hand,
-        pitcher_hand,
-        outs_before,
-        start_bases,
-        balls,
-        strikes
-    );
+ON features.pa_count_state_context_prior_season_rates (
+    feature_season,
+    batter_hand,
+    pitcher_hand,
+    outs_before,
+    start_bases,
+    balls,
+    strikes
+);
 
 CREATE INDEX pa_count_state_context_prior_season_rates_pa_idx
-    ON features.pa_count_state_context_prior_season_rates (feature_season, balls, strikes, prior_pa DESC);
+ON features.pa_count_state_context_prior_season_rates (feature_season, balls, strikes, prior_pa DESC);
 
 CREATE OR REPLACE VIEW features.plate_appearance_count_state_advanced_examples AS
 SELECT
@@ -112,35 +112,46 @@ SELECT
     context_count.prior_home_run_rate AS count_state_context_prior_home_run_rate,
     context_count.prior_reach_base_rate AS count_state_context_prior_reach_base_rate,
     context_count.prior_extra_base_hit_rate AS count_state_context_prior_extra_base_hit_rate
-FROM features.plate_appearance_advanced_examples advanced
-LEFT JOIN features.batter_count_state_prior_pa_summary batter_count
-  ON batter_count.feature_season = advanced.season
- AND batter_count.batter_id = advanced.batter_id
- AND batter_count.balls = advanced.balls
- AND batter_count.strikes = advanced.strikes
-LEFT JOIN features.pitcher_count_state_prior_pa_summary pitcher_count
-  ON pitcher_count.feature_season = advanced.season
- AND pitcher_count.pitcher_id = advanced.pitcher_id
- AND pitcher_count.balls = advanced.balls
- AND pitcher_count.strikes = advanced.strikes
-LEFT JOIN features.pa_count_state_context_prior_season_rates context_count
-  ON context_count.feature_season = advanced.season
- AND context_count.batter_hand = advanced.batter_hand
- AND context_count.pitcher_hand = advanced.pitcher_hand
- AND context_count.outs_before = advanced.outs_before
- AND context_count.start_bases = advanced.start_bases
- AND context_count.balls = advanced.balls
- AND context_count.strikes = advanced.strikes;
+FROM features.plate_appearance_advanced_examples AS advanced
+LEFT JOIN features.batter_count_state_prior_pa_summary AS batter_count
+    ON
+        advanced.season = batter_count.feature_season
+        AND advanced.batter_id = batter_count.batter_id
+        AND advanced.balls = batter_count.balls
+        AND advanced.strikes = batter_count.strikes
+LEFT JOIN features.pitcher_count_state_prior_pa_summary AS pitcher_count
+    ON
+        advanced.season = pitcher_count.feature_season
+        AND advanced.pitcher_id = pitcher_count.pitcher_id
+        AND advanced.balls = pitcher_count.balls
+        AND advanced.strikes = pitcher_count.strikes
+LEFT JOIN features.pa_count_state_context_prior_season_rates AS context_count
+    ON
+        advanced.season = context_count.feature_season
+        AND advanced.batter_hand = context_count.batter_hand
+        AND advanced.pitcher_hand = context_count.pitcher_hand
+        AND advanced.outs_before = context_count.outs_before
+        AND advanced.start_bases = context_count.start_bases
+        AND advanced.balls = context_count.balls
+        AND advanced.strikes = context_count.strikes;
 
 CREATE OR REPLACE VIEW features.count_state_feature_mart_validation_summary AS
-SELECT 'features.batter_count_state_prior_pa_summary' AS object_name, count(*) AS row_count
+SELECT
+    'features.batter_count_state_prior_pa_summary' AS object_name,
+    count(*) AS row_count
 FROM features.batter_count_state_prior_pa_summary
 UNION ALL
-SELECT 'features.pitcher_count_state_prior_pa_summary', count(*)
+SELECT
+    'features.pitcher_count_state_prior_pa_summary',
+    count(*)
 FROM features.pitcher_count_state_prior_pa_summary
 UNION ALL
-SELECT 'features.pa_count_state_context_prior_season_rates', count(*)
+SELECT
+    'features.pa_count_state_context_prior_season_rates',
+    count(*)
 FROM features.pa_count_state_context_prior_season_rates
 UNION ALL
-SELECT 'features.plate_appearance_count_state_advanced_examples', count(*)
+SELECT
+    'features.plate_appearance_count_state_advanced_examples',
+    count(*)
 FROM features.plate_appearance_count_state_advanced_examples;

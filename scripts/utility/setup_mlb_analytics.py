@@ -2,8 +2,8 @@
 # Views, materialized views, and procedures for MLB data analysis
 
 import os
+
 import psycopg2
-from psycopg2.extras import execute_values
 
 
 def database_kwargs():

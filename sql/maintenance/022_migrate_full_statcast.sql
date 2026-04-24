@@ -132,30 +132,30 @@ BEGIN
 END $$;
 
 -- Create index on new columns for performance
-CREATE INDEX IF NOT EXISTS idx_pitch_locations_release_speed 
-    ON features_pitch.locations(release_speed) WHERE release_speed IS NOT NULL;
-    
-CREATE INDEX IF NOT EXISTS idx_pitch_locations_effective_speed 
-    ON features_pitch.locations(effective_speed) WHERE effective_speed IS NOT NULL;
-    
-CREATE INDEX IF NOT EXISTS idx_pitch_locations_spin_axis 
-    ON features_pitch.locations(spin_axis) WHERE spin_axis IS NOT NULL;
-    
-CREATE INDEX IF NOT EXISTS idx_pitch_locations_game_date 
-    ON features_pitch.locations(game_date);
-    
-CREATE INDEX IF NOT EXISTS idx_pitch_locations_sv_id 
-    ON features_pitch.locations(sv_id) WHERE sv_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pitch_locations_release_speed
+ON features_pitch.locations (release_speed) WHERE release_speed IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pitch_locations_effective_speed
+ON features_pitch.locations (effective_speed) WHERE effective_speed IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pitch_locations_spin_axis
+ON features_pitch.locations (spin_axis) WHERE spin_axis IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pitch_locations_game_date
+ON features_pitch.locations (game_date);
+
+CREATE INDEX IF NOT EXISTS idx_pitch_locations_sv_id
+ON features_pitch.locations (sv_id) WHERE sv_id IS NOT NULL;
 
 -- Verify migration
-SELECT 
+SELECT
     game_year,
-    COUNT(*) as total_pitches,
-    COUNT(release_speed) as have_release_speed,
-    COUNT(spin_axis) as have_spin_axis,
-    COUNT(estimated_ba) as have_expected_stats,
-    COUNT(vx0) as have_physics,
-    COUNT(game_date) as have_game_date
+    COUNT(*) AS total_pitches,
+    COUNT(release_speed) AS have_release_speed,
+    COUNT(spin_axis) AS have_spin_axis,
+    COUNT(estimated_ba) AS have_expected_stats,
+    COUNT(vx0) AS have_physics,
+    COUNT(game_date) AS have_game_date
 FROM features_pitch.locations
 GROUP BY game_year
 ORDER BY game_year DESC;

@@ -4,14 +4,10 @@ from __future__ import annotations
 import argparse
 import json
 from datetime import UTC, datetime
-from pathlib import Path
 
 import joblib
 import numpy as np
 import psycopg2
-from psycopg2.extras import Json
-from sqlalchemy import create_engine
-
 from analyze_pa_outcome_calibration import feature_columns, load_validation_frame
 from calibrate_pa_outcome_model import (
     apply_calibrators,
@@ -20,8 +16,9 @@ from calibrate_pa_outcome_model import (
     per_class_ece,
 )
 from predict_pa_outcome_distribution import load_registered_model
+from psycopg2.extras import Json
+from sqlalchemy import create_engine
 from train_pa_outcome_distribution import ROOT, TARGET_ID, database_kwargs, database_url
-
 
 CALIBRATION_DIR = ROOT / "data" / "models" / "calibration" / TARGET_ID
 DEFAULT_MODEL_NAME = "hist_gradient_boosting_multiclass"
@@ -90,7 +87,9 @@ def main() -> None:
     class_to_index = {label: index for index, label in enumerate(classes)}
     calibration_targets = calibration_frame["target"].to_numpy()
     evaluation_targets = evaluation_frame["target"].to_numpy()
-    calibration_index = np.array([class_to_index[label] for label in calibration_targets], dtype=int)
+    calibration_index = np.array(
+        [class_to_index[label] for label in calibration_targets], dtype=int
+    )
 
     calibrators = fit_isotonic_calibrators(raw_cal, calibration_index)
     calibrated_eval = apply_calibrators(raw_eval, calibrators)

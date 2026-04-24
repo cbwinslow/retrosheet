@@ -7,7 +7,7 @@ Downloads live feeds for completed games with rate limiting and deduplication.
 import argparse
 import json
 import time
-from datetime import datetime
+
 import psycopg2
 from psycopg2.extras import Json
 
@@ -23,9 +23,7 @@ def database_kwargs():
     }
 
 
-def get_games_to_download(
-    start_date: str, end_date: str, max_games: int = None
-) -> list:
+def get_games_to_download(start_date: str, end_date: str, max_games: int = None) -> list:
     """Get list of completed games that need live feed downloads."""
     conn = psycopg2.connect(**database_kwargs())
 
@@ -106,9 +104,7 @@ def store_game_feed(game_pk: int, result: dict):
             game_info = game_data.get("game", {})
 
             game_date = (
-                game_info.get("gameDate", "").split("T")[0]
-                if game_info.get("gameDate")
-                else None
+                game_info.get("gameDate", "").split("T")[0] if game_info.get("gameDate") else None
             )
             season = game_info.get("season")
 
@@ -155,9 +151,7 @@ def main():
         default=2.0,
         help="Delay between requests in seconds (default: 2.0)",
     )
-    parser.add_argument(
-        "--dry-run", action="store_true", help="Show what would be downloaded"
-    )
+    parser.add_argument("--dry-run", action="store_true", help="Show what would be downloaded")
 
     args = parser.parse_args()
 
@@ -187,9 +181,7 @@ def main():
     rate_limited = 0
 
     for i, (game_pk, game_date, status) in enumerate(games):
-        print(
-            f"📥 [{i + 1:4d}/{len(games)}] Downloading game {game_pk} ({game_date})..."
-        )
+        print(f"📥 [{i + 1:4d}/{len(games)}] Downloading game {game_pk} ({game_date})...")
 
         result = download_game_feed(game_pk)
 
@@ -205,15 +197,13 @@ def main():
 
         http_status = result.get("http_status", "ERROR")
         response_time = result.get("response_time_ms", 0)
-        print(
-            f"   {status_emoji} Game {game_pk}: HTTP {http_status} ({response_time}ms)"
-        )
+        print(f"   {status_emoji} Game {game_pk}: HTTP {http_status} ({response_time}ms)")
 
         # Rate limiting
         if i < len(games) - 1:  # Don't delay on last request
             time.sleep(args.delay)
 
-    print(f"\n🎯 Download Complete:")
+    print("\n🎯 Download Complete:")
     print(f"   ✅ Successful: {successful}")
     print(f"   ❌ Failed: {failed}")
     if rate_limited > 0:

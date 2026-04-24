@@ -10,17 +10,17 @@ We train two independent models (one per target) and store them under
 so they can be loaded by the same inference service used for historic models.
 """
 
-import json, joblib, structlog
+import joblib
 import pandas as pd
-import psycopg2
+import structlog
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
-from datetime import datetime
 
 log = structlog.get_logger(__name__)
 
 # Re‑use the warehouse helper to obtain a DB connection
 from scripts.warehouse import get_connection
+
 
 def load_features(conn) -> pd.DataFrame:
     sql = """
@@ -32,6 +32,7 @@ def load_features(conn) -> pd.DataFrame:
         WHERE is_hit IS NOT NULL AND is_strikeout IS NOT NULL
     """
     return pd.read_sql(sql, conn)
+
 
 def train_and_save(df: pd.DataFrame, target: str, model_name: str):
     X = df.drop(columns=["game_pk", "play_id", target])
@@ -54,11 +55,12 @@ def train_and_save(df: pd.DataFrame, target: str, model_name: str):
         VALUES (%s, %s, %s, TRUE, now(), now())
         ON CONFLICT (model_name) DO UPDATE SET model_path = EXCLUDED.model_path, is_active = TRUE, updated_at = now();
         """,
-        (model_name, model_path, "logistic_regression")
+        (model_name, model_path, "logistic_regression"),
     )
     conn.commit()
     cur.close()
     conn.close()
+
 
 def main():
     conn = get_connection()
@@ -69,6 +71,7 @@ def main():
         return
     train_and_save(df, target="is_hit", model_name="live_hit_odds")
     train_and_save(df, target="is_strikeout", model_name="live_so_odds")
+
 
 if __name__ == "__main__":
     main()

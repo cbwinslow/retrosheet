@@ -7,7 +7,6 @@ This script loads comprehensive Statcast batter metrics from Baseball Savant.
 
 import argparse
 import sys
-from pathlib import Path
 
 try:
     import pandas as pd
@@ -22,48 +21,49 @@ except ImportError:
 def get_conn():
     """Get database connection from environment variables."""
     import os
-    import psycopg2
     from urllib.parse import urlparse
-    
+
+    import psycopg2
+
     # Try DATABASE_URL first, then fall back to PG* variables
-    db_url = os.getenv('DATABASE_URL')
+    db_url = os.getenv("DATABASE_URL")
     if db_url:
         parsed = urlparse(db_url)
         return psycopg2.connect(
             host=parsed.hostname,
             port=parsed.port or 5432,
-            database=parsed.path.lstrip('/'),
+            database=parsed.path.lstrip("/"),
             user=parsed.username,
-            password=parsed.password
+            password=parsed.password,
         )
-    
+
     # Fall back to PG* variables
     return psycopg2.connect(
-        host=os.getenv('PGHOST', 'localhost'),
-        port=os.getenv('PGPORT', 5432),
-        database=os.getenv('PGDATABASE', 'retrosheet'),
-        user=os.getenv('PGUSER', os.getenv('USER')),
-        password=os.getenv('PGPASSWORD', '')
+        host=os.getenv("PGHOST", "localhost"),
+        port=os.getenv("PGPORT", 5432),
+        database=os.getenv("PGDATABASE", "retrosheet"),
+        user=os.getenv("PGUSER", os.getenv("USER")),
+        password=os.getenv("PGPASSWORD", ""),
     )
 
 
 def load_total_stats(csv_path: str) -> bool:
     """Load total_stats.csv into the database."""
     print(f"Loading total_stats from {csv_path}")
-    
+
     try:
         df = pd.read_csv(csv_path)
         print(f"  Read {len(df)} rows")
-        
+
         # Create schema if not exists
         conn = get_conn()
         cur = conn.cursor()
-        
+
         cur.execute("CREATE SCHEMA IF NOT EXISTS baseball_savant")
-        
+
         # Drop table if exists
         cur.execute("DROP TABLE IF EXISTS baseball_savant.total_stats")
-        
+
         # Create table with TEXT columns to handle any data format
         cur.execute("""
             CREATE TABLE baseball_savant.total_stats (
@@ -255,35 +255,35 @@ def load_total_stats(csv_path: str) -> bool:
                 hp_to_1b TEXT
             )
         """)
-        
+
         # Prepare data for insertion
         # Convert all values to strings to handle any data format
         data = []
         for _, row in df.iterrows():
             row_data = [str(val) if pd.notna(val) else None for val in row]
             data.append(tuple(row_data))
-        
+
         # Get column names from dataframe
         columns = df.columns.tolist()
-        
+
         # Insert data
         execute_values(
             cur,
             sql.SQL("INSERT INTO baseball_savant.total_stats ({}) VALUES %s").format(
-                sql.SQL(', ').join([sql.Identifier(col) for col in columns])
+                sql.SQL(", ").join([sql.Identifier(col) for col in columns])
             ),
-            data
+            data,
         )
-        
+
         conn.commit()
         print(f"  ✅ Loaded {len(df)} rows")
         return True
-        
+
     except Exception as e:
         print(f"  ❌ Error: {e}")
         return False
     finally:
-        if 'conn' in locals():
+        if "conn" in locals():
             conn.close()
 
 
@@ -291,9 +291,9 @@ def main():
     parser = argparse.ArgumentParser(description="Load Baseball Savant total_stats.csv")
     parser.add_argument("--csv", default="total_stats.csv", help="Path to total_stats.csv")
     args = parser.parse_args()
-    
+
     success = load_total_stats(args.csv)
-    
+
     if success:
         print("\n✅ Baseball Savant data loaded successfully")
         sys.exit(0)

@@ -100,7 +100,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON PROCEDURE bridge.populate_player_xref_from_chadwick(p_csv_directory TEXT) IS 'Populates bridge.player_xref from Chadwick Bureau Register CSV files';
+COMMENT ON PROCEDURE bridge.populate_player_xref_from_chadwick (p_csv_directory TEXT) IS 'Populates bridge.player_xref from Chadwick Bureau Register CSV files';
 
 -- Wrapper procedure: Download Chadwick data and populate player_xref
 CREATE OR REPLACE PROCEDURE bridge.populate_player_xref_full()
@@ -134,4 +134,4 @@ BEGIN
 END;
 $$;
 
-COMMENT ON PROCEDURE bridge.populate_player_xref_full() IS 'Downloads Chadwick Bureau Register data and populates bridge.player_xref';
+COMMENT ON PROCEDURE bridge.populate_player_xref_full () IS 'Downloads Chadwick Bureau Register data and populates bridge.player_xref';

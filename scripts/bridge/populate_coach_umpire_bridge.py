@@ -8,9 +8,10 @@ Usage:
 """
 
 import os
+
 import psycopg2
-from psycopg2 import Error
 from dotenv import load_dotenv
+from psycopg2 import Error
 
 load_dotenv()
 
@@ -54,10 +55,12 @@ def populate_coach_xref():
                     confidence_source = EXCLUDED.confidence_source,
                     updated_at = NOW()
             """)
-            
+
             coach_count = cur.rowcount
             conn.commit()
-            print(f"Populated {coach_count} coaches in bridge.coach_xref with names from biofile_legacy")
+            print(
+                f"Populated {coach_count} coaches in bridge.coach_xref with names from biofile_legacy"
+            )
             return coach_count
     except Error as e:
         print(f"Error populating coach_xref: {e}")
@@ -98,10 +101,12 @@ def populate_umpire_xref():
                     confidence_source = EXCLUDED.confidence_source,
                     updated_at = NOW()
             """)
-            
+
             umpire_count = cur.rowcount
             conn.commit()
-            print(f"Populated {umpire_count} umpires in bridge.umpire_xref with biofile_legacy cross-reference")
+            print(
+                f"Populated {umpire_count} umpires in bridge.umpire_xref with biofile_legacy cross-reference"
+            )
             return umpire_count
     except Error as e:
         print(f"Error populating umpire_xref: {e}")
@@ -113,10 +118,10 @@ def populate_umpire_xref():
 
 def main():
     print("Populating coach and umpire bridge tables...")
-    
+
     coach_count = populate_coach_xref()
     umpire_count = populate_umpire_xref()
-    
+
     print("\nSummary:")
     print(f"  Coaches: {coach_count}")
     print(f"  Umpires: {umpire_count}")

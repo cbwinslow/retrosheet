@@ -4,8 +4,8 @@ Populate MLB reference tables (players, teams, venues) from raw game feed data.
 """
 
 import os
+
 import psycopg2
-from psycopg2.extras import execute_values, Json
 
 
 def database_kwargs():
@@ -34,9 +34,7 @@ def populate_mlb_teams():
                 WHERE http_status = 200;
             """)
             total_feeds, home_teams, away_teams = cur.fetchone()
-            print(
-                f"   Found {total_feeds} feeds, {home_teams} home teams, {away_teams} away teams"
-            )
+            print(f"   Found {total_feeds} feeds, {home_teams} home teams, {away_teams} away teams")
 
             # Extract teams from game feeds
             cur.execute("""

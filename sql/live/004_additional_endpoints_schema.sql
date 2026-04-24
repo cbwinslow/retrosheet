@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS raw_mlb.play_by_play_snapshots (
     fetched_at timestamptz NOT NULL DEFAULT NOW(),
     sha256_checksum text NOT NULL,
     http_status integer DEFAULT 200,
-    UNIQUE(game_pk, fetched_at)
+    UNIQUE (game_pk, fetched_at)
 );
 
 CREATE INDEX IF NOT EXISTS idx_mlb_playbyplay_game ON raw_mlb.play_by_play_snapshots (game_pk);
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS raw_mlb.pitch_metrics_snapshots (
     fetched_at timestamptz NOT NULL DEFAULT NOW(),
     sha256_checksum text NOT NULL,
     http_status integer DEFAULT 200,
-    UNIQUE(game_pk, fetched_at)
+    UNIQUE (game_pk, fetched_at)
 );
 
 CREATE INDEX IF NOT EXISTS idx_mlb_pitchmetrics_game ON raw_mlb.pitch_metrics_snapshots (game_pk);
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS raw_mlb.win_probability_snapshots (
     fetched_at timestamptz NOT NULL DEFAULT NOW(),
     sha256_checksum text NOT NULL,
     http_status integer DEFAULT 200,
-    UNIQUE(game_pk, fetched_at)
+    UNIQUE (game_pk, fetched_at)
 );
 
 CREATE INDEX IF NOT EXISTS idx_mlb_winprob_game ON raw_mlb.win_probability_snapshots (game_pk);
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS raw_mlb.boxscore_snapshots (
     fetched_at timestamptz NOT NULL DEFAULT NOW(),
     sha256_checksum text NOT NULL,
     http_status integer DEFAULT 200,
-    UNIQUE(game_pk, fetched_at)
+    UNIQUE (game_pk, fetched_at)
 );
 
 CREATE INDEX IF NOT EXISTS idx_mlb_boxscore_game ON raw_mlb.boxscore_snapshots (game_pk);

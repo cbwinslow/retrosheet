@@ -12,25 +12,25 @@ CREATE TABLE IF NOT EXISTS metadata.table_dictionary (
     last_analyzed timestamptz,
     is_active boolean DEFAULT true,
     priority_level integer DEFAULT 3,
-    ai_hints text[],
+    ai_hints text [],
     created_at timestamptz NOT NULL DEFAULT NOW(),
     updated_at timestamptz NOT NULL DEFAULT NOW(),
-    UNIQUE(schemaname, tablename)
+    UNIQUE (schemaname, tablename)
 );
 
 CREATE TABLE IF NOT EXISTS metadata.column_dictionary (
     column_id bigserial PRIMARY KEY,
-    table_id bigint REFERENCES metadata.table_dictionary(table_id) ON DELETE CASCADE,
+    table_id bigint REFERENCES metadata.table_dictionary (table_id) ON DELETE CASCADE,
     column_name text NOT NULL,
     column_description text NOT NULL,
     data_type text NOT NULL,
     is_nullable boolean DEFAULT true,
     is_primary_key boolean DEFAULT false,
     is_foreign_key boolean DEFAULT false,
-    ai_hints text[],
+    ai_hints text [],
     created_at timestamptz NOT NULL DEFAULT NOW(),
     updated_at timestamptz NOT NULL DEFAULT NOW(),
-    UNIQUE(table_id, column_name)
+    UNIQUE (table_id, column_name)
 );
 
 CREATE OR REPLACE FUNCTION metadata.refresh_data_dictionary()

@@ -3,10 +3,10 @@ from __future__ import annotations
 import json
 import os
 import re
-from typing import Dict, List, Any, Optional
 
 # Import our existing infrastructure
 import sys
+from typing import Any, Dict, List, Optional
 
 sys.path.append(os.path.dirname(__file__))
 
@@ -86,9 +86,7 @@ class OpenAIClient(LLMClient):
                         tool_calls.append(tool_call)
                         print(f"DEBUG: Successfully extracted tool call: {tool_call}")
                     else:
-                        print(
-                            f"DEBUG: Parsed object is not a valid tool call: {tool_call}"
-                        )
+                        print(f"DEBUG: Parsed object is not a valid tool call: {tool_call}")
                 except json.JSONDecodeError as e:
                     print(f"DEBUG: JSON decode error: {e}")
                     print(f"DEBUG: Failed content: {repr(json_content)}")
@@ -189,9 +187,7 @@ class ToolRegistry:
             },
             "get_live_odds": {
                 "description": "Get real-time odds for all baseball outcomes",
-                "parameters": {
-                    "game_id": {"type": "string", "description": "Game identifier"}
-                },
+                "parameters": {"game_id": {"type": "string", "description": "Game identifier"}},
             },
             "analyze_player": {
                 "description": "Analyze player statistics and performance",
@@ -465,9 +461,7 @@ Be helpful, accurate, and engaging in your responses."""
                         result = self._execute_tool(tool_name, parameters)
                         results.append({"tool": tool_name, "result": result})
                     else:
-                        results.append(
-                            {"tool": tool_name, "error": "Invalid parameters"}
-                        )
+                        results.append({"tool": tool_name, "error": "Invalid parameters"})
 
             # Generate final response
             if results:
@@ -533,11 +527,9 @@ Be helpful, accurate, and engaging in your responses."""
             return {"error": "Missing game_id or plate_appearance_id"}
 
         try:
-            result = self.prediction_service.predict_plate_appearance(
-                game_id, int(pa_id)
-            )
+            result = self.prediction_service.predict_plate_appearance(game_id, int(pa_id))
             return result
-        except Exception as e:
+        except Exception:
             # For mock/demo purposes, return sample predictions
             return {
                 "game_id": game_id,

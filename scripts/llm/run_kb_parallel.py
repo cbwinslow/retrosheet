@@ -26,6 +26,7 @@ SCRIPTS = [
     "scripts/web_search_kb.py",
 ]
 
+
 def run_script(path: str) -> tuple:
     """Execute a Python script and return (path, returncode)."""
     try:
@@ -40,6 +41,7 @@ def run_script(path: str) -> tuple:
         print(f"Error running {path}: {e}", file=sys.stderr)
         return (path, -1)
 
+
 def main():
     # Run the three independent scripts in parallel
     with ProcessPoolExecutor(max_workers=3) as executor:
@@ -51,8 +53,11 @@ def main():
 
     # After the above finish, run the optional ingestion step (sequential)
     print("=== Running optional LlamaIndex ingestion ===")
-    rc = subprocess.run([sys.executable, "scripts/ingest_kb_llamaindex.py"], capture_output=True, text=True).returncode
+    rc = subprocess.run(
+        [sys.executable, "scripts/ingest_kb_llamaindex.py"], capture_output=True, text=True
+    ).returncode
     print(f"ingest_kb_llamaindex.py finished with code {rc}")
+
 
 if __name__ == "__main__":
     main()

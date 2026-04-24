@@ -13,7 +13,7 @@ import argparse
 import json
 import urllib.request
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 
 def fetch_mlb_schedule(date: str) -> Dict[str, Any]:
@@ -44,12 +44,8 @@ def get_active_games(schedule_data: Dict[str, Any]) -> List[Dict[str, Any]]:
                         "status": abstract_state,
                         "home_team": game["teams"]["home"]["team"]["name"],
                         "away_team": game["teams"]["away"]["team"]["name"],
-                        "home_score": game.get("teams", {})
-                        .get("home", {})
-                        .get("score", 0),
-                        "away_score": game.get("teams", {})
-                        .get("away", {})
-                        .get("score", 0),
+                        "home_score": game.get("teams", {}).get("home", {}).get("score", 0),
+                        "away_score": game.get("teams", {}).get("away", {}).get("score", 0),
                         "inning": game.get("inning", 0),
                         "is_top_inning": game.get("isTopInning", True),
                         "game_date": game.get("gameDate"),
@@ -107,9 +103,7 @@ def main():
         print(f"\nTotal active games found: {len(all_active_games)}")
         print("\nTo ingest live data for these games, run:")
         for game in all_active_games[:5]:  # Show first 5 as examples
-            print(
-                f"  python3 scripts/warehouse.py fetch-live-game --game-pk {game['game_pk']}"
-            )
+            print(f"  python3 scripts/warehouse.py fetch-live-game --game-pk {game['game_pk']}")
         if len(all_active_games) > 5:
             print(f"  ... and {len(all_active_games) - 5} more")
     else:

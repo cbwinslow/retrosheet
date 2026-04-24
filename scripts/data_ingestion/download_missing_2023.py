@@ -6,6 +6,7 @@ Download missing 2023 MLB schedules.
 import json
 import time
 import urllib.request
+
 import psycopg2
 from psycopg2.extras import Json
 

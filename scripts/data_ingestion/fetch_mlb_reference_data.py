@@ -13,7 +13,6 @@ from collections.abc import Iterable
 import psycopg2
 from psycopg2.extras import Json
 
-
 BASE_URL = "https://statsapi.mlb.com/api/v1"
 
 
@@ -165,7 +164,9 @@ def fetch_rosters_for_season(team_ids: list[int], season: int, delay: float) -> 
     return sorted(set(player_ids))
 
 
-def fetch_people_for_season(player_ids: list[int], season: int, delay: float, batch_size: int) -> None:
+def fetch_people_for_season(
+    player_ids: list[int], season: int, delay: float, batch_size: int
+) -> None:
     for batch in chunks(player_ids, batch_size):
         params = {"personIds": ",".join(str(player_id) for player_id in batch)}
         result = fetch_json("/people", params)
@@ -232,7 +233,9 @@ def fetch_venues_for_season(team_ids: list[int], season: int, delay: float) -> N
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Fetch MLB Stats API reference endpoint snapshots into raw_mlb.reference_snapshots")
+    parser = argparse.ArgumentParser(
+        description="Fetch MLB Stats API reference endpoint snapshots into raw_mlb.reference_snapshots"
+    )
     parser.add_argument("--start-season", type=int, required=True)
     parser.add_argument("--end-season", type=int, required=True)
     parser.add_argument(

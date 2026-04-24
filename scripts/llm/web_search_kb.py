@@ -11,12 +11,11 @@ The list of queries is defined in ``QUERIES`` – it covers the topics you asked
 for (Moneyball, Markov chains, Bayesian inference, WAR, betting markets, etc.).
 """
 
-import os
-import json
 import hashlib
-import sys
+import json
+import os
 from pathlib import Path
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -42,6 +41,7 @@ QUERIES = [
     "Feature engineering baseball analytics",
 ]
 
+
 def sha256_of_file(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -49,9 +49,11 @@ def sha256_of_file(path: Path) -> str:
             h.update(chunk)
     return h.hexdigest()
 
+
 def log_result(entry: dict):
     with RESULTS_PATH.open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
 
 def download_pdf(url: str, dest: Path) -> None:
     try:
@@ -65,6 +67,7 @@ def download_pdf(url: str, dest: Path) -> None:
     except Exception as e:
         print(f"⚠️ Failed to download PDF {url}: {e}")
 
+
 def serpapi_search(query: str, api_key: str):
     params = {
         "engine": "google",
@@ -76,6 +79,7 @@ def serpapi_search(query: str, api_key: str):
     resp.raise_for_status()
     return resp.json().get("organic_results", [])
 
+
 def bing_html_search(query: str):
     # Very simple Bing search – may be throttled.
     url = f"https://www.bing.com/search?q={requests.utils.quote(query)}"
@@ -83,11 +87,12 @@ def bing_html_search(query: str):
     page.raise_for_status()
     soup = BeautifulSoup(page.text, "html.parser")
     results = []
-    for li in soup.select('li.b_algo')[:10]:
-        a = li.find('a')
-        if a and a.get('href'):
-            results.append({"title": a.get_text(), "link": a['href']})
+    for li in soup.select("li.b_algo")[:10]:
+        a = li.find("a")
+        if a and a.get("href"):
+            results.append({"title": a.get_text(), "link": a["href"]})
     return results
+
 
 def process_query(query: str, api_key: str = None):
     print(f"🔎 Searching for: {query}")
@@ -106,16 +111,18 @@ def process_query(query: str, api_key: str = None):
         entry = {"query": query, "title": title, "url": link}
         log_result(entry)
         # If the link ends with .pdf, download it
-        if link and link.lower().endswith('.pdf'):
+        if link and link.lower().endswith(".pdf"):
             filename = os.path.basename(urlparse(link).path)
             dest = ARTICLES_DIR / filename
             download_pdf(link, dest)
+
 
 def main():
     api_key = os.getenv("SERPAPI_KEY")
     for q in QUERIES:
         process_query(q, api_key)
     print("✅ Search complete. Results stored in", RESULTS_PATH)
+
 
 if __name__ == "__main__":
     main()

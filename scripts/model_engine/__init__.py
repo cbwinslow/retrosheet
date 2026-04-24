@@ -16,10 +16,11 @@ The factory prefers XGBoost‑GPU if CUDA is available, then a PyTorch NN, and
 finally falls back to the original logistic‑regression implementation.
 """
 
-from .logistic_regression import LogisticRegressionEngine
-from .xgboost_gpu import XGBoostGPUEngine
-from .pytorch_nn import PyTorchEngine
 import torch
+
+from .logistic_regression import LogisticRegressionEngine
+from .pytorch_nn import PyTorchEngine
+from .xgboost_gpu import XGBoostGPUEngine
 
 
 def get_engine(preferred: str = "auto"):
@@ -38,6 +39,7 @@ def get_engine(preferred: str = "auto"):
         # Prefer XGBoost GPU if CUDA is present
         try:
             import xgboost as xgb  # noqa: F401
+
             if torch.cuda.is_available():
                 return XGBoostGPUEngine()
         except Exception:

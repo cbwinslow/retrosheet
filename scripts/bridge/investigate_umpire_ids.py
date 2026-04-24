@@ -8,9 +8,10 @@ via MLB Stats API or other sources.
 """
 
 import os
+
 import psycopg2
-from psycopg2 import Error
 from dotenv import load_dotenv
+from psycopg2 import Error
 
 load_dotenv()
 
@@ -36,7 +37,7 @@ def investigate_umpire_mlb_id_mapping():
     try:
         with conn.cursor() as cur:
             print("Investigating umpire MLB ID mapping options...\n")
-            
+
             # Check if season_umpires table exists and has data
             cur.execute("""
                 SELECT EXISTS (
@@ -47,12 +48,12 @@ def investigate_umpire_mlb_id_mapping():
             """)
             umpires_exists = cur.fetchone()[0]
             print(f"season_umpires table exists: {umpires_exists}")
-            
+
             if umpires_exists:
                 cur.execute("SELECT COUNT(*) FROM raw_retrosheet.season_umpires")
                 umpires_count = cur.fetchone()[0]
                 print(f"season_umpires row count: {umpires_count}")
-                
+
                 # Get sample umpire data
                 print("\n--- Sample Retrosheet umpire data ---")
                 cur.execute("""
@@ -66,8 +67,10 @@ def investigate_umpire_mlb_id_mapping():
                 """)
                 samples = cur.fetchall()
                 for sample in samples:
-                    print(f"  Umpire ID: {sample[0]}, Name: {sample[2]} {sample[1]}, Season: {sample[3]}")
-                
+                    print(
+                        f"  Umpire ID: {sample[0]}, Name: {sample[2]} {sample[1]}, Season: {sample[3]}"
+                    )
+
                 # Check for unique umpires
                 cur.execute("""
                     SELECT 
@@ -78,7 +81,7 @@ def investigate_umpire_mlb_id_mapping():
                 result = cur.fetchone()
                 print(f"\nUnique umpire IDs: {result[0]}")
                 print(f"Unique umpire names: {result[1]}")
-                
+
                 # Check if MLB data has umpire information
                 print("\n--- Checking for MLB umpire data ---")
                 cur.execute("""
@@ -90,7 +93,7 @@ def investigate_umpire_mlb_id_mapping():
                 """)
                 live_games_exists = cur.fetchone()[0]
                 print(f"live_games table exists: {live_games_exists}")
-                
+
                 if live_games_exists:
                     # Check if live_games has umpire IDs in raw_payload
                     cur.execute("""
@@ -100,7 +103,7 @@ def investigate_umpire_mlb_id_mapping():
                     """)
                     live_games_count = cur.fetchone()[0]
                     print(f"live_games with raw_payload: {live_games_count}")
-                    
+
                     if live_games_count > 0:
                         # Sample raw_payload to check for umpire IDs
                         cur.execute("""
@@ -113,11 +116,11 @@ def investigate_umpire_mlb_id_mapping():
                         if payload and payload[0]:
                             print(f"Sample raw_payload length: {len(payload[0])} chars")
                             # Check for umpire-related keys
-                            if 'umpire' in payload[0].lower() or 'officials' in payload[0].lower():
+                            if "umpire" in payload[0].lower() or "officials" in payload[0].lower():
                                 print("✓ Raw payload contains umpire/officials data")
                             else:
                                 print("✗ Raw payload does not contain obvious umpire data")
-                
+
                 # Check if biofile_legacy has umpire information
                 print("\n--- Checking biofile_legacy for umpire data ---")
                 cur.execute("""
@@ -127,7 +130,7 @@ def investigate_umpire_mlb_id_mapping():
                 """)
                 umpire_players = cur.fetchone()[0]
                 print(f"Players with umpire debut dates: {umpire_players}")
-                
+
                 if umpire_players > 0:
                     print("\nSample players who were umpires:")
                     cur.execute("""
@@ -143,22 +146,34 @@ def investigate_umpire_mlb_id_mapping():
                     """)
                     for row in cur.fetchall():
                         print(f"  {row[1]} ({row[2]}): {row[3]} - {row[4]}")
-                
+
                 # Recommendation
                 print("\n--- Recommendation ---")
                 if live_games_exists and live_games_count > 0:
                     print("✅ MLB live_games data available")
-                    print("Recommendation: Investigate MLB API raw_payload structure for umpire IDs")
-                    print("Next step: Extract umpire IDs from live_games raw_payload and match to umpire names")
+                    print(
+                        "Recommendation: Investigate MLB API raw_payload structure for umpire IDs"
+                    )
+                    print(
+                        "Next step: Extract umpire IDs from live_games raw_payload and match to umpire names"
+                    )
                 elif umpire_players > 0:
-                    print("⚠️  Some umpire information in biofile_legacy (players who became umpires)")
-                    print("Recommendation: This may help for historical umpires who were also players")
-                    print("Next step: Cross-reference umpire names with biofile_legacy player names")
+                    print(
+                        "⚠️  Some umpire information in biofile_legacy (players who became umpires)"
+                    )
+                    print(
+                        "Recommendation: This may help for historical umpires who were also players"
+                    )
+                    print(
+                        "Next step: Cross-reference umpire names with biofile_legacy player names"
+                    )
                 else:
                     print("❌ No obvious MLB umpire ID sources available")
-                    print("Recommendation: Investigate external sources (MLB Stats API umpire endpoint, Baseball Reference)")
+                    print(
+                        "Recommendation: Investigate external sources (MLB Stats API umpire endpoint, Baseball Reference)"
+                    )
                     print("Alternative: Use name-based matching with external APIs")
-                
+
     except Error as e:
         print(f"Error investigating umpire MLB ID mapping: {e}")
     finally:

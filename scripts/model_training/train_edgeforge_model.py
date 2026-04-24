@@ -5,14 +5,14 @@ Focus: Calibrated betting edges with uncertainty quantification
 """
 
 import os
+
+import joblib
 import pandas as pd
 import psycopg2
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import roc_auc_score, brier_score_loss
 from sklearn.calibration import calibration_curve
-import numpy as np
-import joblib
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import brier_score_loss, roc_auc_score
+from sklearn.model_selection import train_test_split
 
 
 def database_kwargs():
@@ -74,12 +74,8 @@ def prepare_betting_features(df):
 
     # Create advanced betting features
     df["count_pressure"] = (df["balls"] - df["strikes"]).clip(-2, 3)  # Count pressure
-    df["momentum_shift"] = (
-        (df["runners_on_base"] > 0) & (df["outs_before"] < 2)
-    ).astype(int)
-    df["quality_matchup"] = (
-        (df["batter_avg"] > 0.280) & (df["pitcher_era"] < 3.50)
-    ).astype(int)
+    df["momentum_shift"] = ((df["runners_on_base"] > 0) & (df["outs_before"] < 2)).astype(int)
+    df["quality_matchup"] = ((df["batter_avg"] > 0.280) & (df["pitcher_era"] < 3.50)).astype(int)
 
     # Pitch effectiveness features
     df["pitch_effective"] = (
@@ -250,15 +246,11 @@ def analyze_feature_importance(model, feature_cols):
     statcast_imp = importance_df[importance_df["feature"].isin(statcast_features)][
         "importance"
     ].sum()
-    matchup_imp = importance_df[importance_df["feature"].isin(matchup_features)][
+    matchup_imp = importance_df[importance_df["feature"].isin(matchup_features)]["importance"].sum()
+    situational_imp = importance_df[importance_df["feature"].isin(situational_features)][
         "importance"
     ].sum()
-    situational_imp = importance_df[
-        importance_df["feature"].isin(situational_features)
-    ]["importance"].sum()
-    basic_imp = importance_df[importance_df["feature"].isin(basic_features)][
-        "importance"
-    ].sum()
+    basic_imp = importance_df[importance_df["feature"].isin(basic_features)]["importance"].sum()
 
     print("\n📊 Feature Category Importance:")
     print(".1%")

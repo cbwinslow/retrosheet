@@ -16,13 +16,9 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List
 
-import psycopg2
-import pandas as pd
 from psycopg2.pool import SimpleConnectionPool
-from sqlalchemy import create_engine, text
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -165,9 +161,7 @@ class BaseballTester:
         finally:
             self.db_pool.putconn(conn)
 
-    def test_data_integrity(
-        self, table: str, constraints: List[Dict]
-    ) -> Dict[str, Any]:
+    def test_data_integrity(self, table: str, constraints: List[Dict]) -> Dict[str, Any]:
         """Test data integrity constraints."""
         results = {}
 
@@ -190,9 +184,7 @@ class BaseballTester:
 
         return results
 
-    def test_inference_accuracy(
-        self, target_id: str, sample_size: int = 100
-    ) -> Dict[str, Any]:
+    def test_inference_accuracy(self, target_id: str, sample_size: int = 100) -> Dict[str, Any]:
         """Test inference accuracy by comparing predictions to actual outcomes."""
         conn = self.db_pool.getconn()
         try:
@@ -234,9 +226,7 @@ def run_core_schema_tests(tester: BaseballTester) -> None:
     # Test tables exist
     core_tables = ["games", "events", "plate_appearances", "players", "teams", "parks"]
     for table in core_tables:
-        tester.run_test(
-            f"core_table_{table}_exists", tester.test_table_exists, "core", table
-        )
+        tester.run_test(f"core_table_{table}_exists", tester.test_table_exists, "core", table)
 
     # Test views exist
     core_views = [
@@ -250,9 +240,7 @@ def run_core_schema_tests(tester: BaseballTester) -> None:
         "player_relatives",
     ]
     for view in core_views:
-        tester.run_test(
-            f"core_view_{view}_exists", tester.test_view_exists, "core", view
-        )
+        tester.run_test(f"core_view_{view}_exists", tester.test_view_exists, "core", view)
 
 
 def run_feature_mart_tests(tester: BaseballTester) -> None:
@@ -311,9 +299,7 @@ def run_inference_tests(tester: BaseballTester) -> None:
     # Test inference views
     inference_views = ["plate_appearance_features"]
     for view in inference_views:
-        tester.run_test(
-            f"inference_view_{view}_exists", tester.test_view_exists, "inference", view
-        )
+        tester.run_test(f"inference_view_{view}_exists", tester.test_view_exists, "inference", view)
 
     # Test inference functions
     inference_functions = [

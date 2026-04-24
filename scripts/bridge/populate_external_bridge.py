@@ -8,9 +8,10 @@ Usage:
 """
 
 import os
+
 import psycopg2
-from psycopg2 import Error
 from dotenv import load_dotenv
+from psycopg2 import Error
 
 _ = load_dotenv()
 
@@ -54,11 +55,11 @@ def populate_statcast_player_xref():
                 ON CONFLICT (external_source, external_player_id) DO UPDATE SET
                     retrosheet_player_id = EXCLUDED.retrosheet_player_id
             """)
-            
+
             batter_count = cur.rowcount
             conn.commit()
             print(f"Populated {batter_count} Statcast batters in bridge.external_player_xref")
-            
+
             # Map Statcast pitcher IDs to Retrosheet IDs via bridge.player_xref
             cur.execute("""
                 INSERT INTO bridge.external_player_xref (external_source, external_player_id, retrosheet_player_id)
@@ -78,11 +79,11 @@ def populate_statcast_player_xref():
                 ON CONFLICT (external_source, external_player_id) DO UPDATE SET
                     retrosheet_player_id = EXCLUDED.retrosheet_player_id
             """)
-            
+
             pitcher_count = cur.rowcount
             conn.commit()
             print(f"Populated {pitcher_count} Statcast pitchers in bridge.external_player_xref")
-            
+
             return batter_count + pitcher_count
     except Error as e:
         print(f"Error populating statcast_player_xref: {e}")
@@ -112,10 +113,12 @@ def populate_bref_player_xref():
                 ON CONFLICT (external_source, external_player_id) DO UPDATE SET
                     retrosheet_player_id = EXCLUDED.retrosheet_player_id
             """)
-            
+
             bref_count = cur.rowcount
             conn.commit()
-            print(f"Populated {bref_count} Baseball Reference players in bridge.external_player_xref")
+            print(
+                f"Populated {bref_count} Baseball Reference players in bridge.external_player_xref"
+            )
             return bref_count
     except Error as e:
         print(f"Error populating bref_player_xref: {e}")
@@ -143,7 +146,7 @@ def populate_lahman_player_xref():
                 ON CONFLICT (external_source, external_player_id) DO UPDATE SET
                     retrosheet_player_id = EXCLUDED.retrosheet_player_id
             """)
-            
+
             lahman_count = cur.rowcount
             conn.commit()
             print(f"Populated {lahman_count} Lahman players in bridge.external_player_xref")
@@ -158,11 +161,11 @@ def populate_lahman_player_xref():
 
 def main():
     print("Populating external bridge tables...")
-    
+
     statcast_count = populate_statcast_player_xref()
     bref_count = populate_bref_player_xref()
     lahman_count = populate_lahman_player_xref()
-    
+
     print("\nSummary:")
     print(f"  Statcast players: {statcast_count}")
     print(f"  Baseball Reference players: {bref_count}")

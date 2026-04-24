@@ -15,9 +15,10 @@ Note: ESPN uses integer IDs that match MLBAM IDs, so we can use existing bridge 
 """
 
 import os
+
 import psycopg2
-from psycopg2 import Error
 from dotenv import load_dotenv
+from psycopg2 import Error
 
 load_dotenv()
 
@@ -39,7 +40,7 @@ def get_db_connection():
 
 def populate_espn_player_xref():
     """Populate bridge.external_player_xref for ESPN using bridge.player_xref mlb_id mappings.
-    
+
     ESPN player IDs are integer MLBAM IDs, so we can match them directly via bridge.player_xref.mlb_id.
     """
     conn = get_db_connection()
@@ -73,7 +74,7 @@ def populate_espn_player_xref():
                 ON CONFLICT (external_source, external_player_id) DO UPDATE SET
                     retrosheet_player_id = EXCLUDED.retrosheet_player_id
             """)
-            
+
             player_count = cur.rowcount
             conn.commit()
             print(f"Populated {player_count} ESPN player mappings in bridge.external_player_xref")
@@ -88,7 +89,7 @@ def populate_espn_player_xref():
 
 def populate_espn_team_xref():
     """Populate bridge.external_team_xref for ESPN using bridge.team_xref mlb_team_id mappings.
-    
+
     ESPN team IDs are integer MLB team IDs, so we can match them directly via bridge.team_xref.mlb_team_id.
     """
     conn = get_db_connection()
@@ -117,7 +118,7 @@ def populate_espn_team_xref():
                 ON CONFLICT (external_source, external_team_id) DO UPDATE SET
                     retrosheet_team_id = EXCLUDED.retrosheet_team_id
             """)
-            
+
             team_count = cur.rowcount
             conn.commit()
             print(f"Populated {team_count} ESPN team mappings in bridge.external_team_xref")
@@ -132,7 +133,7 @@ def populate_espn_team_xref():
 
 def populate_espn_coach_xref():
     """Populate bridge.coach_xref.espn_coach_id from ESPN data.
-    
+
     Note: ESPN coach data location in JSON needs to be determined.
     This is a placeholder for future implementation.
     """
@@ -142,7 +143,7 @@ def populate_espn_coach_xref():
 
 def populate_espn_umpire_xref():
     """Populate bridge.umpire_xref.espn_umpire_id from ESPN data.
-    
+
     Note: ESPN umpire data location in JSON needs to be determined.
     This is a placeholder for future implementation.
     """
@@ -152,12 +153,12 @@ def populate_espn_umpire_xref():
 
 def main():
     print("Populating ESPN bridge tables...")
-    
+
     player_count = populate_espn_player_xref()
     team_count = populate_espn_team_xref()
     coach_count = populate_espn_coach_xref()
     umpire_count = populate_espn_umpire_xref()
-    
+
     print("\nSummary:")
     print(f"  Players: {player_count}")
     print(f"  Teams: {team_count}")

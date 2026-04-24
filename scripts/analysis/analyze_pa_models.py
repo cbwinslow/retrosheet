@@ -13,7 +13,6 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy import URL, create_engine, text
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -145,9 +144,7 @@ def analyze_models():
     )
 
     # Calculate improvement over baseline
-    analysis["accuracy_improvement"] = (
-        analysis["accuracy"] - analysis["baseline_accuracy"]
-    )
+    analysis["accuracy_improvement"] = analysis["accuracy"] - analysis["baseline_accuracy"]
 
     print("Performance Summary:")
     print("=" * 50)
@@ -184,9 +181,7 @@ def analyze_models():
     print("\n\nModel Family Comparison:")
     print("=" * 25)
     family_comp = (
-        analysis.groupby("model_family")
-        .agg({"roc_auc": "mean", "accuracy": "mean"})
-        .round(4)
+        analysis.groupby("model_family").agg({"roc_auc": "mean", "accuracy": "mean"}).round(4)
     )
     print(family_comp)
 

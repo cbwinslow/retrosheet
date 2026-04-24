@@ -113,7 +113,7 @@ $$;
 -- ============================================================================
 -- Comment on procedure
 -- ============================================================================
-COMMENT ON PROCEDURE bridge.populate_all_bridge_tables(BOOLEAN) IS 
+COMMENT ON PROCEDURE bridge.populate_all_bridge_tables (BOOLEAN) IS
 'Master orchestrator that calls all bridge table population procedures in the correct dependency order.';
 
 -- ============================================================================

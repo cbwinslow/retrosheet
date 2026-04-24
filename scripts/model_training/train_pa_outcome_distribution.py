@@ -7,11 +7,13 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
+import catboost as cb
 import joblib
+import lightgbm as lgb
 import numpy as np
 import pandas as pd
 import psycopg2
-from sqlalchemy import URL, create_engine, text
+import xgboost as xgb
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.impute import SimpleImputer
@@ -19,10 +21,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, log_loss, top_k_accuracy_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-import xgboost as xgb
-import lightgbm as lgb
-import catboost as cb
-
+from sqlalchemy import URL, create_engine, text
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / "data" / "models"

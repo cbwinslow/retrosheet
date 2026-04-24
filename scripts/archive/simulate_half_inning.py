@@ -13,13 +13,12 @@ import argparse
 import json
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import joblib
 import pandas as pd
 import psycopg2
 from sqlalchemy import URL, create_engine
-
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / "data" / "models"
@@ -66,9 +65,7 @@ def load_pa_model(target_id: str, model_name: str = "hist_gradient_boosting") ->
             )
             row = cur.fetchone()
             if not row:
-                raise ValueError(
-                    f"No active model found for {target_id} with {model_name}"
-                )
+                raise ValueError(f"No active model found for {target_id} with {model_name}")
 
             artifact_path = ROOT / row[0]
             feature_spec = row[1]
@@ -102,18 +99,14 @@ def get_half_inning_state(game_id: str, inning: int, is_bottom_inning: bool) -> 
         """
         df = pd.read_sql_query(sql, engine, params=(game_id, inning, is_bottom_inning))
         if df.empty:
-            raise ValueError(
-                f"Half-inning {game_id}:{inning}:{is_bottom_inning} not found"
-            )
+            raise ValueError(f"Half-inning {game_id}:{inning}:{is_bottom_inning} not found")
 
         return df.iloc[0].to_dict()
     finally:
         engine.dispose()
 
 
-def get_lineup_for_half_inning(
-    game_id: str, inning: int, is_bottom_inning: bool
-) -> List[Dict]:
+def get_lineup_for_half_inning(game_id: str, inning: int, is_bottom_inning: bool) -> List[Dict]:
     """Get the plate appearances that occurred in this half-inning for context."""
     engine = create_engine(database_url())
     try:
@@ -247,9 +240,7 @@ def simulate_plate_appearance(
         elif current_bases == 2:
             new_bases = 3  # Runner from second to third, batter to first
         elif current_bases == 3:
-            new_bases = (
-                5  # Runner from first to second, from third scores, batter to first
-            )
+            new_bases = 5  # Runner from first to second, from third scores, batter to first
             runs_scored = 1
         elif current_bases == 4:
             new_bases = 5  # Runner from third scores, batter to first
@@ -374,24 +365,16 @@ def simulate_half_inning(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Run Monte Carlo half-inning simulation"
-    )
+    parser = argparse.ArgumentParser(description="Run Monte Carlo half-inning simulation")
     parser.add_argument("--game-id", required=True, help="Game ID")
     parser.add_argument("--inning", type=int, required=True, help="Inning number")
-    parser.add_argument(
-        "--is-bottom", action="store_true", help="Bottom half of inning"
-    )
-    parser.add_argument(
-        "--simulations", type=int, default=100, help="Number of simulations to run"
-    )
+    parser.add_argument("--is-bottom", action="store_true", help="Bottom half of inning")
+    parser.add_argument("--simulations", type=int, default=100, help="Number of simulations to run")
 
     args = parser.parse_args()
 
     try:
-        result = simulate_half_inning(
-            args.game_id, args.inning, args.is_bottom, args.simulations
-        )
+        result = simulate_half_inning(args.game_id, args.inning, args.is_bottom, args.simulations)
         print(json.dumps(result, indent=2))
     except Exception as e:
         print(f"Error: {e}")

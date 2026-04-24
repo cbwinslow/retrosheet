@@ -6,9 +6,9 @@ SELECT
     game_pk,
     play_id,
     batter_id,
-    COUNT(*) FILTER (WHERE is_hit)      AS hit_events,
-    COUNT(*)                            AS total_events,
-    (COUNT(*) FILTER (WHERE is_hit))::numeric / NULLIF(COUNT(*),0) AS hit_prob
+    COUNT(*) FILTER (WHERE is_hit) AS hit_events,
+    COUNT(*) AS total_events,
+    (COUNT(*) FILTER (WHERE is_hit))::numeric / NULLIF(COUNT(*), 0) AS hit_prob
 FROM features.play_snapshot
 GROUP BY game_pk, play_id, batter_id
 WITH DATA;
@@ -22,8 +22,8 @@ SELECT
     play_id,
     pitcher_id,
     COUNT(*) FILTER (WHERE is_strikeout) AS so_events,
-    COUNT(*)                             AS total_events,
-    (COUNT(*) FILTER (WHERE is_strikeout))::numeric / NULLIF(COUNT(*),0) AS so_prob
+    COUNT(*) AS total_events,
+    (COUNT(*) FILTER (WHERE is_strikeout))::numeric / NULLIF(COUNT(*), 0) AS so_prob
 FROM features.play_snapshot
 GROUP BY game_pk, play_id, pitcher_id
 WITH DATA;

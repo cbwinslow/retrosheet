@@ -8,9 +8,10 @@ allowing us to use the name fields from biofile_legacy to populate coach_name in
 """
 
 import os
+
 import psycopg2
-from psycopg2 import Error
 from dotenv import load_dotenv
+from psycopg2 import Error
 
 _ = load_dotenv()
 
@@ -36,7 +37,7 @@ def investigate_coach_name_resolution():
     try:
         with conn.cursor() as cur:
             print("Investigating coach name resolution options...\n")
-            
+
             # Check if biofile_legacy table exists and has data
             cur.execute("""
                 SELECT EXISTS (
@@ -47,12 +48,12 @@ def investigate_coach_name_resolution():
             """)
             biofile_exists = cur.fetchone()[0]
             print(f"biofile_legacy table exists: {biofile_exists}")
-            
+
             if biofile_exists:
                 cur.execute("SELECT COUNT(*) FROM raw_retrosheet.biofile_legacy")
                 biofile_count = cur.fetchone()[0]
                 print(f"biofile_legacy row count: {biofile_count}")
-                
+
                 # Check if coaches table exists and has data
                 cur.execute("""
                     SELECT EXISTS (
@@ -63,12 +64,12 @@ def investigate_coach_name_resolution():
                 """)
                 coaches_exists = cur.fetchone()[0]
                 print(f"coaches table exists: {coaches_exists}")
-                
+
                 if coaches_exists:
                     cur.execute("SELECT COUNT(*) FROM raw_retrosheet.coaches")
                     coaches_count = cur.fetchone()[0]
                     print(f"coaches row count: {coaches_count}")
-                    
+
                     # Test hypothesis: Can coach_id match player_id in biofile_legacy?
                     print("\n--- Testing coach_id to player_id matching ---")
                     cur.execute("""
@@ -83,7 +84,7 @@ def investigate_coach_name_resolution():
                     print(f"Total coaches: {result[0]}")
                     print(f"Matching players in biofile_legacy: {result[1]}")
                     print(f"Match percentage: {result[2]}%")
-                    
+
                     # Show sample matches
                     print("\n--- Sample coach_id matches ---")
                     cur.execute("""
@@ -104,10 +105,12 @@ def investigate_coach_name_resolution():
                     """)
                     samples = cur.fetchall()
                     for sample in samples:
-                        print(f"  Coach ID: {sample[0]}, Season: {sample[1]}, Team: {sample[2]}, Role: {sample[3]}")
+                        print(
+                            f"  Coach ID: {sample[0]}, Season: {sample[1]}, Team: {sample[2]}, Role: {sample[3]}"
+                        )
                         print(f"    Name: {sample[6]} (Last: {sample[4]}, Use: {sample[5]})")
                         print(f"    Coaching: {sample[7]} - {sample[8]}")
-                    
+
                     # Check for coaches without biofile matches
                     print("\n--- Coaches without biofile matches ---")
                     cur.execute("""
@@ -119,7 +122,7 @@ def investigate_coach_name_resolution():
                     """)
                     unmatched = cur.fetchone()[0]
                     print(f"Unmatched coaches: {unmatched}")
-                    
+
                     if unmatched > 0:
                         print("\nSample unmatched coaches:")
                         cur.execute("""
@@ -131,25 +134,39 @@ def investigate_coach_name_resolution():
                         """)
                         for row in cur.fetchall():
                             print(f"  Coach ID: {row[0]}, Team: {row[1]}, Role: {row[2]}")
-                    
+
                     # Recommendation
                     print("\n--- Recommendation ---")
                     if result[2] >= 70:
-                        print(f"✅ GOOD: {result[2]}% of coaches can be resolved via biofile_legacy")
-                        print("Recommendation: Use biofile_legacy to populate coach names for matched coaches")
-                        print("For unmatched coaches, investigate alternative sources (MLB API, Baseball Reference)")
+                        print(
+                            f"✅ GOOD: {result[2]}% of coaches can be resolved via biofile_legacy"
+                        )
+                        print(
+                            "Recommendation: Use biofile_legacy to populate coach names for matched coaches"
+                        )
+                        print(
+                            "For unmatched coaches, investigate alternative sources (MLB API, Baseball Reference)"
+                        )
                     elif result[2] >= 50:
-                        print(f"⚠️  MODERATE: {result[2]}% of coaches can be resolved via biofile_legacy")
-                        print("Recommendation: Use biofile_legacy as primary source, investigate alternatives for remaining")
+                        print(
+                            f"⚠️  MODERATE: {result[2]}% of coaches can be resolved via biofile_legacy"
+                        )
+                        print(
+                            "Recommendation: Use biofile_legacy as primary source, investigate alternatives for remaining"
+                        )
                     else:
-                        print(f"❌ POOR: Only {result[2]}% of coaches can be resolved via biofile_legacy")
-                        print("Recommendation: Investigate alternative primary sources (MLB API, Baseball Reference)")
-                
+                        print(
+                            f"❌ POOR: Only {result[2]}% of coaches can be resolved via biofile_legacy"
+                        )
+                        print(
+                            "Recommendation: Investigate alternative primary sources (MLB API, Baseball Reference)"
+                        )
+
                 else:
                     print("coaches table does not exist - cannot investigate")
             else:
                 print("biofile_legacy table does not exist - cannot investigate")
-                
+
     except Error as e:
         print(f"Error investigating coach name resolution: {e}")
     finally:

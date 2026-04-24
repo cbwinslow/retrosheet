@@ -60,7 +60,7 @@ CREATE TABLE mlb.games (
 
     -- Metadata
     api_source text DEFAULT 'mlb_api',
-    data_quality_score numeric(3,2),  -- 0.0 to 1.0
+    data_quality_score numeric(3, 2),  -- 0.0 to 1.0
     last_updated timestamptz DEFAULT now(),
     created_at timestamptz DEFAULT now(),
 
@@ -117,12 +117,12 @@ CREATE TABLE mlb.play_events (
 
     -- Metadata
     api_source text DEFAULT 'mlb_api',
-    data_quality_score numeric(3,2),
+    data_quality_score numeric(3, 2),
     last_updated timestamptz DEFAULT now(),
     created_at timestamptz DEFAULT now(),
 
     PRIMARY KEY (game_pk, event_index),
-    FOREIGN KEY (game_pk) REFERENCES mlb.games(game_pk),
+    FOREIGN KEY (game_pk) REFERENCES mlb.games (game_pk),
 
     -- Constraints
     CHECK (inning >= 1 AND inning <= 25),
@@ -145,36 +145,36 @@ CREATE TABLE mlb.pitches (
     -- Pitch type and result
     pitch_type_code text,  -- FF, SL, CU, etc.
     pitch_type_description text,
-    pitch_type_confidence numeric(4,3),
+    pitch_type_confidence numeric(4, 3),
 
     -- Pitch result
     pitch_call_code text,  -- B, S, F, X, etc.
     pitch_call_description text,
-    pitch_call_confidence numeric(4,3),
+    pitch_call_confidence numeric(4, 3),
 
     -- Pitch location (plate coordinates)
-    plate_x numeric(6,2),  -- Horizontal location (-2 to 2 ft)
-    plate_z numeric(6,2),  -- Vertical location (0 to 4 ft)
+    plate_x numeric(6, 2),  -- Horizontal location (-2 to 2 ft)
+    plate_z numeric(6, 2),  -- Vertical location (0 to 4 ft)
     plate_zone integer,    -- Strike zone zone (1-14)
 
     -- Pitch trajectory
-    start_speed numeric(5,1),  -- Initial velocity (mph)
-    end_speed numeric(5,1),    -- Final velocity (mph)
-    extension numeric(5,3),    -- Release extension (ft)
+    start_speed numeric(5, 1),  -- Initial velocity (mph)
+    end_speed numeric(5, 1),    -- Final velocity (mph)
+    extension numeric(5, 3),    -- Release extension (ft)
 
     -- Pitch physics
     spin_rate integer,         -- RPM
     spin_direction integer,    -- Degrees
-    break_angle numeric(4,1),  -- Degrees
-    break_length numeric(4,1), -- Feet
-    break_vertical numeric(5,1), -- Inches
-    break_horizontal numeric(5,1), -- Inches
-    pfx_x numeric(5,2),        -- Horizontal movement (ft)
-    pfx_z numeric(5,2),        -- Vertical movement (ft)
+    break_angle numeric(4, 1),  -- Degrees
+    break_length numeric(4, 1), -- Feet
+    break_vertical numeric(5, 1), -- Inches
+    break_horizontal numeric(5, 1), -- Inches
+    pfx_x numeric(5, 2),        -- Horizontal movement (ft)
+    pfx_z numeric(5, 2),        -- Vertical movement (ft)
 
     -- Pitch timing
-    plate_time numeric(6,4),   -- Time to plate (seconds)
-    reaction_time numeric(6,4), -- Batter reaction time
+    plate_time numeric(6, 4),   -- Time to plate (seconds)
+    reaction_time numeric(6, 4), -- Batter reaction time
 
     -- Contextual data
     batter_id integer,
@@ -194,14 +194,14 @@ CREATE TABLE mlb.pitches (
 
     -- Metadata
     api_source text DEFAULT 'mlb_api',
-    data_quality_score numeric(3,2),
+    data_quality_score numeric(3, 2),
     pitch_system text DEFAULT 'statcast',  -- statcast, pitchfx, etc.
     last_updated timestamptz DEFAULT now(),
     created_at timestamptz DEFAULT now(),
 
     PRIMARY KEY (game_pk, event_index, pitch_index),
-    FOREIGN KEY (game_pk) REFERENCES mlb.games(game_pk),
-    FOREIGN KEY (game_pk, event_index) REFERENCES mlb.play_events(game_pk, event_index)
+    FOREIGN KEY (game_pk) REFERENCES mlb.games (game_pk),
+    FOREIGN KEY (game_pk, event_index) REFERENCES mlb.play_events (game_pk, event_index)
 );
 
 -- MLB Players (comprehensive player data)
@@ -237,18 +237,18 @@ CREATE TABLE mlb.players (
     position_type text,
 
     -- Advanced metrics (when available)
-    bat_speed numeric(6,1),     -- mph
-    swing_speed numeric(6,1),   -- mph
-    sprint_speed numeric(5,2),  -- seconds for 60ft
+    bat_speed numeric(6, 1),     -- mph
+    swing_speed numeric(6, 1),   -- mph
+    sprint_speed numeric(5, 2),  -- seconds for 60ft
     arm_strength text,          -- above/below average
 
     -- Metadata
     api_source text DEFAULT 'mlb_api',
-    data_quality_score numeric(3,2),
+    data_quality_score numeric(3, 2),
     last_updated timestamptz DEFAULT now(),
     created_at timestamptz DEFAULT now(),
 
-    FOREIGN KEY (current_team_id) REFERENCES mlb.teams(mlb_id)
+    FOREIGN KEY (current_team_id) REFERENCES mlb.teams (mlb_id)
 );
 
 -- MLB Teams (must be created before players that reference it)
@@ -313,7 +313,7 @@ CREATE TABLE raw_mlb.schedule_snapshots (
     http_status integer,
     response_time_ms integer,
     error_text text,
-    UNIQUE(snapshot_date, fetched_at)
+    UNIQUE (snapshot_date, fetched_at)
 );
 
 -- Indexes for raw data tables

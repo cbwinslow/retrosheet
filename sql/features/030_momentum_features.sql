@@ -21,6 +21,7 @@ WITH team_game_results AS (
         home_score AS runs_allowed
     FROM core.games
 ),
+
 team_rolling_stats AS (
     SELECT
         game_id,
@@ -41,6 +42,7 @@ team_rolling_stats AS (
         last_10 AS (PARTITION BY team_id ORDER BY game_date ROWS BETWEEN 10 PRECEDING AND 1 PRECEDING),
         last_30 AS (PARTITION BY team_id ORDER BY game_date ROWS BETWEEN 30 PRECEDING AND 1 PRECEDING)
 )
+
 SELECT
     game_id,
     team_id,

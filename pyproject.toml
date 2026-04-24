@@ -45,8 +45,50 @@ python-downloads = "auto"
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-select = ["E", "F", "I", "B", "C4", "SIM", "ARG"]
-ignore = ["E501"]
+
+# Enable comprehensive rule sets
+# E/W - pycodestyle errors/warnings
+# F - Pyflakes
+# I - isort (import sorting)
+# N - pep8-naming
+# B - flake8-bugbear
+# C4 - flake8-comprehensions
+# SIM - flake8-simplify
+# ARG - flake8-unused-arguments
+# UP - pyupgrade (Python upgrade checks)
+# PERF - perflint (performance anti-patterns)
+# RUF - Ruff-specific rules
+select = [
+    "E", "W", "F", "I", "N", "B", "C4", "SIM", "ARG",
+    "UP", "PERF", "RUF"
+]
+
+# Ignored rules
+ignore = [
+    "E501",     # Line too long (handled by formatter)
+    "W191",     # Indentation contains tabs (handled by formatter)
+    "E111",     # Indentation is not a multiple of 4 (handled by formatter)
+    "E114",     # Indentation is not a multiple of 4 (comment)
+    "N806",     # Variable in function should be lowercase (allow for ML models)
+    "N803",     # Argument name should be lowercase (allow for common ML patterns)
+]
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "lf"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# Scripts can have imports at top level and print statements
+"scripts/**/*.py" = ["E402", "T201"]
+# Test files can have magic numbers and assertions
+"tests/**/*.py" = ["PLR2004", "S101"]
+# Notebooks/jupyter can have certain patterns
+"**/*.ipynb" = ["E402", "T201"]
 
 [tool.mypy]
 python_version = "3.10"
@@ -58,3 +100,9 @@ disallow_untyped_defs = false
 pythonpath = ["."]
 testpaths = ["tests"]
 addopts = "-v --cov=. --cov-report=term-missing"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.11",
+    "sqlfluff>=4.1.0",
+]

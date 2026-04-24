@@ -35,6 +35,39 @@ User identified critical gap: we have NOT been following proper reproducibility 
 ### Git Commit
 - Commit message: "Add REPRODUCIBILITY MANDATE to AGENTS.md and create comprehensive audit prompt"
 
+#### 3. E2E Testing Infrastructure Created
+- Created `sql/test/001_create_test_schema.sql` - Test schema setup with test.runs tracking table
+- Created `sql/test/002_test_fixtures.sql` - Test data fixtures (100 games from 2024)
+- Created `scripts/test/e2e_test_runner.sh` - Main E2E test runner (executable)
+- Created `scripts/test/validate_sql_files.sh` - SQL file header validation (executable)
+- Created `scripts/test/verify_rebuild.sh` - Warehouse rebuild verification (executable)
+
+**Test Infrastructure Features:**
+- Free local setup - uses existing PostgreSQL instance (no Docker, no cloud)
+- Test schema `test` isolated from production data
+- Small test fixtures for fast execution (100 games vs 62,000)
+- Automated validation of SQL headers, table comments, row counts
+- AI Agent Gap-Fill Loop: Run tests → find gaps → create missing files → re-run
+
+**Usage:**
+```bash
+./scripts/test/validate_sql_files.sh      # 5 minutes - check headers
+./scripts/test/e2e_test_runner.sh --quick # 10 minutes - full suite
+./scripts/test/verify_rebuild.sh           # 30 minutes - full rebuild
+```
+
+#### 4. Updated REPRODUCIBILITY_AUDIT_PROMPT.md
+- Added Phase 4: E2E Testing Environment Setup (2 hours)
+- Added CRITICAL REQUIREMENT clause requiring creation of scripts/SQL files
+- Added E2E Testing Environment FAQ section
+- Added AI Agent Gap-Fill Procedure section with explicit loop
+- Updated deliverables checklist with E2E requirements
+
+#### 5. Updated AGENTS.md
+- Added E2E testing to Paper Trail Checklist
+- Added E2E Testing Environment section with free local setup instructions
+- Documented AI Agent Gap-Fill Loop
+
 ## 2026-04-23 (Sabermetrics Knowledge Base Expansion)
 
 ### Ingested Research

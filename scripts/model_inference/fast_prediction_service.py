@@ -19,15 +19,12 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import joblib
 import numpy as np
 import pandas as pd
-import psycopg2
 from psycopg2.pool import SimpleConnectionPool
-from sqlalchemy import create_engine, text
-
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / "data" / "models"
@@ -37,9 +34,7 @@ class PredictionService:
     """High-performance prediction service with model caching."""
 
     def __init__(self, max_connections: int = 10):
-        self.models: Dict[
-            str, Tuple[Any, Dict]
-        ] = {}  # target_id -> (model, feature_spec)
+        self.models: Dict[str, Tuple[Any, Dict]] = {}  # target_id -> (model, feature_spec)
         self.db_pool = SimpleConnectionPool(
             minconn=1, maxconn=max_connections, **self._database_kwargs()
         )
@@ -88,9 +83,7 @@ class PredictionService:
         finally:
             self.db_pool.putconn(conn)
 
-    def get_features_from_db(
-        self, game_id: str, plate_appearance_id: int
-    ) -> Optional[Dict]:
+    def get_features_from_db(self, game_id: str, plate_appearance_id: int) -> Optional[Dict]:
         """Get pre-computed features from optimized inference view."""
         conn = self.db_pool.getconn()
         try:
@@ -147,9 +140,7 @@ class PredictionService:
                     # Create base features
                     base_features = {
                         "inning": game_state.get("inning", 1),
-                        "is_bottom_inning": int(
-                            game_state.get("is_bottom_inning", False)
-                        ),
+                        "is_bottom_inning": int(game_state.get("is_bottom_inning", False)),
                         "outs_before": game_state.get("outs_before", 0),
                         "start_bases": game_state.get("start_bases", 0),
                         "balls": game_state.get("balls", 0),
@@ -219,9 +210,7 @@ class PredictionService:
                 probability = self.predict_single(target_id, features)
                 results.append({"target_id": target_id, "probability": probability})
             except Exception as e:
-                results.append(
-                    {"target_id": target_id, "probability": 0.5, "error": str(e)}
-                )
+                results.append({"target_id": target_id, "probability": 0.5, "error": str(e)})
 
         return results
 
@@ -249,9 +238,7 @@ class PredictionService:
             "features_used": list(features_df.columns),
         }
 
-    def simulate_half_inning_fast(
-        self, game_state: Dict, num_simulations: int = 100
-    ) -> Dict:
+    def simulate_half_inning_fast(self, game_state: Dict, num_simulations: int = 100) -> Dict:
         """Fast half-inning simulation using cached models."""
         # This is a simplified simulation - in practice you'd want more sophisticated
         # base-running and game-state logic
@@ -292,9 +279,7 @@ class PredictionService:
                 # Update game state based on outcomes
                 if outcomes.get("pa_batter_strikeout", False):
                     outs += 1
-                elif outcomes.get("pa_batter_walk", False) or outcomes.get(
-                    "pa_batter_hit", False
-                ):
+                elif outcomes.get("pa_batter_walk", False) or outcomes.get("pa_batter_hit", False):
                     # Simplified: batter reaches base
                     # In reality, this would involve base-running logic
                     pass  # For now, just continue
@@ -307,9 +292,7 @@ class PredictionService:
                 sim_state["balls"] = 0
                 sim_state["strikes"] = 0
 
-            results.append(
-                {"runs": runs_scored, "outs": outs, "plate_appearances": pa_count}
-            )
+            results.append({"runs": runs_scored, "outs": outs, "plate_appearances": pa_count})
 
         # Aggregate results
         runs_dist = [r["runs"] for r in results]
@@ -359,9 +342,7 @@ class AsyncPredictionService:
 def main():
     parser = argparse.ArgumentParser(description="High-performance prediction service")
     parser.add_argument("--port", type=int, default=8080, help="Port to run service on")
-    parser.add_argument(
-        "--workers", type=int, default=4, help="Number of worker threads"
-    )
+    parser.add_argument("--workers", type=int, default=4, help="Number of worker threads")
 
     args = parser.parse_args()
 

@@ -16,6 +16,11 @@ SELECT cron.schedule(
 );
 
 -- Verify scheduled jobs
-SELECT jobid, schedule, command, nodename, nodeport
+SELECT
+    jobid,
+    schedule,
+    command,
+    nodename,
+    nodeport
 FROM cron.job
 ORDER BY jobid;

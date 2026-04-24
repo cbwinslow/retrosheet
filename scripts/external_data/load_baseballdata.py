@@ -23,8 +23,10 @@ from psycopg2.extras import execute_values
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/retrosheet")
 
+
 def get_connection():
     return psycopg2.connect(DATABASE_URL)
+
 
 def load_pbp(csv_path: Path):
     if not csv_path.is_file():
@@ -37,27 +39,27 @@ def load_pbp(csv_path: Path):
         player_links = set()
         for row in reader:
             event_id = int(row.get("event_id") or 0)
-            rows.append((
-                event_id,
-                int(row.get("game_id") or 0),
-                int(row.get("inning") or 0),
-                row.get("half") or None,
-                int(row.get("batter_id") or 0),
-                int(row.get("pitcher_id") or 0),
-                row.get("event_type") or None,
-                row.get("description") or None,
-            ))
+            rows.append(
+                (
+                    event_id,
+                    int(row.get("game_id") or 0),
+                    int(row.get("inning") or 0),
+                    row.get("half") or None,
+                    int(row.get("batter_id") or 0),
+                    int(row.get("pitcher_id") or 0),
+                    row.get("event_type") or None,
+                    row.get("description") or None,
+                )
+            )
             # collect player mapping candidates
-            player_links.add((
-                "baseball_data_com",
-                int(row.get("batter_id") or 0),
-                None  # retrosheet ID unknown at load time
-            ))
-            player_links.add((
-                "baseball_data_com",
-                int(row.get("pitcher_id") or 0),
-                None
-            ))
+            player_links.add(
+                (
+                    "baseball_data_com",
+                    int(row.get("batter_id") or 0),
+                    None,  # retrosheet ID unknown at load time
+                )
+            )
+            player_links.add(("baseball_data_com", int(row.get("pitcher_id") or 0), None))
 
     conn = get_connection()
     try:
@@ -89,7 +91,9 @@ def load_pbp(csv_path: Path):
             execute_values(cur, sql_bridge, list(player_links), page_size=500)
 
         conn.commit()
-        print(f"✅ Loaded {len(rows)} Baseball‑Data.com rows and {len(player_links)} player placeholders.")
+        print(
+            f"✅ Loaded {len(rows)} Baseball‑Data.com rows and {len(player_links)} player placeholders."
+        )
     finally:
         conn.close()
 

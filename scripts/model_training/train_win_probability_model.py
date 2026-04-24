@@ -4,12 +4,13 @@ Train a basic win probability model using the MLB features.
 """
 
 import os
+
+import joblib
 import pandas as pd
 import psycopg2
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, roc_auc_score
-import joblib
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
 
 
 def database_kwargs():
@@ -116,9 +117,7 @@ def train_model(X, y):
     print(f"   Test set: {len(X_test)} samples")
 
     # Train model
-    model = RandomForestClassifier(
-        n_estimators=100, max_depth=10, random_state=42, n_jobs=-1
-    )
+    model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, n_jobs=-1)
 
     model.fit(X_train, y_train)
 
