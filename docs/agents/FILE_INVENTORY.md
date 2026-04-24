@@ -291,6 +291,8 @@ These files may be present as active development work. Treat them as live-bridge
 | `sql/features/015_final_features_schema.sql` | **FINAL FEATURES SCHEMA** - Adds 50+ Markov chains, matchup history, postseason, sequence patterns, platoon splits, rookie/veteran classification. Completes FEATURE_ENGINEERING_PLAN.md. | ✅ Schema added |
 | `sql/features/016_populate_final_features.sql` | Population script for final features with Markov calculations. | Ready |
 | `sql/features/017_populate_final_features_batch.sql` | **BATCHED POPULATION** - Processes final features in batches. | 🔄 Ready |
+| `sql/features/018_swing_model_schema.sql` | **SWING MODEL SCHEMA** - Tables for swing probability predictions, performance tracking, calibration curves. | ✅ Ready |
+| `scripts/pitch_models/train_swing_probability.py` | **SWING PROBABILITY MODEL** - Binary classifier for P(swing). Research-backed features. | 🔄 Ready to train |
 | `docs/PITCH_FEATURE_MART_SCHEMA.md` | Comprehensive schema documentation. Table reference, usage patterns, design principles, data lineage, performance considerations. | Complete |
 | `docs/diagrams/PITCH_FEATURE_MART_ERD.puml` | Entity relationship diagram showing all 7 tables and relationships. | Complete |
 | `docs/diagrams/PITCH_DATA_FLOW.puml` | Data flow architecture diagram from sources through processing to models with CRISP-DM labels. | Complete |

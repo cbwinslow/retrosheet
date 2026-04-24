@@ -57,19 +57,52 @@ Tier 2 (Fine) - Top 5:
 - Dropped `vw_xgboost_base` view (dependency issue)
 - Created indexes on `engineered_features` table
 
-## Next Steps
+## Swing Probability Model (NEW - Option B) ✅
+
+### Model Purpose
+Binary classification: P(swing | pitch context)
+
+**Target:** `is_swing` - Did batter swing at this pitch?
+- Class distribution: ~63% swing, ~37% take
+- Research-backed features: location, count, sequence, pitch type
+
+**Key Features:**
+- Pitch location (plate_x, plate_z, zone_region)
+- Count context (balls, strikes, 2-strike flag)
+- Pitch characteristics (type, velocity, movement)
+- Sequence (previous pitch type, consecutive same type)
+- Game situation (score, inning, leverage)
+
+**Expected Metrics:**
+- ROC-AUC: >0.80 (location is strong predictor)
+- Calibration: Well-calibrated by probability bins
+- Use cases: "Will he chase?", swing tendency analysis
+
+### Files Created
+```
+scripts/pitch_models/train_swing_probability.py    # Training script
+sql/features/018_swing_model_schema.sql           # Predictions table + analysis views
+```
+
+## Next Steps (Option A)
 
 1. **Complete Tier-1 XGBoost Training**
    - Target: >80% accuracy on S/B/X classification
    - Current: Script optimized (200 trees, depth 6, early stopping)
-   - Status: In progress
+   - Status: Ready to run with all 220+ features
 
-2. **Tier-2 XGBoost Training**
+2. **Feature Ablation Study**
+   - Test baseline (118 raw features only)
+   - Test with velocity/movement (46 engineered)
+   - Test with context features (60)
+   - Measure marginal improvement per feature group
+
+3. **Tier-2 XGBoost Training**
    - Target: Fine-grained outcome prediction
-   - Features: Same as Tier-1
    - Classes: 12 outcome types
+   - Conditional on Tier-1 predictions
 
-3. **Model Evaluation**
+4. **Model Evaluation**
    - Log Loss < 0.5
    - Brier Score < 0.25
    - Calibration error < 0.05
