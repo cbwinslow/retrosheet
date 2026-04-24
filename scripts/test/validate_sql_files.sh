@@ -10,8 +10,6 @@
 # - Every SQL file has a header with File:/Purpose:/Author:/Date:
 # - SQL files with CREATE TABLE have COMMENT ON TABLE
 
-set -e
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
@@ -24,8 +22,10 @@ HEADER_ERRORS=0
 COMMENT_WARNINGS=0
 TOTAL_SQL=0
 
-for f in $(find "$PROJECT_ROOT" -name "*.sql" -type f | sort); do
-    ((TOTAL_SQL++))
+SQL_FILES=$(find "$PROJECT_ROOT" -name "*.sql" -type f | sort)
+
+for f in $SQL_FILES; do
+    TOTAL_SQL=$((TOTAL_SQL + 1))
     
     # Skip test files
     if echo "$f" | grep -q "/test/"; then
@@ -35,14 +35,14 @@ for f in $(find "$PROJECT_ROOT" -name "*.sql" -type f | sort); do
     # Check for header comment
     if ! head -10 "$f" | grep -q "File:"; then
         echo "ERROR: Missing header: $f"
-        ((HEADER_ERRORS++))
+        HEADER_ERRORS=$((HEADER_ERRORS + 1))
     fi
     
     # Check for CREATE TABLE statements without comments
     if grep -q "CREATE TABLE" "$f"; then
         if ! grep -q "COMMENT ON TABLE" "$f"; then
             echo "WARNING: Missing table comments: $f"
-            ((COMMENT_WARNINGS++))
+            COMMENT_WARNINGS=$((COMMENT_WARNINGS + 1))
         fi
     fi
 done

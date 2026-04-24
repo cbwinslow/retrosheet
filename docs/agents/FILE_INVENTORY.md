@@ -267,7 +267,9 @@ These files may be present as active development work. Treat them as live-bridge
 
 | File | Purpose | Status |
 |---|---|---|
-| `sql/features/003_pitch_flexible_mart.sql` | **PRIMARY SCHEMA** - Flexible feature mart with ALL 118 Statcast fields preserved. Creates 7 tables: base_features, feature_registry, engineered_features, sequential_features, player_context, model_training_set, pitch_sequences. Includes vw_xgboost_base view and dynamic feature selection functions. | Created, ready to execute |
+| `sql/features/003_pitch_flexible_mart.sql` | **PRIMARY SCHEMA** - Flexible feature mart with ALL 118 Statcast fields preserved. Creates 7 tables: base_features, feature_registry, engineered_features, sequential_features, player_context, model_training_set, pitch_sequences. Includes vw_xgboost_base view and dynamic feature selection functions. | ✅ Complete - All tables created |
+| `sql/features/004_alter_base_features_types.sql` | Schema fix: Extend of_fielding_alignment to varchar(50) to prevent truncation errors. | ✅ Complete |
+| `sql/features/005_build_engineered_features.sql` | **FEATURE ENGINE** - Populates engineered_features with ALL research-backed derived features. 22KB script with velocity percentiles, strike zone regions, pitch movement, game context, count features, two-tier outcome labels. | ✅ Complete - 7.66M rows populated |
 | `docs/PITCH_FEATURE_MART_SCHEMA.md` | Comprehensive schema documentation. Table reference, usage patterns, design principles, data lineage, performance considerations. | Complete |
 | `docs/diagrams/PITCH_FEATURE_MART_ERD.puml` | Entity relationship diagram showing all 7 tables and relationships. | Complete |
 | `docs/diagrams/PITCH_DATA_FLOW.puml` | Data flow architecture diagram from sources through processing to models with CRISP-DM labels. | Complete |
@@ -280,19 +282,27 @@ These files may be present as active development work. Treat them as live-bridge
 | `docs/agents/CURRENT_SNAPSHOT.md` | Updated with pitch-level data state and current objectives. | **Updated April 2026** |
 | `AGENTS.md` | Added AI Agent Documentation Update Protocol section. Instructions for maintaining CRISP-DM docs, research paper, and GitHub issue updates. | **Updated April 2026** |
 
-### Status: Sub-Issue #79 Complete ✅
+### Status: Epic #78 Phase 4 In Progress 🔄
 
-**Completed April 24, 2026:**
-- Schema created: 7 tables in database
-- Feature registry: 37 features populated
-- Documentation: research paper with equations, ERD diagrams, schema docs
-- Branch: `feature/pitch-mart-schema` pushed to GitHub
+**Completed April 24, 2026 (Sub-Issue #79):**
+- ✅ Schema created: 7 tables in database
+- ✅ Base features: 7,661,992 rows populated (2015-2025, 118 Statcast fields)
+- ✅ Engineered features: 7,661,992 rows with 21+ derived features
+- ✅ Feature registry: 37 features documented
+- ✅ Outcome labels: Tier 1 {S,B,X}, Tier 2 {12 classes}
+- ✅ Documentation: AGENTS.md, PITCH_MODEL_PROGRESS.md updated
+- ✅ GitHub: Epic #78 and Sub-Issue #79 updated with progress
+- ✅ Validation: SQL headers fixed, tests passing
 - CRISP-DM Phase 3: 100% Complete
 
-**Ready for Sub-Issues #80-83:**
-- Base features ready to populate (7.66M pitches)
-- Engineered features ready to build
-- All 4 model families have schema support
+**Phase 4: Modeling (In Progress):**
+- 🔄 Tier-1 XGBoost baseline training
+- ⏳ Tier-2 XGBoost fine-grained outcomes
+- ⏳ Model evaluation and calibration
+
+**Scripts:**
+- `scripts/pitch_data/populate_base_features.py` - Data migration
+- `scripts/pitch_models/train_tier1_xgboost.py` - Tier-1 model training
 
 ### Feature Mart Schema Design
 

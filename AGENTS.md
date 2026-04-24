@@ -270,6 +270,50 @@ JOIN core.events e ON gx.retrosheet_game_id = e.game_id
 WHERE p.game_pk = <GAME_PK>;
 ```
 
+### Pitch-Level Feature Engineering (Epic #78)
+
+**Feature Mart Tables:**
+| Table | Rows | Purpose | Status |
+|-------|------|---------|--------|
+| `features_pitch.base_features` | 7,661,992 | 118 Statcast fields preserved | ✅ Populated |
+| `features_pitch.engineered_features` | 7,661,992 | Derived ML features | ✅ Built |
+| `features_pitch.player_context` | - | Rolling player statistics | 🔄 Schema ready |
+
+**Engineered Features (ALL Research-Backed, No Dropping):**
+
+| Category | Features | Research Source |
+|----------|----------|-----------------|
+| **Velocity** | `velocity_percentile`, `velocity_diff_from_avg` | SMU/CMU pitch papers |
+| **Strike Zone** | `distance_from_center`, `zone_region`, `is_in_zone`, `is_shadow`, `is_chase` | Zone judgment models |
+| **Movement** | `horizontal_break`, `vertical_break`, `approach_angle`, `spin_efficiency`, `induced_vertical_break` | Pitch physics |
+| **Game Context** | `score_diff`, `is_late_game`, `is_high_leverage`, `base_state_code` | Win probability |
+| **Count** | `is_full_count`, `is_two_strike`, `is_three_ball` | Count dynamics |
+
+**Outcome Labels (Two-Tier Hierarchy):**
+- **Tier 1** (Coarse): S (Strike, 69.9%), X (Ball-in-Play, 26.9%), B (Ball, 3.2%)
+- **Tier 2** (Fine): Strikeout, Walk, Single, Double, Triple, HR, Out, HBP, Foul, Ball, Strike, Other
+
+**Training Data:**
+- Valid Pitches: 5,072,278 (excludes 'U' unknown outcomes)
+- Stratified sampling for balanced class representation
+- 21+ engineered features, all research-backed
+
+**Scripts:**
+```bash
+# Populate base features from locations
+python scripts/pitch_data/populate_base_features.py
+
+# Build engineered features
+psql -f sql/features/005_build_engineered_features.sql
+
+# Train Tier-1 XGBoost model
+python scripts/pitch_models/train_tier1_xgboost.py
+```
+
+**GitHub Issues:**
+- Epic #78: Pitch-Level Model Pipeline (Phase 4 In Progress)
+- Sub-Issue #79: Flexible Feature Mart Schema (✅ Complete)
+
 ## PostgreSQL Extensions and Features
 
 ### Researched Extensions

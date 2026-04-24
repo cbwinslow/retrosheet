@@ -1,26 +1,28 @@
--- ============================================================================
--- Populate engineered_features table with ALL research-backed derived features
--- 
--- This script populates the engineered_features table from base_features,
--- calculating all derived features for pitch-level modeling.
---
--- Research-backed feature categories:
--- 1. Velocity features (percentiles, diffs, categories)
--- 2. Strike zone features (zone regions, distance calculations)
--- 3. Outcome flags (tier1, tier2, swing, whiff, hit types)
--- 4. Pitch movement (break, approach angle, spin)
--- 5. Sequence context (previous pitch, pitch count)
--- 6. Count features (full count, 2-strike, 3-ball)
--- 7. Game context (score diff, leverage, base state)
---
--- Outcome Labels (Two-Tier Hierarchy):
--- Tier 1: Strike (S), Ball (B), Ball-in-Play (X)
--- Tier 2: Strikeout, Walk, Single, Double, Triple, HR, Out, HBP, Other
---
--- Author: AI Agent
--- Date: 2026-04-24
--- Epic: #78
--- ============================================================================
+/*
+File: sql/features/005_build_engineered_features.sql
+Purpose: Populate engineered_features with ALL research-backed derived features
+Author: Agent Cascade
+Date: 2026-04-24
+Depends On: sql/features/004_alter_base_features_types.sql, features_pitch.base_features
+Called By: scripts/pitch_data/populate_base_features.py
+
+Tables Created/Modified:
+- features_pitch.engineered_features (populated with derived features)
+
+Features Calculated:
+- Velocity: velocity_percentile, velocity_diff_from_avg
+- Strike Zone: zone_region, distance_from_center, is_in_zone, is_shadow, is_chase
+- Movement: horizontal_break, vertical_break, approach_angle, spin_efficiency
+- Outcomes: outcome_tier1 (S/B/X), outcome_tier2 (12 classes)
+- Context: score_diff, is_late_game, is_high_leverage, base_state_code
+- Count: is_full_count, is_two_strike, is_three_ball
+
+Notes:
+- Research-backed features only - NO dropping for token savings
+- Two-tier outcome hierarchy (Tier 1 coarse, Tier 2 fine)
+- Idempotent (TRUNCATE before INSERT)
+- Epic: #78
+*/
 
 -- Clear existing data for idempotent run
 TRUNCATE TABLE features_pitch.engineered_features;
