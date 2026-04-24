@@ -75,17 +75,17 @@ def populate_all_seasons(conn, dry_run: bool = False) -> int:
             location, quality_flag,
             source_table, source_row_id, created_at
         )
-        SELECT 
+        SELECT
             game_year::smallint, game_pk, game_date, sv_id,
             batter_id, pitcher_id, player_name,
             pitch_type, pitch_name, pitch_number::smallint,
             description, events,
-            balls::smallint, strikes::smallint, outs_when_up::smallint, 
+            balls::smallint, strikes::smallint, outs_when_up::smallint,
             inning::smallint, inning_topbot,
             on_1b::boolean, on_2b::boolean, on_3b::boolean,
             stand, p_throws, home_team, away_team, type,
             start_speed::real, effective_speed::real, release_spin_rate::real,
-            release_pos_x::real, release_pos_y::real, release_pos_z::real, 
+            release_pos_x::real, release_pos_y::real, release_pos_z::real,
             release_extension::real,
             pfx_x::real, pfx_z::real, spin_axis::real,
             plate_x::real, plate_z::real, zone::smallint, sz_top::real, sz_bot::real,
@@ -95,14 +95,14 @@ def populate_all_seasons(conn, dry_run: bool = False) -> int:
             launch_speed::real, launch_angle::real, launch_speed_angle::real,
             estimated_ba::real, estimated_woba::real, estimated_slg::real,
             woba_value::real, woba_denom::real, babip_value::real, iso_value::real,
-            home_score::smallint, away_score::smallint, 
+            home_score::smallint, away_score::smallint,
             bat_score::smallint, fld_score::smallint,
-            post_home_score::smallint, post_away_score::smallint, 
+            post_home_score::smallint, post_away_score::smallint,
             post_bat_score::smallint, post_fld_score::smallint,
             at_bat_number,
             fielder_2, fielder_3, fielder_4, fielder_5, fielder_6,
             fielder_7, fielder_8, fielder_9,
-            delta_home_win_exp::real, delta_run_exp::real, 
+            delta_home_win_exp::real, delta_run_exp::real,
             home_win_exp::real, bat_win_exp::real,
             if_fielding_alignment, of_fielding_alignment,
             spin_rate_deprecated::real,
@@ -118,7 +118,7 @@ def populate_all_seasons(conn, dry_run: bool = False) -> int:
 
     if dry_run:
         count_query = """
-            SELECT COUNT(*) 
+            SELECT COUNT(*)
             FROM features_pitch.locations l
             WHERE NOT EXISTS (
                 SELECT 1 FROM features_pitch.base_features bf
@@ -182,17 +182,17 @@ def populate_seasons(conn, seasons: list[int], dry_run: bool = False) -> int:
                 location, quality_flag,
                 source_table, source_row_id, created_at
             )
-            SELECT 
+            SELECT
                 game_year::smallint, game_pk, game_date, sv_id,
                 batter_id, pitcher_id, player_name,
                 pitch_type, pitch_name, pitch_number::smallint,
                 description, events,
-                balls::smallint, strikes::smallint, outs_when_up::smallint, 
+                balls::smallint, strikes::smallint, outs_when_up::smallint,
                 inning::smallint, inning_topbot,
                 on_1b::boolean, on_2b::boolean, on_3b::boolean,
                 stand, p_throws, home_team, away_team, type,
                 start_speed::real, effective_speed::real, release_spin_rate::real,
-                release_pos_x::real, release_pos_y::real, release_pos_z::real, 
+                release_pos_x::real, release_pos_y::real, release_pos_z::real,
                 release_extension::real,
                 pfx_x::real, pfx_z::real, spin_axis::real,
                 plate_x::real, plate_z::real, zone::smallint, sz_top::real, sz_bot::real,
@@ -202,14 +202,14 @@ def populate_seasons(conn, seasons: list[int], dry_run: bool = False) -> int:
                 launch_speed::real, launch_angle::real, launch_speed_angle::real,
                 estimated_ba::real, estimated_woba::real, estimated_slg::real,
                 woba_value::real, woba_denom::real, babip_value::real, iso_value::real,
-                home_score::smallint, away_score::smallint, 
+                home_score::smallint, away_score::smallint,
                 bat_score::smallint, fld_score::smallint,
-                post_home_score::smallint, post_away_score::smallint, 
+                post_home_score::smallint, post_away_score::smallint,
                 post_bat_score::smallint, post_fld_score::smallint,
                 at_bat_number,
                 fielder_2, fielder_3, fielder_4, fielder_5, fielder_6,
                 fielder_7, fielder_8, fielder_9,
-                delta_home_win_exp::real, delta_run_exp::real, 
+                delta_home_win_exp::real, delta_run_exp::real,
                 home_win_exp::real, bat_win_exp::real,
                 if_fielding_alignment, of_fielding_alignment,
                 spin_rate_deprecated::real,
@@ -225,7 +225,7 @@ def populate_seasons(conn, seasons: list[int], dry_run: bool = False) -> int:
 
         if dry_run:
             count_query = """
-                SELECT COUNT(*) 
+                SELECT COUNT(*)
                 FROM features_pitch.locations l
                 WHERE l.game_year = %s
                 AND NOT EXISTS (

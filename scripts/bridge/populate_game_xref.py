@@ -40,7 +40,7 @@ def populate_game_xref():
             # Use DISTINCT ON to pick one match per mlb_game_pk to avoid duplicates
             cur.execute("""
                 WITH mlb_games AS (
-                    SELECT 
+                    SELECT
                         lg.mlb_game_pk,
                         (lg.raw_payload->'gameData'->'datetime'->>'originalDate')::date AS game_date,
                         (lg.raw_payload->'gameData'->'game'->>'gameNumber')::int AS game_number,
@@ -75,7 +75,7 @@ def populate_game_xref():
                     mlb_home_team_id,
                     mlb_away_team_id
                 )
-                SELECT 
+                SELECT
                     retrosheet_game_id,
                     mlb_game_pk,
                     game_date,
@@ -99,9 +99,9 @@ def populate_game_xref():
 
             # Check for unmatched games
             cur.execute("""
-                SELECT COUNT(*) 
-                FROM core.live_games 
-                WHERE mlb_game_pk IS NOT NULL 
+                SELECT COUNT(*)
+                FROM core.live_games
+                WHERE mlb_game_pk IS NOT NULL
                 AND game_date_parsed IS NOT NULL
                 AND game_id NOT IN (
                     SELECT retrosheet_game_id FROM bridge.game_xref WHERE retrosheet_game_id IS NOT NULL
@@ -111,8 +111,8 @@ def populate_game_xref():
             print(f'Unmatched MLB games: {unmatched_mlb}')
 
             cur.execute("""
-                SELECT COUNT(*) 
-                FROM core.games 
+                SELECT COUNT(*)
+                FROM core.games
                 WHERE game_date >= '2026-01-01'
                 AND game_id NOT IN (
                     SELECT retrosheet_game_id FROM bridge.game_xref

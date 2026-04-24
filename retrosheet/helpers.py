@@ -21,7 +21,7 @@ def leave_base(bases_dict, bfrom):
 
 
 def pitch_count(string, current_count):
-    """For now it is including pickoffs
+    """For now it is including pickoffs.
     """
     # simplest idea:
     clean_pitches = string.replace('>', '').replace('+', '').replace('*', '').replace('??', '')
@@ -35,7 +35,7 @@ def out_in_advance(play_dict, bto=None, bfrom=None):
     """Runner out when advancing by next base
     - play_dict: play dictionary
     - bto : base to, heading to
-    - bfrom: base coming from, previous base
+    - bfrom: base coming from, previous base.
     """
     bto = '1' if not bto and not bfrom else bto
     if bfrom:
@@ -56,7 +56,7 @@ def advance_base(play_dict, bto=None, bfrom=None):
     """Runner advanced to next base
     - play_dict: play dictionary
     - bto : base to, heading to
-    - bfrom: base coming from, previous base
+    - bfrom: base coming from, previous base.
     """
     bto = '1' if not bto and not bfrom else bto
     if bto == 'H':
@@ -71,7 +71,7 @@ def advance_base(play_dict, bto=None, bfrom=None):
 
 
 def progress(count, total, status=''):
-    """Adapted from https://gist.github.com/vladignatyev/06860ec2040cb497f0f3
+    """Adapted from https://gist.github.com/vladignatyev/06860ec2040cb497f0f3.
     """
     bar_len = 60
     filled_len = int(round(bar_len * count / float(total)))
@@ -86,7 +86,7 @@ def progress(count, total, status=''):
 
 
 def game_state(pre, post):
-    """Expected format of pre/post: {'B': 1,'1': 0,'2': 0,'3': 0,'H': 0, 'out': 0,'run': 0}
+    """Expected format of pre/post: {'B': 1,'1': 0,'2': 0,'3': 0,'H': 0, 'out': 0,'run': 0}.
     """
     pre_list = [int(pre['1']), int(pre['2']), int(pre['3']), int(pre['out'])]
     post_list = [int(post['1']), int(post['2']), int(post['3']), int(post['out'])]
@@ -160,5 +160,5 @@ def field_conditions(string):
     sky: cloudy, dome, night, overcast, sunny, unknown;
     winddir: fromcf, fromlf, fromrf, ltor, rtol, tocf, tolf, torf, unknown;
     temp: (0 is unkown)
-    windspeed: (-1 is unkown)
+    windspeed: (-1 is unkown).
     """

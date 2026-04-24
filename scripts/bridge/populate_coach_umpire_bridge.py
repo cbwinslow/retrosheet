@@ -40,7 +40,7 @@ def populate_coach_xref():
             # Join with biofile_legacy to get coach names (coach_id matches player_id)
             cur.execute("""
                 INSERT INTO bridge.coach_xref (retrosheet_coach_id, source_system, coach_name, confidence_score, confidence_source)
-                SELECT DISTINCT 
+                SELECT DISTINCT
                     c.coach_id,
                     'retrosheet' as source_system,
                     COALESCE(b.use_name, b.full_name, b.last_name, c.coach_id) as coach_name,
@@ -90,7 +90,7 @@ def populate_umpire_xref():
                     CASE WHEN b.player_id IS NOT NULL THEN 0.9 ELSE 0.7 END as confidence_score,
                     CASE WHEN b.player_id IS NOT NULL THEN 'biofile_legacy_player_match' ELSE 'retrosheet_name_only' END as confidence_source
                 FROM raw_retrosheet.season_umpires u
-                LEFT JOIN raw_retrosheet.biofile_legacy b ON 
+                LEFT JOIN raw_retrosheet.biofile_legacy b ON
                     (u.last_name = b.last_name OR u.last_name = b.use_name)
                     AND b.umpire_debut IS NOT NULL
                 WHERE u.umpire_id IS NOT NULL

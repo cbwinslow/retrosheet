@@ -57,7 +57,7 @@ def complete_game_xref(
             # Get MLB games without game_xref mappings
             query = """
                 WITH mlb_games_without_xref AS (
-                    SELECT 
+                    SELECT
                         g.mlb_game_pk as game_pk,
                         g.game_date::date as game_date,
                         g.season::int as season,
@@ -133,8 +133,8 @@ def complete_game_xref(
                 # Get Retrosheet team IDs from bridge.team_xref
                 cur.execute(
                     """
-                    SELECT retrosheet_team_id 
-                    FROM bridge.team_xref 
+                    SELECT retrosheet_team_id
+                    FROM bridge.team_xref
                     WHERE mlb_team_id = %s
                     LIMIT 1
                     """,
@@ -144,8 +144,8 @@ def complete_game_xref(
 
                 cur.execute(
                     """
-                    SELECT retrosheet_team_id 
-                    FROM bridge.team_xref 
+                    SELECT retrosheet_team_id
+                    FROM bridge.team_xref
                     WHERE mlb_team_id = %s
                     LIMIT 1
                     """,
@@ -171,8 +171,8 @@ def complete_game_xref(
                 # Match Retrosheet game by date + teams
                 cur.execute(
                     """
-                    SELECT game_id 
-                    FROM core.games 
+                    SELECT game_id
+                    FROM core.games
                     WHERE game_date = %s
                     AND home_team_id = %s
                     AND away_team_id = %s
@@ -185,8 +185,8 @@ def complete_game_xref(
                 # Check if retrosheet game already exists in bridge table
                 cur.execute(
                     """
-                    SELECT mlb_game_pk 
-                    FROM bridge.game_xref 
+                    SELECT mlb_game_pk
+                    FROM bridge.game_xref
                     WHERE retrosheet_game_id = %s
                     LIMIT 1
                     """,

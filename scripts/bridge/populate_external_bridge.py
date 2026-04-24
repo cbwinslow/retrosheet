@@ -39,16 +39,16 @@ def populate_statcast_player_xref():
             # Pre-filter player_xref to only include rows with valid retrosheet_id
             cur.execute("""
                 INSERT INTO bridge.external_player_xref (external_source, external_player_id, retrosheet_player_id)
-                SELECT DISTINCT 
+                SELECT DISTINCT
                     'statcast' as external_source,
                     s.batter::text as external_player_id,
                     px.retrosheet_id as retrosheet_player_id
                 FROM raw_mlb.statcast s
                 JOIN (
-                    SELECT mlb_id, retrosheet_id 
-                    FROM bridge.player_xref 
-                    WHERE mlb_id IS NOT NULL 
-                    AND retrosheet_id IS NOT NULL 
+                    SELECT mlb_id, retrosheet_id
+                    FROM bridge.player_xref
+                    WHERE mlb_id IS NOT NULL
+                    AND retrosheet_id IS NOT NULL
                     AND retrosheet_id != ''
                 ) px ON s.batter = px.mlb_id
                 WHERE s.batter IS NOT NULL
@@ -63,16 +63,16 @@ def populate_statcast_player_xref():
             # Map Statcast pitcher IDs to Retrosheet IDs via bridge.player_xref
             cur.execute("""
                 INSERT INTO bridge.external_player_xref (external_source, external_player_id, retrosheet_player_id)
-                SELECT DISTINCT 
+                SELECT DISTINCT
                     'statcast' as external_source,
                     s.pitcher::text as external_player_id,
                     px.retrosheet_id as retrosheet_player_id
                 FROM raw_mlb.statcast s
                 JOIN (
-                    SELECT mlb_id, retrosheet_id 
-                    FROM bridge.player_xref 
-                    WHERE mlb_id IS NOT NULL 
-                    AND retrosheet_id IS NOT NULL 
+                    SELECT mlb_id, retrosheet_id
+                    FROM bridge.player_xref
+                    WHERE mlb_id IS NOT NULL
+                    AND retrosheet_id IS NOT NULL
                     AND retrosheet_id != ''
                 ) px ON s.pitcher = px.mlb_id
                 WHERE s.pitcher IS NOT NULL
@@ -101,7 +101,7 @@ def populate_bref_player_xref():
             # Map Baseball Reference IDs to Retrosheet IDs via bridge.player_xref
             cur.execute("""
                 INSERT INTO bridge.external_player_xref (external_source, external_player_id, retrosheet_player_id)
-                SELECT DISTINCT 
+                SELECT DISTINCT
                     'baseball_reference' as external_source,
                     px.baseball_reference_id as external_player_id,
                     px.retrosheet_id as retrosheet_player_id
@@ -136,7 +136,7 @@ def populate_lahman_player_xref():
             # Map Lahman playerID to Retrosheet IDs via retroID column
             cur.execute("""
                 INSERT INTO bridge.external_player_xref (external_source, external_player_id, retrosheet_player_id)
-                SELECT DISTINCT 
+                SELECT DISTINCT
                     'lahman' as external_source,
                     l."playerID" as external_player_id,
                     l."retroID" as retrosheet_player_id

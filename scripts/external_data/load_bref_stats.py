@@ -102,8 +102,8 @@ def load_bref_batting(csv_path: Path) -> bool:
         execute_values(
             cur,
             """
-            INSERT INTO raw_bref.batting_stats 
-            (season, player_id, player_name, age, team, league, games, at_bats, runs, hits, 
+            INSERT INTO raw_bref.batting_stats
+            (season, player_id, player_name, age, team, league, games, at_bats, runs, hits,
              doubles, triples, home_runs, rbi, stolen_bases, caught_stealing, walks, strikeouts,
              batting_avg, on_base_pct, slugging_pct, ops)
             VALUES %s
@@ -214,7 +214,7 @@ def load_bref_pitching(csv_path: Path) -> bool:
         execute_values(
             cur,
             """
-            INSERT INTO raw_bref.pitching_stats 
+            INSERT INTO raw_bref.pitching_stats
             (season, player_id, player_name, age, team, league, games, games_started, wins, losses,
              saves, innings_pitched, hits, runs, earned_runs, home_runs, walks, strikeouts, era, whip)
             VALUES %s

@@ -172,15 +172,15 @@ def create_statcast_table(engine, schema: str = 'features_pitch'):
 
     sql = f"""
     CREATE SCHEMA IF NOT EXISTS {schema};
-    
+
     DROP TABLE IF EXISTS {schema}.statcast_pitches;
-    
+
     CREATE TABLE {schema}.statcast_pitches (
         id BIGSERIAL PRIMARY KEY,
         {", ".join(columns_sql)},
         location_point geometry(POINT, 4326)
     );
-    
+
     -- Indexes for common queries
     CREATE INDEX idx_statcast_year ON {schema}.statcast_pitches(game_year);
     CREATE INDEX idx_statcast_game ON {schema}.statcast_pitches(game_pk);
@@ -188,7 +188,7 @@ def create_statcast_table(engine, schema: str = 'features_pitch'):
     CREATE INDEX idx_statcast_batter ON {schema}.statcast_pitches(batter);
     CREATE INDEX idx_statcast_pitch_type ON {schema}.statcast_pitches(pitch_type);
     CREATE INDEX idx_statcast_location ON {schema}.statcast_pitches USING GIST(location_point);
-    
+
     -- Comments
     COMMENT ON TABLE {schema}.statcast_pitches IS 'Pitch-level Statcast data. Reference: Baseball Savant CSV Docs. Schema based on pybaseball library.';
     COMMENT ON COLUMN {schema}.statcast_pitches.plate_x IS 'Horizontal position when pitch crosses plate (inches, from catcher view)';
@@ -266,7 +266,7 @@ def create_analysis_views(engine):
     views_sql = [
         """
         CREATE OR REPLACE VIEW eda.statcast_pitches_by_type AS
-        SELECT 
+        SELECT
             pitch_type,
             COUNT(*) as total_pitches,
             AVG(plate_x) as avg_plate_x,
@@ -275,9 +275,9 @@ def create_analysis_views(engine):
             AVG(pfx_x) as avg_horiz_movement,
             AVG(pfx_z) as avg_vert_movement,
             -- Strike zone rate
-            SUM(CASE 
-                WHEN plate_x BETWEEN -8.5 AND 8.5 
-                AND plate_z BETWEEN sz_bot AND sz_top 
+            SUM(CASE
+                WHEN plate_x BETWEEN -8.5 AND 8.5
+                AND plate_z BETWEEN sz_bot AND sz_top
                 THEN 1 ELSE 0 END)::numeric / COUNT(*) * 100 as in_zone_pct
         FROM features_pitch.statcast_pitches
         WHERE pitch_type IS NOT NULL
@@ -286,7 +286,7 @@ def create_analysis_views(engine):
         """,
         """
         CREATE OR REPLACE VIEW eda.statcast_pitcher_arsenal AS
-        SELECT 
+        SELECT
             pitcher,
             pitch_type,
             COUNT(*) as pitch_count,
@@ -300,7 +300,7 @@ def create_analysis_views(engine):
         """,
         """
         CREATE OR REPLACE VIEW eda.statcast_batter_outcomes AS
-        SELECT 
+        SELECT
             batter,
             pitch_type,
             COUNT(*) as pa,

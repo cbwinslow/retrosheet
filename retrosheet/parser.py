@@ -7,7 +7,7 @@ from .version import __version__
 
 
 class Retrosheet(event, parse_files):
-    """A python object to parse retrosheet data"""
+    """A python object to parse retrosheet data."""
 
     def __init__(self):
         self.__version__ = __version__
@@ -56,7 +56,7 @@ class Retrosheet(event, parse_files):
 
 
 class InvalidYearError(Exception):
-    """Exception that is raised when years are not within possible range"""
+    """Exception that is raised when years are not within possible range."""
 
     def __init__(self, error, years):
         self.log = logging.getLogger(__name__)

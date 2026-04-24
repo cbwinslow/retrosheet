@@ -14,7 +14,7 @@ from .version import __version__
 
 class parse_row:
     """Parse one single row
-    - A row can return only one type of data (id, version, start, play, sub, com, data)
+    - A row can return only one type of data (id, version, start, play, sub, com, data).
     """
 
     def __init__(self):
@@ -39,7 +39,7 @@ class parse_row:
 class parse_game(parse_row):
     """ "Object for each baseball game, subclass.
     - Data is expected to be sequentially passed (Retrosheet format)
-    - When this class is initialized, it restarts all stats for the game
+    - When this class is initialized, it restarts all stats for the game.
     """
 
     def __init__(self, id=''):
@@ -72,7 +72,7 @@ class parse_game(parse_row):
         self.event.advances = {'B': 1, '1': 0, '2': 0, '3': 0, 'H': 0, 'out': 3, 'run': 0}
 
     def parse_start(self, start_sub='start'):
-        """This will happen before the game starts"""
+        """This will happen before the game starts."""
         fielding_position = self.row_values[5]
         player_id = self.row_values[1]
         home_away = self.row_values[-3][-1]  # some entires are '01'
@@ -99,7 +99,7 @@ class parse_game(parse_row):
     def parse_play(self):
         """-----------------------------------------------------------------------------------------
         field format: "play | inning | home_away | player_id | count on batter | pitches | play "|
-        index counts:   0        1          2          3              4             5       6    |
+        index counts:   0        1          2          3              4             5       6    |.
         ------------------------------------------------------------------------------------------
         """
         self.event.str = self.row_values[6]  # pass string to parse values
@@ -413,7 +413,7 @@ class parse_files(parse_games):
 
     def save_csv(self, path_str='', append=True):
         """Save dataframes to csv
-        append = True for large downloads
+        append = True for large downloads.
         """
         if path_str:
             path_str + '/' if path_str[-1] != '/' else path_str

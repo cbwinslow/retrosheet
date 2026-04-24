@@ -125,7 +125,7 @@ def load_training_data(conn, limit: int | None = None) -> pd.DataFrame:
         # Use stratified sampling to ensure all classes are represented
         query = f"""
         WITH stratified AS (
-            SELECT 
+            SELECT
                 ef.pitch_id,
                 ef.outcome_tier1 as target,
                 ef.velocity_percentile,
@@ -167,7 +167,7 @@ def load_training_data(conn, limit: int | None = None) -> pd.DataFrame:
         """
     else:
         query = """
-        SELECT 
+        SELECT
             ef.pitch_id,
             ef.outcome_tier1 as target,
             ef.velocity_percentile,

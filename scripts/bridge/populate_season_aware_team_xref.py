@@ -43,11 +43,11 @@ def populate_season_aware_team_xref():
             # First, populate basic season ranges for all teams from core.games
             cur.execute("""
                 UPDATE bridge.team_xref tx
-                SET 
+                SET
                     valid_from_season = g.first_season,
                     valid_to_season = CASE WHEN g.last_season >= 2025 THEN NULL ELSE g.last_season END
                 FROM (
-                    SELECT 
+                    SELECT
                         team_id,
                         MIN(season) as first_season,
                         MAX(season) as last_season

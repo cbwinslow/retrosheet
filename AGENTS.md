@@ -283,11 +283,17 @@ WHERE p.game_pk = <GAME_PK>;
 
 | Category | Features | Research Source |
 |----------|----------|-----------------|
-| **Velocity** | `velocity_percentile`, `velocity_diff_from_avg` | SMU/CMU pitch papers |
-| **Strike Zone** | `distance_from_center`, `zone_region`, `is_in_zone`, `is_shadow`, `is_chase` | Zone judgment models |
-| **Movement** | `horizontal_break`, `vertical_break`, `approach_angle`, `spin_efficiency`, `induced_vertical_break` | Pitch physics |
-| **Game Context** | `score_diff`, `is_late_game`, `is_high_leverage`, `base_state_code` | Win probability |
-| **Count** | `is_full_count`, `is_two_strike`, `is_three_ball` | Count dynamics |
+| **Velocity** | `velocity_percentile`, `velocity_diff_from_avg`, `velocity_bucket`, `velocity_change_from_prev` | SMU/CMU pitch papers |
+| **Strike Zone** | `distance_from_center`, `zone_region`, `is_in_zone`, `is_shadow`, `is_chase`, `pitch_distance_from_heart` | Zone judgment models |
+| **Movement** | `horizontal_break`, `vertical_break`, `approach_angle`, `spin_efficiency`, `induced_vertical_break`, `spin_axis_quadrant`, `is_backspin`, `is_topspin`, `is_gyro_spin` | Pitch physics |
+| **Game Context** | `score_diff`, `is_late_game`, `is_high_leverage`, `base_state_code`, `run_expectancy_24`, `win_probability_added`, `inning_phase`, `is_save_situation` | Win probability |
+| **Count** | `is_full_count`, `is_two_strike`, `is_three_ball`, `count_leverage_index`, `is_payoff_pitch`, `is_pitcher_ahead`, `is_hitter_ahead` | Count dynamics |
+| **Sequential** | `prev_pitch_type`, `prev_pitch_result`, `consecutive_same_type`, `pitches_since_last_swing` | Pitch sequencing research |
+| **TTOP** | `times_through_order_detailed`, `is_first_time_seeing_pitcher`, `ttop_penalty_applies` | Times Through Order Penalty |
+| **Matchup** | `is_same_handed_matchup`, `is_platoon_advantage_pitcher`, `prior_matchup_count` | Platoon advantage |
+| **Pitch Quality** | `pitch_quality_score`, `is_primary_pitch_type`, `pitch_type_family` | Pitch quality models |
+| **Environmental** | `is_day_game`, `game_month`, `is_opening_series` | Environmental effects |
+| **Pressure** | `pa_pressure_index`, `is_high_pressure_pa`, `is_walk_off_situation`, `leverage_index_bracket` | High-leverage performance |
 
 **Outcome Labels (Two-Tier Hierarchy):**
 - **Tier 1** (Coarse): S (Strike, 69.9%), X (Ball-in-Play, 26.9%), B (Ball, 3.2%)
@@ -296,15 +302,27 @@ WHERE p.game_pk = <GAME_PK>;
 **Training Data:**
 - Valid Pitches: 5,072,278 (excludes 'U' unknown outcomes)
 - Stratified sampling for balanced class representation
-- 21+ engineered features, all research-backed
+- **110+ engineered features** across 11 categories, all research-backed
+- **118 raw Statcast fields** preserved in base_features
+- **Total feature space: 230+ columns** for maximum model coverage
 
 **Scripts:**
 ```bash
 # Populate base features from locations
 python scripts/pitch_data/populate_base_features.py
 
-# Build engineered features
+# Build engineered features (run in order)
 psql -f sql/features/005_build_engineered_features.sql
+
+# Populate additional features (run batches until complete)
+for i in {1..80}; do
+    psql -f sql/features/008_populate_additional_features_batch.sql
+done
+
+# Populate more features from KB research (run batches until complete)
+for i in {1..80}; do
+    psql -f sql/features/011_populate_more_features_batch.sql
+done
 
 # Train Tier-1 XGBoost model
 python scripts/pitch_models/train_tier1_xgboost.py

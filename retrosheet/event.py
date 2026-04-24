@@ -959,7 +959,7 @@ class event:
             ###########################   end   ################################
 
     def _main_play(self, mp, mpm):
-        """Parse main play"""
+        """Parse main play."""
         if mp == '99':  # error or unknown --> usually out
             self.main_play = (
                 out_in_advance(self.main_play, bfrom='B')
@@ -1792,7 +1792,7 @@ class event:
         - main play --> main string
         - implicit advances --> calculated
         - main play modifiers --> separated by '/'
-        - secondary_play --> (for K+ and [I]W+ events)
+        - secondary_play --> (for K+ and [I]W+ events).
 
         - explicit advances --> separated from main play by '.'. It is = explicit move + advance description + advance modifiers
         - explicit move --> the move of players, without modifiers. base-base or baseXbase
@@ -1875,7 +1875,7 @@ class event:
     def final_moves(self):
         """Combine main play with explicit advances.
         Also, it needs to check to make sure bases are correct based on previous
-        play (previous_advances)
+        play (previous_advances).
         """
         for key, value in self.main_play.items():
             if key in ['out', 'run', 'H']:
@@ -1884,7 +1884,7 @@ class event:
                 self.advances[key] = value
 
     def decipher(self):
-        """Parse baseball play"""
+        """Parse baseball play."""
         self.move_on_error = []
         # initialize this play
         self.modifiers = {
@@ -1941,7 +1941,7 @@ class event:
 
 
 class eventNotFoundError(Exception):
-    """Exception that is raised when an event is not recognized"""
+    """Exception that is raised when an event is not recognized."""
 
     def __init__(self, error, event):
         self.log = logging.getLogger(__name__)

@@ -41,8 +41,8 @@ def investigate_umpire_mlb_id_mapping():
             # Check if season_umpires table exists and has data
             cur.execute("""
                 SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_schema = 'raw_retrosheet' 
+                    SELECT FROM information_schema.tables
+                    WHERE table_schema = 'raw_retrosheet'
                     AND table_name = 'season_umpires'
                 )
             """)
@@ -57,7 +57,7 @@ def investigate_umpire_mlb_id_mapping():
                 # Get sample umpire data
                 print('\n--- Sample Retrosheet umpire data ---')
                 cur.execute("""
-                    SELECT 
+                    SELECT
                         umpire_id,
                         last_name,
                         first_name,
@@ -73,7 +73,7 @@ def investigate_umpire_mlb_id_mapping():
 
                 # Check for unique umpires
                 cur.execute("""
-                    SELECT 
+                    SELECT
                         COUNT(DISTINCT umpire_id) as unique_umpires,
                         COUNT(DISTINCT last_name || ' ' || first_name) as unique_names
                     FROM raw_retrosheet.season_umpires
@@ -86,8 +86,8 @@ def investigate_umpire_mlb_id_mapping():
                 print('\n--- Checking for MLB umpire data ---')
                 cur.execute("""
                     SELECT EXISTS (
-                        SELECT FROM information_schema.tables 
-                        WHERE table_schema = 'raw_mlb' 
+                        SELECT FROM information_schema.tables
+                        WHERE table_schema = 'raw_mlb'
                         AND table_name = 'live_games'
                     )
                 """)
@@ -97,8 +97,8 @@ def investigate_umpire_mlb_id_mapping():
                 if live_games_exists:
                     # Check if live_games has umpire IDs in raw_payload
                     cur.execute("""
-                        SELECT COUNT(*) 
-                        FROM core.live_games 
+                        SELECT COUNT(*)
+                        FROM core.live_games
                         WHERE raw_payload IS NOT NULL
                     """)
                     live_games_count = cur.fetchone()[0]
@@ -107,8 +107,8 @@ def investigate_umpire_mlb_id_mapping():
                     if live_games_count > 0:
                         # Sample raw_payload to check for umpire IDs
                         cur.execute("""
-                            SELECT raw_payload::text 
-                            FROM core.live_games 
+                            SELECT raw_payload::text
+                            FROM core.live_games
                             WHERE raw_payload IS NOT NULL
                             LIMIT 1
                         """)
@@ -124,8 +124,8 @@ def investigate_umpire_mlb_id_mapping():
                 # Check if biofile_legacy has umpire information
                 print('\n--- Checking biofile_legacy for umpire data ---')
                 cur.execute("""
-                    SELECT COUNT(*) 
-                    FROM raw_retrosheet.biofile_legacy 
+                    SELECT COUNT(*)
+                    FROM raw_retrosheet.biofile_legacy
                     WHERE umpire_debut IS NOT NULL
                 """)
                 umpire_players = cur.fetchone()[0]
@@ -134,13 +134,13 @@ def investigate_umpire_mlb_id_mapping():
                 if umpire_players > 0:
                     print('\nSample players who were umpires:')
                     cur.execute("""
-                        SELECT 
+                        SELECT
                             player_id,
                             last_name,
                             use_name,
                             umpire_debut,
                             umpire_lastgame
-                        FROM raw_retrosheet.biofile_legacy 
+                        FROM raw_retrosheet.biofile_legacy
                         WHERE umpire_debut IS NOT NULL
                         LIMIT 5
                     """)

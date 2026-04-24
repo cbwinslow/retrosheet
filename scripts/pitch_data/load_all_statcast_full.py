@@ -31,10 +31,10 @@ def get_connection():
 def get_season_counts(conn) -> list[tuple[int, int]]:
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT game_year::int, COUNT(*) 
-            FROM raw_mlb.statcast 
+            SELECT game_year::int, COUNT(*)
+            FROM raw_mlb.statcast
             WHERE game_year IS NOT NULL AND plate_x IS NOT NULL
-            GROUP BY game_year::int 
+            GROUP BY game_year::int
             ORDER BY game_year::int DESC
         """)
         return cur.fetchall()
@@ -95,7 +95,7 @@ def load_season_full(conn, season: int) -> int:
                 -- At bat numbering
                 at_bat_number,
                 -- Fielders
-                fielder_2, fielder_3, fielder_4, fielder_5, fielder_6, 
+                fielder_2, fielder_3, fielder_4, fielder_5, fielder_6,
                 fielder_7, fielder_8, fielder_9,
                 -- Win probability
                 delta_home_win_exp, delta_run_exp, home_win_exp, bat_win_exp,
@@ -104,7 +104,7 @@ def load_season_full(conn, season: int) -> int:
                 -- Deprecated (for reference)
                 spin_rate_deprecated
             )
-            SELECT 
+            SELECT
                 s.game_year::integer,
                 s.game_pk::integer,
                 s.game_date::date,
@@ -208,7 +208,7 @@ def load_season_full(conn, season: int) -> int:
         logger.info('Updating PostGIS geometry...')
         cur.execute(
             """
-            UPDATE features_pitch.locations 
+            UPDATE features_pitch.locations
             SET location = ST_SetSRID(ST_MakePoint(plate_x, plate_z), 4326)
             WHERE game_year = %s
               AND location IS NULL
@@ -240,17 +240,17 @@ def verify_load(conn) -> bool:
         # Check row counts per season
         cur.execute("""
             WITH raw_counts AS (
-                SELECT game_year::int as year, COUNT(*) as cnt 
-                FROM raw_mlb.statcast 
+                SELECT game_year::int as year, COUNT(*) as cnt
+                FROM raw_mlb.statcast
                 WHERE plate_x IS NOT NULL AND plate_z IS NOT NULL
                 GROUP BY game_year::int
             ),
             loaded_counts AS (
-                SELECT game_year, COUNT(*) as cnt 
-                FROM features_pitch.locations 
+                SELECT game_year, COUNT(*) as cnt
+                FROM features_pitch.locations
                 GROUP BY game_year
             )
-            SELECT 
+            SELECT
                 r.year,
                 r.cnt as raw_count,
                 COALESCE(l.cnt, 0) as loaded_count,
@@ -272,7 +272,7 @@ def verify_load(conn) -> bool:
 
         # Check column coverage
         cur.execute("""
-            SELECT 
+            SELECT
                 COUNT(*) as total,
                 COUNT(start_speed) as has_speed,
                 COUNT(spin_axis) as has_spin,
@@ -320,16 +320,16 @@ def main():
 Examples:
     Load all seasons:
         %(prog)s --all
-    
+
     Load specific season:
         %(prog)s --seasons 2025
-    
+
     Load range:
         %(prog)s --seasons 2020-2025
-    
+
     Force reload (clear first):
         %(prog)s --all --force
-    
+
     Verify only (check existing data):
         %(prog)s --verify
         """,

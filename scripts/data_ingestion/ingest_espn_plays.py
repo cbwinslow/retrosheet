@@ -145,7 +145,7 @@ def main():
             # Get all game IDs from 2024 onwards that don't have plays snapshots
             # ESPN only has play-by-play data for recent games (2024-2026)
             cur.execute("""
-                SELECT DISTINCT g.game_id 
+                SELECT DISTINCT g.game_id
                 FROM raw_espn.game_snapshots g
                 WHERE g.game_id NOT IN (
                     SELECT DISTINCT p.game_id FROM raw_espn.plays_snapshots p

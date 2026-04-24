@@ -11,11 +11,11 @@ def main():
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT 
+        SELECT
             name,
             default_version,
             installed_version,
-            CASE 
+            CASE
                 WHEN installed_version IS NOT NULL THEN 'INSTALLED'
                 ELSE 'AVAILABLE'
             END as status

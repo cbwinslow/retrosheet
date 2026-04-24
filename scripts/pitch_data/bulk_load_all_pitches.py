@@ -32,10 +32,10 @@ def get_connection():
 def get_season_counts(conn) -> list[tuple[int, int]]:
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT game_year::int, COUNT(*) 
-            FROM raw_mlb.statcast 
+            SELECT game_year::int, COUNT(*)
+            FROM raw_mlb.statcast
             WHERE game_year IS NOT NULL AND plate_x IS NOT NULL
-            GROUP BY game_year::int 
+            GROUP BY game_year::int
             ORDER BY game_year::int DESC
         """)
         return cur.fetchall()
@@ -68,7 +68,7 @@ def load_season_bulk(conn, season: int) -> int:
                 inning, inning_topbot, hc_x, hc_y, hit_location, bb_type,
                 launch_speed, launch_angle, hit_distance
             )
-            SELECT 
+            SELECT
                 s.game_year::integer,
                 s.game_pk::integer,
                 s.batter::integer,
@@ -112,10 +112,10 @@ def load_season_bulk(conn, season: int) -> int:
         logger.info(f'Updating PostGIS geometry for {inserted:,} pitches...')
         cur.execute(
             """
-            UPDATE features_pitch.locations 
+            UPDATE features_pitch.locations
             SET location = ST_SetSRID(ST_MakePoint(plate_x, plate_z), 4326)
             WHERE game_year = %s
-              AND plate_x IS NOT NULL 
+              AND plate_x IS NOT NULL
               AND plate_z IS NOT NULL
         """,
             (season,),

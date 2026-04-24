@@ -49,7 +49,7 @@ def get_polling_status(conn) -> list[dict]:
     """Get current cron job status."""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
-            SELECT jobid, jobname, schedule, active, 
+            SELECT jobid, jobname, schedule, active,
                    substring(command, 1, 80) as command_preview
             FROM cron.job
             WHERE jobname LIKE '%poll%' OR jobname LIKE '%game%'
@@ -62,7 +62,7 @@ def check_season_conditions(conn) -> dict:
     """Check if current conditions meet MLB season/game hours."""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
-            SELECT 
+            SELECT
                 metadata.is_mlb_season() as is_season,
                 metadata.is_game_hours() as is_game_hours,
                 metadata.should_poll_games() as should_poll,

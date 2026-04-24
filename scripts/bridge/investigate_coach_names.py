@@ -41,8 +41,8 @@ def investigate_coach_name_resolution():
             # Check if biofile_legacy table exists and has data
             cur.execute("""
                 SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_schema = 'raw_retrosheet' 
+                    SELECT FROM information_schema.tables
+                    WHERE table_schema = 'raw_retrosheet'
                     AND table_name = 'biofile_legacy'
                 )
             """)
@@ -57,8 +57,8 @@ def investigate_coach_name_resolution():
                 # Check if coaches table exists and has data
                 cur.execute("""
                     SELECT EXISTS (
-                        SELECT FROM information_schema.tables 
-                        WHERE table_schema = 'raw_retrosheet' 
+                        SELECT FROM information_schema.tables
+                        WHERE table_schema = 'raw_retrosheet'
                         AND table_name = 'coaches'
                     )
                 """)
@@ -73,7 +73,7 @@ def investigate_coach_name_resolution():
                     # Test hypothesis: Can coach_id match player_id in biofile_legacy?
                     print('\n--- Testing coach_id to player_id matching ---')
                     cur.execute("""
-                        SELECT 
+                        SELECT
                             COUNT(DISTINCT c.coach_id) as total_coaches,
                             COUNT(DISTINCT b.player_id) as matching_players,
                             ROUND(100.0 * COUNT(DISTINCT b.player_id) / NULLIF(COUNT(DISTINCT c.coach_id), 0), 2) as match_percentage
@@ -88,7 +88,7 @@ def investigate_coach_name_resolution():
                     # Show sample matches
                     print('\n--- Sample coach_id matches ---')
                     cur.execute("""
-                        SELECT 
+                        SELECT
                             c.coach_id,
                             c.season,
                             c.team_id,
@@ -114,7 +114,7 @@ def investigate_coach_name_resolution():
                     # Check for coaches without biofile matches
                     print('\n--- Coaches without biofile matches ---')
                     cur.execute("""
-                        SELECT 
+                        SELECT
                             COUNT(DISTINCT c.coach_id) as unmatched_count
                         FROM raw_retrosheet.coaches c
                         LEFT JOIN raw_retrosheet.biofile_legacy b ON c.coach_id = b.player_id

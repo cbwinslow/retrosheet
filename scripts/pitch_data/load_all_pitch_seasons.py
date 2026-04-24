@@ -41,10 +41,10 @@ def get_season_counts(conn) -> list[tuple[int, int]]:
     """Get pitch counts by season from raw_mlb.statcast."""
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT game_year::int, COUNT(*) 
-            FROM raw_mlb.statcast 
+            SELECT game_year::int, COUNT(*)
+            FROM raw_mlb.statcast
             WHERE game_year IS NOT NULL
-            GROUP BY game_year 
+            GROUP BY game_year
             ORDER BY game_year DESC
         """)
         return cur.fetchall()
@@ -54,9 +54,9 @@ def get_loaded_season_counts(conn) -> list[tuple[int, int]]:
     """Get already loaded pitch counts by season."""
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT game_year, COUNT(*) 
-            FROM features_pitch.locations 
-            GROUP BY game_year 
+            SELECT game_year, COUNT(*)
+            FROM features_pitch.locations
+            GROUP BY game_year
             ORDER BY game_year DESC
         """)
         return cur.fetchall()
@@ -74,10 +74,10 @@ def load_season(conn, season: int, batch_size: int = 50000) -> int:
         # First, count how many rows we'll be inserting
         cur.execute(
             """
-            SELECT COUNT(*) 
-            FROM raw_mlb.statcast 
-            WHERE game_year = %s 
-              AND plate_x IS NOT NULL 
+            SELECT COUNT(*)
+            FROM raw_mlb.statcast
+            WHERE game_year = %s
+              AND plate_x IS NOT NULL
               AND plate_z IS NOT NULL
         """,
             (season,),
@@ -109,7 +109,7 @@ def load_season(conn, season: int, batch_size: int = 50000) -> int:
         cur.execute(
             """
             DECLARE pitch_cursor CURSOR FOR
-            SELECT 
+            SELECT
                 s.game_year::integer,
                 s.game_pk::integer,
                 s.batter::integer,
@@ -176,10 +176,10 @@ def load_season(conn, season: int, batch_size: int = 50000) -> int:
         logger.info(f'Updating PostGIS geometry for season {season}...')
         cur.execute(
             """
-            UPDATE features_pitch.locations 
+            UPDATE features_pitch.locations
             SET location = ST_SetSRID(ST_MakePoint(plate_x, plate_z), 4326)
             WHERE game_year = %s
-              AND plate_x IS NOT NULL 
+              AND plate_x IS NOT NULL
               AND plate_z IS NOT NULL
               AND location IS NULL
         """,

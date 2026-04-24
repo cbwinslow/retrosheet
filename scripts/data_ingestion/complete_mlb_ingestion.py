@@ -72,10 +72,10 @@ def get_missing_seasons() -> list[int]:
             """
             psql -d retrosheet -t -c "
             SELECT generate_series as missing_season
-            FROM generate_series(2000, 2019) 
+            FROM generate_series(2000, 2019)
             WHERE generate_series NOT IN (
-                SELECT DISTINCT season 
-                FROM raw_mlb.live_feed_snapshots 
+                SELECT DISTINCT season
+                FROM raw_mlb.live_feed_snapshots
                 WHERE season >= 2000
             )
             ORDER BY generate_series
@@ -105,7 +105,7 @@ def get_current_status():
         result = subprocess.run(
             """
             psql -d retrosheet -c "
-            SELECT 
+            SELECT
                 (SELECT COUNT(*) FROM raw_mlb.live_feed_snapshots) as game_feeds,
                 (SELECT COUNT(*) FROM core.live_games) as processed_games,
                 (SELECT COUNT(DISTINCT season) FROM raw_mlb.live_feed_snapshots WHERE season >= 2000) as seasons_downloaded,

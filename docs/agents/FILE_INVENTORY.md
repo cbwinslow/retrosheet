@@ -273,6 +273,9 @@ These files may be present as active development work. Treat them as live-bridge
 | `sql/features/006_additional_engineered_features.sql` | **ADDITIONAL FEATURES SCHEMA** - Adds 25+ advanced engineered features including pitch tunneling, spin characteristics, platoon indicators, fatigue metrics, pressure metrics, timing features, situational indicators. | ✅ Schema added |
 | `sql/features/007_populate_additional_features.sql` | Single-pass population script for additional features. | Ready (use 008 for batching) |
 | `sql/features/008_populate_additional_features_batch.sql` | **BATCHED POPULATION** - Processes additional features in 100k row batches for 7.66M rows. Run multiple times until complete. | 🔄 In Progress |
+| `sql/features/009_more_engineered_features.sql` | **MORE FEATURES SCHEMA** - Adds 40+ research-backed features from KB analysis: pitch quality score, count leverage, TTOP (times through order), RE24, WPA, payoff pitch, game situation, environmental. | ✅ Schema added |
+| `sql/features/010_populate_more_features.sql` | Single-pass population for more features (RE24, WPA, TTOP, pitch quality). | Ready |
+| `sql/features/011_populate_more_features_batch.sql` | **BATCHED POPULATION** - Processes more features in 100k row batches. | 🔄 Ready |
 | `docs/PITCH_FEATURE_MART_SCHEMA.md` | Comprehensive schema documentation. Table reference, usage patterns, design principles, data lineage, performance considerations. | Complete |
 | `docs/diagrams/PITCH_FEATURE_MART_ERD.puml` | Entity relationship diagram showing all 7 tables and relationships. | Complete |
 | `docs/diagrams/PITCH_DATA_FLOW.puml` | Data flow architecture diagram from sources through processing to models with CRISP-DM labels. | Complete |
@@ -290,8 +293,8 @@ These files may be present as active development work. Treat them as live-bridge
 **Completed April 24, 2026 (Sub-Issue #79):**
 - ✅ Schema created: 7 tables in database
 - ✅ Base features: 7,661,992 rows populated (2015-2025, 118 Statcast fields)
-- ✅ Engineered features: 7,661,992 rows with 21+ derived features
-- ✅ Feature registry: 37 features documented
+- ✅ Engineered features: 7,661,992 rows with **46+ derived features** (original) + **25 additional** + **40 more** = **110+ total features**
+- ✅ Feature registry: 110+ features documented across multiple SQL files
 - ✅ Outcome labels: Tier 1 {S,B,X}, Tier 2 {12 classes}
 - ✅ Documentation: AGENTS.md, PITCH_MODEL_PROGRESS.md updated
 - ✅ GitHub: Epic #78 and Sub-Issue #79 updated with progress

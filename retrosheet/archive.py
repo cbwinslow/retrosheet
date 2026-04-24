@@ -19,7 +19,7 @@ class Parser:
         self.metadata = pd.DataFrame()
 
     def _pitch_count(self, string, current_count):
-        """For now it is including pickoffs
+        """For now it is including pickoffs.
         """
         # simplest idea:
         clean_pitches = string.replace('>', '').replace('+', '').replace('*', '').replace('??', '')
@@ -31,7 +31,7 @@ class Parser:
     def parse_file(self, year):
         """Will parse the file respective for one year.
         - It will first look for the file in current directory
-        - Else, it will take from the web (without making a copy)
+        - Else, it will take from the web (without making a copy).
         """
         event = Event()
         filename = f'{year}eve{self.extension}'
@@ -377,7 +377,7 @@ class Event:
     """Events
     Parameters:
         - event_string (NP = No Play)
-        - play = {'B': 1,'1': 0,'2': 0,'3': 0,'H': 0, 'out': 0, 'run': 0}
+        - play = {'B': 1,'1': 0,'2': 0,'3': 0,'H': 0, 'out': 0, 'run': 0}.
 
     Todo:
         - clean code, make it less redundant, potentially in a module only.
@@ -398,7 +398,7 @@ class Event:
         |--------------------------|
         |------[ H ]---[ B ]-------|
         |--------------------------|
-        Runs: [%]    Outs: [%]
+        Runs: [%]    Outs: [%].
 
         Todo:
             - Log instead of print
@@ -418,7 +418,7 @@ class Event:
         )
 
     def parse_advance(self):
-        """This portion parses the explicit advancements
+        """This portion parses the explicit advancements.
         """
         self.play = (
             {'B': 1, '1': 0, '2': 0, '3': 0, 'H': 0, 'out': 0, 'run': 0}
@@ -506,7 +506,7 @@ class Event:
         return True
 
     def _secondary_event(self, secondary_event):
-        """Events happening with K or Walks. This can be merged with parse_event() if written well
+        """Events happening with K or Walks. This can be merged with parse_event() if written well.
         """
         if re.findall(r'^CS[23H](?:\([1-9]+\))+', secondary_event):
             # print ('CAUGHT STEALING')

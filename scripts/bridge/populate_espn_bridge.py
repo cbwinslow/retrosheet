@@ -50,13 +50,13 @@ def populate_espn_player_xref():
             # Match to Retrosheet IDs via bridge.player_xref.mlb_id
             cur.execute("""
                 INSERT INTO bridge.external_player_xref (external_source, external_player_id, retrosheet_player_id)
-                SELECT DISTINCT 
+                SELECT DISTINCT
                     'espn' as external_source,
                     (player_data->'id')::text as external_player_id,
                     px.retrosheet_id as retrosheet_player_id
                 FROM (
                     -- Extract player IDs from game snapshots (leaders/athletes)
-                    SELECT 
+                    SELECT
                         jsonb_array_elements(raw_payload->'events'->0->'competitors') as competitor
                     FROM raw_espn.game_snapshots
                     WHERE raw_payload IS NOT NULL
@@ -64,10 +64,10 @@ def populate_espn_player_xref():
                 CROSS JOIN jsonb_array_elements(comp.competitor->'leaders') as leader_data
                 CROSS JOIN jsonb_array_elements(comp.competitor->'roster') as player_data
                 JOIN (
-                    SELECT mlb_id, retrosheet_id 
-                    FROM bridge.player_xref 
-                    WHERE mlb_id IS NOT NULL 
-                    AND retrosheet_id IS NOT NULL 
+                    SELECT mlb_id, retrosheet_id
+                    FROM bridge.player_xref
+                    WHERE mlb_id IS NOT NULL
+                    AND retrosheet_id IS NOT NULL
                     AND retrosheet_id != ''
                 ) px ON (player_data->'player'->>'id')::int = px.mlb_id
                 WHERE (player_data->'player'->>'id') IS NOT NULL
@@ -99,7 +99,7 @@ def populate_espn_team_xref():
             # Match to Retrosheet IDs via bridge.team_xref.mlb_team_id
             cur.execute("""
                 INSERT INTO bridge.external_team_xref (external_source, external_team_id, retrosheet_team_id)
-                SELECT DISTINCT 
+                SELECT DISTINCT
                     'espn' as external_source,
                     (team_data->'id')::text as external_team_id,
                     tx.retrosheet_team_id as retrosheet_team_id
@@ -107,10 +107,10 @@ def populate_espn_team_xref():
                 CROSS JOIN jsonb_array_elements(raw_payload->'events'->0->'competitors') as competitor
                 CROSS JOIN jsonb_array_elements(competitor->'team') as team_data
                 JOIN (
-                    SELECT mlb_team_id, retrosheet_team_id 
-                    FROM bridge.team_xref 
-                    WHERE mlb_team_id IS NOT NULL 
-                    AND retrosheet_team_id IS NOT NULL 
+                    SELECT mlb_team_id, retrosheet_team_id
+                    FROM bridge.team_xref
+                    WHERE mlb_team_id IS NOT NULL
+                    AND retrosheet_team_id IS NOT NULL
                     AND retrosheet_team_id != ''
                 ) tx ON (team_data->>'id')::int = tx.mlb_team_id
                 WHERE raw_payload IS NOT NULL

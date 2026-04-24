@@ -42,7 +42,7 @@ class PredictionTarget:
             cur.execute(
                 """
                 SELECT target_id, target_name, target_family, description
-                FROM predictions.prediction_targets 
+                FROM predictions.prediction_targets
                 WHERE target_id = %s
             """,
                 (target_id,),
@@ -184,7 +184,7 @@ class PredictorRegistry:
         try:
             with conn.cursor() as cur:
                 cur.execute("""
-                    SELECT target_id FROM predictions.prediction_targets 
+                    SELECT target_id FROM predictions.prediction_targets
                     WHERE is_active = TRUE
                 """)
                 return [r[0] for r in cur.fetchall()]
