@@ -252,6 +252,24 @@ These files may be present as active development work. Treat them as live-bridge
 | `sql/features/002_player_profile_mart.sql` | Player profile mart schema for pitcher arsenals and batter zones. | Existing |
 | `docs/PITCH_PLAYER_ANALYSIS_ARCHITECTURE.md` | Architecture document for pitch-to-player attribution and feature engineering. | Existing |
 | `docs/STATCAST_MODELS_RESEARCH_REPORT.md` | Research on external Statcast pitch modeling repositories and architectures. | Existing |
+| `docs/research_paper.md` | **PRIMARY RESEARCH DOC** - Mathematical formulations for pitch-level models. Includes equations for Two-Tier, LSTM, Multi-Task, and Swing Probability models. Loss functions, evaluation metrics, research alignment. | **NEW - April 2026** |
+| `docs/CRISP_DM_IMPLEMENTATION_PLAN.md` | Updated with Phase 3 completion (100%) and pitch-level milestones. Phase progress, next actions, milestones. | **Updated April 2026** |
+| `docs/agents/CURRENT_SNAPSHOT.md` | Updated with pitch-level data state and current objectives. | **Updated April 2026** |
+| `AGENTS.md` | Added AI Agent Documentation Update Protocol section. Instructions for maintaining CRISP-DM docs, research paper, and GitHub issue updates. | **Updated April 2026** |
+
+### Status: Sub-Issue #79 Complete ✅
+
+**Completed April 24, 2026:**
+- Schema created: 7 tables in database
+- Feature registry: 37 features populated
+- Documentation: research paper with equations, ERD diagrams, schema docs
+- Branch: `feature/pitch-mart-schema` pushed to GitHub
+- CRISP-DM Phase 3: 100% Complete
+
+**Ready for Sub-Issues #80-83:**
+- Base features ready to populate (7.66M pitches)
+- Engineered features ready to build
+- All 4 model families have schema support
 
 ### Feature Mart Schema Design
 

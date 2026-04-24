@@ -73,25 +73,49 @@ All project scripts, CI, and environments use Python 3.10. Legacy `requirements.
 
 **Raw Source Data:**
 - `raw_mlb.statcast`: Source-preserved Statcast data from Baseball Savant
-  - Columns: pitch_type, plate_x, plate_z, sz_top, sz_bot, pfx_x, pfx_z, release_speed, spin_rate, launch_speed, launch_angle, hit_distance_sc
-  - Count: ~7.8M pitches (2015-2025 seasons)
+  - **Count**: 7,797,034 pitch-level records (2015-2025 seasons)
+  - **Fields**: 118 Statcast columns including pitch metrics, physics, expected stats, win probability
 
-**Normalized Tables:**
-- `mlb.pitches`: 19.7M normalized pitch records with batter_id, pitcher_id, game_pk
-- `features_pitch.locations`: PostGIS-enabled table with geometry(Point, 4326) column for spatial queries
+**Feature Table (Complete Load):**
+- `features_pitch.locations`: 7,661,992 pitches (2015-2025) with ALL Statcast fields
+  - **Core**: game_year, game_pk, game_date, batter_id, pitcher_id, player_name
+  - **Pitch**: pitch_type, pitch_name, pitch_number, pitch_result, description, events
+  - **Count/State**: balls, strikes, outs_when_up, inning, on_1b, on_2b, on_3b
+  - **Release/Physics**: start_speed, effective_speed, release_spin_rate, spin_axis, release_pos_x/y/z, release_extension
+  - **Movement/Location**: pfx_x, pfx_z, plate_x, plate_z, zone, sz_top, sz_bot, **PostGIS geometry**
+  - **Physics Components**: vx0, vy0, vz0, ax, ay, az
+  - **Hit Data**: hc_x, hc_y, hit_location, bb_type, launch_speed, launch_angle, hit_distance
+  - **Expected Stats**: estimated_ba, estimated_woba, estimated_slg, woba_value, woba_denom
+  - **Scoring**: home_score, away_score, bat_score, fld_score, post_* variants
+  - **Win Probability**: delta_home_win_exp, delta_run_exp, home_win_exp, bat_win_exp
+  - **Fielding**: fielder_2-9, if_fielding_alignment, of_fielding_alignment
 
 **Key Fields for GIS Mapping:**
-- `plate_x`: Horizontal position (-17 to +17 inches, 0 = center)
+- `plate_x`: Horizontal position (-17 to +17 inches, 0 = center of plate)
 - `plate_z`: Vertical position (feet from ground)
 - `sz_top`: Top of strike zone for batter
 - `sz_bot`: Bottom of strike zone for batter
-- `location`: PostGIS geometry column (ST_MakePoint(plate_x, plate_z))
+- `location`: PostGIS geometry column (ST_SetSRID(ST_MakePoint(plate_x, plate_z), 4326))
+
+**Verification Status**: ✅ All 11 seasons loaded (2015-2025), 7.66M pitches, 90 columns, row counts verified against raw_mlb.statcast
+
+**Loading Script:**
+```bash
+# Load all seasons with verification
+python scripts/pitch_data/load_all_statcast_full.py --all
+
+# Verify existing data
+python scripts/pitch_data/load_all_statcast_full.py --verify
+
+# Load specific season
+python scripts/pitch_data/load_all_statcast_full.py --seasons 2025
+```
 
 **Linking to Plate Appearances:**
 ```sql
 -- Link pitches to retrosheet games via bridge
 SELECT p.*, gx.retrosheet_game_id, e.event_id
-FROM mlb.pitches p
+FROM features_pitch.locations p
 JOIN bridge.game_xref gx ON p.game_pk::text = gx.mlb_game_pk::text
 JOIN core.events e ON gx.retrosheet_game_id = e.game_id
 WHERE p.game_pk = <GAME_PK>;
@@ -252,6 +276,111 @@ When creating or updating GitHub issues:
 - Use labels consistently with existing conventions
 - Add items to the project board for tracking
 - Reference knowledge base documents when applicable
+
+## AI Agent Documentation Update Protocol
+
+**CRITICAL: After every significant conversation, AI agents MUST update documentation to maintain project continuity.**
+
+### Required Documentation Updates
+
+After completing work, AI agents must update:
+
+1. **CRISP-DM Implementation Plan** (`docs/CRISP_DM_IMPLEMENTATION_PLAN.md`)
+   - Update phase completion percentages
+   - Add milestone achievements with dates
+   - Update "Next Phase Actions" with completed items
+   - Link to relevant GitHub issues
+
+2. **Research Paper** (`docs/research_paper.md`)
+   - Add experimental results from model training
+   - Document mathematical formulations for new models
+   - Include equations, loss functions, and evaluation metrics
+   - Reference external research papers
+
+3. **Current Snapshot** (`docs/agents/CURRENT_SNAPSHOT.md`)
+   - Update "Current Objective" section
+   - Refresh "Current Data State" with row counts
+   - Update "Best Move Right Now" recommendations
+   - Document any blockers or dependencies
+
+4. **Agent Operating Guide** (this file, `AGENTS.md`)
+   - Update data layer descriptions when schema changes
+   - Add new procedures for completed work
+   - Document pitch-level features and table structures
+   - Update "Non-Negotiables" if conventions change
+
+5. **File Inventory** (`docs/agents/FILE_INVENTORY.md`)
+   - Add new SQL files, scripts, and documentation
+   - Update ownership and status for modified files
+   - Link to related GitHub issues
+   - Document deprecated or experimental files
+
+6. **GitHub Issues and Comments**
+   - Add progress comments to epics and sub-issues
+   - Include specific details: row counts, metrics, file paths
+   - Update issue status (open → in progress → closed)
+   - Link commits and PRs to issues
+
+### Documentation Update Template
+
+When updating documentation, include:
+
+```markdown
+**Date:** YYYY-MM-DD  
+**CRISP-DM Phase:** [Current Phase]  
+**Epic/Issue:** #[number]  
+**Agent:** [AI agent identifier]
+
+### Changes Made
+- [Specific change 1]
+- [Specific change 2]
+
+### Metrics/Results
+- Rows affected: [count]
+- Performance: [metrics]
+- Accuracy: [if applicable]
+
+### Next Steps
+1. [Action item 1]
+2. [Action item 2]
+```
+
+### Paper Trail Requirements
+
+Every significant work session must leave:
+
+1. **Commit messages** with detailed descriptions
+2. **GitHub issue comments** with technical details
+3. **Documentation updates** showing what changed and why
+4. **Research paper updates** for model/math work
+5. **CRISP-DM plan updates** showing phase progress
+
+### Examples of "Significant Work"
+
+**MUST document:**
+- Schema changes (new tables, columns, indexes)
+- Model training runs (accuracies, loss values, metrics)
+- Feature engineering (new derived features, rolling averages)
+- Data migrations (row counts, data quality issues)
+- Research findings (equations, literature review)
+- Bug fixes (root cause, solution, prevention)
+
+**MAY skip:**
+- Typo fixes
+- Minor formatting changes
+- Configuration tweaks without data impact
+- Read-only queries for exploration
+
+### Documentation Quality Standards
+
+All documentation must include:
+
+- **Specific numbers:** Row counts, percentages, timestamps
+- **File paths:** Absolute paths to relevant files
+- **Equations:** LaTeX formatting for mathematical concepts
+- **Code snippets:** SQL queries, Python functions
+- **Research citations:** Author, year, paper/repo links
+- **Decision rationale:** Why this approach was chosen
 
 ## Chadwick Procedure
 

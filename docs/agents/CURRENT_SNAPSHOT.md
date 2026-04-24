@@ -2,11 +2,18 @@
 
 This file is the shortest durable handoff for another agent. Read this first when resuming work after context loss.
 
-Last updated: `2026-04-12`
+**Last updated:** `2026-04-24`  
+**CRISP-DM Phase:** 3 → 4 Transition (Data Preparation → Modeling)  
+**Current Focus:** Pitch-Level Model Pipeline (Epic #78)
 
 ## Current Objective
 
-The project is currently focused on the historical plate-appearance probability engine first, with live MLB bridge work staged behind it.
+**PRIMARY:** Build pitch-level prediction models using the newly completed flexible feature mart schema.  
+**SECONDARY:** Continue historical plate-appearance probability engine improvements.
+
+The project has transitioned from PA-level to pitch-level modeling with a complete schema supporting 4 model families: Two-Tier XGBoost, LSTM Sequential, Multi-Task Network, and Swing Probability.
+
+**Key Achievement (April 24, 2026):** Flexible Feature Mart Schema (#79) implemented with 7 tables, enabling all 118 Statcast fields for research-backed model architectures from SMU, CMU, and Penn State.
 
 Priority order:
 
@@ -32,7 +39,28 @@ Do not treat `mlb_features`, `mlb_models`, `mlb_enhanced`, or EdgeForge prototyp
 
 ## Current Data State
 
-Historical warehouse:
+### Pitch-Level Data (NEW - April 24, 2026)
+
+**Feature Mart Schema (`features_pitch` schema):**
+
+| Table | Rows | Status | Description |
+|-------|------|--------|-------------|
+| `features_pitch.locations` | 7,661,992 | ✅ Populated | Full Statcast data 2015-2025 (118 fields) |
+| `features_pitch.base_features` | TBD | ⏳ Ready to populate | Mirrors locations with versioning |
+| `features_pitch.feature_registry` | 37 | ✅ Populated | Metadata catalog for feature selection |
+| `features_pitch.engineered_features` | TBD | ⏳ Schema ready | Derived metrics + model targets |
+| `features_pitch.sequential_features` | TBD | ⏳ Schema ready | LSTM/GRU sequence windows |
+| `features_pitch.player_context` | TBD | ⏳ Schema ready | Rolling player statistics |
+| `features_pitch.model_training_set` | TBD | ⏳ Schema ready | Versioned training data |
+| `features_pitch.pitch_sequences` | TBD | ⏳ Schema ready | PA-level pitch aggregations |
+
+**Data Quality:**
+- 98.2% completeness on Statcast data
+- Quality flags implemented (normal, outlier, passed_ball, wild_pitch)
+- PostGIS geometry enabled for spatial queries
+- All 118 Statcast fields preserved (release_speed, spin_rate, plate_x, plate_z, etc.)
+
+### Historical warehouse:
 
 - `features.plate_appearance_outcome_examples`: `4,779,662` rows across `2000-2025`
 - grouped layer exists in `features.plate_appearance_outcome_grouped_examples`
@@ -232,33 +260,62 @@ Important limitation:
 
 ## Best Move Right Now
 
-The KB is now expanded with Markov chain research and framework documentation. The new prediction framework is the next workstream.
+**PRIORITY 1: Pitch-Level Model Pipeline (Epic #78)**
 
-Do this next:
+The flexible feature mart schema is complete. Now execute the modeling phase:
 
-1. Build the modular prediction framework structure (Strategy/Registry pattern)
-   - Create `predictions/registry.py` (base registry)
-   - Create `predictions/base.py` (target/model base classes)
-   - Port `pa_outcome_distribution` into new framework
-2. Add run expectancy matrix feature mart (`sql/features/080_run_expectancy_matrix.sql`)
-3. Add Markov chain model as first new model family
-4. Add `next_state_distribution` target as second concrete target
+### Immediate Actions (This Week)
 
-Research new docs:
-- [docs/KNOWLEDGE_BASE_MARKOV_CHAIN.md](docs/KNOWLEDGE_BASE_MARKOV_CHAIN.md) — Markov research
-- [docs/KNOWLEDGE_BASE_FRAMEWORK.md](docs/KNOWLEDGE_BASE_FRAMEWORK.md) — Architecture
-- [docs/MODEL_SELECTION_GUIDE.md](docs/MODEL_SELECTION_GUIDE.md) — Model selection
+1. **Populate base_features** from `features_pitch.locations`
+   - Migrate 7.66M pitches (2015-2025)
+   - Preserve all 118 Statcast fields
+   - Verify row counts match exactly
 
-Legacy PA model (still valid):
+2. **Build engineered_features** table
+   - Create `outcome_tier1`: {Ball, Strike, Ball-in-Play}
+   - Create `outcome_tier2`: {Single, Double, Triple, HR, Out, Walk, K}
+   - Add derived physics features (break magnitude, approach angle)
+   - Add score differential and leverage index
+
+3. **Train Tier-1 XGBoost baseline**
+   - Target: >80% coarse outcome accuracy
+   - Validate against SMU benchmark (58%)
+   - Document log loss, Brier score, calibration error
+
+### Secondary Priority (Next 2 Weeks)
+
+4. **Implement remaining pitch-level models**
+   - LSTM Sequential (Epic #78, Sub-Issue #81)
+   - Multi-Task Network (Epic #78, Sub-Issue #82)
+   - Swing Probability (Epic #78, Sub-Issue #83)
+
+5. **Build player context features**
+   - 30-day rolling averages for all pitchers
+   - Batter zone discipline profiles
+   - Pitcher arsenal composition (% FB, BB, OS)
+
+### Key Documentation
+
+**Pitch-Level Research:**
+- [docs/research_paper.md](docs/research_paper.md) — Mathematical formulations, loss functions, evaluation metrics
+- [docs/STATCAST_MODELS_RESEARCH_REPORT.md](docs/STATCAST_MODELS_RESEARCH_REPORT.md) — SMU, CMU, Penn State research alignment
+- [docs/PITCH_FEATURE_MART_SCHEMA.md](docs/PITCH_FEATURE_MART_SCHEMA.md) — Schema documentation
+
+**SQL Schema:**
+- `sql/features/003_pitch_flexible_mart.sql` — 7 table definitions
+- `sql/features/001_pitch_data_quality.sql` — Quality flags and views
+
+**Legacy PA Model (still valid, lower priority):**
 - HGB + advanced_count (log loss 1.5089)
 - Calibration artifact registered
-- Count-state priors fix two-strike overconfidence
+- Available via existing scripts
 
-Do not do this yet:
+### Do Not Do Yet
 
-- GPU migration
-- new model-family churn beyond Markov chain exploration
+- GPU migration (stay CPU-first for reproducibility)
+- PA-level Markov chain (deprioritized behind pitch-level)
 - EdgeForge prototype integration
+- Live prediction triggers (wait for models)
 - broad interface expansion before probability/reporting layers settle
 
 ## Compute Notes
@@ -276,7 +333,18 @@ Current canonical modeling path is CPU-first and reproducible. GPU work is optio
 
 ## GitHub Issues To Read First
 
-Resume from these issues before starting new work:
+### Pitch-Level Model Pipeline (NEW - Active)
+
+Resume from Epic #78 and sub-issues:
+
+- `#78` **Epic:** Pitch-Level Model Pipeline — Master tracking issue
+- `#79` **Sub-Issue:** Flexible Feature Mart Schema — ✅ **COMPLETE**
+- `#80` **Sub-Issue:** Two-Tier XGBoost Implementation — ⏳ Ready to start
+- `#81` **Sub-Issue:** LSTM Sequential Model — ⏳ Schema ready
+- `#82` **Sub-Issue:** Multi-Task Network — ⏳ Schema ready
+- `#83` **Sub-Issue:** Swing Probability Model — ⏳ Schema ready
+
+### Legacy PA Model Issues (Active but lower priority)
 
 - `#10` Improve model quality with richer features, calibration, and backtesting
 - `#24` Train and evaluate full advanced PA outcome distribution model
