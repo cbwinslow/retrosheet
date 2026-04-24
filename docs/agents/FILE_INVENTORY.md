@@ -13,7 +13,17 @@
 - Issue #10: Statcast Pitch-Level Data Ingestion – completed. See [#58](https://github.com/cbwinslow/retrosheet/issues/58)
 - Issue #11: Pitch-Level Model Pipeline (Epic #78) – **in progress**. See [#78](https://github.com/cbwinslow/retrosheet/issues/78)
 - Issue #11.1: Flexible Feature Mart Schema (Sub-Issue #79) – **in progress**. See [#79](https://github.com/cbwinslow/retrosheet/issues/79)
-- Issue #12: Extensible MLB Prediction Framework (22 hours, 3 weeks) – **ready to implement**. See [#80](https://github.com/cbwinslow/retrosheet/issues/80)
+- Issue #12: Extensible MLB Prediction Framework (Epic #80) – **ready to implement**. See [#80](https://github.com/cbwinslow/retrosheet/issues/80)
+  - #81: Phase 1.1 - Pydantic Configuration Schemas
+  - #82: Phase 1.2 - Rich Result Classes
+  - #83: Phase 1.3 - Test Infrastructure
+  - #84: Phase 2.1 - ModelTrainer Class
+  - #85: Phase 2.2 - Plugin Registry
+  - #86: Phase 2.3 - FeatureLoader
+  - #87: Phase 2.4 - Experiment Runner
+  - #88: Phase 3.1 - Unified CLI
+  - #89: Phase 3.2 - Database Triggers
+  - #90: Phase 3.3 - Documentation
 
 This inventory tells agents what each important file does and which workflows own it. Files may appear in multiple sections when they serve multiple goals.
 
@@ -55,6 +65,7 @@ This inventory tells agents what each important file does and which workflows ow
 | `docs/FRAMEWORK_CONFIRMATION.md` | Proof architecture will work, risk analysis, success criteria. | Architecture validation |
 | `docs/IMPLEMENTATION_ROADMAP.md` | 22-hour implementation plan with phases and deliverables. | Implementation tracking |
 | `docs/DEPLOYMENT_PLAN.md` | Complete deployment guide for agents, handoff checklist, rollback plan. | Agent handoff |
+| `docs/GITHUB_PROJECT_GUIDE.md` | GitHub Project board setup, workflow, tracking for issues #80-#90. | GitHub project management |
 
 ## Configuration
 
