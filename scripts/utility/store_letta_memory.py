@@ -114,6 +114,6 @@ response = requests.post(
 print(f'Status: {response.status_code}')
 if response.status_code == 201:
     passage = response.json()
-    print(f"Created passage ID: {passage.get('id')}")
+    print(f'Created passage ID: {passage.get("id")}')
 else:
     print(f'Error: {response.text}')

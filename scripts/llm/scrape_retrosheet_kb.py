@@ -122,7 +122,8 @@ def main():
                     article_soup = BeautifulSoup(html_resp.text, 'html.parser')
                     # Simple heuristic: grab <article> or main <div>
                     article = article_soup.find('article') or article_soup.find(
-                        'div', {'class': 'content'},
+                        'div',
+                        {'class': 'content'},
                     )
                     text = (
                         article.get_text(separator='\n', strip=True)

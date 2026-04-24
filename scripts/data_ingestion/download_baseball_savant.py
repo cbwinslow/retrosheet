@@ -111,18 +111,24 @@ def download_baseball_savant_year(year: int, data_type: str = 'batter') -> bool:
 def main():
     parser = argparse.ArgumentParser(description='Download Baseball Savant data for multiple years')
     parser.add_argument(
-        '--year-start', type=int, default=2008, help='Start year (Statcast began in 2008)',
+        '--year-start',
+        type=int,
+        default=2008,
+        help='Start year (Statcast began in 2008)',
     )
     parser.add_argument('--year-end', type=int, default=2026, help='End year')
     parser.add_argument(
-        '--type', choices=['batter', 'pitcher', 'both'], default='both', help='Data type',
+        '--type',
+        choices=['batter', 'pitcher', 'both'],
+        default='both',
+        help='Data type',
     )
     args = parser.parse_args()
 
     years = list(range(args.year_start, args.year_end + 1))
 
     print(f'Downloading Baseball Savant data for years: {years}')
-    print(f"Data directory: {Path(__file__).resolve().parents[1] / 'data' / 'baseball_savant'}")
+    print(f'Data directory: {Path(__file__).resolve().parents[1] / "data" / "baseball_savant"}')
     print('=' * 60)
 
     results = {}

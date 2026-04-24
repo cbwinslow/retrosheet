@@ -29,7 +29,9 @@ class BaseballTester:
 
     def __init__(self, max_connections: int = 5):
         self.db_pool = SimpleConnectionPool(
-            minconn=1, maxconn=max_connections, **self._database_kwargs(),
+            minconn=1,
+            maxconn=max_connections,
+            **self._database_kwargs(),
         )
         self.results = {}
 
@@ -79,7 +81,7 @@ class BaseballTester:
 
         self.results[test_name] = test_result
         status_icon = '✅' if test_result['status'] == 'PASS' else '❌'
-        print(f"{status_icon} {test_name}: {test_result['status']} ({elapsed:.2f}s)")
+        print(f'{status_icon} {test_name}: {test_result["status"]} ({elapsed:.2f}s)')
 
         return test_result
 
@@ -139,7 +141,10 @@ class BaseballTester:
             self.db_pool.putconn(conn)
 
     def benchmark_query(
-        self, query: str, params: tuple = None, iterations: int = 3,
+        self,
+        query: str,
+        params: tuple = None,
+        iterations: int = 3,
     ) -> dict[str, float]:
         """Benchmark a query's execution time."""
         conn = self.db_pool.getconn()
@@ -197,7 +202,7 @@ class BaseballTester:
                            is_home_run, is_reach_base, is_extra_base_hit
                     FROM features.plate_appearance_examples
                     WHERE season = 2022  -- Use validation season
-                    AND {target_id.replace("pa_batter_", "")} IS NOT NULL
+                    AND {target_id.replace('pa_batter_', '')} IS NOT NULL
                     ORDER BY random()
                     LIMIT %s
                 """,
@@ -365,12 +370,14 @@ def run_performance_benchmarks(tester: BaseballTester) -> None:
 
     for bench in benchmarks:
         result = tester.run_test(
-            f"benchmark_{bench['name']}", tester.benchmark_query, bench['query'],
+            f'benchmark_{bench["name"]}',
+            tester.benchmark_query,
+            bench['query'],
         )
         if result['status'] == 'PASS':
             perf = result['result']
             print(
-                f"  └─ {bench['description']}: {perf['avg_time']:.4f}s avg ({perf['min_time']:.4f}s - {perf['max_time']:.4f}s)",
+                f'  └─ {bench["description"]}: {perf["avg_time"]:.4f}s avg ({perf["min_time"]:.4f}s - {perf["max_time"]:.4f}s)',
             )
 
 
@@ -403,7 +410,7 @@ def run_data_integrity_tests(tester: BaseballTester) -> None:
 
     for check in integrity_checks:
         tester.run_test(
-            f"integrity_{check['name']}",
+            f'integrity_{check["name"]}',
             tester.test_data_integrity,
             'core.games',
             [check],
@@ -445,7 +452,7 @@ def generate_report(tester: BaseballTester) -> None:
         print('\n❌ FAILED TESTS:')
         for name, result in tester.results.items():
             if result['status'] == 'FAIL':
-                print(f"  • {name}: {result.get('error', 'Unknown error')}")
+                print(f'  • {name}: {result.get("error", "Unknown error")}')
 
     print('\n✅ PASSED TESTS:')
     for name, result in tester.results.items():

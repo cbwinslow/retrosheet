@@ -139,11 +139,14 @@ def main():
     )
     parser.add_argument('--active', action='store_true', help='Ingest currently active/live games')
     parser.add_argument(
-        '--schedule', action='store_true', help="Ingest all games from today's schedule",
+        '--schedule',
+        action='store_true',
+        help="Ingest all games from today's schedule",
     )
     parser.add_argument('--game-pk', type=int, help='Ingest a specific game by MLB game PK')
     parser.add_argument(
-        '--date', help='Date to fetch schedule for (YYYY-MM-DD format, default: today)',
+        '--date',
+        help='Date to fetch schedule for (YYYY-MM-DD format, default: today)',
     )
     parser.add_argument(
         '--no-skip-existing',

@@ -159,8 +159,10 @@ def parse_runs_on_play(runners: list[dict[str, Any]]) -> int:
         1
         for runner in runners
         if runner.get('details', {}).get('isScoringEvent')
-        or (runner.get('movement', {}).get('isOut') is False
-        and runner.get('movement', {}).get('end') == 'score')
+        or (
+            runner.get('movement', {}).get('isOut') is False
+            and runner.get('movement', {}).get('end') == 'score'
+        )
     )
 
 
@@ -428,7 +430,7 @@ def upsert_live_events(conn, event_rows: list[dict[str, Any]]) -> None:
             cur,
             f"""
             INSERT INTO core.live_events (
-                {", ".join(columns)}
+                {', '.join(columns)}
             ) VALUES %s
             ON CONFLICT (game_id, event_id) DO UPDATE
             SET season = EXCLUDED.season,
@@ -530,8 +532,8 @@ def main() -> None:
         raise SystemExit(1) from exc
 
     print(
-        f"Transformed snapshot for game_pk {args.game_pk} into {game_row['game_id']} "
-        f"with {len(event_rows)} live events.",
+        f'Transformed snapshot for game_pk {args.game_pk} into {game_row["game_id"]} '
+        f'with {len(event_rows)} live events.',
     )
 
 

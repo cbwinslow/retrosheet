@@ -29,10 +29,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def run_command(cmd: list[str], description: str) -> bool:
     """Run a command and return success status."""
-    print(f"\n{'=' * 60}")
+    print(f'\n{"=" * 60}')
     print(f'STEP: {description}')
-    print(f"Command: {' '.join(cmd)}")
-    print(f"{'=' * 60}")
+    print(f'Command: {" ".join(cmd)}')
+    print(f'{"=" * 60}')
 
     result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
 
@@ -42,7 +42,7 @@ def run_command(cmd: list[str], description: str) -> bool:
         print(result.stderr, file=sys.stderr)
 
     success = result.returncode == 0
-    print(f"Status: {'✅ SUCCESS' if success else '❌ FAILED'}")
+    print(f'Status: {"✅ SUCCESS" if success else "❌ FAILED"}')
     return success
 
 
@@ -121,14 +121,14 @@ def main() -> None:
     parser.add_argument('--skip-promote', action='store_true', help='Skip model promotion')
     args = parser.parse_args()
 
-    print(f"\n{'=' * 60}")
+    print(f'\n{"=" * 60}')
     print('MODEL RETRAINING PIPELINE')
-    print(f"{'=' * 60}")
-    print(f"Target: {args.target if args.target else 'all'}")
+    print(f'{"=" * 60}')
+    print(f'Target: {args.target if args.target else "all"}')
     print(f'Feature set: {args.feature_set}')
     print(f'Skip refresh: {args.skip_refresh}')
     print(f'Skip promote: {args.skip_promote}')
-    print(f"{'=' * 60}\n")
+    print(f'{"=" * 60}\n')
 
     # Determine targets to train
     if args.all:
@@ -170,16 +170,16 @@ def main() -> None:
     log_training_run(targets, results)
 
     # Summary
-    print(f"\n{'=' * 60}")
+    print(f'\n{"=" * 60}')
     print('PIPELINE SUMMARY')
-    print(f"{'=' * 60}")
+    print(f'{"=" * 60}')
     for step, success in results.items():
         status = '✅' if success else '❌'
         print(f'{status} {step}')
 
     all_success = all(results.values())
-    print(f"\nOverall status: {'✅ SUCCESS' if all_success else '❌ FAILED'}")
-    print(f"{'=' * 60}\n")
+    print(f'\nOverall status: {"✅ SUCCESS" if all_success else "❌ FAILED"}')
+    print(f'{"=" * 60}\n')
 
     sys.exit(0 if all_success else 1)
 

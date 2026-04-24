@@ -48,7 +48,37 @@ PA_NUMERIC_FEATURES = [
     'home_score_diff',
 ]
 PA_CATEGORICAL_FEATURES = ['batter_hand', 'pitcher_hand']
-PA_ENRICHED_NUMERIC_FEATURES = [*PA_NUMERIC_FEATURES, 'batter_prior_pa', 'batter_prior_hit_rate', 'batter_prior_walk_rate', 'batter_prior_strikeout_rate', 'batter_prior_home_run_rate', 'batter_prior_reach_base_rate', 'batter_prior_extra_base_hit_rate', 'pitcher_prior_batters_faced', 'pitcher_prior_hit_allowed_rate', 'pitcher_prior_walk_allowed_rate', 'pitcher_prior_strikeout_rate', 'pitcher_prior_home_run_allowed_rate', 'pitcher_prior_reach_base_allowed_rate', 'pitcher_prior_extra_base_hit_allowed_rate', 'batting_team_prior_win_rate', 'batting_team_prior_runs_scored_per_game', 'batting_team_prior_runs_allowed_per_game', 'fielding_team_prior_win_rate', 'fielding_team_prior_runs_scored_per_game', 'fielding_team_prior_runs_allowed_per_game', 'context_prior_pa', 'context_prior_hit_rate', 'context_prior_walk_rate', 'context_prior_strikeout_rate', 'context_prior_home_run_rate', 'context_prior_reach_base_rate', 'context_prior_extra_base_hit_rate', 'context_prior_batting_team_win_rate']
+PA_ENRICHED_NUMERIC_FEATURES = [
+    *PA_NUMERIC_FEATURES,
+    'batter_prior_pa',
+    'batter_prior_hit_rate',
+    'batter_prior_walk_rate',
+    'batter_prior_strikeout_rate',
+    'batter_prior_home_run_rate',
+    'batter_prior_reach_base_rate',
+    'batter_prior_extra_base_hit_rate',
+    'pitcher_prior_batters_faced',
+    'pitcher_prior_hit_allowed_rate',
+    'pitcher_prior_walk_allowed_rate',
+    'pitcher_prior_strikeout_rate',
+    'pitcher_prior_home_run_allowed_rate',
+    'pitcher_prior_reach_base_allowed_rate',
+    'pitcher_prior_extra_base_hit_allowed_rate',
+    'batting_team_prior_win_rate',
+    'batting_team_prior_runs_scored_per_game',
+    'batting_team_prior_runs_allowed_per_game',
+    'fielding_team_prior_win_rate',
+    'fielding_team_prior_runs_scored_per_game',
+    'fielding_team_prior_runs_allowed_per_game',
+    'context_prior_pa',
+    'context_prior_hit_rate',
+    'context_prior_walk_rate',
+    'context_prior_strikeout_rate',
+    'context_prior_home_run_rate',
+    'context_prior_reach_base_rate',
+    'context_prior_extra_base_hit_rate',
+    'context_prior_batting_team_win_rate',
+]
 PA_ENRICHED_CATEGORICAL_FEATURES = PA_CATEGORICAL_FEATURES
 
 GAME_ENRICHED_NUMERIC_FEATURES = GAME_NUMERIC_FEATURES + [
@@ -89,10 +119,84 @@ GAME_ENRICHED_NUMERIC_FEATURES = GAME_NUMERIC_FEATURES + [
     'same_opponent_as_previous_game',
 ]
 GAME_ENRICHED_CATEGORICAL_FEATURES = GAME_CATEGORICAL_FEATURES
-PA_ADVANCED_NUMERIC_FEATURES = [*PA_NUMERIC_FEATURES, 'batter_career_prior_pa', 'batter_career_prior_hit_rate', 'batter_career_prior_walk_rate', 'batter_career_prior_strikeout_rate', 'batter_career_prior_home_run_rate', 'batter_career_prior_reach_base_rate', 'pitcher_career_prior_batters_faced', 'pitcher_career_prior_hit_allowed_rate', 'pitcher_career_prior_walk_allowed_rate', 'pitcher_career_prior_strikeout_rate', 'pitcher_career_prior_home_run_allowed_rate', 'pitcher_career_prior_reach_base_allowed_rate', 'prior_matchup_pa', 'prior_matchup_hit_rate', 'prior_matchup_walk_rate', 'prior_matchup_strikeout_rate', 'prior_matchup_home_run_rate', 'prior_matchup_reach_base_rate', 'coarse_context_prior_pa', 'coarse_context_prior_hit_rate', 'coarse_context_prior_walk_rate', 'coarse_context_prior_strikeout_rate', 'coarse_context_prior_home_run_rate', 'coarse_context_prior_reach_base_rate', 'coarse_context_prior_extra_base_hit_rate', 'park_prior_total_runs_per_game', 'park_prior_home_win_rate', 'batting_team_rolling_30_games', 'batting_team_rolling_30_win_rate', 'batting_team_rolling_30_runs_scored_per_game', 'batting_team_rolling_30_runs_allowed_per_game', 'fielding_team_rolling_30_games', 'fielding_team_rolling_30_win_rate', 'fielding_team_rolling_30_runs_scored_per_game', 'fielding_team_rolling_30_runs_allowed_per_game']
+PA_ADVANCED_NUMERIC_FEATURES = [
+    *PA_NUMERIC_FEATURES,
+    'batter_career_prior_pa',
+    'batter_career_prior_hit_rate',
+    'batter_career_prior_walk_rate',
+    'batter_career_prior_strikeout_rate',
+    'batter_career_prior_home_run_rate',
+    'batter_career_prior_reach_base_rate',
+    'pitcher_career_prior_batters_faced',
+    'pitcher_career_prior_hit_allowed_rate',
+    'pitcher_career_prior_walk_allowed_rate',
+    'pitcher_career_prior_strikeout_rate',
+    'pitcher_career_prior_home_run_allowed_rate',
+    'pitcher_career_prior_reach_base_allowed_rate',
+    'prior_matchup_pa',
+    'prior_matchup_hit_rate',
+    'prior_matchup_walk_rate',
+    'prior_matchup_strikeout_rate',
+    'prior_matchup_home_run_rate',
+    'prior_matchup_reach_base_rate',
+    'coarse_context_prior_pa',
+    'coarse_context_prior_hit_rate',
+    'coarse_context_prior_walk_rate',
+    'coarse_context_prior_strikeout_rate',
+    'coarse_context_prior_home_run_rate',
+    'coarse_context_prior_reach_base_rate',
+    'coarse_context_prior_extra_base_hit_rate',
+    'park_prior_total_runs_per_game',
+    'park_prior_home_win_rate',
+    'batting_team_rolling_30_games',
+    'batting_team_rolling_30_win_rate',
+    'batting_team_rolling_30_runs_scored_per_game',
+    'batting_team_rolling_30_runs_allowed_per_game',
+    'fielding_team_rolling_30_games',
+    'fielding_team_rolling_30_win_rate',
+    'fielding_team_rolling_30_runs_scored_per_game',
+    'fielding_team_rolling_30_runs_allowed_per_game',
+]
 PA_ADVANCED_CATEGORICAL_FEATURES = [*PA_CATEGORICAL_FEATURES, 'park_id']
 
-GAME_ADVANCED_NUMERIC_FEATURES = [*GAME_NUMERIC_FEATURES, 'batter_career_prior_pa', 'batter_career_prior_hit_rate', 'batter_career_prior_walk_rate', 'batter_career_prior_strikeout_rate', 'batter_career_prior_home_run_rate', 'batter_career_prior_reach_base_rate', 'pitcher_career_prior_batters_faced', 'pitcher_career_prior_hit_allowed_rate', 'pitcher_career_prior_walk_allowed_rate', 'pitcher_career_prior_strikeout_rate', 'pitcher_career_prior_home_run_allowed_rate', 'pitcher_career_prior_reach_base_allowed_rate', 'prior_matchup_pa', 'prior_matchup_hit_rate', 'prior_matchup_walk_rate', 'prior_matchup_strikeout_rate', 'prior_matchup_home_run_rate', 'prior_matchup_reach_base_rate', 'coarse_context_prior_pa', 'coarse_context_prior_hit_rate', 'coarse_context_prior_walk_rate', 'coarse_context_prior_strikeout_rate', 'coarse_context_prior_home_run_rate', 'coarse_context_prior_reach_base_rate', 'coarse_context_prior_extra_base_hit_rate', 'park_prior_total_runs_per_game', 'park_prior_home_win_rate', 'home_team_rolling_30_games', 'home_team_rolling_30_win_rate', 'home_team_rolling_30_runs_scored_per_game', 'home_team_rolling_30_runs_allowed_per_game', 'away_team_rolling_30_games', 'away_team_rolling_30_win_rate', 'away_team_rolling_30_runs_scored_per_game', 'away_team_rolling_30_runs_allowed_per_game']
+GAME_ADVANCED_NUMERIC_FEATURES = [
+    *GAME_NUMERIC_FEATURES,
+    'batter_career_prior_pa',
+    'batter_career_prior_hit_rate',
+    'batter_career_prior_walk_rate',
+    'batter_career_prior_strikeout_rate',
+    'batter_career_prior_home_run_rate',
+    'batter_career_prior_reach_base_rate',
+    'pitcher_career_prior_batters_faced',
+    'pitcher_career_prior_hit_allowed_rate',
+    'pitcher_career_prior_walk_allowed_rate',
+    'pitcher_career_prior_strikeout_rate',
+    'pitcher_career_prior_home_run_allowed_rate',
+    'pitcher_career_prior_reach_base_allowed_rate',
+    'prior_matchup_pa',
+    'prior_matchup_hit_rate',
+    'prior_matchup_walk_rate',
+    'prior_matchup_strikeout_rate',
+    'prior_matchup_home_run_rate',
+    'prior_matchup_reach_base_rate',
+    'coarse_context_prior_pa',
+    'coarse_context_prior_hit_rate',
+    'coarse_context_prior_walk_rate',
+    'coarse_context_prior_strikeout_rate',
+    'coarse_context_prior_home_run_rate',
+    'coarse_context_prior_reach_base_rate',
+    'coarse_context_prior_extra_base_hit_rate',
+    'park_prior_total_runs_per_game',
+    'park_prior_home_win_rate',
+    'home_team_rolling_30_games',
+    'home_team_rolling_30_win_rate',
+    'home_team_rolling_30_runs_scored_per_game',
+    'home_team_rolling_30_runs_allowed_per_game',
+    'away_team_rolling_30_games',
+    'away_team_rolling_30_win_rate',
+    'away_team_rolling_30_runs_scored_per_game',
+    'away_team_rolling_30_runs_allowed_per_game',
+]
 GAME_ADVANCED_CATEGORICAL_FEATURES = [*GAME_CATEGORICAL_FEATURES, 'park_id']
 PA_TARGETS = {
     'pa_batter_hit': 'is_hit',
@@ -492,7 +596,10 @@ def load_examples(
 
 
 def preprocessor(
-    *, numeric_features: list[str], categorical_features: list[str], scale_numeric: bool,
+    *,
+    numeric_features: list[str],
+    categorical_features: list[str],
+    scale_numeric: bool,
 ) -> ColumnTransformer:
     numeric_steps = [('imputer', SimpleImputer(strategy='median'))]
     if scale_numeric:
@@ -513,7 +620,9 @@ def preprocessor(
 
 
 def build_models(
-    *, numeric_features: list[str], categorical_features: list[str],
+    *,
+    numeric_features: list[str],
+    categorical_features: list[str],
 ) -> dict[str, Pipeline]:
     return {
         'logistic_regression': Pipeline(
@@ -542,7 +651,9 @@ def build_models(
                 (
                     'model',
                     HistGradientBoostingClassifier(
-                        max_iter=250, learning_rate=0.05, random_state=42,
+                        max_iter=250,
+                        learning_rate=0.05,
+                        random_state=42,
                     ),
                 ),
             ],
@@ -683,7 +794,8 @@ def train(args: argparse.Namespace) -> None:
             'feature_set': args.feature_set,
         }
         for model_name, model in build_models(
-            numeric_features=numeric_features, categorical_features=categorical_features,
+            numeric_features=numeric_features,
+            categorical_features=categorical_features,
         ).items():
             model.fit(
                 train_frame[numeric_features + categorical_features],
@@ -720,7 +832,7 @@ def train(args: argparse.Namespace) -> None:
                 metrics=metrics,
                 activate=not args.no_activate,
             )
-            print(f"trained {model_name}: {json.dumps(metrics['validation'], sort_keys=True)}")
+            print(f'trained {model_name}: {json.dumps(metrics["validation"], sort_keys=True)}')
             print(f'artifact: {artifact_path}')
     finally:
         engine.dispose()

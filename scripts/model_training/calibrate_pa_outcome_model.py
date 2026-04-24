@@ -36,7 +36,8 @@ def normalize_rows(probabilities: np.ndarray) -> np.ndarray:
 
 
 def fit_isotonic_calibrators(
-    probabilities: np.ndarray, target_index: np.ndarray,
+    probabilities: np.ndarray,
+    target_index: np.ndarray,
 ) -> list[IsotonicRegression]:
     calibrators: list[IsotonicRegression] = []
     for class_index in range(probabilities.shape[1]):
@@ -48,7 +49,8 @@ def fit_isotonic_calibrators(
 
 
 def apply_calibrators(
-    probabilities: np.ndarray, calibrators: list[IsotonicRegression],
+    probabilities: np.ndarray,
+    calibrators: list[IsotonicRegression],
 ) -> np.ndarray:
     calibrated = np.zeros_like(probabilities)
     for class_index, calibrator in enumerate(calibrators):
@@ -57,7 +59,9 @@ def apply_calibrators(
 
 
 def metric_summary(
-    target_labels: np.ndarray, probabilities: np.ndarray, classes: list[str],
+    target_labels: np.ndarray,
+    probabilities: np.ndarray,
+    classes: list[str],
 ) -> dict[str, float | int]:
     predicted_index = probabilities.argmax(axis=1)
     predicted_labels = np.array(classes, dtype=object)[predicted_index]
@@ -83,7 +87,10 @@ def metric_summary(
 
 
 def per_class_ece(
-    target_labels: np.ndarray, probabilities: np.ndarray, classes: list[str], bins: int,
+    target_labels: np.ndarray,
+    probabilities: np.ndarray,
+    classes: list[str],
+    bins: int,
 ) -> list[dict]:
     rows: list[dict] = []
     for class_index, class_name in enumerate(classes):
@@ -159,7 +166,8 @@ def main() -> None:
     calibration_targets = calibration_frame['target'].to_numpy()
     evaluation_targets = evaluation_frame['target'].to_numpy()
     calibration_index = np.array(
-        [class_to_index[label] for label in calibration_targets], dtype=int,
+        [class_to_index[label] for label in calibration_targets],
+        dtype=int,
     )
 
     calibrators = fit_isotonic_calibrators(raw_cal, calibration_index)
@@ -191,7 +199,8 @@ def main() -> None:
             output_path = ROOT / output_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
-            json.dumps(report, indent=2, sort_keys=True) + '\n', encoding='utf-8',
+            json.dumps(report, indent=2, sort_keys=True) + '\n',
+            encoding='utf-8',
         )
 
     print(json.dumps(report, indent=2, sort_keys=True))

@@ -1,4 +1,3 @@
-
 import logging
 
 from .event import event
@@ -35,7 +34,8 @@ class Retrosheet(event, parse_files):
             self.get_data(yearFrom=start_year, yearTo=end_year)
             self.to_df()
             self.save_csv(path_str='', append=False) if loop == 0 else self.save_csv(
-                path_str='', append=True,
+                path_str='',
+                append=True,
             )
 
             # empty datasets for free-up memory

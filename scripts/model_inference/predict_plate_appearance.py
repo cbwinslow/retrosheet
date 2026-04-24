@@ -87,7 +87,9 @@ def load_model(target_id: str, model_name: str = 'hist_gradient_boosting') -> tu
 
 
 def predict_plate_appearance(
-    game_id: str, plate_appearance_id: int, target_ids: list[str] | None = None,
+    game_id: str,
+    plate_appearance_id: int,
+    target_ids: list[str] | None = None,
 ) -> dict:
     """Make predictions for a specific plate appearance."""
     if target_ids is None:
@@ -208,7 +210,10 @@ def main():
     parser = argparse.ArgumentParser(description='Make plate appearance predictions')
     parser.add_argument('--game-id', required=True, help='Game ID')
     parser.add_argument(
-        '--plate-appearance-id', type=int, required=True, help='Plate appearance ID',
+        '--plate-appearance-id',
+        type=int,
+        required=True,
+        help='Plate appearance ID',
     )
     parser.add_argument('--targets', nargs='*', help='Specific targets to predict (default: all)')
 

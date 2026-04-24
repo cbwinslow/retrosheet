@@ -107,14 +107,16 @@ def test_feature_columns_mapping() -> None:
     """
     # Game target with enriched features
     num, cat = sweep_hyperparameters.feature_columns(
-        target_id='game_home_win', feature_set='enriched',
+        target_id='game_home_win',
+        feature_set='enriched',
     )
     assert num == train_models.GAME_ENRICHED_NUMERIC_FEATURES
     assert cat == train_models.GAME_ENRICHED_CATEGORICAL_FEATURES
 
     # Plate appearance target with basic features
     num2, cat2 = sweep_hyperparameters.feature_columns(
-        target_id='pa_batter_hit', feature_set='basic',
+        target_id='pa_batter_hit',
+        feature_set='basic',
     )
     assert num2 == train_models.PA_NUMERIC_FEATURES
     assert cat2 == train_models.PA_CATEGORICAL_FEATURES

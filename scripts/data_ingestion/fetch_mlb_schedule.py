@@ -87,11 +87,11 @@ def main():
                 status_indicator = '🔴' if game['status'] == 'Live' else '⚫'
                 inning_info = ''
                 if game['status'] == 'Live':
-                    inning_info = f" (inning {game['inning']}, {'top' if game['is_top_inning'] else 'bottom'})"
+                    inning_info = f' (inning {game["inning"]}, {"top" if game["is_top_inning"] else "bottom"})'
 
                 print(
-                    f"  {status_indicator} {game['game_pk']}: {game['away_team']} @ {game['home_team']} "
-                    f"({game['away_score']}-{game['home_score']}){inning_info}",
+                    f'  {status_indicator} {game["game_pk"]}: {game["away_team"]} @ {game["home_team"]} '
+                    f'({game["away_score"]}-{game["home_score"]}){inning_info}',
                 )
 
             all_active_games.extend(active_games)
@@ -103,7 +103,7 @@ def main():
         print(f'\nTotal active games found: {len(all_active_games)}')
         print('\nTo ingest live data for these games, run:')
         for game in all_active_games[:5]:  # Show first 5 as examples
-            print(f"  python3 scripts/warehouse.py fetch-live-game --game-pk {game['game_pk']}")
+            print(f'  python3 scripts/warehouse.py fetch-live-game --game-pk {game["game_pk"]}')
         if len(all_active_games) > 5:
             print(f'  ... and {len(all_active_games) - 5} more')
     else:

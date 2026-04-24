@@ -210,10 +210,15 @@ Examples:
     parser.add_argument('--all', action='store_true', help='Load all available seasons')
     parser.add_argument('--force', action='store_true', help='Force reload even if data exists')
     parser.add_argument(
-        '--dry-run', action='store_true', help='Show what would be loaded without loading',
+        '--dry-run',
+        action='store_true',
+        help='Show what would be loaded without loading',
     )
     parser.add_argument(
-        '--batch-size', type=int, default=50000, help='Batch size for inserts (default: 50000)',
+        '--batch-size',
+        type=int,
+        default=50000,
+        help='Batch size for inserts (default: 50000)',
     )
 
     args = parser.parse_args()

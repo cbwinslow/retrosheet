@@ -23,14 +23,14 @@ try:
 
     def show(df: pd.DataFrame, n: int = 20, title: str = '') -> None:
         if title:
-            print(f"\n{'=' * 60}\n{title}\n{'=' * 60}")
+            print(f'\n{"=" * 60}\n{title}\n{"=" * 60}')
         print(tabulate(df.head(n), headers='keys', tablefmt='psql', showindex=False))
         print(f'  ... ({len(df):,} total rows)\n')
 except ImportError:
 
     def show(df: pd.DataFrame, n: int = 20, title: str = '') -> None:
         if title:
-            print(f"\n{'=' * 60}\n{title}\n{'=' * 60}")
+            print(f'\n{"=" * 60}\n{title}\n{"=" * 60}')
         print(df.head(n).to_string(index=False))
         print(f'  ... ({len(df):,} total rows)\n')
 
@@ -218,7 +218,9 @@ def example_one_day(game_date: str = '2025-04-10') -> pd.DataFrame:
 
 
 def example_team_games(
-    team_name: str = 'Yankees', start_date: str = '2025-04-01', end_date: str = '2025-04-15',
+    team_name: str = 'Yankees',
+    start_date: str = '2025-04-01',
+    end_date: str = '2025-04-15',
 ) -> pd.DataFrame:
     """
     Collect PBP for all games involving a specific team in a date window.
@@ -231,7 +233,7 @@ def example_team_games(
 
     print(f'  Found {len(games)} games:')
     for g in games:
-        print(f"    gamePk={g['game_pk']}  {g['away_team']} @ {g['home_team']}  ({g['game_date']})")
+        print(f'    gamePk={g["game_pk"]}  {g["away_team"]} @ {g["home_team"]}  ({g["game_date"]})')
 
     all_dfs = []
     for g in games:
@@ -313,7 +315,7 @@ def example_load_and_filter(csv_path: str, event_filter: str = 'home_run') -> pd
     Load a previously saved CSV and filter by event type.
     Demonstrates downstream analysis workflow.
 
-    >>> df = example_load_and_filter("mlb_pbp_2025-04-10.csv", "home_run")
+    >>> df = example_load_and_filter('mlb_pbp_2025-04-10.csv', 'home_run')
     """
     import os
 
@@ -423,7 +425,10 @@ def main():
     parser.add_argument('--game', type=int, help='Run single-game example with this gamePk')
     parser.add_argument('--team', type=str, help='Run team-games example with this team name')
     parser.add_argument(
-        '--date', type=str, default='2025-04-10', help='Date for one-day batch example (YYYY-MM-DD)',
+        '--date',
+        type=str,
+        default='2025-04-10',
+        help='Date for one-day batch example (YYYY-MM-DD)',
     )
     parser.add_argument('--csv', type=str, help='Path to existing CSV to load and filter')
     parser.add_argument('--schema', action='store_true', help='Print column reference')

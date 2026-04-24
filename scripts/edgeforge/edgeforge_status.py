@@ -86,7 +86,7 @@ def display_status_report(status):
 
     print('🎯 EdgeForge MLB Data Ingestion Status Report')
     print('=' * 60)
-    print(f"📊 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    print(f'📊 Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")}')
     print('=' * 60)
 
     # Progress summary
@@ -115,7 +115,7 @@ def display_status_report(status):
         print('6')
 
     if status['missing_count'] > 0:
-        print(f"   ❌ Missing Seasons: {status['missing_count']} (2000-2019)")
+        print(f'   ❌ Missing Seasons: {status["missing_count"]} (2000-2019)')
 
     # Ingestion status
     print('\n🔄 INGESTION STATUS')

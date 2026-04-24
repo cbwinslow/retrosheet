@@ -22,7 +22,9 @@ def convert_file(filepath: Path) -> bool:
     author_match = re.search(r'Author:\s*(.+)', content)
     date_match = re.search(r'Date:\s*(.+)', content)
 
-    file_val = file_match.group(1).strip() if file_match else str(filepath.relative_to(PROJECT_ROOT))
+    file_val = (
+        file_match.group(1).strip() if file_match else str(filepath.relative_to(PROJECT_ROOT))
+    )
     purpose_val = purpose_match.group(1).strip() if purpose_match else ''
     author_val = author_match.group(1).strip() if author_match else 'Agent Cascade'
     date_val = date_match.group(1).strip() if date_match else '2026-04-24'
@@ -33,7 +35,7 @@ def convert_file(filepath: Path) -> bool:
         return False
 
     # Everything after the block comment
-    rest = content[block_end + 2:].lstrip('\n')
+    rest = content[block_end + 2 :].lstrip('\n')
 
     # Build new line-comment header
     new_header = f"""-- File: {file_val}

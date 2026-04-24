@@ -39,9 +39,69 @@ BASIC_NUMERIC_FEATURES = [
 ]
 BASIC_CATEGORICAL_FEATURES = ['batter_hand', 'pitcher_hand', 'season_era', 'rules_context_era']
 
-ADVANCED_NUMERIC_FEATURES = [*BASIC_NUMERIC_FEATURES, 'batter_career_prior_pa', 'batter_career_prior_hit_rate', 'batter_career_prior_walk_rate', 'batter_career_prior_strikeout_rate', 'batter_career_prior_home_run_rate', 'batter_career_prior_reach_base_rate', 'pitcher_career_prior_batters_faced', 'pitcher_career_prior_hit_allowed_rate', 'pitcher_career_prior_walk_allowed_rate', 'pitcher_career_prior_strikeout_rate', 'pitcher_career_prior_home_run_allowed_rate', 'pitcher_career_prior_reach_base_allowed_rate', 'prior_matchup_pa', 'prior_matchup_hit_rate', 'prior_matchup_walk_rate', 'prior_matchup_strikeout_rate', 'prior_matchup_home_run_rate', 'prior_matchup_reach_base_rate', 'coarse_context_prior_pa', 'coarse_context_prior_hit_rate', 'coarse_context_prior_walk_rate', 'coarse_context_prior_strikeout_rate', 'coarse_context_prior_home_run_rate', 'coarse_context_prior_reach_base_rate', 'coarse_context_prior_extra_base_hit_rate', 'park_prior_total_runs_per_game', 'park_prior_home_win_rate', 'batting_team_rolling_30_games', 'batting_team_rolling_30_win_rate', 'batting_team_rolling_30_runs_scored_per_game', 'batting_team_rolling_30_runs_allowed_per_game', 'fielding_team_rolling_30_games', 'fielding_team_rolling_30_win_rate', 'fielding_team_rolling_30_runs_scored_per_game', 'fielding_team_rolling_30_runs_allowed_per_game']
+ADVANCED_NUMERIC_FEATURES = [
+    *BASIC_NUMERIC_FEATURES,
+    'batter_career_prior_pa',
+    'batter_career_prior_hit_rate',
+    'batter_career_prior_walk_rate',
+    'batter_career_prior_strikeout_rate',
+    'batter_career_prior_home_run_rate',
+    'batter_career_prior_reach_base_rate',
+    'pitcher_career_prior_batters_faced',
+    'pitcher_career_prior_hit_allowed_rate',
+    'pitcher_career_prior_walk_allowed_rate',
+    'pitcher_career_prior_strikeout_rate',
+    'pitcher_career_prior_home_run_allowed_rate',
+    'pitcher_career_prior_reach_base_allowed_rate',
+    'prior_matchup_pa',
+    'prior_matchup_hit_rate',
+    'prior_matchup_walk_rate',
+    'prior_matchup_strikeout_rate',
+    'prior_matchup_home_run_rate',
+    'prior_matchup_reach_base_rate',
+    'coarse_context_prior_pa',
+    'coarse_context_prior_hit_rate',
+    'coarse_context_prior_walk_rate',
+    'coarse_context_prior_strikeout_rate',
+    'coarse_context_prior_home_run_rate',
+    'coarse_context_prior_reach_base_rate',
+    'coarse_context_prior_extra_base_hit_rate',
+    'park_prior_total_runs_per_game',
+    'park_prior_home_win_rate',
+    'batting_team_rolling_30_games',
+    'batting_team_rolling_30_win_rate',
+    'batting_team_rolling_30_runs_scored_per_game',
+    'batting_team_rolling_30_runs_allowed_per_game',
+    'fielding_team_rolling_30_games',
+    'fielding_team_rolling_30_win_rate',
+    'fielding_team_rolling_30_runs_scored_per_game',
+    'fielding_team_rolling_30_runs_allowed_per_game',
+]
 ADVANCED_CATEGORICAL_FEATURES = [*BASIC_CATEGORICAL_FEATURES, 'park_id']
-ADVANCED_COUNT_NUMERIC_FEATURES = [*ADVANCED_NUMERIC_FEATURES, 'batter_count_state_prior_pa', 'batter_count_state_prior_hit_rate', 'batter_count_state_prior_walk_rate', 'batter_count_state_prior_strikeout_rate', 'batter_count_state_prior_home_run_rate', 'batter_count_state_prior_reach_base_rate', 'batter_count_state_prior_extra_base_hit_rate', 'pitcher_count_state_prior_batters_faced', 'pitcher_count_state_prior_hit_allowed_rate', 'pitcher_count_state_prior_walk_allowed_rate', 'pitcher_count_state_prior_strikeout_rate', 'pitcher_count_state_prior_home_run_allowed_rate', 'pitcher_count_state_prior_reach_base_allowed_rate', 'pitcher_count_state_prior_extra_base_hit_allowed_rate', 'count_state_context_prior_pa', 'count_state_context_prior_hit_rate', 'count_state_context_prior_walk_rate', 'count_state_context_prior_strikeout_rate', 'count_state_context_prior_home_run_rate', 'count_state_context_prior_reach_base_rate', 'count_state_context_prior_extra_base_hit_rate']
+ADVANCED_COUNT_NUMERIC_FEATURES = [
+    *ADVANCED_NUMERIC_FEATURES,
+    'batter_count_state_prior_pa',
+    'batter_count_state_prior_hit_rate',
+    'batter_count_state_prior_walk_rate',
+    'batter_count_state_prior_strikeout_rate',
+    'batter_count_state_prior_home_run_rate',
+    'batter_count_state_prior_reach_base_rate',
+    'batter_count_state_prior_extra_base_hit_rate',
+    'pitcher_count_state_prior_batters_faced',
+    'pitcher_count_state_prior_hit_allowed_rate',
+    'pitcher_count_state_prior_walk_allowed_rate',
+    'pitcher_count_state_prior_strikeout_rate',
+    'pitcher_count_state_prior_home_run_allowed_rate',
+    'pitcher_count_state_prior_reach_base_allowed_rate',
+    'pitcher_count_state_prior_extra_base_hit_allowed_rate',
+    'count_state_context_prior_pa',
+    'count_state_context_prior_hit_rate',
+    'count_state_context_prior_walk_rate',
+    'count_state_context_prior_strikeout_rate',
+    'count_state_context_prior_home_run_rate',
+    'count_state_context_prior_reach_base_rate',
+    'count_state_context_prior_extra_base_hit_rate',
+]
 ADVANCED_COUNT_CATEGORICAL_FEATURES = ADVANCED_CATEGORICAL_FEATURES
 
 
@@ -246,7 +306,10 @@ def filter_sparse_classes(frame: pd.DataFrame, min_class_rows: int) -> pd.DataFr
 
 
 def apply_recent_window(
-    frame: pd.DataFrame, *, train_through: int, recent_window: int | None,
+    frame: pd.DataFrame,
+    *,
+    train_through: int,
+    recent_window: int | None,
 ) -> pd.DataFrame:
     if recent_window is None:
         return frame
@@ -293,7 +356,10 @@ def add_temporal_weights(
 
 
 def preprocessor(
-    *, numeric_features: list[str], categorical_features: list[str], scale_numeric: bool,
+    *,
+    numeric_features: list[str],
+    categorical_features: list[str],
+    scale_numeric: bool,
 ) -> ColumnTransformer:
     numeric_steps = [('imputer', SimpleImputer(strategy='median'))]
     if scale_numeric:
@@ -314,7 +380,10 @@ def preprocessor(
 
 
 def build_models(
-    *, numeric_features: list[str], categorical_features: list[str], args,
+    *,
+    numeric_features: list[str],
+    categorical_features: list[str],
+    args,
 ) -> dict[str, Pipeline]:
     return {
         'multinomial_logistic_regression': Pipeline(
@@ -364,11 +433,17 @@ def build_models(
                         )
                         if args.model_type == 'xgboost'
                         else lgb.LGBMClassifier(
-                            n_estimators=250, learning_rate=0.05, random_state=42, verbose=-1,
+                            n_estimators=250,
+                            learning_rate=0.05,
+                            random_state=42,
+                            verbose=-1,
                         )
                         if args.model_type == 'lightgbm'
                         else cb.CatBoostClassifier(
-                            iterations=250, learning_rate=0.05, random_state=42, verbose=False,
+                            iterations=250,
+                            learning_rate=0.05,
+                            random_state=42,
+                            verbose=False,
                         )
                         if args.model_type == 'catboost'
                         else LogisticRegression(max_iter=1000, random_state=42)
@@ -380,7 +455,9 @@ def build_models(
 
 
 def multiclass_brier_score(
-    classes: np.ndarray, target: pd.Series, probabilities: np.ndarray,
+    classes: np.ndarray,
+    target: pd.Series,
+    probabilities: np.ndarray,
 ) -> float:
     class_to_index = {label: index for index, label in enumerate(classes)}
     actual = np.zeros_like(probabilities)
@@ -571,7 +648,7 @@ def train(args: argparse.Namespace) -> None:
                 metrics=metrics,
                 activate=not args.no_activate,
             )
-            print(f"trained {model_name}: {json.dumps(metrics['validation'], sort_keys=True)}")
+            print(f'trained {model_name}: {json.dumps(metrics["validation"], sort_keys=True)}')
             print(f'artifact: {artifact_path}')
     finally:
         engine.dispose()

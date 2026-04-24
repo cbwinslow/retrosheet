@@ -296,7 +296,10 @@ def main():
     )
     parser.add_argument('--all', action='store_true', help='Populate all seasons at once')
     parser.add_argument(
-        '--seasons', nargs='+', type=int, help='Specific seasons to populate (e.g., 2020 2021 2022)',
+        '--seasons',
+        nargs='+',
+        type=int,
+        help='Specific seasons to populate (e.g., 2020 2021 2022)',
     )
     parser.add_argument(
         '--dry-run',
@@ -304,7 +307,9 @@ def main():
         help='Show what would be inserted without actually inserting',
     )
     parser.add_argument(
-        '--verify', action='store_true', help='Verify population by comparing row counts',
+        '--verify',
+        action='store_true',
+        help='Verify population by comparing row counts',
     )
 
     args = parser.parse_args()
@@ -322,14 +327,14 @@ def main():
 
         if args.all:
             rows = populate_all_seasons(conn, dry_run=args.dry_run)
-            print(f"\n{'Would insert' if args.dry_run else 'Inserted'} {rows:,} total rows")
+            print(f'\n{"Would insert" if args.dry_run else "Inserted"} {rows:,} total rows')
 
             if not args.dry_run:
                 verify_population(conn)
 
         elif args.seasons:
             rows = populate_seasons(conn, args.seasons, dry_run=args.dry_run)
-            print(f"\n{'Would insert' if args.dry_run else 'Inserted'} {rows:,} total rows")
+            print(f'\n{"Would insert" if args.dry_run else "Inserted"} {rows:,} total rows')
 
             if not args.dry_run:
                 verify_population(conn)

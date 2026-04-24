@@ -67,14 +67,14 @@ def candidate_game_pks(
                 snap.season,
                 snap.fetched_at
             FROM raw_mlb.live_feed_snapshots snap
-            WHERE {" AND ".join(snapshot_filters)}
+            WHERE {' AND '.join(snapshot_filters)}
             ORDER BY snap.game_pk, snap.fetched_at DESC, snap.snapshot_id DESC
         )
         SELECT latest_success.game_pk
         FROM latest_success
         LEFT JOIN core.live_games lg
           ON lg.mlb_game_pk = latest_success.game_pk
-        {"WHERE " + " AND ".join(outer_filters) if outer_filters else ""}
+        {'WHERE ' + ' AND '.join(outer_filters) if outer_filters else ''}
         ORDER BY latest_success.season NULLS LAST, latest_success.game_pk
     """
     if limit is not None:
@@ -94,7 +94,7 @@ def replay_games(game_pks: Sequence[int]) -> tuple[int, int]:
         processed += 1
         total_events += len(event_rows)
         print(
-            f"Replayed game_pk {game_pk} -> {game_row['game_id']} with {len(event_rows)} live events.",
+            f'Replayed game_pk {game_pk} -> {game_row["game_id"]} with {len(event_rows)} live events.',
         )
     return processed, total_events
 

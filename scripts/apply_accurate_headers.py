@@ -35,7 +35,6 @@ ACCURATE_PURPOSES = {
     'sql/core/081_probability_calibration_artifacts.sql': 'Create calibration artifact tables and model reliability views',
     'sql/core/082_count_state_feature_marts.sql': 'Create count-state feature marts and ball-strike transition views',
     'sql/core/mlb_win_probability_features.sql': 'Create MLB win probability features tables and in-game state views',
-
     # Bridge tables
     'sql/bridge/900_bridge_monitoring_views.sql': 'Monitoring views for bridge table counts, coverage, quality, duplicates',
     'sql/bridge/910_confidence_scoring.sql': 'Add confidence scoring columns and views to all bridge mapping tables',
@@ -48,10 +47,8 @@ ACCURATE_PURPOSES = {
     'sql/bridge/980_player_xref_schema_enhancement.sql': 'Enhance player_xref with Baseball Reference IDs and indexes',
     'sql/bridge/985_player_xref_population_procedure.sql': 'Populate player_xref from Chadwick Register with full ID mapping',
     'sql/bridge/999_master_bridge_population_procedure.sql': 'Master procedure to populate all bridge tables in sequence',
-
     # EDA
     'sql/eda/030_gis_pitch_views.sql': 'GIS views classifying pitch locations relative to strike zone',
-
     # External data
     'sql/external/200_external_data.sql': 'Create schemas and tables for Statcast, play-by-play, and ID bridges',
     'sql/external/200_utility_functions.sql': 'Create utility functions for view refresh, health checks, and backups',
@@ -65,7 +62,6 @@ ACCURATE_PURPOSES = {
     'sql/external/220_espn_schema.sql': 'Create ESPN schema and tables for game snapshots and schedules',
     'sql/external/225_ingest_run_tracking.sql': 'Track data ingestion runs with metadata, progress, and errors',
     'sql/external/230_data_validation_views.sql': 'Row count and maintenance statistics for all warehouse tables',
-
     # Features
     'sql/features/001_pitch_data_quality.sql': 'Create pitch quality views and indexes for location data',
     'sql/features/002_player_profile_mart.sql': 'Pitcher arsenal composition and rolling statistics by game',
@@ -84,14 +80,12 @@ ACCURATE_PURPOSES = {
     'sql/features/099_enhanced_feature_view.sql': 'Join plate appearances with pitcher arsenal and weather features',
     'sql/features/099_phase2_enhanced_feature_view.sql': 'Add team momentum and postseason flags to plate appearances',
     'sql/features/099_phase3_final_enhanced_view.sql': 'Add matchup stats and stadium physics to feature set',
-
     # Live data
     'sql/live/001_raw_sportradar_schema.sql': 'Schema and tables for Sportradar push events and snapshots',
     'sql/live/002_ingest_functions.sql': 'Functions to fetch schedule, ingest live games, and poll actives',
     'sql/live/003_schedule_jobs.sql': 'pg_cron jobs for polling active games and endpoints',
     'sql/live/004_additional_endpoints_schema.sql': 'Tables for additional MLB API endpoints (boxscore, plays, etc)',
     'sql/live/005_additional_endpoint_functions.sql': 'Functions to ingest additional MLB API endpoints per game',
-
     # Maintenance
     'sql/maintenance/001_check_extensions.sql': 'List installed and available PostgreSQL extensions',
     'sql/maintenance/002_install_pg_cron.sql': 'Install pg_cron extension for scheduled database jobs',
@@ -107,7 +101,6 @@ ACCURATE_PURPOSES = {
     'sql/maintenance/022_migrate_full_statcast.sql': 'Backfill Statcast pitch data into locations table',
     'sql/maintenance/030_kb_vector_schema.sql': 'Vector-enabled knowledge base schema for semantic search',
     'sql/maintenance/999_master_installation.sql': 'Orchestrate installation of all PostgreSQL extensions',
-
     # MLB
     'sql/mlb/090_mlb_live_data.sql': 'Tables for raw MLB API schedule and live feed snapshots',
     'sql/mlb/091_mlb_reference_raw.sql': 'Tables for raw MLB API reference endpoint snapshots',
@@ -123,17 +116,14 @@ ACCURATE_PURPOSES = {
     'sql/mlb/150_mlb_data_completeness.sql': 'Views and functions for MLB data completeness monitoring',
     'sql/mlb/150_model_registry.sql': 'Central registry for ML model artifacts and versions',
     'sql/mlb/151_register_model.sql': 'Register a trained model artifact in the model registry',
-
     # Optimization
     'sql/optimization/140_database_optimization.sql': 'Database optimization functions, indexes, and views',
     'sql/optimization/141_performance_indexes.sql': 'Performance indexes on core events, games, players, teams',
     'sql/optimization/142_optimized_functions.sql': 'Optimized SQL functions for stats, lookups, and summaries',
     'sql/optimization/143_advanced_optimizations.sql': 'Advanced optimizations: partitioning, clustering, monitoring',
     'sql/optimization/144_live_plate_appearances.sql': 'Live plate appearances table with indexes for MLB data',
-
     # Scripts
     'scripts/trace_deps.sql': 'List database objects that depend on a given relation',
-
     # Test
     'sql/test/001_create_test_schema.sql': 'Create isolated test schema with core table structure',
     'sql/test/002_test_fixtures.sql': 'Load test fixture data for E2E validation',
@@ -148,7 +138,9 @@ def update_file(filepath: Path, purpose: str) -> bool:
     if len(lines) < 2 or not lines[0].startswith('-- File:'):
         return False
 
-    current_purpose = lines[1].replace('-- Purpose: ', '') if lines[1].startswith('-- Purpose:') else ''
+    current_purpose = (
+        lines[1].replace('-- Purpose: ', '') if lines[1].startswith('-- Purpose:') else ''
+    )
     if current_purpose == purpose:
         return False
 

@@ -141,7 +141,8 @@ def analyze_models():
 
     # Calculate baseline (predicting majority class)
     analysis['baseline_accuracy'] = analysis.apply(
-        lambda row: max(row['prevalence'], 1 - row['prevalence']), axis=1,
+        lambda row: max(row['prevalence'], 1 - row['prevalence']),
+        axis=1,
     )
 
     # Calculate improvement over baseline
@@ -166,11 +167,11 @@ def analyze_models():
     for target in summary.index:
         row = summary.loc[target]
         print(f'\n{target}:')
-        print(f"  Prevalence: {row['prevalence']:.1%}")
-        print(f"  Best ROC AUC: {row['roc_auc']:.3f}")
-        print(f"  Best Accuracy: {row['accuracy']:.3f}")
-        print(f"  Baseline Accuracy: {row['baseline_accuracy']:.3f}")
-        print(f"  Improvement: {row['accuracy_improvement']:.3f}")
+        print(f'  Prevalence: {row["prevalence"]:.1%}')
+        print(f'  Best ROC AUC: {row["roc_auc"]:.3f}')
+        print(f'  Best Accuracy: {row["accuracy"]:.3f}')
+        print(f'  Baseline Accuracy: {row["baseline_accuracy"]:.3f}')
+        print(f'  Improvement: {row["accuracy_improvement"]:.3f}')
 
     print('\n\nTop Models by ROC AUC:')
     print('=' * 30)
@@ -191,11 +192,11 @@ def analyze_models():
 
     # Identify best performing targets
     best_targets = summary.nlargest(3, 'roc_auc')
-    print(f"Most predictable outcomes: {', '.join(best_targets.index.tolist())}")
+    print(f'Most predictable outcomes: {", ".join(best_targets.index.tolist())}')
 
     # Identify targets needing improvement
     worst_targets = summary.nsmallest(3, 'roc_auc')
-    print(f"Areas for improvement: {', '.join(worst_targets.index.tolist())}")
+    print(f'Areas for improvement: {", ".join(worst_targets.index.tolist())}')
 
     # Check if gradient boosting consistently outperforms
     gb_better = (

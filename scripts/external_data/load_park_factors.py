@@ -25,7 +25,10 @@ def get_conn():
 def main():
     parser = argparse.ArgumentParser(description='Load Statcast park factors')
     parser.add_argument(
-        '--file', type=Path, required=True, help='CSV file downloaded from Baseball-Savant',
+        '--file',
+        type=Path,
+        required=True,
+        help='CSV file downloaded from Baseball-Savant',
     )
     args = parser.parse_args()
 

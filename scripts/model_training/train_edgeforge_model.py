@@ -141,7 +141,11 @@ def train_edgeforge_model(X, y):
 
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y,
+        X,
+        y,
+        test_size=0.2,
+        random_state=42,
+        stratify=y,
     )
 
     print(f'   Training set: {len(X_train)} samples')
@@ -243,13 +247,9 @@ def analyze_feature_importance(model, feature_cols):
         if f not in statcast_features + matchup_features + situational_features
     ]
 
-    importance_df[importance_df['feature'].isin(statcast_features)][
-        'importance'
-    ].sum()
+    importance_df[importance_df['feature'].isin(statcast_features)]['importance'].sum()
     importance_df[importance_df['feature'].isin(matchup_features)]['importance'].sum()
-    importance_df[importance_df['feature'].isin(situational_features)][
-        'importance'
-    ].sum()
+    importance_df[importance_df['feature'].isin(situational_features)]['importance'].sum()
     importance_df[importance_df['feature'].isin(basic_features)]['importance'].sum()
 
     print('\n📊 Feature Category Importance:')

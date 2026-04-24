@@ -112,7 +112,7 @@ def populate_season_aware_team_xref():
             print('\nFranchise move entries:')
             for row in cur.fetchall():
                 if len(row) >= 5:
-                    print(f"  {row[0]} ({row[1]}): {row[3]}-{row[4] if row[4] else 'present'}")
+                    print(f'  {row[0]} ({row[1]}): {row[3]}-{row[4] if row[4] else "present"}')
                 else:
                     print(f'  {row[0]}: insufficient data')
 

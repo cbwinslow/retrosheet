@@ -143,7 +143,9 @@ class EdgeForgeAlerts:
         import subprocess
 
         result = subprocess.run(
-            ['pgrep', '-f', 'complete_mlb_ingestion'], capture_output=True, text=True,
+            ['pgrep', '-f', 'complete_mlb_ingestion'],
+            capture_output=True,
+            text=True,
         )
 
         if result.returncode != 0:
@@ -187,7 +189,7 @@ class EdgeForgeAlerts:
         # Format alert message
         alert_msg = f"""
 {icon} EdgeForge Alert - {priority}
-{"=" * 50}
+{'=' * 50}
 
 {title}
 
@@ -196,7 +198,7 @@ class EdgeForgeAlerts:
 💡 Business Impact:
 {impact}
 
-📊 Timestamp: {datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")}
+📊 Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
 
 🎯 EdgeForge - Professional Sports Betting Intelligence
         """.strip()

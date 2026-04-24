@@ -1,4 +1,3 @@
-
 import logging
 import re
 
@@ -241,7 +240,9 @@ class event:
 
                                         # append pass sequence (for location purposes)
                                         passes = re.sub(
-                                            '[^0-9]', '', other_error[0] + error_modifier,
+                                            '[^0-9]',
+                                            '',
+                                            other_error[0] + error_modifier,
                                         )
                                         self.modifiers['passes'].append(passes) if passes else None
                 """
@@ -1011,7 +1012,8 @@ class event:
                     and base_out[1] not in self.move_on_error
                 ):  # a player moved to that base in advaances
                     self.main_play = out_in_advance(
-                        self.main_play, bfrom=base_out[1],
+                        self.main_play,
+                        bfrom=base_out[1],
                     )  # excluding at bat
                     self.base = leave_base(self.base, bfrom=base_out[1])
                 else:
@@ -1192,7 +1194,8 @@ class event:
                 bfrom = PREVIOUS_BASE[cs[2]]
 
                 if re.findall(
-                    rf'[\-X]{bfrom}', self.str.split('.')[len(self.str.split('.')) - 1],
+                    rf'[\-X]{bfrom}',
+                    self.str.split('.')[len(self.str.split('.')) - 1],
                 ):
                     self.main_play['out'] += 1
                 else:
@@ -1233,7 +1236,8 @@ class event:
 
                 if not self._is_explicit(bfrom):
                     if re.findall(
-                        rf'[\-X]{bfrom}', self.str.split('.')[len(self.str.split('.')) - 1],
+                        rf'[\-X]{bfrom}',
+                        self.str.split('.')[len(self.str.split('.')) - 1],
                     ):
                         self.main_play[bto] = 1
                         if bto == 'H' or bfrom == '3':
@@ -1292,7 +1296,8 @@ class event:
             ###########################   end   ################################
 
         elif re.findall(
-            '^DGR[0-9]*$', mp,
+            '^DGR[0-9]*$',
+            mp,
         ):  # ground rule double (two bases for everyone as ball went out after being in)
             self.main_play = (
                 advance_base(self.main_play, bto='2', bfrom='B')
@@ -1321,10 +1326,12 @@ class event:
             ###########################   end   ################################
 
         elif re.findall(
-            r'^E[1-9]+\??$', mp,
+            r'^E[1-9]+\??$',
+            mp,
         ):  ## error allowing batter to get on base (B-1 implicit or not)
             if not re.findall(
-                'K', self.mp[0],
+                'K',
+                self.mp[0],
             ):  # it is an error but not on second event following strike
                 self.main_play = (
                     advance_base(self.main_play, bfrom='B')
@@ -1365,7 +1372,8 @@ class event:
             ###########################   end   ################################
 
         elif re.findall(
-            '^FLE[1-9]+$', mp,
+            '^FLE[1-9]+$',
+            mp,
         ):  # error on foul fly play (error given to the play but no advances)
             ###########################   stats   ##############################
             self.stats['fielding'].append(['FLE', mp[3]])
@@ -1468,7 +1476,8 @@ class event:
             bto = NEXT_BASE[mp[2]]
 
             if re.findall(
-                rf'[\-X]{bfrom}', self.str.split('.')[len(self.str.split('.')) - 1],
+                rf'[\-X]{bfrom}',
+                self.str.split('.')[len(self.str.split('.')) - 1],
             ):
                 self.main_play['out'] += 1
             else:
@@ -1506,7 +1515,8 @@ class event:
             ###########################   end   ################################
 
         elif re.findall(
-            r'^PO[123](?:\([1-9]*E[1-9]+)', mp,
+            r'^PO[123](?:\([1-9]*E[1-9]+)',
+            mp,
         ):  # pick off with pass error (no out nothing implicit)
             ###########################   stats   ##############################
             bfrom = mp[2]
@@ -1526,7 +1536,8 @@ class event:
             ###########################   end   ################################
 
         elif re.findall(
-            r'^POCS[23H](?:\([1-9]+\))', mp,
+            r'^POCS[23H](?:\([1-9]+\))',
+            mp,
         ):  # POCS%($$) picked off off base % (2, 3 or H) with the runner charged with a caught stealing
             for split in mp.split(';'):
                 if split[0:2] == 'CS':
@@ -1815,7 +1826,8 @@ class event:
 
         # main part:
         self.mp = re.findall(
-            r'^(?:[^\.^\+^/]+)', self.str.split('.')[0].split('+')[0],
+            r'^(?:[^\.^\+^/]+)',
+            self.str.split('.')[0].split('+')[0],
         )  # self.str.split('.')[0]
         # print ('\nmp:\t', self.mp)
 
@@ -1825,7 +1837,8 @@ class event:
         #'+' could be a string in a location or a separator of plays (second play)
         if not self.sp:
             self.mpm = re.findall(
-                r'(?<=/)[^\+^/]+', self.str.split('.')[0].replace('#', '').replace('+', ''),
+                r'(?<=/)[^\+^/]+',
+                self.str.split('.')[0].replace('#', '').replace('+', ''),
             )
         else:
             self.mpm = re.findall(

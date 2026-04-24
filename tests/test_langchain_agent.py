@@ -6,7 +6,6 @@ The current implementation in [`scripts/llm/langchain_baseball_agent.py`](script
 2. The method can be called without the ``prometheus_client`` package being installed (the fallback ``_NoOpCounter`` should not raise).
 """
 
-
 from scripts.llm.langchain_baseball_agent import LangChainBaseballAgent
 
 
@@ -43,7 +42,9 @@ def test_prometheus_counter_fallback_is_noop(monkeypatch) -> None:
 
     # Patch the counter used inside the agent module
     monkeypatch.setattr(
-        'scripts.llm.langchain_baseball_agent.PrometheusCounter', DummyCounter, raising=False,
+        'scripts.llm.langchain_baseball_agent.PrometheusCounter',
+        DummyCounter,
+        raising=False,
     )
 
     agent = LangChainBaseballAgent()

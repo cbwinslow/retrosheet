@@ -55,7 +55,9 @@ def main():
     # After the above finish, run the optional ingestion step (sequential)
     print('=== Running optional LlamaIndex ingestion ===')
     rc = subprocess.run(
-        [sys.executable, 'scripts/ingest_kb_llamaindex.py'], capture_output=True, text=True,
+        [sys.executable, 'scripts/ingest_kb_llamaindex.py'],
+        capture_output=True,
+        text=True,
     ).returncode
     print(f'ingest_kb_llamaindex.py finished with code {rc}')
 

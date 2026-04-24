@@ -8,7 +8,8 @@ base.
 Usage::
 
     from scripts.model_engine import get_engine
-    engine = get_engine("auto")   # picks the fastest available
+
+    engine = get_engine('auto')  # picks the fastest available
     engine.fit(X_train, y_train)
     preds = engine.predict_proba(X_val)
 

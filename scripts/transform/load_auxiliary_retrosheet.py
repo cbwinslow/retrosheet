@@ -399,14 +399,17 @@ def main() -> None:
         ),
         'raw_retrosheet.season_rosters': write_csv('raw_retrosheet.season_rosters', iter_rosters()),
         'raw_retrosheet.season_teams': write_csv(
-            'raw_retrosheet.season_teams', iter_season_teams(),
+            'raw_retrosheet.season_teams',
+            iter_season_teams(),
         ),
         'raw_retrosheet.season_schedules': write_csv(
-            'raw_retrosheet.season_schedules', iter_schedules(),
+            'raw_retrosheet.season_schedules',
+            iter_schedules(),
         ),
         'raw_retrosheet.season_umpires': write_csv('raw_retrosheet.season_umpires', iter_umpires()),
         'raw_retrosheet.special_gamelog_lines': write_csv(
-            'raw_retrosheet.special_gamelog_lines', iter_special_gamelogs(),
+            'raw_retrosheet.special_gamelog_lines',
+            iter_special_gamelogs(),
         ),
     }
 

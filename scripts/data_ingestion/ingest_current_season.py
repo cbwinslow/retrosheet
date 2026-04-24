@@ -30,10 +30,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def run_command(cmd: list[str], description: str) -> bool:
     """Run a command and return success status."""
-    print(f"\n{'=' * 60}")
+    print(f'\n{"=" * 60}')
     print(f'STEP: {description}')
-    print(f"Command: {' '.join(cmd)}")
-    print(f"{'=' * 60}")
+    print(f'Command: {" ".join(cmd)}')
+    print(f'{"=" * 60}')
 
     result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
 
@@ -43,7 +43,7 @@ def run_command(cmd: list[str], description: str) -> bool:
         print(result.stderr, file=sys.stderr)
 
     success = result.returncode == 0
-    print(f"Status: {'✅ SUCCESS' if success else '❌ FAILED'}")
+    print(f'Status: {"✅ SUCCESS" if success else "❌ FAILED"}')
     return success
 
 
@@ -152,11 +152,15 @@ def main() -> None:
     parser.add_argument('--season', type=int, help='Season to ingest (e.g., 2026)')
     parser.add_argument('--days-back', type=int, help='Number of days back to ingest (default: 7)')
     parser.add_argument(
-        '--schedule-only', action='store_true', help="Only fetch schedule, don't ingest games",
+        '--schedule-only',
+        action='store_true',
+        help="Only fetch schedule, don't ingest games",
     )
     parser.add_argument('--skip-bridge', action='store_true', help='Skip bridge table population')
     parser.add_argument(
-        '--skip-xref', action='store_true', help='Skip game cross-reference completion',
+        '--skip-xref',
+        action='store_true',
+        help='Skip game cross-reference completion',
     )
     parser.add_argument('--no-validate', action='store_true', help='Skip validation step')
 
@@ -165,16 +169,16 @@ def main() -> None:
     season = args.season or datetime.now().year
     days_back = args.days_back or 7
 
-    print(f"\n{'=' * 60}")
+    print(f'\n{"=" * 60}')
     print('CURRENT SEASON INGESTION PIPELINE')
-    print(f"{'=' * 60}")
+    print(f'{"=" * 60}')
     print(f'Season: {season}')
     print(f'Days back: {days_back}')
     print(f'Schedule only: {args.schedule_only}')
     print(f'Skip bridge: {args.skip_bridge}')
     print(f'Skip xref: {args.skip_xref}')
     print(f'No validate: {args.no_validate}')
-    print(f"{'=' * 60}\n")
+    print(f'{"=" * 60}\n')
 
     steps = []
 
@@ -208,16 +212,16 @@ def main() -> None:
             break
 
     # Summary
-    print(f"\n{'=' * 60}")
+    print(f'\n{"=" * 60}')
     print('PIPELINE SUMMARY')
-    print(f"{'=' * 60}")
+    print(f'{"=" * 60}')
     for step_name, success in results:
         status = '✅' if success else '❌'
         print(f'{status} {step_name}')
 
     all_success = all(success for _, success in results)
-    print(f"\nOverall status: {'✅ SUCCESS' if all_success else '❌ FAILED'}")
-    print(f"{'=' * 60}\n")
+    print(f'\nOverall status: {"✅ SUCCESS" if all_success else "❌ FAILED"}')
+    print(f'{"=" * 60}\n')
 
     sys.exit(0 if all_success else 1)
 

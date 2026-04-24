@@ -19,8 +19,7 @@ class Parser:
         self.metadata = pd.DataFrame()
 
     def _pitch_count(self, string, current_count):
-        """For now it is including pickoffs.
-        """
+        """For now it is including pickoffs."""
         # simplest idea:
         clean_pitches = string.replace('>', '').replace('+', '').replace('*', '').replace('??', '')
         splits = clean_pitches.split('.')  # results in a list
@@ -139,7 +138,11 @@ class Parser:
                                 if event.play['out'] != 3:
                                     self.errors.append(
                                         'Game: {3} Inning {0} team {4} ended with {1} outs [{2}]'.format(
-                                            inning, event.play['out'], event.str, game_id, team,
+                                            inning,
+                                            event.play['out'],
+                                            event.str,
+                                            game_id,
+                                            team,
                                         ),
                                     )
                                     event.play['out'] = 0
@@ -150,7 +153,8 @@ class Parser:
                         if row.rstrip('\n').split(',')[2] == '0':  # the opposite team is pitching
                             pitcher_id = home_pitcher_id
                             home_pitch_count = self._pitch_count(
-                                row.rstrip('\n').split(',')[5], home_pitch_count,
+                                row.rstrip('\n').split(',')[5],
+                                home_pitch_count,
                             )
                             pitch_count = home_pitch_count
                             away_team_score = away_team_score + event.play['run'] - runs
@@ -158,7 +162,8 @@ class Parser:
                         elif row.rstrip('\n').split(',')[2] == '1':  # away
                             pitcher_id = away_pitcher_id
                             away_pitch_count = self._pitch_count(
-                                row.rstrip('\n').split(',')[5], away_pitch_count,
+                                row.rstrip('\n').split(',')[5],
+                                away_pitch_count,
                             )
                             pitch_count = away_pitch_count
                             home_team_score = home_team_score + event.play['run'] - runs
@@ -302,7 +307,8 @@ class Parser:
         )
         comments_df = pd.DataFrame(comments, columns=['order', 'game_id', 'version', 'comment'])
         er_df = pd.DataFrame(
-            er, columns=['game_id', 'version', 'earned_run', 'player_id', 'variable'],
+            er,
+            columns=['game_id', 'version', 'earned_run', 'player_id', 'variable'],
         )
         metadata_df = pd.DataFrame(metadata, columns=['file', 'datetime', 'version'])
 
@@ -418,8 +424,7 @@ class Event:
         )
 
     def parse_advance(self):
-        """This portion parses the explicit advancements.
-        """
+        """This portion parses the explicit advancements."""
         self.play = (
             {'B': 1, '1': 0, '2': 0, '3': 0, 'H': 0, 'out': 0, 'run': 0}
             if self.play['out'] >= 3
@@ -443,7 +448,8 @@ class Event:
             # two type of PLAYER ERRORS on advances:
             # a) notation is out ($X$) but error negates the out. 'X' becomes '-'
             error_out = re.findall(
-                r'[1-3B]X[1-3H](?:\([^\)]+\))*(?:\([^\)]*E[^\)]+\))(?:\([^\)]+\))?', self.advances,
+                r'[1-3B]X[1-3H](?:\([^\)]+\))*(?:\([^\)]*E[^\)]+\))(?:\([^\)]+\))?',
+                self.advances,
             )  # error a
 
             # b) notation is advance ($-$) and parenthesis explain the error that generated the advance
@@ -459,7 +465,8 @@ class Event:
 
             for error in error_out:
                 if not re.findall(r'(?:\([1-9U/TH]+\))+', error) or re.findall(
-                    r'^[1-3B]X[1-3H](?:\(TH\))', error,
+                    r'^[1-3B]X[1-3H](?:\(TH\))',
+                    error,
                 ):  # 'BX3(36)(E5/TH)' and 'BXH(TH)(E2/TH)(8E2)(NR)(UR)' are not errors.
                     self.play['out'] -= 1
                     if error[2] == 'H':
@@ -506,8 +513,7 @@ class Event:
         return True
 
     def _secondary_event(self, secondary_event):
-        """Events happening with K or Walks. This can be merged with parse_event() if written well.
-        """
+        """Events happening with K or Walks. This can be merged with parse_event() if written well."""
         if re.findall(r'^CS[23H](?:\([1-9]+\))+', secondary_event):
             # print ('CAUGHT STEALING')
             for cs in secondary_event.split(';'):
@@ -515,7 +521,8 @@ class Event:
 
         ##caught stealing errors --> calls reversed:
         elif re.findall(
-            r'^CS[23H](?:\([1-9]*E[1-9]+)+', secondary_event,
+            r'^CS[23H](?:\([1-9]*E[1-9]+)+',
+            secondary_event,
         ):  # removed last ')' as some observations didnt have it
             for cs in secondary_event.split(';'):
                 self._advance(cs[2])
@@ -563,7 +570,6 @@ class Event:
 
         if self.str is None:
             pass  # return False
-
 
         a = self.str.split('.')[0].split('/')[0].replace('!', '').replace('#', '').replace('?', '')
         modifiers = (
@@ -618,7 +624,8 @@ class Event:
                         self._out_in_advance(str(int(out[1]) + 1))
 
                 elif (
-                    not re.search(r'(?:\([B]\))', a) and len(re.findall(r'(?:\([B123]\))', a)) == outs
+                    not re.search(r'(?:\([B]\))', a)
+                    and len(re.findall(r'(?:\([B123]\))', a)) == outs
                 ):
                     for out in re.findall(r'(?:\([B123]\))', a):
                         self._out_in_advance(str(int(out[1]) + 1))
@@ -630,7 +637,8 @@ class Event:
         # out + error: #out is negated
         elif re.findall('^[1-9][1-9]*E[1-9]*$', a):
             if not re.findall(r'[B]\-[1-3H](?:\([^\)]+\))*', self.advances) or not re.findall(
-                r'[B]X[1-3H](?:\([^\)]+\))*(?:\([^\)]*E[^\)]+\))(?:\([^\)]+\))?', self.advances,
+                r'[B]X[1-3H](?:\([^\)]+\))*(?:\([^\)]*E[^\)]+\))(?:\([^\)]+\))?',
+                self.advances,
             ):
                 self.play['B'] = 0
                 self.play['1'] = 1
@@ -644,7 +652,8 @@ class Event:
 
         ##caught stealing errors --> calls reversed:
         elif re.findall(
-            r'^CS[23H](?:\([1-9]*E[1-9]+)+', a,
+            r'^CS[23H](?:\([1-9]*E[1-9]+)+',
+            a,
         ):  # removed last ')' as some observations didnt have it
             for cs in a.split(';'):
                 self._advance(cs[2])
@@ -726,7 +735,8 @@ class Event:
 
             if modifiers:
                 if modifiers[0] == 'FO' and re.findall(
-                    r'[1-3B]X[1-3H](?:\([^\)]+\))*', self.advances,
+                    r'[1-3B]X[1-3H](?:\([^\)]+\))*',
+                    self.advances,
                 ):
                     self.play['out'] -= 1
 
@@ -744,7 +754,8 @@ class Event:
                     self.play['out'] -= 1
 
                 if modifiers[0] == 'C' and re.findall(
-                    r'[B]\-[1-3H](?:\([^\)]+\))*(?:\([^\)]*E[^\)]+\))(?:\([^\)]+\))?', self.advances,
+                    r'[B]\-[1-3H](?:\([^\)]+\))*(?:\([^\)]*E[^\)]+\))(?:\([^\)]+\))?',
+                    self.advances,
                 ):
                     self.play['out'] -= 1
 
@@ -774,24 +785,26 @@ class Event:
 
                 if (re.findall('^K$', a) and modifiers[0] == 'MREV') or modifiers == 'UREV':
                     if re.findall(
-                        r'[B]\-[1-3H]', self.advances,
+                        r'[B]\-[1-3H]',
+                        self.advances,
                     ):  # base runner explicit, so no strikeout
                         self.play['out'] -= 1
 
             elif (
-                (re.findall(r'[B]X[1-3H](?:\([^\)]+\))*', self.advances)
+                re.findall(r'[B]X[1-3H](?:\([^\)]+\))*', self.advances)
                 and not re.findall(
                     r'[1-3B]X[1-3H](?:\([^\)]+\))*(?:\([^\)]*E[^\)]+\))(?:\([^\)]+\))?',
                     self.advances,
-                ))
-                or (re.findall('^K$', a)
+                )
+            ) or (
+                re.findall('^K$', a)
                 and (
                     re.findall(r'[B]\-[1-3H](?:\([^\)]+\))*', self.advances)
                     or re.findall(
                         r'[B]X[1-3H](?:\([^\)]+\))*(?:\([^\)]*E[^\)]+\))(?:\([^\)]+\))?',
                         self.advances,
                     )
-                ))
+                )
             ):  # Base explicit out
                 self.play['out'] -= 1
 
@@ -804,7 +817,8 @@ class Event:
                     self.play[base_advanced] = 1
 
                 elif re.findall(
-                    r'[B]X[1-3H](?:\([^\)]+\))*(?:\([^\)]*E[^\)]+\))(?:\([^\)]+\))?', self.advances,
+                    r'[B]X[1-3H](?:\([^\)]+\))*(?:\([^\)]*E[^\)]+\))(?:\([^\)]+\))?',
+                    self.advances,
                 ):
                     self.play['out'] -= 1
                     base_advanced = re.findall(

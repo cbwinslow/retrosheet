@@ -186,7 +186,7 @@ def fetch_espn_schedule(date: str) -> dict[str, Any] | None:
     """
     # Convert YYYY-MM-DD to YYYYMMDD format for ESPN API
     date_formatted = date.replace('-', '')
-    url = f"{ENDPOINTS['scoreboard']}?dates={date_formatted}"
+    url = f'{ENDPOINTS["scoreboard"]}?dates={date_formatted}'
 
     try:
         start_time = time.time()
@@ -478,7 +478,9 @@ def store_plays_snapshot(snapshot_data: dict[str, Any], game_id: str) -> bool:
 
 
 def fetch_games_batch(
-    game_ids: list[str], include_plays: bool = False, max_workers: int = 10,
+    game_ids: list[str],
+    include_plays: bool = False,
+    max_workers: int = 10,
 ) -> dict[str, int]:
     """Fetch multiple games in parallel using ThreadPoolExecutor.
 
@@ -541,14 +543,18 @@ def main():
     # Schedule command
     schedule_parser = subparsers.add_parser('schedule', help='Fetch schedule data')
     schedule_parser.add_argument(
-        '--date', type=str, help='Date in YYYY-MM-DD format (default: today)',
+        '--date',
+        type=str,
+        help='Date in YYYY-MM-DD format (default: today)',
     )
 
     # Game command
     game_parser = subparsers.add_parser('game', help='Fetch game data')
     game_parser.add_argument('--game-id', type=str, required=True, help='ESPN game ID')
     game_parser.add_argument(
-        '--include-plays', action='store_true', help='Also fetch play-by-play data',
+        '--include-plays',
+        action='store_true',
+        help='Also fetch play-by-play data',
     )
 
     # Plays command
@@ -558,27 +564,45 @@ def main():
     # Batch command
     batch_parser = subparsers.add_parser('batch', help='Fetch multiple games in parallel')
     batch_parser.add_argument(
-        '--game-ids', type=str, required=True, help='Comma-separated list of ESPN game IDs',
+        '--game-ids',
+        type=str,
+        required=True,
+        help='Comma-separated list of ESPN game IDs',
     )
     batch_parser.add_argument(
-        '--include-plays', action='store_true', help='Also fetch play-by-play data',
+        '--include-plays',
+        action='store_true',
+        help='Also fetch play-by-play data',
     )
     batch_parser.add_argument(
-        '--workers', type=int, default=10, help='Number of parallel workers (default: 10)',
+        '--workers',
+        type=int,
+        default=10,
+        help='Number of parallel workers (default: 10)',
     )
 
     # Ingest historical command
     historical_parser = subparsers.add_parser(
-        'ingest-historical', help='Ingest historical games from a date range',
+        'ingest-historical',
+        help='Ingest historical games from a date range',
     )
     historical_parser.add_argument(
-        '--start-date', type=str, required=True, help='Start date in YYYY-MM-DD format',
+        '--start-date',
+        type=str,
+        required=True,
+        help='Start date in YYYY-MM-DD format',
     )
     historical_parser.add_argument(
-        '--end-date', type=str, required=True, help='End date in YYYY-MM-DD format',
+        '--end-date',
+        type=str,
+        required=True,
+        help='End date in YYYY-MM-DD format',
     )
     historical_parser.add_argument(
-        '--workers', type=int, default=10, help='Number of parallel workers (default: 10)',
+        '--workers',
+        type=int,
+        default=10,
+        help='Number of parallel workers (default: 10)',
     )
 
     args = parser.parse_args()
@@ -688,7 +712,9 @@ def main():
             # Batch fetch all games
             if all_game_ids:
                 counts = fetch_games_batch(
-                    all_game_ids, include_plays=True, max_workers=args.workers,
+                    all_game_ids,
+                    include_plays=True,
+                    max_workers=args.workers,
                 )
                 update_run_progress(run_id, records_downloaded=counts['downloaded'])
                 update_run_progress(run_id, records_ingested=counts['ingested'])

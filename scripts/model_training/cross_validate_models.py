@@ -39,7 +39,7 @@ def database_kwargs() -> dict[str, str]:
 
 def database_url() -> str:
     kwargs = database_kwargs()
-    return f"postgresql+psycopg2://{kwargs['user']}:{kwargs['password']}@{kwargs['host']}:{kwargs['port']}/{kwargs['dbname']}"
+    return f'postgresql+psycopg2://{kwargs["user"]}:{kwargs["password"]}@{kwargs["host"]}:{kwargs["port"]}/{kwargs["dbname"]}'
 
 
 def get_active_models(target_id: str) -> list[dict]:
@@ -99,7 +99,10 @@ def load_training_data(target_id: str, sample_rate: float = 0.1) -> pd.DataFrame
 
 
 def evaluate_model_cv(
-    model_path: Path, feature_spec: dict, data: pd.DataFrame, cv_folds: int = 5,
+    model_path: Path,
+    feature_spec: dict,
+    data: pd.DataFrame,
+    cv_folds: int = 5,
 ) -> dict:
     """Evaluate a model using cross-validation."""
 
@@ -181,7 +184,10 @@ def run_cross_validation(target_id: str, sample_rate: float = 0.1, cv_folds: int
         print(f'Evaluating {model_name}...')
 
         cv_results = evaluate_model_cv(
-            model_info['artifact_path'], model_info['feature_spec'], data, cv_folds,
+            model_info['artifact_path'],
+            model_info['feature_spec'],
+            data,
+            cv_folds,
         )
 
         results[model_name] = {
@@ -202,14 +208,14 @@ def print_summary(results: dict) -> None:
     print('=' * 60)
 
     for model_name, result in results.items():
-        print(f"\n{model_name} ({result['model_family']}):")
-        print(f"  CV Folds: {result['cv_folds']}")
-        print(f"  Training Samples: {result['training_samples']:,}")
+        print(f'\n{model_name} ({result["model_family"]}):')
+        print(f'  CV Folds: {result["cv_folds"]}')
+        print(f'  Training Samples: {result["training_samples"]:,}')
 
         metrics = result['metrics']
         for metric_name, metric_data in metrics.items():
             if 'error' in metric_data:
-                print(f"  {metric_name}: ERROR - {metric_data['error']}")
+                print(f'  {metric_name}: ERROR - {metric_data["error"]}')
             else:
                 metric_data['mean']
                 metric_data['std']
@@ -231,7 +237,10 @@ def main():
         help='Target to evaluate (e.g., pa_batter_hit, half_inning_any_run)',
     )
     parser.add_argument(
-        '--sample-rate', type=float, default=0.05, help='Sample rate for training data',
+        '--sample-rate',
+        type=float,
+        default=0.05,
+        help='Sample rate for training data',
     )
     parser.add_argument('--cv-folds', type=int, default=5, help='Number of cross-validation folds')
     parser.add_argument('--output-json', type=str, help='Save results to JSON file')

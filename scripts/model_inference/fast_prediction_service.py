@@ -37,7 +37,9 @@ class PredictionService:
     def __init__(self, max_connections: int = 10):
         self.models: dict[str, tuple[Any, dict]] = {}  # target_id -> (model, feature_spec)
         self.db_pool = SimpleConnectionPool(
-            minconn=1, maxconn=max_connections, **self._database_kwargs(),
+            minconn=1,
+            maxconn=max_connections,
+            **self._database_kwargs(),
         )
         self.executor = ThreadPoolExecutor(max_workers=max_connections)
         self._load_active_models()
@@ -53,7 +55,7 @@ class PredictionService:
 
     def _database_url(self) -> str:
         kwargs = self._database_kwargs()
-        return f"postgresql+psycopg2://{kwargs['user']}:{kwargs['password']}@{kwargs['host']}:{kwargs['port']}/{kwargs['dbname']}"
+        return f'postgresql+psycopg2://{kwargs["user"]}:{kwargs["password"]}@{kwargs["host"]}:{kwargs["port"]}/{kwargs["dbname"]}'
 
     def _load_active_models(self) -> None:
         """Load all active models into memory."""
@@ -328,15 +330,22 @@ class AsyncPredictionService:
     async def predict_batch_async(self, predictions: list[dict]) -> list[dict]:
         """Async batch prediction."""
         return await asyncio.get_event_loop().run_in_executor(
-            None, self.service.predict_batch, predictions,
+            None,
+            self.service.predict_batch,
+            predictions,
         )
 
     async def simulate_half_inning_async(
-        self, game_state: dict, num_simulations: int = 100,
+        self,
+        game_state: dict,
+        num_simulations: int = 100,
     ) -> dict:
         """Async half-inning simulation."""
         return await asyncio.get_event_loop().run_in_executor(
-            None, self.service.simulate_half_inning_fast, game_state, num_simulations,
+            None,
+            self.service.simulate_half_inning_fast,
+            game_state,
+            num_simulations,
         )
 
 

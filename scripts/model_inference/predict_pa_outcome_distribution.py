@@ -292,7 +292,9 @@ def derived_probabilities(probabilities: dict[str, float]) -> dict[str, float]:
         'hit_by_pitch',
     )
     p_reach_base_any = p_on_base_traditional + probability(
-        probabilities, 'error_on_batter', 'interference',
+        probabilities,
+        'error_on_batter',
+        'interference',
     )
     p_ball_in_play = probability(
         probabilities,
@@ -359,7 +361,7 @@ def predict_pa_outcome_distribution(
         column for column in numeric_features + categorical_features if column not in frame
     ]
     if missing_features:
-        raise ValueError(f"Missing model features: {', '.join(missing_features)}")
+        raise ValueError(f'Missing model features: {", ".join(missing_features)}')
 
     feature_frame = frame[numeric_features + categorical_features]
     raw_probabilities = model.predict_proba(feature_frame)[0]

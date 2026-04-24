@@ -164,7 +164,9 @@ def process_file(filepath: Path) -> bool:
     for i, line in enumerate(lines):
         stripped = line.strip()
         # Skip initial empty lines and simple descriptive comments
-        if skip_count == i and (stripped == '' or (stripped.startswith('--') and not stripped.startswith('-- File:'))):
+        if skip_count == i and (
+            stripped == '' or (stripped.startswith('--') and not stripped.startswith('-- File:'))
+        ):
             skip_count += 1
             continue
         new_lines.append(line)

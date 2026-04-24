@@ -174,7 +174,10 @@ def main():
     parser.add_argument('--season-start', type=int, default=2000, help='Start season')
     parser.add_argument('--season-end', type=int, default=2026, help='End season')
     parser.add_argument(
-        '--type', choices=['batting', 'pitching', 'both'], default='both', help='Data type',
+        '--type',
+        choices=['batting', 'pitching', 'both'],
+        default='both',
+        help='Data type',
     )
     args = parser.parse_args()
 

@@ -118,7 +118,7 @@ def main():
             store_schedule(date_str, result)
             print(f'  ✅ Stored {date_str}')
         else:
-            print(f"  ❌ Failed {date_str}: {result.get('error', 'Unknown error')}")
+            print(f'  ❌ Failed {date_str}: {result.get("error", "Unknown error")}')
         time.sleep(1)  # Rate limiting
 
     print('Done!')

@@ -52,7 +52,7 @@ def load_training_data():
     conn.close()
 
     print(f'✅ Loaded {len(df)} training samples')
-    print(f"   Win rate: {df['target'].mean():.3f}")
+    print(f'   Win rate: {df["target"].mean():.3f}')
     print(f'   Features: {list(df.columns[:-1])}')
 
     return df
@@ -110,7 +110,11 @@ def train_model(X, y):
 
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y,
+        X,
+        y,
+        test_size=0.2,
+        random_state=42,
+        stratify=y,
     )
 
     print(f'   Training set: {len(X_train)} samples')

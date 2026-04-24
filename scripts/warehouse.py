@@ -289,7 +289,7 @@ def selected_outputs(value: str) -> list[str]:
     outputs = [part.strip() for part in value.split(',') if part.strip()]
     unknown = sorted(set(outputs) - set(CHADWICK_OUTPUTS))
     if unknown:
-        raise SystemExit(f"Unknown Chadwick output(s): {', '.join(unknown)}")
+        raise SystemExit(f'Unknown Chadwick output(s): {", ".join(unknown)}')
     return outputs
 
 
@@ -393,15 +393,15 @@ def load_chadwick_csv(output: str, path: Path, year: int, source_type: str) -> N
         *[f'{column} text' for column in columns],
     ]
     run_psql_sql(
-        "\\set ON_ERROR_STOP on\n"
-        "BEGIN;\n"
-        f"CREATE TEMP TABLE {table}_load ({', '.join(temp_columns)});\n"
+        '\\set ON_ERROR_STOP on\n'
+        'BEGIN;\n'
+        f'CREATE TEMP TABLE {table}_load ({", ".join(temp_columns)});\n'
         f"\\copy {table}_load ({', '.join(load_columns)}) FROM '{normalized}' WITH (FORMAT csv, NULL '')\n"
-        f"DELETE FROM raw_retrosheet.{table} "
+        f'DELETE FROM raw_retrosheet.{table} '
         f"WHERE season = {year} AND source_type = '{source_type}';\n"
-        f"INSERT INTO raw_retrosheet.{table} "
-        f"({', '.join(load_columns)}) SELECT {', '.join(load_columns)} FROM {table}_load;\n"
-        "COMMIT;\n",
+        f'INSERT INTO raw_retrosheet.{table} '
+        f'({", ".join(load_columns)}) SELECT {", ".join(load_columns)} FROM {table}_load;\n'
+        'COMMIT;\n',
     )
     normalized.unlink(missing_ok=True)
     print(f'loaded {rows} {output} rows from {path}')
@@ -461,15 +461,15 @@ def load_labeled_event_file(path: Path, year: int, source_type: str) -> None:
         *[f'{column} text' for column in feature_columns],
     ]
     run_psql_sql(
-        "\\set ON_ERROR_STOP on\n"
-        "BEGIN;\n"
-        f"CREATE TEMP TABLE labeled_event_load ({', '.join(temp_columns)});\n"
+        '\\set ON_ERROR_STOP on\n'
+        'BEGIN;\n'
+        f'CREATE TEMP TABLE labeled_event_load ({", ".join(temp_columns)});\n'
         f"\\copy labeled_event_load ({', '.join(load_columns)}) FROM '{normalized}' WITH (FORMAT csv, NULL '')\n"
-        "DELETE FROM raw_retrosheet.chadwick_events "
+        'DELETE FROM raw_retrosheet.chadwick_events '
         f"WHERE season = {year} AND source_type = '{source_type}';\n"
-        "INSERT INTO raw_retrosheet.chadwick_events "
-        f"({', '.join(load_columns)}) SELECT {', '.join(load_columns)} FROM labeled_event_load;\n"
-        "COMMIT;\n",
+        'INSERT INTO raw_retrosheet.chadwick_events '
+        f'({", ".join(load_columns)}) SELECT {", ".join(load_columns)} FROM labeled_event_load;\n'
+        'COMMIT;\n',
     )
     normalized.unlink(missing_ok=True)
     print(f'loaded {rows} labeled rows from {path}')
@@ -503,12 +503,12 @@ def load_event_file(path: Path, year: int, source_type: str) -> None:
             f"\\copy event_load ({', '.join(columns)}) FROM '{normalized}' WITH (FORMAT csv, NULL '')\n",
         )
         tmp.write(
-            "DELETE FROM raw_retrosheet.chadwick_event_raw "
+            'DELETE FROM raw_retrosheet.chadwick_event_raw '
             f"WHERE season = {year} AND source_type = '{source_type}';\n",
         )
         tmp.write(
-            "INSERT INTO raw_retrosheet.chadwick_event_raw "
-            f"({', '.join(columns)}) SELECT {', '.join(columns)} FROM event_load;\n",
+            'INSERT INTO raw_retrosheet.chadwick_event_raw '
+            f'({", ".join(columns)}) SELECT {", ".join(columns)} FROM event_load;\n',
         )
         tmp.write('COMMIT;\n')
 
@@ -546,7 +546,7 @@ def fetch_live_game(args: argparse.Namespace) -> None:
         tmp.write(f'  {int(args.game_pk)},\n')
         tmp.write(f'  {sql_literal(endpoint)},\n')
         tmp.write(f'  {sql_literal(payload_json)}::jsonb,\n')
-        tmp.write(f"  {sql_literal(json.dumps(request_params, separators=(',', ':')))}::jsonb,\n")
+        tmp.write(f'  {sql_literal(json.dumps(request_params, separators=(",", ":")))}::jsonb,\n')
         tmp.write(f'  {http_status},\n')
         tmp.write(f'  {sql_literal(payload_checksum)},\n')
         tmp.write('  ' + ('NULL' if not game_date else sql_literal(game_date)) + ',\n')
@@ -568,25 +568,33 @@ def build_parser() -> argparse.ArgumentParser:
 
     extract = sub.add_parser('extract-events')
     extract.add_argument(
-        '--years', required=True, help='Year, comma list, or range. Example: 2023 or 2000-2025',
+        '--years',
+        required=True,
+        help='Year, comma list, or range. Example: 2023 or 2000-2025',
     )
     extract.set_defaults(func=extract_events)
 
     load = sub.add_parser('load-events')
     load.add_argument(
-        '--years', required=True, help='Year, comma list, or range. Example: 2023 or 2000-2025',
+        '--years',
+        required=True,
+        help='Year, comma list, or range. Example: 2023 or 2000-2025',
     )
     load.set_defaults(func=load_events)
 
     labeled = sub.add_parser('load-labeled-events')
     labeled.add_argument(
-        '--years', required=True, help='Year, comma list, or range. Example: 2023 or 2000-2025',
+        '--years',
+        required=True,
+        help='Year, comma list, or range. Example: 2023 or 2000-2025',
     )
     labeled.set_defaults(func=load_labeled_events)
 
     extract_chadwick_parser = sub.add_parser('extract-chadwick')
     extract_chadwick_parser.add_argument(
-        '--years', required=True, help='Year, comma list, or range.',
+        '--years',
+        required=True,
+        help='Year, comma list, or range.',
     )
     extract_chadwick_parser.add_argument(
         '--outputs',

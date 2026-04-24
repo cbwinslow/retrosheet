@@ -166,7 +166,10 @@ def fetch_rosters_for_season(team_ids: list[int], season: int, delay: float) -> 
 
 
 def fetch_people_for_season(
-    player_ids: list[int], season: int, delay: float, batch_size: int,
+    player_ids: list[int],
+    season: int,
+    delay: float,
+    batch_size: int,
 ) -> None:
     for batch in chunks(player_ids, batch_size):
         params = {'personIds': ','.join(str(player_id) for player_id in batch)}

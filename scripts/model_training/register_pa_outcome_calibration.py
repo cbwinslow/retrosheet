@@ -89,7 +89,8 @@ def main() -> None:
     calibration_targets = calibration_frame['target'].to_numpy()
     evaluation_targets = evaluation_frame['target'].to_numpy()
     calibration_index = np.array(
-        [class_to_index[label] for label in calibration_targets], dtype=int,
+        [class_to_index[label] for label in calibration_targets],
+        dtype=int,
     )
 
     calibrators = fit_isotonic_calibrators(raw_cal, calibration_index)

@@ -29,7 +29,10 @@ def f1_from_confusion(confusion: np.ndarray) -> tuple[float, float]:
 
     macro = float(f1.mean())
     weights = np.divide(
-        true_count, true_count.sum(), out=np.zeros_like(true_count), where=true_count.sum() > 0,
+        true_count,
+        true_count.sum(),
+        out=np.zeros_like(true_count),
+        where=true_count.sum() > 0,
     )
     weighted = float((f1 * weights).sum())
     return macro, weighted
@@ -45,7 +48,8 @@ def build_game_cache(
     target_index = np.array([class_to_index[label] for label in frame['target']], dtype=np.int64)
     predicted_index = probabilities.argmax(axis=1)
     top3_index = np.argpartition(probabilities, -min(3, len(classes)), axis=1)[
-        :, -min(3, len(classes)) :,
+        :,
+        -min(3, len(classes)) :,
     ]
     top3_correct = np.any(top3_index == target_index[:, None], axis=1).astype(np.int64)
 
@@ -80,7 +84,10 @@ def build_game_cache(
 
 
 def bootstrap_game_samples(
-    *, season_games: dict[int, np.ndarray], replicates: int, seed: int,
+    *,
+    season_games: dict[int, np.ndarray],
+    replicates: int,
+    seed: int,
 ) -> list[list[str]]:
     rng = np.random.default_rng(seed)
     samples: list[list[str]] = []
@@ -216,7 +223,8 @@ def main() -> None:
             output_path = ROOT / args.output_json
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
-            json.dumps(summary, indent=2, sort_keys=True) + '\n', encoding='utf-8',
+            json.dumps(summary, indent=2, sort_keys=True) + '\n',
+            encoding='utf-8',
         )
 
     print(json.dumps(summary, indent=2, sort_keys=True))

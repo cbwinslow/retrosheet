@@ -472,7 +472,8 @@ def _merge_statcast(pbp_df: pd.DataFrame, sc_df: pd.DataFrame) -> pd.DataFrame:
         sc = (
             sc_df.sort_values('pitch_number')
             .groupby(
-                ['game_pk', 'batter', 'inning', 'inning_topbot', 'at_bat_number'], as_index=False,
+                ['game_pk', 'batter', 'inning', 'inning_topbot', 'at_bat_number'],
+                as_index=False,
             )
             .last()[[c for c in [*wanted_sc, 'at_bat_number'] if c in sc_df.columns]]
         )
@@ -554,9 +555,9 @@ def collect_game(
     game_meta['home_abbr'] = _get_team_abbr(game_meta.get('home_team', 'UNK'))
 
     logging.info(
-        f"Collecting game {game_pk}: "
-        f"{game_meta.get('away_team', '?')} @ {game_meta.get('home_team', '?')} "
-        f"({game_meta.get('game_date', '?')})",
+        f'Collecting game {game_pk}: '
+        f'{game_meta.get("away_team", "?")} @ {game_meta.get("home_team", "?")} '
+        f'({game_meta.get("game_date", "?")})',
     )
 
     all_plays = _get_play_by_play(game_pk)
@@ -644,7 +645,7 @@ def collect_season(
                 if not df.empty:
                     all_frames.append(df)
             except Exception as exc:
-                logging.exception(f"  Failed game {meta['game_pk']}: {exc}")
+                logging.exception(f'  Failed game {meta["game_pk"]}: {exc}')
             time.sleep(RATE_LIMIT_SLEEP)
 
     if not all_frames:
@@ -755,7 +756,7 @@ def query_game(game_pk: int, merge_statcast_data: bool = True) -> pd.DataFrame:
     Example
     -------
     >>> df = query_game(778498)
-    >>> print(df[["inning","batter_name","event_type","pitch_sequence"]].head(20))
+    >>> print(df[['inning', 'batter_name', 'event_type', 'pitch_sequence']].head(20))
     """
     meta = _get_game_metadata_from_feed(game_pk)
     sc_df = None

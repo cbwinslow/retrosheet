@@ -290,7 +290,9 @@ def main():
     parser = argparse.ArgumentParser(description='Apply advanced database optimizations')
     parser.add_argument('--all', action='store_true', help='Apply all optimizations')
     parser.add_argument(
-        '--materialized-views', action='store_true', help='Create materialized views',
+        '--materialized-views',
+        action='store_true',
+        help='Create materialized views',
     )
     parser.add_argument('--clustering', action='store_true', help='Apply table clustering')
     parser.add_argument('--monitoring', action='store_true', help='Set up monitoring functions')

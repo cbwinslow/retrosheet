@@ -292,8 +292,14 @@ WHERE p.game_pk = <GAME_PK>;
 | **TTOP** | `times_through_order_detailed`, `is_first_time_seeing_pitcher`, `ttop_penalty_applies` | Times Through Order Penalty |
 | **Matchup** | `is_same_handed_matchup`, `is_platoon_advantage_pitcher`, `prior_matchup_count` | Platoon advantage |
 | **Pitch Quality** | `pitch_quality_score`, `is_primary_pitch_type`, `pitch_type_family` | Pitch quality models |
-| **Environmental** | `is_day_game`, `game_month`, `is_opening_series` | Environmental effects |
+| **Environmental** | `is_day_game`, `game_month`, `is_opening_series`, `temp_extreme_flag`, `wind_effect_score`, `altitude_factor`, `is_shadow_game` | Environmental effects |
 | **Pressure** | `pa_pressure_index`, `is_high_pressure_pa`, `is_walk_off_situation`, `leverage_index_bracket` | High-leverage performance |
+| **Weather** | `temp_extreme_flag`, `wind_effect_score`, `humidity_proxy`, `altitude_factor` | Weather effects on ball flight |
+| **Momentum** | `batting_team_last_5_win_rate`, `batting_team_last_10_win_rate`, `team_momentum_delta`, `pitcher_last_3_era`, `pitcher_last_3_strikeout_rate` | Team and player streaks |
+| **Umpire** | `umpire_strike_zone_size`, `umpire_strike_calls_pct`, `umpire_k_friendly`, `umpire_walk_friendly`, `umpire_hitter_favored`, `umpire_pitcher_favored`, `umpire_consistency_score` | Umpire tendencies |
+| **Attendance** | `attendance_vs_capacity_pct`, `is_sellout`, `crowd_noise_proxy`, `home_field_advantage_score`, `is_rivalry_game` | Crowd effects |
+| **Park Factors** | `park_elevation_feet`, `park_hr_factor_lf`, `park_hr_factor_cf`, `park_hr_factor_rf`, `park_overall_hr_factor`, `park_grass_turf`, `park_is_dome` | Stadium physics |
+| **Fatigue** | `pitcher_days_rest`, `is_short_rest_start`, `pitcher_season_workload`, `pitcher_inning_velocity_decline` | Pitcher rest and workload |
 
 **Outcome Labels (Two-Tier Hierarchy):**
 - **Tier 1** (Coarse): S (Strike, 69.9%), X (Ball-in-Play, 26.9%), B (Ball, 3.2%)
@@ -302,9 +308,9 @@ WHERE p.game_pk = <GAME_PK>;
 **Training Data:**
 - Valid Pitches: 5,072,278 (excludes 'U' unknown outcomes)
 - Stratified sampling for balanced class representation
-- **110+ engineered features** across 11 categories, all research-backed
+- **170+ engineered features** across 18 categories, all research-backed
 - **118 raw Statcast fields** preserved in base_features
-- **Total feature space: 230+ columns** for maximum model coverage
+- **Total feature space: 290+ columns** for maximum model coverage
 
 **Scripts:**
 ```bash
@@ -322,6 +328,11 @@ done
 # Populate more features from KB research (run batches until complete)
 for i in {1..80}; do
     psql -f sql/features/011_populate_more_features_batch.sql
+done
+
+# Populate context features: weather, momentum, umpire, attendance, park, fatigue
+for i in {1..80}; do
+    psql -f sql/features/014_populate_context_features_batch.sql
 done
 
 # Train Tier-1 XGBoost model

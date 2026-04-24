@@ -184,8 +184,8 @@ def main():
             status = '❌'
 
         print(
-            f"   {status} {date_str}: {result.get('http_status', 'ERROR')} "
-            f"({result.get('response_time_ms', 0)}ms)",
+            f'   {status} {date_str}: {result.get("http_status", "ERROR")} '
+            f'({result.get("response_time_ms", 0)}ms)',
         )
 
         # Rate limiting

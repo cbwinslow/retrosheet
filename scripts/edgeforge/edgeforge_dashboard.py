@@ -140,7 +140,7 @@ def display_header():
     print('🎯 EdgeForge MLB Data Ingestion Dashboard')
     print('💰 Professional Sports Betting Intelligence Platform')
     print('=' * 70)
-    print(f"📊 Live Status | Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    print(f'📊 Live Status | Updated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")}')
     print('=' * 70)
 
 
@@ -192,7 +192,7 @@ def display_season_breakdown(status):
                 # Convert string dates to date objects for formatting
                 earliest_date = datetime.strptime(str(earliest)[:10], '%Y-%m-%d').date()
                 latest_date = datetime.strptime(str(latest)[:10], '%Y-%m-%d').date()
-                f"{earliest_date.strftime('%m/%d')}-{latest_date.strftime('%m/%d')}"
+                f'{earliest_date.strftime("%m/%d")}-{latest_date.strftime("%m/%d")}'
             else:
                 pass
         except:
@@ -213,7 +213,7 @@ def display_missing_seasons(status):
         print('🎉 Ready for complete EdgeForge deployment!')
     else:
         print(f'📋 Seasons to download: {len(missing)}')
-        print(f"🎯 Target: {missing[:10]}{'...' if len(missing) > 10 else ''}")
+        print(f'🎯 Target: {missing[:10]}{"..." if len(missing) > 10 else ""}')
 
         # Estimated completion
         avg_season_time = 1.5  # hours per season

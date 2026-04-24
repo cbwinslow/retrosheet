@@ -93,7 +93,10 @@ class PredictionEngine:
         return self.get_predictor(target_id).predict(features)
 
     def predict_top_k(
-        self, target_id: str, features: pd.DataFrame, k: int = 3,
+        self,
+        target_id: str,
+        features: pd.DataFrame,
+        k: int = 3,
     ) -> tuple[list, list]:
         """Get top k predictions."""
         predictor = self.get_predictor(target_id)

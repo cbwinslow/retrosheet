@@ -75,7 +75,10 @@ def policy_label(
 
 
 def build_command(
-    args: argparse.Namespace, *, recent_window: int | None, season_half_life: float | None,
+    args: argparse.Namespace,
+    *,
+    recent_window: int | None,
+    season_half_life: float | None,
 ) -> list[str]:
     command = [
         sys.executable,
@@ -200,7 +203,8 @@ def main() -> None:
             output_path = ROOT / output_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
-            json.dumps(summary, indent=2, sort_keys=True) + '\n', encoding='utf-8',
+            json.dumps(summary, indent=2, sort_keys=True) + '\n',
+            encoding='utf-8',
         )
 
 

@@ -50,7 +50,7 @@ def _insert_dataframe(conn, df: pd.DataFrame) -> None:
     # Convert empty strings to None for nullable columns
     records = [tuple(None if v == '' else v for v in row) for row in df.values]
     with conn.cursor() as cur:
-        sql = f"INSERT INTO core.mlb_pbp ({', '.join(cols)}) VALUES %s"
+        sql = f'INSERT INTO core.mlb_pbp ({", ".join(cols)}) VALUES %s'
         execute_values(cur, sql, records, page_size=1000)
     conn.commit()
 

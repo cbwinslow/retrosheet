@@ -62,7 +62,7 @@ def hgb_candidates() -> list[tuple[str, HistGradientBoostingClassifier]]:
     )
     return [
         (
-            f"hgb_iter{max_iter}_lr{str(learning_rate).replace('.', '')}_leaf{max_leaf_nodes}_l2{str(l2_regularization).replace('.', '')}",
+            f'hgb_iter{max_iter}_lr{str(learning_rate).replace(".", "")}_leaf{max_leaf_nodes}_l2{str(l2_regularization).replace(".", "")}',
             HistGradientBoostingClassifier(
                 max_iter=max_iter,
                 learning_rate=learning_rate,
@@ -78,7 +78,7 @@ def hgb_candidates() -> list[tuple[str, HistGradientBoostingClassifier]]:
 def logistic_candidates() -> list[tuple[str, LogisticRegression]]:
     return [
         (
-            f"logreg_c{str(c_value).replace('.', '')}",
+            f'logreg_c{str(c_value).replace(".", "")}',
             LogisticRegression(C=c_value, max_iter=2000),
         )
         for c_value in [0.05, 0.1, 0.5, 1.0, 2.0, 5.0]
@@ -130,14 +130,19 @@ def main() -> None:
     )
     parser.add_argument('--target-id', required=True)
     parser.add_argument(
-        '--feature-set', choices=['basic', 'enriched', 'advanced'], default='advanced',
+        '--feature-set',
+        choices=['basic', 'enriched', 'advanced'],
+        default='advanced',
     )
     parser.add_argument('--min-season', type=int, default=2000)
     parser.add_argument('--max-season', type=int, default=2025)
     parser.add_argument('--train-through', type=int, default=2022)
     parser.add_argument('--sample-rate', type=float, default=0.05)
     parser.add_argument(
-        '--families', nargs='+', choices=['hgb', 'logistic'], default=['hgb', 'logistic'],
+        '--families',
+        nargs='+',
+        choices=['hgb', 'logistic'],
+        default=['hgb', 'logistic'],
     )
     parser.add_argument('--max-candidates', type=int, default=12)
     parser.add_argument('--activate', action='store_true')
@@ -215,7 +220,7 @@ def main() -> None:
                     metrics['validation']['log_loss'],
                 ),
             )
-            print(f"trained {candidate_name}: {json.dumps(metrics['validation'], sort_keys=True)}")
+            print(f'trained {candidate_name}: {json.dumps(metrics["validation"], sort_keys=True)}')
 
         print('\nLeaderboard:')
         for name, roc_auc, loss in sorted(leaderboard, key=lambda row: row[1], reverse=True):

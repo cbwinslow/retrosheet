@@ -288,7 +288,11 @@ def train_model(X: np.ndarray, y: np.ndarray, feature_names: list[str]) -> dict:
 
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded,
+        X,
+        y_encoded,
+        test_size=0.2,
+        random_state=42,
+        stratify=y_encoded,
     )
 
     logger.info(f'Train: {len(X_train)}, Test: {len(X_test)}')
@@ -348,12 +352,12 @@ def train_model(X: np.ndarray, y: np.ndarray, feature_names: list[str]) -> dict:
         'n_test': len(X_test),
     }
 
-    logger.info(f"\n{'=' * 50}")
+    logger.info(f'\n{"=" * 50}')
     logger.info('Tier-1 XGBoost Results')
-    logger.info(f"{'=' * 50}")
+    logger.info(f'{"=" * 50}')
     logger.info(f'Accuracy: {accuracy:.4f} (Target: ≥0.80)')
     logger.info(f'Log Loss: {logloss:.4f}')
-    logger.info(f"Target Met: {results['accuracy_target_met']}")
+    logger.info(f'Target Met: {results["accuracy_target_met"]}')
     logger.info('\nTop 5 Features:')
     for feat, imp in feature_importance[:5]:
         logger.info(f'  {feat}: {imp:.4f}')
@@ -402,7 +406,7 @@ def main():
             df = load_training_data(conn, limit=1000)
             logger.info(f'✓ Data load successful: {len(df)} rows')
             logger.info(f'✓ Features: {len(get_feature_columns())}')
-            logger.info(f"✓ Target distribution: {df['target'].value_counts().to_dict()}")
+            logger.info(f'✓ Target distribution: {df["target"].value_counts().to_dict()}')
             return
 
         # Load data

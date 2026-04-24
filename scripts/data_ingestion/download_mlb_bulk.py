@@ -358,9 +358,9 @@ def main():
     total_downloaded = 0
 
     for season in range(args.start_season, args.end_season + 1):
-        print(f"\n{'=' * 50}")
+        print(f'\n{"=" * 50}')
         print(f'🏏 Processing {season} MLB Season')
-        print(f"{'=' * 50}")
+        print(f'{"=" * 50}')
 
         if args.mode in ['schedules', 'both']:
             print(f'\n📅 Downloading {season} schedules...')

@@ -94,28 +94,28 @@ def load_validation_frame(
                 advanced.fielding_team_rolling_30_win_rate,
                 advanced.fielding_team_rolling_30_runs_scored_per_game,
                 advanced.fielding_team_rolling_30_runs_allowed_per_game
-                {"," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_pa," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_hit_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_walk_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_strikeout_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_home_run_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_reach_base_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.batter_count_state_prior_extra_base_hit_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_batters_faced," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_hit_allowed_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_walk_allowed_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_strikeout_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_home_run_allowed_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_reach_base_allowed_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.pitcher_count_state_prior_extra_base_hit_allowed_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_pa," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_hit_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_walk_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_strikeout_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_home_run_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_reach_base_rate," if feature_set == "advanced_count" else ""}
-                {"advanced.count_state_context_prior_extra_base_hit_rate" if feature_set == "advanced_count" else ""}
+                {',' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_pa,' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_hit_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_walk_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_strikeout_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_home_run_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_reach_base_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.batter_count_state_prior_extra_base_hit_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_batters_faced,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_hit_allowed_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_walk_allowed_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_strikeout_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_home_run_allowed_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_reach_base_allowed_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.pitcher_count_state_prior_extra_base_hit_allowed_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_pa,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_hit_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_walk_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_strikeout_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_home_run_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_reach_base_rate,' if feature_set == 'advanced_count' else ''}
+                {'advanced.count_state_context_prior_extra_base_hit_rate' if feature_set == 'advanced_count' else ''}
             FROM {source_relation} outcome
             JOIN {advanced_relation} advanced
               ON advanced.game_id = outcome.game_id
@@ -350,7 +350,8 @@ def main() -> None:
             output_path = ROOT / output_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
-            json.dumps(report, indent=2, sort_keys=True) + '\n', encoding='utf-8',
+            json.dumps(report, indent=2, sort_keys=True) + '\n',
+            encoding='utf-8',
         )
 
     print(json.dumps(report, indent=2, sort_keys=True))

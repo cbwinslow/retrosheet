@@ -65,7 +65,7 @@ def predict_live_pa_outcome_distribution(
         column for column in numeric_features + categorical_features if column not in frame
     ]
     if missing_features:
-        raise ValueError(f"Missing live model features: {', '.join(missing_features)}")
+        raise ValueError(f'Missing live model features: {", ".join(missing_features)}')
 
     feature_frame = frame[numeric_features + categorical_features]
     raw_probabilities = model.predict_proba(feature_frame)[0]

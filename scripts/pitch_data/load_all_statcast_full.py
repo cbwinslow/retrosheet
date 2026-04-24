@@ -338,7 +338,9 @@ Examples:
     parser.add_argument('--all', action='store_true', help='Load all available seasons')
     parser.add_argument('--force', action='store_true', help='Force reload even if data exists')
     parser.add_argument(
-        '--dry-run', action='store_true', help='Show what would be loaded without loading',
+        '--dry-run',
+        action='store_true',
+        help='Show what would be loaded without loading',
     )
     parser.add_argument('--verify', action='store_true', help='Verify existing data integrity')
 

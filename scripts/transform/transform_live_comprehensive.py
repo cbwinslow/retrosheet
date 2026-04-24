@@ -249,8 +249,8 @@ def parse_live_game(feed: dict, snapshot_id: int) -> LiveGame:
 
     # Use database connection for ID lookups (will be passed later)
     # For now, use placeholder IDs
-    home_team_id = f"MLB{home_team.get('id')}" if home_team.get('id') else None
-    away_team_id = f"MLB{away_team.get('id')}" if away_team.get('id') else None
+    home_team_id = f'MLB{home_team.get("id")}' if home_team.get('id') else None
+    away_team_id = f'MLB{away_team.get("id")}' if away_team.get('id') else None
 
     # Score info
     linescore = live_data.get('linescore', {})
@@ -260,7 +260,7 @@ def parse_live_game(feed: dict, snapshot_id: int) -> LiveGame:
 
     # Venue info
     venue = game_data.get('venue', {})
-    park_id = f"MLB{venue.get('id')}" if venue.get('id') else None
+    park_id = f'MLB{venue.get("id")}' if venue.get('id') else None
 
     # Weather info
     weather = game_data.get('weather', {})
@@ -300,7 +300,10 @@ def parse_live_game(feed: dict, snapshot_id: int) -> LiveGame:
 
 
 def parse_live_events(
-    feed: dict, game_id: str, snapshot_id: int, conn,
+    feed: dict,
+    game_id: str,
+    snapshot_id: int,
+    conn,
 ) -> tuple[list[LiveEvent], list[LivePlateAppearance]]:
     """Parse MLB live feed plays into LiveEvent and LivePlateAppearance objects."""
     live_data = feed.get('liveData', {})
@@ -322,7 +325,8 @@ def parse_live_events(
         # Basic event info
         inning = about.get('inning')
         is_bottom = about.get(
-            'isTopInning', True,
+            'isTopInning',
+            True,
         )  # MLB API uses isTopInning (True = top of inning)
         event_sequence = about.get('atBatIndex', play_idx)
 
@@ -380,12 +384,12 @@ def parse_live_events(
 
         # Teams
         batting_team_id = (
-            f"MLB{matchup.get('battingTeam', {}).get('id')}"
+            f'MLB{matchup.get("battingTeam", {}).get("id")}'
             if matchup.get('battingTeam', {}).get('id')
             else None
         )
         fielding_team_id = (
-            f"MLB{matchup.get('pitchingTeam', {}).get('id')}"
+            f'MLB{matchup.get("pitchingTeam", {}).get("id")}'
             if matchup.get('pitchingTeam', {}).get('id')
             else None
         )
@@ -491,10 +495,10 @@ def parse_live_events(
             game_data = feed.get('gameData', {})
             teams = game_data.get('teams', {})
             home_team_id = (
-                f"MLB{teams.get('home', {}).get('id')}" if teams.get('home', {}).get('id') else None
+                f'MLB{teams.get("home", {}).get("id")}' if teams.get('home', {}).get('id') else None
             )
             away_team_id = (
-                f"MLB{teams.get('away', {}).get('id')}" if teams.get('away', {}).get('id') else None
+                f'MLB{teams.get("away", {}).get("id")}' if teams.get('away', {}).get('id') else None
             )
 
             pa = LivePlateAppearance(

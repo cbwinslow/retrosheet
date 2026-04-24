@@ -263,7 +263,10 @@ def simulate_plate_appearance(
 
 
 def simulate_half_inning(
-    game_id: str, inning: int, is_bottom_inning: bool, num_simulations: int = 100,
+    game_id: str,
+    inning: int,
+    is_bottom_inning: bool,
+    num_simulations: int = 100,
 ) -> dict:
     """Run Monte Carlo simulation of a half-inning."""
 

@@ -177,7 +177,7 @@ def create_statcast_table(engine, schema: str = 'features_pitch'):
 
     CREATE TABLE {schema}.statcast_pitches (
         id BIGSERIAL PRIMARY KEY,
-        {", ".join(columns_sql)},
+        {', '.join(columns_sql)},
         location_point geometry(POINT, 4326)
     );
 
@@ -205,7 +205,10 @@ def create_statcast_table(engine, schema: str = 'features_pitch'):
 
 
 def load_statcast_data(
-    engine, seasons: list[int] = None, limit: int = None, batch_size: int = 100000,
+    engine,
+    seasons: list[int] = None,
+    limit: int = None,
+    batch_size: int = 100000,
 ):
     """
     Load statcast data from raw_mlb.statcast into normalized table.
@@ -243,7 +246,7 @@ def load_statcast_data(
             if 'plate_x' in chunk.columns and 'plate_z' in chunk.columns:
                 chunk['location_point'] = chunk.apply(
                     lambda r: (
-                        f"SRID=4326;POINT({r['plate_x']} {r['plate_z']})"
+                        f'SRID=4326;POINT({r["plate_x"]} {r["plate_z"]})'
                         if pd.notna(r['plate_x']) and pd.notna(r['plate_z'])
                         else None
                     ),
@@ -329,7 +332,9 @@ def main():
     parser.add_argument('--all', action='store_true', help='Load all available seasons')
     parser.add_argument('--limit', type=int, default=None, help='Limit rows per season')
     parser.add_argument(
-        '--create-only', action='store_true', help='Only create table, do not load data',
+        '--create-only',
+        action='store_true',
+        help='Only create table, do not load data',
     )
     args = parser.parse_args()
 

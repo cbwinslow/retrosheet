@@ -30,9 +30,9 @@ def run_command(cmd: str, description: str) -> bool:
 
 def download_season_data(season: int) -> bool:
     """Download both schedules and game feeds for a season."""
-    print(f"\n{'=' * 60}")
+    print(f'\n{"=" * 60}')
     print(f'🏏 Processing MLB {season} Season')
-    print(f"{'=' * 60}")
+    print(f'{"=" * 60}')
 
     # Download schedules
     success = run_command(
@@ -150,7 +150,9 @@ def main():
         help="Only download data, don't transform",
     )
     parser.add_argument(
-        '--transform-only', action='store_true', help='Only transform existing data',
+        '--transform-only',
+        action='store_true',
+        help='Only transform existing data',
     )
     parser.add_argument('--workers', type=int, default=8, help='Number of parallel workers')
     parser.add_argument('--delay', type=float, default=0.5, help='Delay between requests')

@@ -127,7 +127,10 @@ def main():
         help="Only evaluate targets with this prefix (e.g., 'pa_' for plate appearance models)",
     )
     parser.add_argument(
-        '--sample-rate', type=float, default=0.05, help='Sample rate for CV evaluation',
+        '--sample-rate',
+        type=float,
+        default=0.05,
+        help='Sample rate for CV evaluation',
     )
     parser.add_argument(
         '--dry-run',

@@ -38,7 +38,7 @@ def run_sql_file(sql_path: Path) -> None:
         str(sql_path),
     ]
     if DRY_RUN:
-        print(f"[dry-run] Would execute: {' '.join(cmd)}")
+        print(f'[dry-run] Would execute: {" ".join(cmd)}')
         return
     print(f'Executing {sql_path.name} …')
     subprocess.check_call(cmd)
@@ -64,10 +64,10 @@ def main() -> None:
     if not DRY_RUN:
         # Refresh all materialized views concurrently
         refresh_sql = (
-            "DO $$ DECLARE r RECORD; BEGIN "
-            "FOR r IN SELECT schemaname, matviewname FROM pg_matviews LOOP "
+            'DO $$ DECLARE r RECORD; BEGIN '
+            'FOR r IN SELECT schemaname, matviewname FROM pg_matviews LOOP '
             "EXECUTE format('REFRESH MATERIALIZED VIEW CONCURRENTLY %I.%I', r.schemaname, r.matviewname); "
-            "END LOOP; END $$;"
+            'END LOOP; END $$;'
         )
         subprocess.check_call(['psql', DATABASE_URL, '-c', refresh_sql])
 

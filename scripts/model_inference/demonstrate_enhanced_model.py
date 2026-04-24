@@ -51,7 +51,7 @@ def load_training_data():
 
     print(f'✅ Loaded {len(df)} training samples')
     print(f'   Current features: {len(df.columns) - 1}')
-    print(f"   Win rate: {df['target'].mean():.3f}")
+    print(f'   Win rate: {df["target"].mean():.3f}')
 
     return df
 
@@ -112,7 +112,19 @@ def train_and_compare_models(df):
     ]
 
     # Enhanced features (all available)
-    enhanced_features = [*basic_features, 'pitch_velocity', 'pitch_spin_rate', 'pitch_distance_from_center', 'matchup_pa', 'matchup_avg', 'matchup_slg', 'batter_exit_velocity', 'batter_launch_angle', 'batter_sprint_speed', 'pitcher_k_per_9']
+    enhanced_features = [
+        *basic_features,
+        'pitch_velocity',
+        'pitch_spin_rate',
+        'pitch_distance_from_center',
+        'matchup_pa',
+        'matchup_avg',
+        'matchup_slg',
+        'batter_exit_velocity',
+        'batter_launch_angle',
+        'batter_sprint_speed',
+        'pitcher_k_per_9',
+    ]
 
     X_basic = df[basic_features]
     X_enhanced = df[enhanced_features]
@@ -120,7 +132,10 @@ def train_and_compare_models(df):
 
     # Train-test split
     Xb_train, Xb_test, y_train, y_test = train_test_split(
-        X_basic, y, test_size=0.2, random_state=42,
+        X_basic,
+        y,
+        test_size=0.2,
+        random_state=42,
     )
     Xe_train, Xe_test, _, _ = train_test_split(X_enhanced, y, test_size=0.2, random_state=42)
 
@@ -132,7 +147,10 @@ def train_and_compare_models(df):
 
     # Train enhanced model
     enhanced_model = RandomForestClassifier(
-        n_estimators=100, max_depth=10, random_state=42, n_jobs=-1,
+        n_estimators=100,
+        max_depth=10,
+        random_state=42,
+        n_jobs=-1,
     )
     enhanced_model.fit(Xe_train, y_train)
     enhanced_pred = enhanced_model.predict_proba(Xe_test)[:, 1]

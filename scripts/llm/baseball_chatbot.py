@@ -353,8 +353,8 @@ class ConversationMemory:
 
         context_parts = []
         for turn in recent:
-            context_parts.append(f"User: {turn['user']}")
-            context_parts.append(f"Assistant: {turn['assistant'][:200]}...")  # Truncate
+            context_parts.append(f'User: {turn["user"]}')
+            context_parts.append(f'Assistant: {turn["assistant"][:200]}...')  # Truncate
 
         return '\n'.join(context_parts)
 
@@ -400,7 +400,7 @@ class BaseballQueryAgent:
         """Create the system prompt for the LLM."""
         tools_info = []
         for tool_name, tool_info in self.tool_registry.tools.items():
-            tools_info.append(f"- {tool_name}: {tool_info['description']}")
+            tools_info.append(f'- {tool_name}: {tool_info["description"]}')
 
         return f"""You are a baseball analytics expert chatbot. You have access to comprehensive MLB data and machine learning models to provide detailed analysis and predictions.
 
@@ -466,7 +466,14 @@ Be helpful, accurate, and engaging in your responses."""
             if results:
                 # Include tool results in context
                 tool_context = f'Tool results: {results}'
-                final_messages = [*messages, {'role': 'assistant', 'content': llm_response}, {'role': 'user', 'content': f'Based on the tool results, provide a comprehensive answer: {tool_context}'}]
+                final_messages = [
+                    *messages,
+                    {'role': 'assistant', 'content': llm_response},
+                    {
+                        'role': 'user',
+                        'content': f'Based on the tool results, provide a comprehensive answer: {tool_context}',
+                    },
+                ]
                 final_response = self.llm_client.chat(final_messages)
             else:
                 final_response = llm_response
@@ -553,7 +560,8 @@ Be helpful, accurate, and engaging in your responses."""
         }
 
         return self.prediction_service.simulate_half_inning_fast(
-            game_state, num_simulations=params.get('simulations', 100),
+            game_state,
+            num_simulations=params.get('simulations', 100),
         )
 
     def _get_live_odds(self, params: dict) -> dict:
@@ -597,10 +605,10 @@ def main():
             print('Thinking...')
             result = agent.process_query(user_input)
 
-            print(f"🤖 Bot: {result['response']}")
+            print(f'🤖 Bot: {result["response"]}')
 
             if result.get('tools_used'):
-                print(f"🔧 Tools used: {', '.join(result['tools_used'])}")
+                print(f'🔧 Tools used: {", ".join(result["tools_used"])}')
 
         except KeyboardInterrupt:
             break

@@ -207,6 +207,9 @@ inline-quotes = "single"
 multiline-quotes = "double"
 docstring-quotes = "double"
 
+[tool.ruff]
+exclude = ["scripts/archive"]
+
 [tool.ruff.lint.per-file-ignores]
 # Scripts can have certain patterns
 "scripts/**/*.py" = [

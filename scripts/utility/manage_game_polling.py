@@ -150,17 +150,17 @@ def show_status(conn):
     # Current time info
     now = datetime.now()
     et_hour = datetime.now().astimezone().strftime('%H:%M %Z')
-    print(f"\nCurrent Time: {now.strftime('%Y-%m-%d %H:%M:%S')} ({et_hour})")
+    print(f'\nCurrent Time: {now.strftime("%Y-%m-%d %H:%M:%S")} ({et_hour})')
 
     # Season conditions
     conditions = check_season_conditions(conn)
     print('\nSeason Conditions:')
-    print(f"  Is MLB Season (Feb-Oct):     {'✅ YES' if conditions['is_season'] else '❌ NO'}")
-    print(f"  Is Game Hours (11am-1am ET): {'✅ YES' if conditions['is_game_hours'] else '❌ NO'}")
+    print(f'  Is MLB Season (Feb-Oct):     {"✅ YES" if conditions["is_season"] else "❌ NO"}')
+    print(f'  Is Game Hours (11am-1am ET): {"✅ YES" if conditions["is_game_hours"] else "❌ NO"}')
     print(
-        f"  Has Games Scheduled Today:   {'✅ YES' if conditions['has_games_today'] else '❌ NO / Unknown'}",
+        f'  Has Games Scheduled Today:   {"✅ YES" if conditions["has_games_today"] else "❌ NO / Unknown"}',
     )
-    print(f"  Should Poll:                 {'✅ YES' if conditions['should_poll'] else '❌ NO'}")
+    print(f'  Should Poll:                 {"✅ YES" if conditions["should_poll"] else "❌ NO"}')
 
     # Cron jobs
     jobs = get_polling_status(conn)
@@ -168,10 +168,10 @@ def show_status(conn):
     if jobs:
         for job in jobs:
             status = '🟢 Active' if job['active'] else '🔴 Inactive'
-            print(f"  [{job['jobid']}] {job['jobname']}")
-            print(f"      Schedule: {job['schedule']}")
+            print(f'  [{job["jobid"]}] {job["jobname"]}')
+            print(f'      Schedule: {job["schedule"]}')
             print(f'      Status: {status}')
-            print(f"      Command: {job['command_preview']}...")
+            print(f'      Command: {job["command_preview"]}...')
     else:
         print('  No game polling jobs found')
 

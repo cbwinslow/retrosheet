@@ -278,8 +278,8 @@ def upsert(cur, table, columns):
     # Use ON CONFLICT ON CONSTRAINT <table>_pkey for safety
     cur.execute(
         f"""
-        INSERT INTO raw_lahman.{table} ({", ".join(columns)})
-        SELECT {", ".join(cast_expressions)} FROM raw_lahman.stg_{table}
+        INSERT INTO raw_lahman.{table} ({', '.join(columns)})
+        SELECT {', '.join(cast_expressions)} FROM raw_lahman.stg_{table}
         ON CONFLICT ON CONSTRAINT {table}_pkey DO UPDATE SET {set_clause}
         """,
     )

@@ -1,4 +1,3 @@
-
 import logging
 import os.path
 from io import BytesIO
@@ -87,7 +86,9 @@ class parse_game(parse_row):
         except:
             self.log.debug(
                 'Something wrong with {0} home_away pitcher in {1}, {2}'.format(
-                    self.game['id'], start_sub, self.row_values,
+                    self.game['id'],
+                    start_sub,
+                    self.row_values,
                 ),
             )
 
@@ -148,7 +149,8 @@ class parse_game(parse_row):
         self.row_values[3]
 
         self.pitch_count[pitcher_home_away] = pitch_count(
-            self.row_values[5], self.pitch_count[pitcher_home_away],
+            self.row_values[5],
+            self.pitch_count[pitcher_home_away],
         )
         self.current_inning = self.row_values[1]
         self.current_team = (
@@ -308,7 +310,6 @@ class parse_files(parse_games):
 
         self.zipfile = zipfile
 
-
         for file in self.zipfile.namelist():
             if file[-3:] in ['EVA', 'EVN']:
                 self.file = file
@@ -389,7 +390,8 @@ class parse_files(parse_games):
 
         self.batting = pd.DataFrame(battings, columns=['game_id', 'order', 'stat', 'player_id'])
         self.running = pd.DataFrame(
-            runnings, columns=['game_id', 'order', 'stat', 'bfrom', 'bto', 'player_id'],
+            runnings,
+            columns=['game_id', 'order', 'stat', 'bfrom', 'bto', 'player_id'],
         )
 
         self.rosters = pd.DataFrame(
@@ -406,7 +408,8 @@ class parse_files(parse_games):
             ],
         )
         self.teams = pd.DataFrame(
-            self.teams_list, columns=['year', 'team_abbr', 'league', 'city', 'name'],
+            self.teams_list,
+            columns=['year', 'team_abbr', 'league', 'city', 'name'],
         )
 
         return True
