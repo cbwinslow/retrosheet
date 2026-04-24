@@ -298,6 +298,8 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/analysis/pca_feature_analysis.py` | **PCA ANALYSIS** - Dimensionality reduction, variance explained, component interpretation. | 🔄 Ready |
 | `scripts/analysis/stepwise_feature_selection.py` | **STEPWISE SELECTION** - Forward/backward feature selection with performance tracking. | 🔄 Ready |
 | `scripts/analysis/feature_discovery_master.py` | **FEATURE DISCOVERY ORCHESTRATOR** - Coordinates PCA, correlations, stepwise selection. | 🔄 Ready |
+| `scripts/analysis/pitch_clustering_analysis.py` | **PITCH CLUSTERING** - K-Means/GMM unsupervised learning to discover natural pitch groupings. | 🔄 Ready |
+| `scripts/analysis/feature_interaction_explorer.py` | **FEATURE INTERACTIONS** - Discover non-linear feature pairs that predict outcomes better together. | 🔄 Ready |
 | `docs/PITCH_FEATURE_MART_SCHEMA.md` | Comprehensive schema documentation. Table reference, usage patterns, design principles, data lineage, performance considerations. | Complete |
 | `docs/diagrams/PITCH_FEATURE_MART_ERD.puml` | Entity relationship diagram showing all 7 tables and relationships. | Complete |
 | `docs/diagrams/PITCH_DATA_FLOW.puml` | Data flow architecture diagram from sources through processing to models with CRISP-DM labels. | Complete |
