@@ -340,7 +340,7 @@ def run_upsert_to_player_xref(
     # Get statistics
     with conn.cursor() as cur:
         cur.execute("SELECT COUNT(*) FROM bridge.player_xref")
-    total_bridge = cur.fetchone()[0]
+        total_bridge = cur.fetchone()[0]
     
     return {
         "total_in_bridge": total_bridge,
