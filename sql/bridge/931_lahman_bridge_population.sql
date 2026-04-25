@@ -27,7 +27,7 @@ who may have missing IDs in one source but present in the other.
 -- ============================================================================
 
 -- Create or recreate staging table
-DROP TABLE IF EXISTS bridge._staging_lahman_people;
+DROP TABLE IF EXISTS bridge._staging_lahman_people CASCADE;
 
 CREATE TABLE bridge._staging_lahman_people (
     lahman_id TEXT PRIMARY KEY,
