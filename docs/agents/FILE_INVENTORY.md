@@ -484,6 +484,16 @@ The flexible feature mart follows the principle: **"All fields available, select
 |---|---|---|
 | `mlb_predict/betting/ev_calculator.py` | **EV BETTING CALCULATOR** - Odds conversion, vig calculations, Kelly criterion, portfolio management, backtesting. MoneylineBet, RunLineBet, TotalBet, BettingOpportunity classes. EV calculator matching ChatGPT spec. | EV betting |
 
+### Orchestration (`mlb_predict/orchestration/`)
+
+| File | Purpose | Components |
+|---|---|---|
+| `mlb_predict/orchestration/__init__.py` | Orchestration module exports. | DatabaseOrchestrator, all configs, all engines |
+| `mlb_predict/orchestration/config.py` | **PYDANTIC CONFIG MODELS** - Type-safe configuration for all DB operations. OperationConfig (base), FeaturePopulationConfig, BridgePopulationConfig, IngestOperationConfig, ValidationConfig, ModelTrainingConfig. All with validation and defaults. | 6 config classes |
+| `mlb_predict/orchestration/results.py` | **RESULT MODELS** - Typed results for all operations. OperationResult (base), FeaturePopulationResult, BridgePopulationResult, IngestResult, ValidationResult, ModelTrainingResult, PhaseResult, BatchResult. | 8 result classes |
+| `mlb_predict/orchestration/engines.py` | **OPERATION ENGINES** - Core logic for each operation type. BaseOperationEngine (ABC), FeaturePopulationEngine, BridgePopulationEngine, IngestionEngine, ValidationEngine, ModelTrainingEngine. Wrap SQL procedures with Pydantic interfaces. | 6 engine classes |
+| `mlb_predict/orchestration/orchestrator.py` | **MAIN ORCHESTRATOR** - DatabaseOrchestrator class. Central controller that routes configs to engines. Unified entry point for all DB operations. Integrates with MLB Predict Framework. | DatabaseOrchestrator |
+
 ### Integration (`mlb_predict/integration/`)
 
 | File | Purpose | Components |
