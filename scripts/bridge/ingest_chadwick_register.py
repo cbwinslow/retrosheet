@@ -303,7 +303,7 @@ def load_to_staging(
                         key_mlbam = EXCLUDED.key_mlbam,
                         key_retro = EXCLUDED.key_retro,
                         key_bbref = EXCLUDED.key_bbref,
-                        updated_at = NOW()
+                        loaded_at = NOW()
                     """,
                     records,
                     page_size=1000,
