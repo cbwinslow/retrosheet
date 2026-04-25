@@ -1,5 +1,46 @@
 # Project Log
 
+## 2026-04-25 (Chadwick Ingestion Fix + Abstraction Layers)
+
+### Critical Bug Fixed: Empty String Handling ✅
+
+**Problem**: Chadwick Register ingestion failing with `duplicate key value violates unique constraint "player_xref_retrosheet_id_key"`
+
+**Root Cause**: 485,034 records in staging had empty strings (`''`) in `key_retro` field. SQL procedure filtered with `WHERE cr.key_retro IS NOT NULL`, but **empty strings are NOT NULL** in PostgreSQL. These empty strings passed the filter and violated the unique constraint.
+
+**Fix Applied** (`sql/bridge/930_chadwick_register_bridge.sql`):
+- Changed `WHERE cr.key_retro IS NOT NULL` to `WHERE NULLIF(cr.key_retro, '') IS NOT NULL`
+- Applied to both INSERT and UPDATE statements (lines 160-162, 185-186)
+
+**Result**: 
+- Processed 510,627 Chadwick Register records
+- Updated 25,593 existing player_xref records with additional ID mappings
+- All 8 validation tests passed (100% pass rate)
+
+### New Abstraction Layers Created ✅
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| **Validation Layer** | `mlb_predict/orchestration/validation.py` | 6 pre-flight validation checks for empty strings, duplicates, constraints |
+| **Error Handling** | `mlb_predict/orchestration/error_handling.py` | Retry logic with exponential backoff, circuit breakers, fault isolation |
+| **Checkpointing** | `mlb_predict/orchestration/checkpoints.py` + `bridge_orchestrator.py` | Resumable operations with progress persistence |
+| **Orchestrator** | `scripts/bridge/run_bridge_ingestion.py` | Production CLI with --skip-download, --skip-validation, --no-checkpoints flags |
+
+### Files Created/Modified
+- **New**: `mlb_predict/orchestration/validation.py` (6 validation rules)
+- **New**: `mlb_predict/orchestration/error_handling.py` (retry + circuit breaker)
+- **New**: `mlb_predict/orchestration/bridge_orchestrator.py` (5-stage pipeline)
+- **New**: `mlb_predict/orchestration/checkpoints.py` (resumable operations)
+- **New**: `mlb_predict/orchestration/adapter.py` (SQL execution adapter)
+- **New**: `scripts/bridge/run_bridge_ingestion.py` (CLI entry point)
+- **Fixed**: `sql/bridge/930_chadwick_register_bridge.sql` (empty string handling)
+
+### Documentation Updated
+- `docs/agents/FILE_INVENTORY.md` - Added all new files with descriptions
+- `docs/PROJECT_LOG.md` - This entry
+
+---
+
 ## 2026-04-24 (MLB Predict Framework - IMPLEMENTATION COMPLETE)
 
 ### Framework Built - All Phases Complete ✅

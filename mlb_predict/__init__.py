@@ -98,6 +98,23 @@ from mlb_predict.integration import (
     LEGACY_TARGET_MAPPING,
 )
 
+# Phase 3: Database Orchestration - Complete pipeline abstraction
+from mlb_predict.orchestration import (
+    DatabaseOrchestrator,
+    OperationConfig,
+    FeaturePopulationConfig,
+    BridgePopulationConfig,
+    IngestOperationConfig,
+    ValidationConfig,
+    ModelTrainingConfig,
+    OperationResult,
+    FeaturePopulationResult,
+    BridgePopulationResult,
+    IngestResult,
+    ValidationResult,
+    ModelTrainingResult,
+)
+
 __all__ = [
     # Configuration (Phase 1.1)
     'ModelConfig',
@@ -157,4 +174,18 @@ __all__ = [
     'print_framework_result_legacy_style',
     'LEGACY_TO_FRAMEWORK_FEATURES',
     'LEGACY_TARGET_MAPPING',
+    # Database Orchestration (Phase 3)
+    'DatabaseOrchestrator',
+    'OperationConfig',
+    'FeaturePopulationConfig',
+    'BridgePopulationConfig',
+    'IngestOperationConfig',
+    'ValidationConfig',
+    'ModelTrainingConfig',
+    'OperationResult',
+    'FeaturePopulationResult',
+    'BridgePopulationResult',
+    'IngestResult',
+    'ValidationResult',
+    'ModelTrainingResult',
 ]
