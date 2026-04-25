@@ -156,9 +156,10 @@ BEGIN
         NOW(),
         0.95,  -- High confidence for Chadwick Bureau
         'Chadwick Bureau Register'
-    FROM bridge._staging_chadwick_register
-    WHERE key_retro IS NOT NULL
-      AND key_retro NOT IN (SELECT retrosheet_id FROM bridge.player_xref WHERE retrosheet_id IS NOT NULL);
+    FROM bridge._staging_chadwick_register cr
+    WHERE cr.key_retro IS NOT NULL
+      AND cr.key_retro NOT IN (SELECT retrosheet_id FROM bridge.player_xref WHERE retrosheet_id IS NOT NULL)
+      AND (cr.key_mlbam IS NULL OR cr.key_mlbam::BIGINT NOT IN (SELECT mlb_id FROM bridge.player_xref WHERE mlb_id IS NOT NULL));
     
     GET DIAGNOSTICS v_inserted = ROW_COUNT;
     RAISE NOTICE 'Inserted % new player records', v_inserted;
