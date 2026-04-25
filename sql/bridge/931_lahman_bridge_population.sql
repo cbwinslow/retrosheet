@@ -26,46 +26,33 @@ who may have missing IDs in one source but present in the other.
 -- STAGE 1: Create staging table for Lahman People data
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS bridge._staging_lahman_people AS
-SELECT 
-    playerid as lahman_id,
-    retroid as retrosheet_id,
-    bbrefid as baseball_reference_id,
-    namefirst as name_first,
-    namelast as name_last,
-    namegiven as name_given,
-    CASE 
-        WHEN birthyear IS NOT NULL 
-        THEN MAKE_DATE(birthyear, COALESCE(birthmonth, 1), COALESCE(birthday, 1))
-        ELSE NULL 
-    END as birth_date,
-    birthcountry,
-    birthstate,
-    birthcity,
-    CASE 
-        WHEN deathyear IS NOT NULL 
-        THEN MAKE_DATE(deathyear, COALESCE(deathmonth, 1), COALESCE(deathday, 1))
-        ELSE NULL 
-    END as death_date,
-    weight,
-    height,
-    bats,
-    throws,
-    debut,
-    finalgame as final_game,
-    NOW() as loaded_at
-FROM raw_lahman.people
-WHERE FALSE;  -- Create empty table structure
+-- Create or recreate staging table
+DROP TABLE IF EXISTS bridge._staging_lahman_people;
 
--- Add primary key
-ALTER TABLE bridge._staging_lahman_people
-ADD CONSTRAINT pk_staging_lahman PRIMARY KEY (lahman_id);
+CREATE TABLE bridge._staging_lahman_people (
+    lahman_id TEXT PRIMARY KEY,
+    retrosheet_id TEXT,
+    baseball_reference_id TEXT,
+    name_first TEXT,
+    name_last TEXT,
+    name_given TEXT,
+    birth_date DATE,
+    birthcountry TEXT,
+    birthstate TEXT,
+    birthcity TEXT,
+    death_date DATE,
+    weight INTEGER,
+    height INTEGER,
+    bats TEXT,
+    throws TEXT,
+    debut DATE,
+    final_game DATE,
+    loaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
 -- Add indexes
 CREATE INDEX IF NOT EXISTS idx_staging_lahman_retro ON bridge._staging_lahman_people(retrosheet_id);
 CREATE INDEX IF NOT EXISTS idx_staging_lahman_bbref ON bridge._staging_lahman_people(baseball_reference_id);
-
-COMMENT ON TABLE bridge._staging_lahman_people IS 'Staging table for Lahman People data, used for gap-filling bridge.player_xref.';
 
 -- ============================================================================
 -- STAGE 2: Create procedure to load Lahman data into staging
@@ -121,8 +108,6 @@ BEGIN
     RAISE NOTICE 'Loaded % records from raw_lahman.people to staging', v_count;
 END;
 $$;
-
-COMMENT ON PROCEDURE bridge.load_lahman_to_staging() IS 'Loads raw_lahman.people data into bridge._staging_lahman_people for gap-filling operations.';
 
 -- ============================================================================
 -- STAGE 3: Create procedure for gap-fill using Lahman data
