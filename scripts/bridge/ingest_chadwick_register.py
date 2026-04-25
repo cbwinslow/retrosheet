@@ -297,7 +297,7 @@ def load_to_staging(
                         mlb_played_last, retro_played_first, retro_played_last, college, college_id,
                         high_school, high_school_id, bats_throws_source, birth_source, death_source,
                         weight_height_source, debut_source, mlb_organization, mlb_position,
-                        twitter_id, wikipedia_id, gelb_id, lahman_id, source_timestamp
+                        twitter_id, wikipedia_id, gelb_id, lahman_id
                     ) VALUES %s
                     ON CONFLICT (key_uuid) DO UPDATE SET
                         key_mlbam = EXCLUDED.key_mlbam,
@@ -426,7 +426,7 @@ def main():
     )
     parser.add_argument(
         "--suffixes",
-        nargs="+
+        nargs="+",
         help="Specific file suffixes to download (0-9, a-f). Default: all",
     )
     parser.add_argument(
