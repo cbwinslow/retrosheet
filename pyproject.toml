@@ -26,6 +26,8 @@ dependencies = [
   "catboost>=1.2.10",
   "psycopg>=3.3.3",
   "psycopg2>=2.9.12",
+  "letta-client>=1.10.3",
+  "aider-chat>=0.86.2",
 ]
 
 [project.optional-dependencies]

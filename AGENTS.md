@@ -203,6 +203,74 @@ uv lock
 
 All project scripts, CI, and environments use Python 3.10. Legacy `requirements.txt` is archived and no longer maintained.
 
+## CODE QUALITY, LINTING AND FORMATTING STANDARDS (MANDATORY)
+
+### Enforced Standards
+
+This project uses three enforced linters/formatters that **ALL AI AGENTS MUST FOLLOW WITHOUT EXCEPTION**:
+
+| Tool | Purpose | Configuration File | Command |
+|------|---------|--------------------|---------|
+| **Ruff** | Python linting + formatting | `pyproject.toml` | `uv run ruff check --fix . && uv run ruff format .` |
+| **Biome** | JavaScript/TypeScript/JSON/YAML formatting + linting | `biome.json` | `npx biome check --apply .` |
+| **SQLFluff** | SQL formatting + linting | `.sqlfluff` | `uv run sqlfluff fix sql/**/*.sql` |
+
+### Script Header Requirements
+
+**EVERY script file must contain a proper header at the very top:**
+
+#### Python Scripts Header:
+```python
+#!/usr/bin/env python3
+"""
+File: scripts/path/to/script.py
+Purpose: What this script does
+Author: Agent [identifier]
+Date: YYYY-MM-DD
+Usage: uv run python scripts/path/to/script.py [arguments]
+Dependencies: list any dependencies
+Notes: Any special considerations
+"""
+```
+
+#### Bash Scripts Header:
+```bash
+#!/usr/bin/env bash
+#
+# File: scripts/path/to/script.sh
+# Purpose: What this script does
+# Author: Agent [identifier]
+# Date: YYYY-MM-DD
+# Usage: ./scripts/path/to/script.sh [arguments]
+# Notes: Any special considerations
+#
+set -euo pipefail
+```
+
+#### SQL Files Header:
+Already documented above in the SQL-First Development Rule section. This header is mandatory for ALL .sql files.
+
+### Agent Mandates
+
+1. **ALWAYS run formatters/lint tools BEFORE committing any code changes**
+2. **NEVER submit code that fails linting checks**
+3. **ALWAYS add the proper header to every new file you create**
+4. **If you modify an existing file without a header, ADD THE HEADER as part of your change**
+5. **DO NOT disable lint rules without explicit permission**
+6. **All code must pass `./scripts/test/validate_sql_files.sh` before submission**
+7. **Run `ruff check --fix .` before committing any Python changes**
+8. **Run `biome check --apply .` before committing any frontend/JSON/YAML changes**
+9. **Run `sqlfluff fix` before committing any SQL changes**
+
+### Pre-Commit Checks
+
+Before completing ANY task that modifies code:
+- [ ] Run all applicable linters/formatters
+- [ ] Verify no new lint errors are introduced
+- [ ] All files have proper headers
+- [ ] Code follows project style guidelines
+- [ ] No debug print statements or commented out code left behind
+
 ## LLM Sub-Agent System (NEW)
 
 Automated linting and code fixing using local multi-GPU inference.

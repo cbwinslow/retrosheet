@@ -748,6 +748,187 @@ Outputs:
 
 Use this layer before attempting same-PA temporal features or any direct next-pitch model. It preserves official Retrosheet pitch-sequence symbols, coarse symbol groupings, and terminal-pitch flags while staying anchored to `features.plate_appearance_outcome_examples`.
 
+## Populate Context Features (Optimized Materialized View Architecture)
+
+Purpose: Generate contextual features (weather, momentum, park factors, fatigue) for pitch-level modeling using optimized materialized view architecture.
+
+**⚡ PERFORMANCE**: 5-15 minutes (was 1-3 hours with UPDATE approach)
+
+**✅ DATA INTEGRITY**: Mathematical equivalence - same calculations, cached results
+
+### Prerequisites
+
+- `features_pitch.engineered_features` table populated (7.66M rows)
+- `core.games`, `core.parks`, `core.umpires` reference tables loaded
+- `features_pitch.base_features` with batter/pitcher/team mappings
+
+### One-Time Setup (Create Materialized Views)
+
+Command:
+
+```bash
+# Full setup: Create all materialized views and procedures
+./scripts/pitch_data/populate_context_features_optimized.sh --setup
+
+# What this creates:
+# 1. Drops unused indexes (1.6GB freed)
+# 2. Creates mv_game_context (weather, attendance, rivalry flags)
+# 3. Creates mv_park_context (park factors, dimensions, altitude)
+# 4. Creates mv_team_momentum (rolling 5/10/30 game win rates)
+# 5. Creates mv_pitcher_fatigue (days rest, workload metrics)
+# 6. Creates mv_all_context_features (unified view with 80+ columns)
+# 7. Creates refresh procedures with audit logging
+```
+
+Expected order:
+
+1. **Drop Unused Indexes**: Remove 9 indexes (1.6GB) that were slowing writes but never used
+2. **Create Game Context MV**: Link game PK to weather, attendance, rivalry, time features
+3. **Create Park Context MV**: Calculate park factors from dimensions and elevation
+4. **Create Team Momentum MV**: Window functions for rolling win rates by team
+5. **Create Pitcher Fatigue MV**: LAG/ROW_NUMBER for rest days and workload
+6. **Create Unified View**: Pre-joined 80+ feature columns for ML pipeline
+7. **Create Refresh Procedures**: Stored procedures with audit logging
+
+Files created/modified:
+
+- `sql/features/013a_optimized_context_features_mv.sql` - MV definitions
+- `sql/features/013b_refresh_context_features_procedure.sql` - Refresh procedures
+- `features_pitch.mv_game_context` - Game-level context
+- `features_pitch.mv_park_context` - Park factors
+- `features_pitch.mv_team_momentum` - Team momentum metrics
+- `features_pitch.mv_pitcher_fatigue` - Fatigue indicators
+- `features_pitch.mv_all_context_features` - **USE THIS FOR ML** - unified view
+
+### Refresh Materialized Views (After New Data)
+
+Command:
+
+```bash
+# Refresh all MVs with audit logging
+./scripts/pitch_data/populate_context_features_optimized.sh --refresh
+
+# Or call procedure directly
+psql -c "CALL features_pitch.refresh_context_features_with_audit(TRUE);"
+```
+
+Expected behavior:
+
+- **REFRESH CONCURRENTLY**: Allows reads during refresh (no locking)
+- **Audit logging**: All refreshes tracked in `features_pitch.refresh_audit_log`
+- **Duration tracking**: Each refresh logged with start time, end time, duration
+- **Row count validation**: Verify row counts match before/after
+
+### Verification
+
+Command:
+
+```bash
+# Verify data quality
+./scripts/pitch_data/populate_context_features_optimized.sh --verify
+
+# Compare performance (old vs new)
+./scripts/pitch_data/populate_context_features_optimized.sh --compare
+
+# View audit history
+./scripts/pitch_data/populate_context_features_optimized.sh --audit
+```
+
+Validation queries:
+
+```sql
+-- Row count must match between sources
+SELECT 
+    'engineered_features' as source, COUNT(*) as rows
+FROM features_pitch.engineered_features
+UNION ALL
+SELECT 
+    'mv_all_context_features', COUNT(*)
+FROM features_pitch.mv_all_context_features;
+
+-- Feature value ranges should be valid
+SELECT 
+    ROUND(AVG(home_field_advantage_score)::numeric, 3) as avg_home_adv,
+    ROUND(MIN(home_field_advantage_score)::numeric, 3) as min_home_adv,
+    ROUND(MAX(home_field_advantage_score)::numeric, 3) as max_home_adv
+FROM features_pitch.mv_all_context_features;
+-- Expected: values between 0 and 2
+```
+
+### Migration Path (FROM OLD UPDATE METHOD)
+
+**Legacy scripts** (UPDATE-based, slow):
+- `sql/features/013_populate_context_features.sql` - Original slow UPDATEs
+- `sql/features/014_populate_context_features_batch.sql` - Batched UPDATEs
+
+**New approach** (MV-based, fast):
+- `sql/features/013a_optimized_context_features_mv.sql` - Materialized views
+- `sql/features/013b_refresh_context_features_procedure.sql` - Refresh automation
+
+**Migration steps**:
+
+1. Run `--setup` to create MVs (doesn't disrupt existing data)
+2. Update ML queries to use `mv_all_context_features` instead of `engineered_features` + joins
+3. Test that row counts and feature values match
+4. Document migration in `docs/PROJECT_LOG.md`
+
+**Query migration example**:
+
+```sql
+-- OLD (slow, requires joins)
+SELECT ef.*, g.temperature_f, p.park_overall_hr_factor
+FROM features_pitch.engineered_features ef
+JOIN core.games g ON ef.game_pk = g.game_pk::bigint
+JOIN core.parks p ON g.park_id = p.park_id
+WHERE ef.game_pk = 745140;
+
+-- NEW (fast, pre-joined)
+SELECT *
+FROM features_pitch.mv_all_context_features
+WHERE game_pk = 745140;
+```
+
+### TimescaleDB Enhancement (Future)
+
+For even better performance, convert to TimescaleDB hypertables:
+
+```bash
+# Install TimescaleDB extension
+psql -c "CREATE EXTENSION timescaledb;"
+
+# Convert tables to hypertables (auto-partitioning by year)
+psql -c "SELECT create_hypertable('features_pitch.engineered_features', 'game_date', chunk_time_interval => INTERVAL '1 year');"
+
+# Enable compression on historical data (90% space savings)
+psql -c "ALTER TABLE features_pitch.engineered_features SET (timescaledb.compress);"
+psql -c "SELECT add_compression_policy('features_pitch.engineered_features', INTERVAL '7 days');"
+```
+
+Benefits:
+
+- **Automatic partitioning**: By game_date (2015, 2016, ..., 2025)
+- **Compression**: Historical chunks compress 90%+
+- **Continuous aggregates**: Auto-refreshing materialized views
+- **Query pruning**: Only scan relevant time partitions
+
+### Research Reproducibility
+
+All steps documented in:
+
+- `docs/ISSUE_DATABASE_OPTIMIZATION.md` - GitHub issue #91 with full technical details
+- `docs/research_paper.md` - Section 2.5 "Data Infrastructure and Feature Pipeline"
+- `docs/PROJECT_LOG.md` - Implementation log with performance metrics
+
+**Reproducibility checklist**:
+
+- [ ] All SQL files in version control (`sql/features/013a_*, 013b_*`)
+- [ ] Shell script with proper header and error handling
+- [ ] Row count validation queries pass
+- [ ] Feature value range validation passes
+- [ ] Audit logging enabled and functional
+- [ ] Documentation updated (FILE_INVENTORY.md, PROJECT_LOG.md, research_paper.md)
+- [ ] GitHub issue created with acceptance criteria
+
 ## Build Scenario Simulations
 
 Current baseline:

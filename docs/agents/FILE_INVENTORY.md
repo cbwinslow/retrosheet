@@ -282,6 +282,16 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/populate_bridge_tables.py` | Downloads Chadwick Register and populates player mappings plus canonical team/park bridge mappings from the typed MLB reference views. Tolerates current bridge-schema variations in the active database. | Live bridge setup and reconciliation refresh. |
 | `scripts/ingest_live_games.py` | Orchestrates batch live game ingestion using environment-driven Postgres settings. | Live bridge work. |
 | `scripts/transform_live_game.py` | Transforms stored MLB live snapshots into canonical `core.live_games` / `core.live_events` with upserts and raw JSON preservation. | Live bridge work. |
+
+## External Data Ingestion (Complete Coverage)
+
+| File | Purpose | Use When |
+|---|---|---|
+| `sql/external/210_lahman_complete.sql` | **NEW** - Complete Lahman Baseball Database schema with ALL 28 tables and ALL columns (replaces partial 210_lahman_raw.sql). | After downloading Lahman CSVs. |
+| `sql/external/220_mlb_api_complete.sql` | **NEW** - Complete MLB Stats API schema with ALL endpoints (boxscore, play-by-play, pitch metrics, win probability, Gameday XML, etc.). | Before fetching MLB API data. |
+| `scripts/external_data/load_lahman_complete.py` | **NEW** - Dynamic Lahman loader that reads CSV headers to discover ALL columns. Loads ALL 28 tables with 100% field coverage. Replaces selective load_lahman.py. | Loading Lahman data. |
+| `scripts/data_ingestion/fetch_mlb_stats_api_complete.py` | **NEW** - Fetches ALL MLB Stats API endpoints (boxscore, PBP, pitch metrics, WP, Gameday XML, rosters, standings). Stores source-preserved JSONB. | Fetching MLB API data. |
+| `docs/DATA_INGESTION_FIX_REPORT.md` | **NEW** - Detailed report on data ingestion gaps and fixes applied. | Understanding the fix. |
 | `scripts/replay_live_bridge_backfill.py` | Replays stored latest-successful MLB raw snapshots through `scripts/transform_live_game.py`, optionally targeting only rows that still carry `MLB###` fallback ids. | Controlled live bridge refresh after mapping or transform fixes. |
 | `scripts/backup_sql_files.sh` | Copies all `.sql` files from the `sql/` directory into a timestamped backup folder for Git versioning. | Backup of schema definitions. |
 | `scripts/backup_procedures.sh` | Backs up all database objects (functions, procedures, views, materialized views) to a timestamped SQL dump. | Database maintenance, disaster recovery. |
@@ -331,8 +341,11 @@ These files may be present as active development work. Treat them as live-bridge
 | `sql/features/010_populate_more_features.sql` | Single-pass population for more features (RE24, WPA, TTOP, pitch quality). | Ready |
 | `sql/features/011_populate_more_features_batch.sql` | **BATCHED POPULATION** - Processes more features in 100k row batches. | 🔄 Ready |
 | `sql/features/012_context_features_schema.sql` | **CONTEXT FEATURES SCHEMA** - Adds 60+ weather, momentum, umpire, attendance, park factors, fatigue features from FEATURE_ENGINEERING_PLAN.md Categories 2,3,4,7,8. | ✅ Schema added |
-| `sql/features/013_populate_context_features.sql` | Population script for context features with game/park/umpire joins. | Ready |
-| `sql/features/014_populate_context_features_batch.sql` | **BATCHED POPULATION** - Processes context features in batches. | 🔄 Ready |
+| `sql/features/013_populate_context_features.sql` | Population script for context features with game/park/umpire joins. | Ready (legacy - use 013a instead) |
+| `sql/features/013a_optimized_context_features_mv.sql` | **OPTIMIZED** - Materialized views approach replacing slow UPDATEs. Creates 5 MVs: mv_game_context, mv_park_context, mv_team_momentum, mv_pitcher_fatigue, mv_all_context_features. Drops 1.6GB unused indexes. | ✅ **NEW - April 2025** |
+| `sql/features/013b_refresh_context_features_procedure.sql` | Stored procedures for refreshing MVs with audit logging. Includes refresh_context_features() and refresh_context_features_with_audit(). | ✅ **NEW - April 2025** |
+| `sql/features/014_populate_context_features_batch.sql` | **BATCHED POPULATION** - Processes context features in batches. | 🔄 Ready (legacy) |
+| `scripts/pitch_data/populate_context_features_optimized.sh` | **OPTIMIZED ORCHESTRATION** - Shell wrapper for MV-based feature population. 5-15min vs 1-3 hours. Integrates with pg_cron for scheduled refresh. | ✅ **NEW - April 2025** |
 | `sql/features/015_final_features_schema.sql` | **FINAL FEATURES SCHEMA** - Adds 50+ Markov chains, matchup history, postseason, sequence patterns, platoon splits, rookie/veteran classification. Completes FEATURE_ENGINEERING_PLAN.md. | ✅ Schema added |
 | `sql/features/016_populate_final_features.sql` | Population script for final features with Markov calculations. | Ready |
 | `sql/features/017_populate_final_features_batch.sql` | **BATCHED POPULATION** - Processes final features in batches. | 🔄 Ready |

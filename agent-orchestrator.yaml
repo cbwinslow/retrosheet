@@ -1,0 +1,14 @@
+dataDir: ~/.agent-orchestrator
+worktreeDir: ~/.worktrees
+port: 3003
+defaults:
+  runtime: tmux
+  agent: aider
+  workspace: worktree
+  notifiers:
+    - desktop
+projects:
+  retrosheet:
+    repo: cbwinslow/retrosheet
+    path: /home/cbwinslow/workspace/retrosheet
+    defaultBranch: main

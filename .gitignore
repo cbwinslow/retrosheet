@@ -143,3 +143,4 @@ current_mappings.txt
 !data/**/*.csv
 .direnv/
 tmp/
+.aider*
