@@ -125,7 +125,7 @@ BEGIN
     )
     SELECT 
         key_retro,
-        key_mlbam::BIGINT,
+        NULLIF(key_mlbam, '')::BIGINT,
         key_bbref,
         name_first,
         name_last,
@@ -159,7 +159,7 @@ BEGIN
     FROM bridge._staging_chadwick_register cr
     WHERE cr.key_retro IS NOT NULL
       AND cr.key_retro NOT IN (SELECT retrosheet_id FROM bridge.player_xref WHERE retrosheet_id IS NOT NULL)
-      AND (cr.key_mlbam IS NULL OR cr.key_mlbam::BIGINT NOT IN (SELECT mlb_id FROM bridge.player_xref WHERE mlb_id IS NOT NULL));
+      AND (NULLIF(cr.key_mlbam, '') IS NULL OR NULLIF(cr.key_mlbam, '')::BIGINT NOT IN (SELECT mlb_id FROM bridge.player_xref WHERE mlb_id IS NOT NULL));
     
     GET DIAGNOSTICS v_inserted = ROW_COUNT;
     RAISE NOTICE 'Inserted % new player records', v_inserted;
@@ -167,7 +167,7 @@ BEGIN
     -- Update existing records (merge additional IDs)
     UPDATE bridge.player_xref px
     SET 
-        mlb_id = COALESCE(px.mlb_id, cr.key_mlbam::BIGINT),
+        mlb_id = COALESCE(px.mlb_id, NULLIF(cr.key_mlbam, '')::BIGINT),
         baseball_reference_id = COALESCE(px.baseball_reference_id, cr.key_bbref),
         source_notes = px.source_notes || jsonb_build_object(
             'chadwick_key_uuid', cr.key_uuid,
