@@ -93,6 +93,52 @@ Notes:
 - `bridge.external_player_xref` uses text columns for IDs to match Retrosheet ID formats (e.g., "aaronh101").
 - Monitoring views in `bridge.bridge_table_counts`, `bridge.external_player_coverage`, and `bridge.bridge_data_quality` provide health checks.
 
+### Complete Bridge Population with Validation (Recommended)
+
+Purpose: Achieve 100% player ID coverage across all data sources using Chadwick Register, Lahman gap-fill, and comprehensive validation.
+
+Command:
+
+```bash
+# Full population with all stages
+./scripts/bridge/populate_all_bridge_tables.sh
+
+# Validation only (skip population)
+./scripts/bridge/populate_all_bridge_tables.sh --validate-only
+
+# Dry run (no database changes)
+./scripts/bridge/populate_all_bridge_tables.sh --dry-run
+
+# Skip specific stages
+./scripts/bridge/populate_all_bridge_tables.sh --skip-lahman
+```
+
+Expected order:
+
+1. **Create/Update SQL Procedures**: Deploy `930_chadwick_register_bridge.sql`, `931_lahman_bridge_population.sql`, `940_bridge_validation_tests.sql`.
+2. **Load Chadwick Register Data**: Download 16 CSV files from Chadwick Bureau, parse 58 ID fields, load to staging table.
+3. **Upsert to player_xref**: Merge Chadwick data into `bridge.player_xref` with conflict resolution.
+4. **Lahman Gap-Fill**: Load Lahman People data, match by name to fill missing Retrosheet IDs.
+5. **Populate External Bridges**: Run `populate_external_bridge.py` for Statcast, BBRef, Lahman mappings.
+6. **Validation Testing**: Execute `bridge.run_all_bridge_tests()` to verify coverage.
+7. **Generate Report**: Summary statistics for all bridge tables and pitch data coverage.
+
+Key validation tests:
+
+- `bridge.test_player_xref_mlb_coverage(95.0)`: ≥95% of players have MLB IDs
+- `bridge.test_player_xref_retrosheet_coverage(20.0)`: ≥20% have Retrosheet IDs
+- `bridge.test_pitch_data_player_coverage(100.0)`: 100% of pitch data players linked
+- `bridge.test_player_xref_mlb_id_unique()`: No duplicate MLB IDs
+- `bridge.test_game_xref_complete_coverage()`: All games have both MLB and Retrosheet IDs
+
+Notes:
+
+- Uses Chadwick Bureau Register as primary source (20,000+ players, most comprehensive)
+- Uses Lahman People table for secondary gap-filling (name-based matching)
+- All procedures are idempotent - safe to re-run
+- Logs saved to `logs/bridge_population_YYYYMMDD_HHMMSS.log`
+- Validation functions return BOOLEAN for CI/CD integration
+
 ### Ongoing Live Data Ingestion
 
 Command:
