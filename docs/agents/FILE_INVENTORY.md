@@ -298,6 +298,7 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/bridge/investigate_umpire_ids.py` | Investigates umpire MLB ID mapping options using available data sources. | Umpire ID mapping research. |
 | `scripts/bridge/ingest_chadwick_register.py` | **CHADWICK REGISTER INGESTION** - Downloads and ingests Chadwick Bureau Register CSV files (16 files: people-0-9,a-f). Parses 58 ID fields, loads to staging table, upserts to player_xref. Supports --dry-run, --validate-only, --suffixes flags. | Chadwick-based player ID cross-reference population. |
 | `scripts/bridge/run_bridge_ingestion.py` | **ORCHESTRATED BRIDGE INGESTION** - New orchestrator with validation layer, error handling (retry + circuit breaker), and checkpointing. CLI interface with --skip-download, --skip-validation, --no-checkpoints flags. Replaces populate_all_bridge_tables.sh for Python-based workflows. | Production bridge population with full error handling. |
+| `scripts/bridge/view_metrics.py` | **VIEW OPERATION METRICS** - CLI to view collected metrics and generate reports. Supports --days, --operation-type, --json flags. | Pipeline observability and monitoring. |
 | `scripts/bridge/populate_all_bridge_tables.sh` | **MASTER BRIDGE ORCHESTRATOR** - Complete bridge table population in 6 stages: (1) SQL procedures, (2) Chadwick data, (3) Lahman gap-fill, (4) External bridges, (5) Validation tests, (6) Summary report. Idempotent, supports --validate-only, --skip-* flags. | Complete bridge table population workflow. |
 | `scripts/download_statcast_pitch_level.py` | Downloads Statcast pitch-level data using pybaseball.statcast() for date ranges or seasons. | Statcast pitch-level data download. |
 | `scripts/ingest_espn_plays.py` | Ingests ESPN play-by-play data into `raw_espn.plays` table. | ESPN external data ingestion |
@@ -499,6 +500,8 @@ The flexible feature mart follows the principle: **"All fields available, select
 | `mlb_predict/orchestration/checkpoints.py` | **CHECKPOINT MODELS** - Resumable operation tracking. Checkpoint, FeaturePhaseCheckpoint, BridgeTableCheckpoint, BatchProgressCheckpoint dataclasses. | Operation progress persistence |
 | `mlb_predict/orchestration/adapter.py` | **SQL ADAPTER** - SQL file execution with parameter binding. SQLProcedureAdapter class for dynamic SQL loading and execution. | SQL procedure execution |
 | `mlb_predict/orchestration/bridge_orchestrator.py` | **BRIDGE ORCHESTRATOR** - Complete bridge population pipeline with all abstraction layers. BridgeOrchestrator, CheckpointManager, StageResult classes. 5-stage pipeline with validation and error handling. | Production bridge population |
+| `mlb_predict/orchestration/metrics.py` | **METRICS COLLECTION** - Track operation timing, success rates, row counts. OperationMetrics, MetricsCollector, MetricsReporter classes. JSON file persistence with optional DB storage. | Pipeline observability |
+| `mlb_predict/orchestration/notifications.py` | **NOTIFICATION SYSTEM** - Multi-channel notifications for pipeline events. NotificationManager, ConsoleNotifier, WebhookNotifier classes. Event types: validation_failed, operation_completed, circuit_breaker_open. | Alerting and monitoring |
 
 ### Integration (`mlb_predict/integration/`)
 

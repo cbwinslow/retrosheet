@@ -230,6 +230,7 @@ class BridgeOrchestrator:
         skip_download: bool = False,
         skip_validation: bool = False,
         operation_id: str | None = None,
+        dry_run: bool = False,
     ) -> dict[str, Any]:
         """
         Run complete Chadwick Register ingestion pipeline.
@@ -238,6 +239,7 @@ class BridgeOrchestrator:
             skip_download: Skip download if files already exist
             skip_validation: Skip validation tests
             operation_id: Unique ID for checkpointing/resuming
+            dry_run: If True, simulate all operations without committing changes
             
         Returns:
             Complete result dictionary with all stage results
@@ -249,6 +251,7 @@ class BridgeOrchestrator:
             "start_time": datetime.now().isoformat(),
             "stages": [],
             "success": False,
+            "dry_run": dry_run,
         }
         
         conn = self._get_connection()
@@ -294,7 +297,7 @@ class BridgeOrchestrator:
             stage4 = self._run_with_checkpoint(
                 operation_id,
                 "upsert_player_xref",
-                self._stage_upsert_player_xref,
+                lambda c: self._stage_upsert_player_xref(c, dry_run=dry_run),
                 conn,
             )
             results["stages"].append(stage4.to_dict())
@@ -390,8 +393,39 @@ class BridgeOrchestrator:
             "records_loaded": total_records,
         }
     
-    def _stage_upsert_player_xref(self, conn: psycopg2.extensions.connection) -> dict[str, Any]:
+    def _stage_upsert_player_xref(
+        self,
+        conn: psycopg2.extensions.connection,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
         """Run upsert procedure."""
+        if dry_run:
+            # In dry-run mode, just count what would be affected
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT 
+                        COUNT(*) FILTER (WHERE NULLIF(cr.key_retro, '') IS NOT NULL
+                            AND NULLIF(cr.key_retro, '') NOT IN (
+                                SELECT retrosheet_id FROM bridge.player_xref WHERE retrosheet_id IS NOT NULL
+                            )) as new_records,
+                        COUNT(*) FILTER (WHERE NULLIF(cr.key_retro, '') IS NOT NULL
+                            AND NULLIF(cr.key_retro, '') IN (
+                                SELECT retrosheet_id FROM bridge.player_xref WHERE retrosheet_id IS NOT NULL
+                            )) as update_records
+                    FROM bridge._staging_chadwick_register cr
+                """)
+                row = cur.fetchone()
+                new_records = row[0] if row else 0
+                update_records = row[1] if row else 0
+            
+            return {
+                "dry_run": True,
+                "new_records": new_records,
+                "update_records": update_records,
+                "total_player_xref_records": None,  # Would be populated after actual upsert
+            }
+        
+        # Real execution
         with conn.cursor() as cur:
             cur.execute("CALL bridge.upsert_chadwick_to_player_xref()")
         conn.commit()

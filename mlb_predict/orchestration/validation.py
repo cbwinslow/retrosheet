@@ -272,3 +272,193 @@ class Validator:
 def validate_chadwick_staging(conn: psycopg2.extensions.connection) -> ValidationReport:
     """Convenience function for Chadwick staging validation."""
     return Validator().add_chadwick_preflight_rules().validate(conn)
+
+
+@dataclass
+class DataQualityReport:
+    """Comprehensive pre-flight data quality report."""
+    
+    # Staging statistics
+    total_records: int = 0
+    records_with_retro_id: int = 0
+    records_with_mlb_id: int = 0
+    records_with_bbref_id: int = 0
+    empty_retro_count: int = 0
+    empty_mlb_count: int = 0
+    
+    # ID coverage breakdown
+    id_coverage: dict[str, float] = field(default_factory=dict)
+    
+    # Duplicates
+    duplicate_retro_ids: list[dict] = field(default_factory=list)
+    duplicate_mlb_ids: list[dict] = field(default_factory=list)
+    
+    # Existing player_xref stats
+    existing_player_count: int = 0
+    existing_with_retro: int = 0
+    existing_with_mlb: int = 0
+    
+    # Impact projection
+    new_records: int = 0
+    update_records: int = 0
+    unchanged_records: int = 0
+    
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "staging": {
+                "total_records": self.total_records,
+                "records_with_retro_id": self.records_with_retro_id,
+                "records_with_mlb_id": self.records_with_mlb_id,
+                "records_with_bbref_id": self.records_with_bbref_id,
+                "empty_retro_count": self.empty_retro_count,
+                "empty_mlb_count": self.empty_mlb_count,
+                "retro_coverage_pct": round(self.records_with_retro_id / self.total_records * 100, 2) if self.total_records else 0,
+                "mlb_coverage_pct": round(self.records_with_mlb_id / self.total_records * 100, 2) if self.total_records else 0,
+            },
+            "id_coverage": self.id_coverage,
+            "duplicates": {
+                "retro_id_duplicates": len(self.duplicate_retro_ids),
+                "mlb_id_duplicates": len(self.duplicate_mlb_ids),
+                "sample_duplicates": self.duplicate_retro_ids[:3],
+            },
+            "existing_player_xref": {
+                "total_players": self.existing_player_count,
+                "with_retrosheet_id": self.existing_with_retro,
+                "with_mlb_id": self.existing_with_mlb,
+                "retro_coverage_pct": round(self.existing_with_retro / self.existing_player_count * 100, 2) if self.existing_player_count else 0,
+                "mlb_coverage_pct": round(self.existing_with_mlb / self.existing_player_count * 100, 2) if self.existing_player_count else 0,
+            },
+            "projected_changes": {
+                "new_records": self.new_records,
+                "updated_records": self.update_records,
+                "unchanged_records": self.unchanged_records,
+            },
+        }
+    
+    def print_report(self) -> None:
+        """Print formatted report to console."""
+        print("\n" + "=" * 70)
+        print("PRE-FLIGHT DATA QUALITY REPORT")
+        print("=" * 70)
+        
+        print("\n📊 STAGING TABLE STATISTICS")
+        print(f"  Total records:                    {self.total_records:,}")
+        print(f"  With Retrosheet ID:                 {self.records_with_retro_id:,} ({self.records_with_retro_id/self.total_records*100:.1f}%)")
+        print(f"  With MLB ID:                        {self.records_with_mlb_id:,} ({self.records_with_mlb_id/self.total_records*100:.1f}%)")
+        print(f"  With Baseball-Reference ID:         {self.records_with_bbref_id:,} ({self.records_with_bbref_id/self.total_records*100:.1f}%)")
+        print(f"  Empty Retrosheet IDs:               {self.empty_retro_count:,} (will be filtered)")
+        print(f"  Empty MLB IDs:                      {self.empty_mlb_count:,}")
+        
+        print("\n🔍 DUPLICATE DETECTION")
+        if self.duplicate_retro_ids:
+            print(f"  ⚠️  Found {len(self.duplicate_retro_ids)} duplicate Retrosheet IDs")
+            for dup in self.duplicate_retro_ids[:3]:
+                print(f"      - {dup['id']}: {dup['count']} occurrences")
+        else:
+            print("  ✓ No duplicate Retrosheet IDs")
+        
+        if self.duplicate_mlb_ids:
+            print(f"  ⚠️  Found {len(self.duplicate_mlb_ids)} duplicate MLB IDs")
+        else:
+            print("  ✓ No duplicate MLB IDs")
+        
+        print("\n📋 EXISTING PLAYER_XREF STATE")
+        print(f"  Total players:                      {self.existing_player_count:,}")
+        print(f"  With Retrosheet ID:                 {self.existing_with_retro:,} ({self.existing_with_retro/self.existing_player_count*100:.1f}%)")
+        print(f"  With MLB ID:                        {self.existing_with_mlb:,} ({self.existing_with_mlb/self.existing_player_count*100:.1f}%)")
+        
+        print("\n📈 PROJECTED CHANGES")
+        print(f"  New records to insert:              {self.new_records:,}")
+        print(f"  Existing records to update:         {self.update_records:,}")
+        print(f"  Unchanged records:                  {self.unchanged_records:,}")
+        
+        print("\n" + "=" * 70)
+
+
+def generate_preflight_report(conn: psycopg2.extensions.connection) -> DataQualityReport:
+    """Generate comprehensive pre-flight data quality report."""
+    report = DataQualityReport()
+    
+    with conn.cursor() as cur:
+        # Basic staging counts
+        cur.execute("SELECT COUNT(*) FROM bridge._staging_chadwick_register")
+        report.total_records = cur.fetchone()[0]
+        
+        # ID coverage
+        cur.execute("""
+            SELECT 
+                COUNT(*) FILTER (WHERE NULLIF(key_retro, '') IS NOT NULL),
+                COUNT(*) FILTER (WHERE key_mlbam IS NOT NULL),
+                COUNT(*) FILTER (WHERE NULLIF(key_bbref, '') IS NOT NULL),
+                COUNT(*) FILTER (WHERE key_retro = ''),
+                COUNT(*) FILTER (WHERE key_mlbam IS NULL)
+            FROM bridge._staging_chadwick_register
+        """)
+        row = cur.fetchone()
+        report.records_with_retro_id = row[0] or 0
+        report.records_with_mlb_id = row[1] or 0
+        report.records_with_bbref_id = row[2] or 0
+        report.empty_retro_count = row[3] or 0
+        report.empty_mlb_count = row[4] or 0
+        
+        # Find duplicates
+        cur.execute("""
+            SELECT key_retro, COUNT(*) as cnt
+            FROM bridge._staging_chadwick_register
+            WHERE NULLIF(key_retro, '') IS NOT NULL
+            GROUP BY key_retro
+            HAVING COUNT(*) > 1
+            ORDER BY COUNT(*) DESC
+            LIMIT 10
+        """)
+        report.duplicate_retro_ids = [
+            {"id": row[0], "count": row[1]} for row in cur.fetchall()
+        ]
+        
+        cur.execute("""
+            SELECT key_mlbam, COUNT(*) as cnt
+            FROM bridge._staging_chadwick_register
+            WHERE key_mlbam IS NOT NULL
+            GROUP BY key_mlbam
+            HAVING COUNT(*) > 1
+            ORDER BY COUNT(*) DESC
+            LIMIT 10
+        """)
+        report.duplicate_mlb_ids = [
+            {"id": row[0], "count": row[1]} for row in cur.fetchall()
+        ]
+        
+        # Existing player_xref stats
+        cur.execute("SELECT COUNT(*) FROM bridge.player_xref")
+        report.existing_player_count = cur.fetchone()[0] or 0
+        
+        cur.execute("SELECT COUNT(*) FROM bridge.player_xref WHERE retrosheet_id IS NOT NULL")
+        report.existing_with_retro = cur.fetchone()[0] or 0
+        
+        cur.execute("SELECT COUNT(*) FROM bridge.player_xref WHERE mlb_id IS NOT NULL")
+        report.existing_with_mlb = cur.fetchone()[0] or 0
+        
+        # Projected changes
+        cur.execute("""
+            SELECT COUNT(*) 
+            FROM bridge._staging_chadwick_register cr
+            WHERE NULLIF(cr.key_retro, '') IS NOT NULL
+              AND NULLIF(cr.key_retro, '') NOT IN (
+                  SELECT retrosheet_id FROM bridge.player_xref WHERE retrosheet_id IS NOT NULL
+              )
+        """)
+        report.new_records = cur.fetchone()[0] or 0
+        
+        cur.execute("""
+            SELECT COUNT(*) 
+            FROM bridge._staging_chadwick_register cr
+            WHERE NULLIF(cr.key_retro, '') IS NOT NULL
+              AND NULLIF(cr.key_retro, '') IN (
+                  SELECT retrosheet_id FROM bridge.player_xref WHERE retrosheet_id IS NOT NULL
+              )
+        """)
+        report.update_records = cur.fetchone()[0] or 0
+        
+        report.unchanged_records = report.existing_player_count - report.update_records
+    
+    return report

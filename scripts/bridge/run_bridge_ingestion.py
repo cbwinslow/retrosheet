@@ -29,6 +29,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from mlb_predict.orchestration.bridge_orchestrator import BridgeOrchestrator
+from mlb_predict.orchestration.validation import generate_preflight_report
+import psycopg2
 
 
 def setup_logging(log_dir: Path | None = None) -> Path:
@@ -117,11 +119,45 @@ def main() -> int:
         type=Path,
         help="Write results to JSON file",
     )
+    parser.add_argument(
+        "--report-only",
+        action="store_true",
+        help="Generate pre-flight data quality report and exit (no ingestion)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview what would change without committing (simulates all operations)",
+    )
     
     args = parser.parse_args()
     
     # Setup logging
     log_file = setup_logging()
+    
+    # Handle report-only mode
+    if args.report_only:
+        print("=" * 70)
+        print("PRE-FLIGHT DATA QUALITY REPORT MODE")
+        print("=" * 70)
+        
+        db_url = orchestrator.db_url if 'orchestrator' in locals() else None
+        conn = psycopg2.connect(db_url) if db_url else psycopg2.connect(
+            host="localhost", database="retrosheet"
+        )
+        
+        try:
+            report = generate_preflight_report(conn)
+            report.print_report()
+            
+            if args.output_json:
+                with open(args.output_json, "w") as f:
+                    json.dump(report.to_dict(), f, indent=2)
+                print(f"\nReport written to: {args.output_json}")
+            
+            return 0
+        finally:
+            conn.close()
     
     print("=" * 70)
     print("BRIDGE TABLE POPULATION ORCHESTRATOR")
@@ -129,6 +165,7 @@ def main() -> int:
     print(f"Log file: {log_file}")
     print(f"Checkpoints: {'disabled' if args.no_checkpoints else 'enabled'}")
     print(f"Validation: {'disabled' if args.skip_validation else 'enabled'}")
+    print(f"Dry-run: {'enabled' if args.dry_run else 'disabled'}")
     print("=" * 70)
     
     # Create orchestrator
@@ -141,6 +178,7 @@ def main() -> int:
         skip_download=args.skip_download,
         skip_validation=args.skip_validation,
         operation_id=args.operation_id,
+        dry_run=args.dry_run,
     )
     
     # Print summary

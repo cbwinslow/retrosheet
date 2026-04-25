@@ -139,6 +139,74 @@ Notes:
 - Logs saved to `logs/bridge_population_YYYYMMDD_HHMMSS.log`
 - Validation functions return BOOLEAN for CI/CD integration
 
+### Orchestrated Bridge Ingestion (New - Python-Based)
+
+Purpose: Production-grade bridge population with validation layer, error handling, checkpointing, and detailed reporting. Replaces `populate_all_bridge_tables.sh` for Python-based workflows.
+
+Command:
+
+```bash
+# Full orchestrated ingestion with all layers
+python scripts/bridge/run_bridge_ingestion.py
+
+# Skip download (use existing staging data)
+python scripts/bridge/run_bridge_ingestion.py --skip-download
+
+# Skip validation (faster, but no pre-flight checks)
+python scripts/bridge/run_bridge_ingestion.py --skip-validation
+
+# Disable checkpointing (no resume capability)
+python scripts/bridge/run_bridge_ingestion.py --no-checkpoints
+
+# Dry run mode - preview what would change
+python scripts/bridge/run_bridge_ingestion.py --dry-run
+
+# Combined flags
+python scripts/bridge/run_bridge_ingestion.py --skip-download --skip-validation --output-json results.json
+```
+
+What the orchestrator provides:
+
+1. **Validation Layer** (6 pre-flight checks):
+   - Staging table existence
+   - Empty string ID detection
+   - Duplicate ID detection
+   - Constraint integrity verification
+   - Foreign key relationship checks
+   - Data type validation
+
+2. **Error Handling Layer**:
+   - Automatic retry with exponential backoff (3 attempts, 2s base delay)
+   - Circuit breaker pattern prevents cascade failures
+   - Graceful degradation on non-critical errors
+
+3. **Checkpointing**:
+   - Saves progress after each stage to `/tmp/bridge_checkpoints/`
+   - Resumes from last successful stage on restart
+   - 5 stages: create_procedures → download_and_load → run_upsert → post_validation → cleanup
+
+4. **Detailed Reporting**:
+   - Stage-by-stage timing and status
+   - Validation results with pass/fail counts
+   - Row counts processed
+   - JSON output option for automation
+
+Key files:
+
+- `scripts/bridge/run_bridge_ingestion.py` - CLI entry point
+- `mlb_predict/orchestration/bridge_orchestrator.py` - Orchestration logic
+- `mlb_predict/orchestration/validation.py` - Validation rules
+- `mlb_predict/orchestration/error_handling.py` - Retry and circuit breaker
+- `mlb_predict/orchestration/checkpoints.py` - Progress persistence
+
+Notes:
+
+- Default: checkpoints enabled, validation enabled
+- `--skip-download` uses existing data in `bridge._staging_chadwick_register`
+- `--skip-validation` runs faster but skips all data quality checks
+- Logs saved to `logs/bridge_orchestrator_YYYYMMDD_HHMMSS.log`
+- Returns exit code 0 on success, 1 on failure (suitable for CI/CD)
+
 ### Ongoing Live Data Ingestion
 
 Command:
