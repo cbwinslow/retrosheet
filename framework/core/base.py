@@ -1,5 +1,4 @@
-"""
-Base classes for the framework.
+"""Base classes for the framework.
 
 All components must extend these base classes to ensure compatibility
 with the framework's logging, registry, and experiment systems.
@@ -19,25 +18,26 @@ Example:
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Union
-import pandas as pd
-import numpy as np
 from datetime import datetime
+from typing import Any
+
+import numpy as np
+import pandas as pd
 
 from framework.utils.logger import get_logger, log_to_db
 
 
 class BaseComponent(ABC):
     """Base class for all framework components."""
-    
-    def __init__(self, config: Optional[Dict] = None):
+
+    def __init__(self, config: dict | None = None):
         self.config = config or {}
         self.logger = get_logger(self.__class__.__name__)
         self.component_type = self.__class__.__name__
         self._created_at = datetime.now()
         self._experiment_id = None
-        
-    def log_message(self, level: str, message: str, details: Optional[Dict] = None):
+
+    def log_message(self, level: str, message: str, details: dict | None = None):
         """Log a message to both console and database."""
         self.logger.log(getattr(__import__('logging'), level.upper()), message)
         log_to_db(
@@ -46,25 +46,25 @@ class BaseComponent(ABC):
             operation=self._get_current_operation(),
             message=message,
             details=details,
-            experiment_id=self._experiment_id
+            experiment_id=self._experiment_id,
         )
-    
-    def log_metric(self, name: str, value: float, step: Optional[int] = None):
+
+    def log_metric(self, name: str, value: float, step: int | None = None):
         """Log a metric to the database."""
         details = {'metric_name': name, 'value': value}
         if step is not None:
             details['step'] = step
         self.log_message('INFO', f'Metric: {name}={value}', details)
-    
+
     def set_experiment_id(self, exp_id: int):
         """Associate this component with an experiment for logging."""
         self._experiment_id = exp_id
-    
+
     def _get_current_operation(self) -> str:
         """Override in subclasses to track current operation."""
         return 'general'
-    
-    def get_metadata(self) -> Dict:
+
+    def get_metadata(self) -> dict:
         """Return metadata about this component."""
         return {
             'class': self.__class__.__name__,
@@ -75,8 +75,7 @@ class BaseComponent(ABC):
 
 
 class BaseModel(BaseComponent):
-    """
-    Base class for all prediction models.
+    """Base class for all prediction models.
     
     Supports sklearn-like interface with fit/predict, but also provides
     framework integration for logging, versioning, and experiment tracking.
@@ -100,29 +99,26 @@ class BaseModel(BaseComponent):
             def get_feature_importance(self):
                 return dict(zip(self.feature_names, self.model.feature_importances_))
     """
-    
-    def __init__(self, config: Optional[Dict] = None):
+
+    def __init__(self, config: dict | None = None):
         super().__init__(config)
         self.model = None
         self.feature_names = []
         self.target_name = None
         self.is_trained = False
-        
+
     @abstractmethod
     def train(self, X: pd.DataFrame, y: pd.Series) -> None:
-        """
-        Train the model on data.
+        """Train the model on data.
         
         Args:
             X: Feature DataFrame
             y: Target series
         """
-        pass
-    
+
     @abstractmethod
     def predict(self, X: pd.DataFrame) -> np.ndarray:
-        """
-        Generate predictions.
+        """Generate predictions.
         
         Args:
             X: Feature DataFrame
@@ -130,29 +126,27 @@ class BaseModel(BaseComponent):
         Returns:
             Array of predictions (probabilities for classification)
         """
-        pass
-    
-    def evaluate(self, X: pd.DataFrame, y: pd.Series) -> Dict[str, float]:
-        """
-        Evaluate model performance. Override for custom metrics.
+
+    def evaluate(self, X: pd.DataFrame, y: pd.Series) -> dict[str, float]:
+        """Evaluate model performance. Override for custom metrics.
         
         Returns:
             Dictionary of metric_name -> value
         """
-        from sklearn.metrics import accuracy_score, roc_auc_score, log_loss
-        
+        from sklearn.metrics import accuracy_score, log_loss, roc_auc_score
+
         preds = self.predict(X)
         metrics = {
             'accuracy': accuracy_score(y, preds > 0.5),
             'roc_auc': roc_auc_score(y, preds),
             'log_loss': log_loss(y, preds),
         }
-        
+
         for name, value in metrics.items():
             self.log_metric(name, value)
-        
+
         return metrics
-    
+
     def save(self, path: str) -> None:
         """Save model to disk. Override for custom serialization."""
         import pickle
@@ -164,7 +158,7 @@ class BaseModel(BaseComponent):
                 'is_trained': self.is_trained,
             }, f)
         self.log_message('INFO', f'Model saved to {path}')
-    
+
     def load(self, path: str) -> None:
         """Load model from disk. Override for custom deserialization."""
         import pickle
@@ -175,14 +169,13 @@ class BaseModel(BaseComponent):
             self.feature_names = data['feature_names']
             self.is_trained = data['is_trained']
         self.log_message('INFO', f'Model loaded from {path}')
-    
+
     def _get_current_operation(self) -> str:
         return 'train' if not self.is_trained else 'predict'
 
 
 class BaseFeature(BaseComponent):
-    """
-    Base class for feature transformers/engineering.
+    """Base class for feature transformers/engineering.
     
     Can be SQL-based (computed in database) or Python-based (computed in Python).
     The framework tracks dependencies and computes features in correct order.
@@ -206,17 +199,16 @@ class BaseFeature(BaseComponent):
                 # Return SQL for database computation
                 return f"AVG({self.column}) OVER (ORDER BY game_date ROWS {self.window} PRECEDING)"
     """
-    
-    def __init__(self, config: Optional[Dict] = None):
+
+    def __init__(self, config: dict | None = None):
         super().__init__(config)
         self.feature_name = config.get('name', self.__class__.__name__)
         self.dependencies = config.get('dependencies', [])
         self.output_column = config.get('output_column', self.feature_name)
-        
+
     @abstractmethod
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Transform DataFrame by adding feature column(s).
+        """Transform DataFrame by adding feature column(s).
         
         Args:
             df: Input DataFrame
@@ -224,23 +216,21 @@ class BaseFeature(BaseComponent):
         Returns:
             DataFrame with new feature column(s)
         """
-        pass
-    
+
     def fit_transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """Fit (if needed) then transform. Default just transforms."""
         return self.transform(df)
-    
+
     @property
-    def sql_expression(self) -> Optional[str]:
-        """
-        Return SQL expression for database computation.
+    def sql_expression(self) -> str | None:
+        """Return SQL expression for database computation.
         
         If implemented, the framework can compute this feature in SQL
         for better performance. Return None to use Python transform.
         """
         return None
-    
-    def get_metadata(self) -> Dict:
+
+    def get_metadata(self) -> dict:
         """Get feature metadata including dependencies."""
         meta = super().get_metadata()
         meta.update({
@@ -250,14 +240,13 @@ class BaseFeature(BaseComponent):
             'has_sql_implementation': self.sql_expression is not None,
         })
         return meta
-    
+
     def _get_current_operation(self) -> str:
         return 'transform'
 
 
 class BaseDataLoader(BaseComponent):
-    """
-    Base class for data loading.
+    """Base class for data loading.
     
     Provides consistent interface for loading data from various sources:
     database, files, APIs, etc. Supports batching and filtering.
@@ -274,25 +263,22 @@ class BaseDataLoader(BaseComponent):
             def get_schema(self) -> Dict:
                 return {'game_pk': 'int', 'pitch_type': 'text', ...}
     """
-    
-    def __init__(self, config: Optional[Dict] = None):
+
+    def __init__(self, config: dict | None = None):
         super().__init__(config)
         self.source = config.get('source', 'database')
         self.batch_size = config.get('batch_size', 10000)
-        
+
     @abstractmethod
     def load(self, **kwargs) -> pd.DataFrame:
-        """
-        Load data from source.
+        """Load data from source.
         
         Returns:
             DataFrame with data
         """
-        pass
-    
+
     def load_batch(self, offset: int, limit: int, **kwargs) -> pd.DataFrame:
-        """
-        Load a batch of data. Override for efficient batching.
+        """Load a batch of data. Override for efficient batching.
         
         Args:
             offset: Start row
@@ -303,27 +289,25 @@ class BaseDataLoader(BaseComponent):
         """
         df = self.load(**kwargs)
         return df.iloc[offset:offset+limit]
-    
+
     def get_total_count(self, **kwargs) -> int:
         """Get total number of rows available. Override for progress tracking."""
         return -1  # Unknown
-    
-    def get_schema(self) -> Dict[str, str]:
-        """
-        Return schema of data.
+
+    def get_schema(self) -> dict[str, str]:
+        """Return schema of data.
         
         Returns:
             Dictionary mapping column names to data types
         """
         return {}
-    
+
     def _get_current_operation(self) -> str:
         return 'load'
 
 
 class BaseTransformer(BaseComponent):
-    """
-    Base class for data transformers (preprocessing, normalization, etc.).
+    """Base class for data transformers (preprocessing, normalization, etc.).
     
     Similar to sklearn transformers with fit/transform pattern, but with
     framework logging integration.
@@ -348,32 +332,30 @@ class BaseTransformer(BaseComponent):
                     result[col] = df[col].clip(low, high)
                 return result
     """
-    
-    def __init__(self, config: Optional[Dict] = None):
+
+    def __init__(self, config: dict | None = None):
         super().__init__(config)
         self.is_fitted = False
-        
+
     def fit(self, df: pd.DataFrame) -> 'BaseTransformer':
         """Fit transformer to data. Override if needed."""
         self.is_fitted = True
         return self
-    
+
     @abstractmethod
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """Transform data."""
-        pass
-    
+
     def fit_transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """Fit then transform."""
         return self.fit(df).transform(df)
-    
+
     def _get_current_operation(self) -> str:
         return 'transform'
 
 
 class BaseMetric(BaseComponent):
-    """
-    Base class for custom evaluation metrics.
+    """Base class for custom evaluation metrics.
     
     Allows researchers to define their own metrics beyond standard sklearn.
     
@@ -392,15 +374,14 @@ class BaseMetric(BaseComponent):
                         calibration_errors.append(abs(avg_confidence - avg_accuracy))
                 return np.mean(calibration_errors)
     """
-    
-    def __init__(self, config: Optional[Dict] = None):
+
+    def __init__(self, config: dict | None = None):
         super().__init__(config)
         self.metric_name = config.get('name', self.__class__.__name__)
-        
+
     @abstractmethod
     def compute(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
-        """
-        Compute the metric.
+        """Compute the metric.
         
         Args:
             y_true: Ground truth labels
@@ -409,24 +390,22 @@ class BaseMetric(BaseComponent):
         Returns:
             Metric value
         """
-        pass
-    
+
     def compute_batch(self, y_true: np.ndarray, y_pred: np.ndarray, batch_size: int = 10000) -> float:
         """Compute metric in batches for large datasets."""
         if len(y_true) <= batch_size:
             return self.compute(y_true, y_pred)
-        
+
         # Sample-based estimate for large datasets
         indices = np.random.choice(len(y_true), batch_size, replace=False)
         return self.compute(y_true[indices], y_pred[indices])
-    
+
     def _get_current_operation(self) -> str:
         return 'evaluate'
 
 
 class BaseExperiment(ABC):
-    """
-    Base class for experiment orchestration.
+    """Base class for experiment orchestration.
     
     Use this to define complex multi-step experiments that go beyond
     the simple train/evaluate flow.
@@ -443,17 +422,16 @@ class BaseExperiment(ABC):
                         results.append({'lr': lr, 'depth': depth, 'score': score})
                 return self.find_best(results)
     """
-    
-    def __init__(self, config: Optional[Dict] = None):
+
+    def __init__(self, config: dict | None = None):
         self.config = config or {}
         self.logger = get_logger(self.__class__.__name__)
         self._experiment_id = None
-        
+
     @abstractmethod
     def run(self) -> Any:
         """Execute the experiment."""
-        pass
-    
+
     def set_experiment_id(self, exp_id: int):
         """Set experiment ID for logging."""
         self._experiment_id = exp_id

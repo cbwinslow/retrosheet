@@ -291,4 +291,3 @@ END;
 $$;
 
 COMMENT ON FUNCTION bridge.validate_bridge_tables_quick() IS 'Returns true if all bridge table validation checks pass';
-

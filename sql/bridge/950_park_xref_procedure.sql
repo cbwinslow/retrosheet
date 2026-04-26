@@ -127,4 +127,3 @@ COMMENT ON PROCEDURE bridge.populate_park_xref () IS
 -- Grant execute permission
 -- ============================================================================
 GRANT EXECUTE ON PROCEDURE bridge.populate_park_xref() TO postgres;
-

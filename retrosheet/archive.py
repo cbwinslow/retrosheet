@@ -832,11 +832,7 @@ class Event:
                 self._secondary_event(other_event)
 
         # No Play == substitution
-        elif re.findall('^NP$', a):
-            pass
-
-        # Unkown Play
-        elif re.findall('^(?:OA)?(?:99)?$', a):
+        elif re.findall('^NP$', a) or re.findall('^(?:OA)?(?:99)?$', a):
             pass
 
         ## passed ball - B-1 implicit

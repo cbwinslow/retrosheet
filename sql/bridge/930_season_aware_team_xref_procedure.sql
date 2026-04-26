@@ -79,4 +79,3 @@ COMMENT ON PROCEDURE bridge.populate_season_aware_team_xref () IS
 -- Grant execute permission
 -- ============================================================================
 GRANT EXECUTE ON PROCEDURE bridge.populate_season_aware_team_xref() TO postgres;
-

@@ -1,5 +1,4 @@
-"""
-ModelTrainer - Pydantic wrapper for existing training infrastructure.
+"""ModelTrainer - Pydantic wrapper for existing training infrastructure.
 
 Phase 2.1: Core Wrapper Class
 
@@ -16,54 +15,60 @@ Author: Agent Cascade
 Date: April 24, 2026
 """
 
+import json
 import os
 import sys
-import json
 import time
-import hashlib
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Callable, Tuple
+from collections.abc import Callable
 from datetime import datetime
-from dataclasses import dataclass
-import psycopg2
+from pathlib import Path
+from typing import Any
+
 import numpy as np
-from sqlalchemy import create_engine, text
+import psycopg2
+from sqlalchemy import create_engine
+
 
 # Add scripts path to import existing modules
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'scripts' / 'model_training'))
 
 # Import new framework classes
-from mlb_predict.config import ModelConfig, ModelFamily, TargetVariable, FeatureSet
+from mlb_predict.config import FeatureSet, ModelConfig, TargetVariable
 from mlb_predict.core.results import (
-    TrainResult, Metrics, MetricValue, ValidationCurve,
-    FeatureImportance, Residuals
+    FeatureImportance,
+    Metrics,
+    MetricValue,
+    Residuals,
+    TrainResult,
+    ValidationCurve,
 )
+
 
 # Import existing training functions (wrapped, not replaced)
 try:
     from train_models import (
-        train as train_game_pa_models,
-        database_kwargs,
-        GAME_NUMERIC_FEATURES,
         GAME_CATEGORICAL_FEATURES,
-        PA_NUMERIC_FEATURES,
-        PA_CATEGORICAL_FEATURES,
-        PA_ENRICHED_NUMERIC_FEATURES,
-        PA_ENRICHED_CATEGORICAL_FEATURES,
-        PA_ADVANCED_NUMERIC_FEATURES,
+        GAME_NUMERIC_FEATURES,
         PA_ADVANCED_CATEGORICAL_FEATURES,
+        PA_ADVANCED_NUMERIC_FEATURES,
+        PA_CATEGORICAL_FEATURES,
+        PA_ENRICHED_CATEGORICAL_FEATURES,
+        PA_ENRICHED_NUMERIC_FEATURES,
+        PA_NUMERIC_FEATURES,
+        database_kwargs,
+        train as train_game_pa_models,
     )
     from train_pa_outcome_distribution import (
-        train as train_pa_distribution,
-        BASIC_NUMERIC_FEATURES,
-        BASIC_CATEGORICAL_FEATURES,
-        ADVANCED_NUMERIC_FEATURES,
         ADVANCED_CATEGORICAL_FEATURES,
+        ADVANCED_NUMERIC_FEATURES,
+        BASIC_CATEGORICAL_FEATURES,
+        BASIC_NUMERIC_FEATURES,
+        train as train_pa_distribution,
     )
     EXISTING_SCRIPTS_AVAILABLE = True
 except ImportError as e:
-    print(f"Warning: Could not import existing training scripts: {e}")
+    print(f'Warning: Could not import existing training scripts: {e}')
     EXISTING_SCRIPTS_AVAILABLE = False
     # Define fallbacks
     GAME_NUMERIC_FEATURES = []
@@ -81,8 +86,7 @@ except ImportError as e:
 
 
 class ModelTrainer:
-    """
-    ModelTrainer - Wraps existing training scripts with Pydantic config.
+    """ModelTrainer - Wraps existing training scripts with Pydantic config.
     
     This class bridges the new Pydantic framework with existing scripts:
     - Takes ModelConfig (Pydantic) instead of dict
@@ -113,7 +117,7 @@ class ModelTrainer:
         # Get feature importance
         top_features = result.get_best_features(n=20)
     """
-    
+
     # Feature set mapping: FeatureSet enum -> existing feature lists
     FEATURE_SET_MAP = {
         FeatureSet.BASIC: {
@@ -137,7 +141,7 @@ class ModelTrainer:
             'categorical': PA_ADVANCED_CATEGORICAL_FEATURES,
         },
     }
-    
+
     # Target mapping: TargetVariable enum -> existing target_id
     TARGET_MAP = {
         TargetVariable.SWING_DECISION: 'swing_decision',
@@ -147,33 +151,32 @@ class ModelTrainer:
         TargetVariable.WIN_PROBABILITY: 'win_probability',
         TargetVariable.RUN_EXPECTANCY: 'run_expectancy',
     }
-    
+
     def __init__(self, config: ModelConfig):
-        """
-        Initialize trainer with Pydantic config.
+        """Initialize trainer with Pydantic config.
         
         Args:
             config: ModelConfig with family, target, features, etc.
         """
         if not isinstance(config, ModelConfig):
-            raise TypeError(f"Expected ModelConfig, got {type(config)}")
-        
+            raise TypeError(f'Expected ModelConfig, got {type(config)}')
+
         self.config = config
-        
+
         # Plugin registry for custom models
-        self._plugins: Dict[str, Callable] = {}
-        
+        self._plugins: dict[str, Callable] = {}
+
         # Database connection (lazy loaded)
         self._db_kwargs = None
         self._engine = None
-        
+
         # Training state
-        self._model_id: Optional[int] = None
-        self._start_time: Optional[float] = None
-        self._warnings: List[str] = []
-    
+        self._model_id: int | None = None
+        self._start_time: float | None = None
+        self._warnings: list[str] = []
+
     @property
-    def db_kwargs(self) -> Dict[str, Any]:
+    def db_kwargs(self) -> dict[str, Any]:
         """Lazy load database connection params."""
         if self._db_kwargs is None:
             if EXISTING_SCRIPTS_AVAILABLE:
@@ -187,17 +190,17 @@ class ModelTrainer:
                     'user': os.getenv('PGUSER', 'postgres'),
                 }
         return self._db_kwargs
-    
+
     @property
     def engine(self):
         """Lazy load SQLAlchemy engine."""
         if self._engine is None:
             self._engine = create_engine(
                 f"postgresql://{self.db_kwargs['user']}@{self.db_kwargs.get('host', 'localhost')}"
-                f":{self.db_kwargs.get('port', 5432)}/{self.db_kwargs['dbname']}"
+                f":{self.db_kwargs.get('port', 5432)}/{self.db_kwargs['dbname']}",
             )
         return self._engine
-    
+
     @classmethod
     def from_config(cls, config_path: str) -> 'ModelTrainer':
         """Load trainer from YAML config file.
@@ -215,10 +218,9 @@ class ModelTrainer:
         from mlb_predict.config.loader import load_model_config
         config = load_model_config(config_path)
         return cls(config)
-    
+
     def register_plugin(self, name: str, model_class: Callable) -> None:
-        """
-        Register a custom model plugin.
+        """Register a custom model plugin.
         
         The model_class must implement:
         - __init__(config): Initialize with config dict
@@ -245,10 +247,9 @@ class ModelTrainer:
             result = trainer.train()  # Uses registered plugin
         """
         self._plugins[name] = model_class
-    
-    def train(self, model_type: Optional[str] = None) -> TrainResult:
-        """
-        Execute training and return rich TrainResult.
+
+    def train(self, model_type: str | None = None) -> TrainResult:
+        """Execute training and return rich TrainResult.
         
         This method wraps existing training scripts and returns a TrainResult
         with full metrics, residuals, feature importance, and validation curves.
@@ -278,15 +279,15 @@ class ModelTrainer:
                 result.residuals.plot_residuals()
         """
         self._start_time = time.time()
-        
+
         # Determine model type (config.family is already a string value)
         model_family = model_type or self.config.family
-        
+
         # Record start
-        print(f"[INFO] Starting training: {self.config.target} with {model_family}")
-        print(f"[INFO] Feature set: {self.config.features}")
-        print(f"[INFO] Seasons: {self.config.seasons}")
-        
+        print(f'[INFO] Starting training: {self.config.target} with {model_family}')
+        print(f'[INFO] Feature set: {self.config.features}')
+        print(f'[INFO] Seasons: {self.config.seasons}')
+
         try:
             # Check if it's a custom plugin
             if model_family in self._plugins:
@@ -298,15 +299,15 @@ class ModelTrainer:
                 # Use existing training infrastructure
                 # TODO: Integrate with existing scripts
                 result = self._train_mock(model_family)
-            
-            print(f"[INFO] Training completed in {result.training_time_seconds:.1f}s")
+
+            print(f'[INFO] Training completed in {result.training_time_seconds:.1f}s')
             return result
-            
+
         except Exception as e:
-            print(f"[ERROR] Training failed: {str(e)}")
+            print(f'[ERROR] Training failed: {e!s}')
             raise
-    
-    def _train_game_pa(self, model_type: str) -> Dict[str, Any]:
+
+    def _train_game_pa(self, model_type: str) -> dict[str, Any]:
         """Wrap existing train_models.py for game/PA binary targets."""
         # Build args namespace matching train_models.py expectations
         class Args:
@@ -317,26 +318,26 @@ class ModelTrainer:
             train_through = self.train_through
             sample_rate = self.sample_rate
             no_activate = False
-        
+
         args = Args()
-        
+
         # Log experiment start
         self._log('INFO', f'Calling train_models.train with args: {vars(args)}')
-        
+
         try:
             # Call existing training function
             train_game_pa_models(args)
-            
+
             # Get results from registry
             result = self._get_latest_model_result()
             self._log('INFO', f'Training completed: {result}')
             return result
-            
+
         except Exception as e:
-            self._log('ERROR', f'Training failed: {str(e)}')
+            self._log('ERROR', f'Training failed: {e!s}')
             raise
-    
-    def _train_pa_distribution(self, model_type: str) -> Dict[str, Any]:
+
+    def _train_pa_distribution(self, model_type: str) -> dict[str, Any]:
         """Wrap existing train_pa_outcome_distribution.py."""
         # Map model_family to args
         model_type_map = {
@@ -346,7 +347,7 @@ class ModelTrainer:
             'catboost': 'catboost',
             'logistic_regression': 'logistic_regression',
         }
-        
+
         class Args:
             min_season = min(self.seasons)
             max_season = max(self.seasons)
@@ -361,48 +362,48 @@ class ModelTrainer:
             downweight_2020 = False
             season_half_life = 0
             recent_window = None
-        
+
         args = Args()
-        
-        self._log('INFO', f'Calling train_pa_outcome_distribution.train with args')
-        
+
+        self._log('INFO', 'Calling train_pa_outcome_distribution.train with args')
+
         try:
             train_pa_distribution(args)
             result = self._get_latest_model_result()
             self._log('INFO', f'Training completed: {result}')
             return result
         except Exception as e:
-            self._log('ERROR', f'Training failed: {str(e)}')
+            self._log('ERROR', f'Training failed: {e!s}')
             raise
-    
-    def _train_plugin(self, plugin_name: str) -> Dict[str, Any]:
+
+    def _train_plugin(self, plugin_name: str) -> dict[str, Any]:
         """Train a custom plugin model."""
         model_class = self._plugins[plugin_name]
-        
+
         # Load data using existing patterns
         X_train, y_train, X_val, y_val = self._load_data()
-        
+
         # Instantiate and train
         model = model_class(self.config)
-        
+
         self._log('INFO', f'Training plugin model: {plugin_name}')
         model.fit(X_train, y_train)
-        
+
         # Evaluate
         train_preds = model.predict_proba(X_train)
         val_preds = model.predict_proba(X_val)
-        
+
         metrics = self._compute_metrics(y_train, train_preds, y_val, val_preds)
-        
+
         # Save artifact
         artifact_path = self._save_artifact(model, plugin_name)
-        
+
         # Register in existing model_registry
         self._register_model(plugin_name, artifact_path, metrics)
-        
+
         # Build TrainResult
         train_time = time.time() - self._start_time
-        
+
         return TrainResult(
             model_id=999,  # Mock ID
             model_name=plugin_name,
@@ -415,55 +416,52 @@ class ModelTrainer:
             n_samples_val=len(y_val),
             n_features=X_train.shape[1],
             feature_names=list(X_train.columns) if hasattr(X_train, 'columns') else None,
-            status='completed'
+            status='completed',
         )
-    
+
     def _train_mock(self, model_family: str) -> TrainResult:
-        """
-        Mock training for testing without database/existing scripts.
+        """Mock training for testing without database/existing scripts.
         
         Returns realistic TrainResult with synthetic metrics.
         """
-        import numpy as np
-        
         # Generate synthetic data sizes
         n_train = 10000
         n_val = 2000
         n_features = 220 if self.config.features == FeatureSet.ADVANCED else 50
-        
+
         # Generate realistic metrics
         train_auc = 0.85 + np.random.rand() * 0.05
         val_auc = train_auc - 0.02 - np.random.rand() * 0.02
-        
+
         # Create feature importance
         feature_importance = []
         feature_names = [
             'pitch_speed', 'spin_rate', 'plate_x', 'plate_z',
             'release_speed', 'pfx_x', 'pfx_z', 'balls', 'strikes',
         ] + [f'feature_{i}' for i in range(n_features - 9)]
-        
+
         for i, name in enumerate(feature_names[:n_features]):
             score = np.random.exponential(0.1) if i > 9 else np.random.exponential(0.15)
             feature_importance.append(FeatureImportance(
                 feature_name=name,
                 importance_score=min(score, 0.5),
                 importance_rank=i+1,
-                method='gain'
+                method='gain',
             ))
-        
+
         # Sort by importance
         feature_importance.sort(key=lambda x: x.importance_score, reverse=True)
         for i, fi in enumerate(feature_importance):
             fi.importance_rank = i + 1
-        
+
         # Generate validation curve
         n_iters = 200
         iterations = list(range(0, n_iters, 10))
         train_curve = [0.5 + 0.4 * (1 - np.exp(-i/50)) + np.random.rand() * 0.01 for i in iterations]
         val_curve = [0.5 + 0.35 * (1 - np.exp(-i/50)) - 0.02 + np.random.rand() * 0.01 for i in iterations]
-        
+
         best_iter = iterations[np.argmax(val_curve)]
-        
+
         validation_curve = ValidationCurve(
             metric_name='roc_auc',
             train_values=train_curve,
@@ -471,38 +469,38 @@ class ModelTrainer:
             iterations=iterations,
             best_iteration=best_iter,
             best_train_value=max(train_curve),
-            best_val_value=max(val_curve)
+            best_val_value=max(val_curve),
         )
-        
+
         # Generate residuals
         y_true = np.random.randint(0, 2, n_val)
         y_prob = np.random.rand(n_val) * 0.3 + y_true * 0.4 + 0.1
         y_pred = (y_prob > 0.5).astype(int)
-        
+
         residuals = Residuals(
             y_true=y_true.tolist(),
             y_pred=y_pred.tolist(),
-            y_prob=y_prob.tolist()
+            y_prob=y_prob.tolist(),
         )
-        
+
         # Compute training time
         train_time = time.time() - self._start_time
-        
+
         # Create TrainResult
         return TrainResult(
             model_id=999,  # Mock
-            model_name=f"{model_family}_{self.config.target}",
+            model_name=f'{model_family}_{self.config.target}',
             config=self.config,
-            artifact_path=f"models/mock_{model_family}.pkl",
+            artifact_path=f'models/mock_{model_family}.pkl',
             train_metrics=Metrics(
                 roc_auc=MetricValue(value=train_auc),
                 accuracy=MetricValue(value=train_auc - 0.05),
-                log_loss=MetricValue(value=0.3)
+                log_loss=MetricValue(value=0.3),
             ),
             val_metrics=Metrics(
                 roc_auc=MetricValue(value=val_auc),
                 accuracy=MetricValue(value=val_auc - 0.05),
-                log_loss=MetricValue(value=0.35)
+                log_loss=MetricValue(value=0.35),
             ),
             training_time_seconds=train_time,
             n_samples_train=n_train,
@@ -512,10 +510,10 @@ class ModelTrainer:
             feature_importance=feature_importance[:50],
             validation_curves=[validation_curve],
             val_residuals=residuals,
-            status='completed'
+            status='completed',
         )
-    
-    def _dict_to_metrics(self, metrics_dict: Dict[str, float]) -> Metrics:
+
+    def _dict_to_metrics(self, metrics_dict: dict[str, float]) -> Metrics:
         """Convert dict of metrics to Metrics object."""
         return Metrics(
             roc_auc=MetricValue(value=metrics_dict.get('roc_auc', 0.0)) if 'roc_auc' in metrics_dict else None,
@@ -523,14 +521,14 @@ class ModelTrainer:
             log_loss=MetricValue(value=metrics_dict.get('log_loss', 0.0)) if 'log_loss' in metrics_dict else None,
             brier_score=MetricValue(value=metrics_dict.get('brier_score', 0.0)) if 'brier_score' in metrics_dict else None,
         )
-    
+
     def _load_data(self) -> tuple:
         """Load training data using existing feature marts."""
-        from train_models import load_examples, database_url
         from sqlalchemy import create_engine
-        
+        from train_models import database_url, load_examples
+
         engine = create_engine(database_url())
-        
+
         # Load examples
         frame = load_examples(
             engine,
@@ -540,26 +538,26 @@ class ModelTrainer:
             sample_rate=self.sample_rate,
             feature_set=self.feature_set.replace('pa_', '').replace('game_', ''),
         )
-        
+
         # Get features for this feature_set
         features = self.FEATURE_SETS.get(self.feature_set, self.FEATURE_SETS['pa_basic'])
         all_features = features['numeric'] + features['categorical']
-        
+
         # Split
         train_frame = frame[frame['season'] <= self.train_through]
         val_frame = frame[frame['season'] > self.train_through]
-        
+
         X_train = train_frame[all_features]
         y_train = train_frame['target']
         X_val = val_frame[all_features]
         y_val = val_frame['target']
-        
+
         return X_train, y_train, X_val, y_val
-    
-    def _compute_metrics(self, y_train, train_preds, y_val, val_preds) -> Dict:
+
+    def _compute_metrics(self, y_train, train_preds, y_val, val_preds) -> dict:
         """Compute metrics using sklearn."""
-        from sklearn.metrics import accuracy_score, roc_auc_score, log_loss, brier_score_loss
-        
+        from sklearn.metrics import accuracy_score, brier_score_loss, log_loss, roc_auc_score
+
         return {
             'train': {
                 'accuracy': float(accuracy_score(y_train, train_preds > 0.5)),
@@ -572,24 +570,25 @@ class ModelTrainer:
                 'roc_auc': float(roc_auc_score(y_val, val_preds)),
                 'log_loss': float(log_loss(y_val, val_preds)),
                 'brier_score': float(brier_score_loss(y_val, val_preds)),
-            }
+            },
         }
-    
+
     def _save_artifact(self, model, model_name: str) -> Path:
         """Save model to existing MODEL_DIR."""
-        import joblib
         from datetime import datetime, timezone
-        
+
+        import joblib
+
         MODEL_DIR = ROOT / 'data' / 'models'
         MODEL_DIR.mkdir(parents=True, exist_ok=True)
-        
+
         version = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
         artifact_path = MODEL_DIR / f'{self.target}_{model_name}_{version}.joblib'
-        
+
         joblib.dump(model, artifact_path)
         return artifact_path
-    
-    def _register_model(self, model_name: str, artifact_path: Path, metrics: Dict):
+
+    def _register_model(self, model_name: str, artifact_path: Path, metrics: dict):
         """Register in existing models.model_registry table."""
         conn = psycopg2.connect(**self._db_kwargs)
         try:
@@ -600,7 +599,7 @@ class ModelTrainer:
                     SET is_active = false
                     WHERE target_id = %s AND model_name = %s
                 """, (self.target, model_name))
-                
+
                 # Insert new version
                 cur.execute("""
                     INSERT INTO models.model_registry (
@@ -626,8 +625,8 @@ class ModelTrainer:
             conn.commit()
         finally:
             conn.close()
-    
-    def _get_latest_model_result(self) -> Dict[str, Any]:
+
+    def _get_latest_model_result(self) -> dict[str, Any]:
         """Get latest model from registry."""
         conn = psycopg2.connect(**self._db_kwargs)
         try:
@@ -639,7 +638,7 @@ class ModelTrainer:
                     ORDER BY created_at DESC
                     LIMIT 1
                 """, (self.target,))
-                
+
                 row = cur.fetchone()
                 if row:
                     return {
@@ -652,7 +651,7 @@ class ModelTrainer:
                 return {}
         finally:
             conn.close()
-    
+
     def _log(self, level: str, message: str):
         """Log to framework.log table if experiment_id set."""
         if self.experiment_id:
@@ -666,18 +665,18 @@ class ModelTrainer:
                 conn.commit()
             finally:
                 conn.close()
-        
+
         # Also print
-        print(f"[{level}] {message}")
-    
-    def list_available_targets(self) -> List[str]:
+        print(f'[{level}] {message}')
+
+    def list_available_targets(self) -> list[str]:
         """List all available target types."""
         return list(self.TARGET_TYPES.keys())
-    
-    def list_available_feature_sets(self) -> List[str]:
+
+    def list_available_feature_sets(self) -> list[str]:
         """List all available feature sets."""
         return list(self.FEATURE_SETS.keys())
-    
-    def list_registered_plugins(self) -> List[str]:
+
+    def list_registered_plugins(self) -> list[str]:
         """List registered plugin models."""
         return list(self._plugins.keys())

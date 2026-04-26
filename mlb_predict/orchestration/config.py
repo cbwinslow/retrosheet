@@ -1,5 +1,4 @@
-"""
-Orchestration Configuration Models (Pydantic)
+"""Orchestration Configuration Models (Pydantic)
 
 Type-safe configuration for all database operations.
 All configs include validation, defaults, and documentation.
@@ -10,52 +9,51 @@ from __future__ import annotations
 from abc import ABC
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class DataSource(str, Enum):
     """Supported data sources for ingestion."""
-    STATCAST = "statcast"
-    MLB_API = "mlb_api"
-    ESPN = "espn"
-    BASEBALL_REFERENCE = "baseball_reference"
-    LAHMAN = "lahman"
-    CHADWICK = "chadwick"
-    SPORTSRADAR = "sportradar"
+    STATCAST = 'statcast'
+    MLB_API = 'mlb_api'
+    ESPN = 'espn'
+    BASEBALL_REFERENCE = 'baseball_reference'
+    LAHMAN = 'lahman'
+    CHADWICK = 'chadwick'
+    SPORTSRADAR = 'sportradar'
 
 
 class OperationMode(str, Enum):
     """Operation execution modes."""
-    FULL = "full"           # Run complete operation
-    RESUME = "resume"       # Resume from last checkpoint
-    DRY_RUN = "dry_run"     # Show what would be executed
-    QUICK = "quick"         # Skip expensive operations
-    VALIDATE = "validate"   # Only run validation
+    FULL = 'full'           # Run complete operation
+    RESUME = 'resume'       # Resume from last checkpoint
+    DRY_RUN = 'dry_run'     # Show what would be executed
+    QUICK = 'quick'         # Skip expensive operations
+    VALIDATE = 'validate'   # Only run validation
 
 
 class OperationStatus(str, Enum):
     """Operation execution status."""
-    PENDING = "pending"
-    RUNNING = "running"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    PARTIAL = "partial"     # Some phases completed
-    ABORTED = "aborted"
+    PENDING = 'pending'
+    RUNNING = 'running'
+    COMPLETED = 'completed'
+    FAILED = 'failed'
+    PARTIAL = 'partial'     # Some phases completed
+    ABORTED = 'aborted'
 
 
 class LogLevel(str, Enum):
     """Logging verbosity levels."""
-    DEBUG = "debug"
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
+    DEBUG = 'debug'
+    INFO = 'info'
+    WARNING = 'warning'
+    ERROR = 'error'
 
 
 class OperationConfig(BaseModel, ABC):
-    """
-    Base configuration for any database operation.
+    """Base configuration for any database operation.
     
     All operation configs inherit from this base class.
     Provides common validation, logging, and resume capabilities.
@@ -81,81 +79,80 @@ class OperationConfig(BaseModel, ABC):
         )
         ```
     """
-    
+
     # Execution Control
     dry_run: bool = Field(
         default=False,
-        description="Show what would be executed without running"
+        description='Show what would be executed without running',
     )
-    resume_from: Optional[str] = Field(
+    resume_from: str | None = Field(
         default=None,
-        description="Checkpoint ID to resume from (None = start fresh)"
+        description='Checkpoint ID to resume from (None = start fresh)',
     )
     mode: OperationMode = Field(
         default=OperationMode.FULL,
-        description="Execution mode"
+        description='Execution mode',
     )
-    
+
     # Performance Tuning
     batch_size: int = Field(
         default=100000,
         ge=1000,
         le=1000000,
-        description="Rows to process per batch"
+        description='Rows to process per batch',
     )
     parallel_workers: int = Field(
         default=4,
         ge=1,
         le=16,
-        description="Number of parallel workers"
+        description='Number of parallel workers',
     )
-    
+
     # Reliability
     timeout_seconds: int = Field(
         default=3600,
         ge=60,
         le=86400,
-        description="Max operation time before auto-abort"
+        description='Max operation time before auto-abort',
     )
     max_retries: int = Field(
         default=3,
         ge=0,
         le=10,
-        description="Number of retries on transient failures"
+        description='Number of retries on transient failures',
     )
-    
+
     # Validation & Logging
     validate_after: bool = Field(
         default=True,
-        description="Run validation after operation completes"
+        description='Run validation after operation completes',
     )
     log_level: LogLevel = Field(
         default=LogLevel.INFO,
-        description="Logging verbosity"
+        description='Logging verbosity',
     )
-    
+
     # Metadata
-    operation_name: Optional[str] = Field(
+    operation_name: str | None = Field(
         default=None,
-        description="Human-readable operation name"
+        description='Human-readable operation name',
     )
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict,
-        description="Additional metadata (JSON serializable)"
+        description='Additional metadata (JSON serializable)',
     )
-    
-    @field_validator("batch_size")
+
+    @field_validator('batch_size')
     @classmethod
     def validate_batch_size(cls, v: int) -> int:
         """Ensure batch size is reasonable for memory constraints."""
         if v > 500000:
-            raise ValueError("batch_size > 500k may cause memory issues")
+            raise ValueError('batch_size > 500k may cause memory issues')
         return v
 
 
 class FeaturePopulationConfig(OperationConfig):
-    """
-    Configuration for feature population operations.
+    """Configuration for feature population operations.
     
     Controls how ML features are populated from raw data.
     Supports phased execution for incremental feature building.
@@ -190,72 +187,71 @@ class FeaturePopulationConfig(OperationConfig):
         )
         ```
     """
-    
+
     # Phase Control
-    phases: List[int] = Field(
+    phases: list[int] = Field(
         default_factory=list,
-        description="Phase numbers to run (empty = all phases 0-7)"
+        description='Phase numbers to run (empty = all phases 0-7)',
     )
     skip_verification: bool = Field(
         default=False,
-        description="Skip post-population verification"
+        description='Skip post-population verification',
     )
     checkpoint_interval: int = Field(
         default=100000,
         ge=10000,
         le=500000,
-        description="Rows between checkpoints"
+        description='Rows between checkpoints',
     )
-    
+
     # Feature Categories
     include_physics_features: bool = Field(default=True)
     include_location_features: bool = Field(default=True)
     include_context_features: bool = Field(default=True)
     include_matchup_features: bool = Field(default=True)
     include_sequential_features: bool = Field(default=False)  # Expensive
-    
-    feature_categories: Set[str] = Field(
+
+    feature_categories: set[str] = Field(
         default_factory=lambda: {
-            "physics", "location", "context", "matchup", "quality"
+            'physics', 'location', 'context', 'matchup', 'quality',
         },
-        description="Categories of features to populate"
+        description='Categories of features to populate',
     )
-    
+
     # Schema Target
     target_schema: str = Field(
-        default="features_pitch",
-        description="Schema containing engineered_features table"
+        default='features_pitch',
+        description='Schema containing engineered_features table',
     )
     target_table: str = Field(
-        default="engineered_features",
-        description="Table to populate"
+        default='engineered_features',
+        description='Table to populate',
     )
-    
-    @field_validator("phases")
+
+    @field_validator('phases')
     @classmethod
-    def validate_phases(cls, v: List[int]) -> List[int]:
+    def validate_phases(cls, v: list[int]) -> list[int]:
         """Ensure phase numbers are valid (0-7)."""
         if v:
             invalid = [p for p in v if p < 0 or p > 7]
             if invalid:
-                raise ValueError(f"Invalid phases: {invalid}. Must be 0-7")
+                raise ValueError(f'Invalid phases: {invalid}. Must be 0-7')
         return sorted(set(v)) if v else []
-    
-    @model_validator(mode="after")
+
+    @model_validator(mode='after')
     def set_operation_name(self) -> FeaturePopulationConfig:
         """Auto-set operation name if not provided."""
         if not self.operation_name:
             if self.phases:
-                phase_str = ",".join(map(str, self.phases))
-                self.operation_name = f"feature_population_phases_{phase_str}"
+                phase_str = ','.join(map(str, self.phases))
+                self.operation_name = f'feature_population_phases_{phase_str}'
             else:
-                self.operation_name = "feature_population_all_phases"
+                self.operation_name = 'feature_population_all_phases'
         return self
 
 
 class BridgePopulationConfig(OperationConfig):
-    """
-    Configuration for bridge table population operations.
+    """Configuration for bridge table population operations.
     
     Controls how ID cross-reference tables are populated.
     Links IDs across Retrosheet, MLB API, Lahman, and other sources.
@@ -290,80 +286,79 @@ class BridgePopulationConfig(OperationConfig):
         )
         ```
     """
-    
+
     # Bridge Tables to Populate
     include_player_xref: bool = Field(
         default=True,
-        description="Populate player ID cross-references (slow)"
+        description='Populate player ID cross-references (slow)',
     )
     include_team_xref: bool = Field(
         default=True,
-        description="Populate team ID cross-references"
+        description='Populate team ID cross-references',
     )
     include_game_xref: bool = Field(
         default=True,
-        description="Populate game ID cross-references"
+        description='Populate game ID cross-references',
     )
     include_park_xref: bool = Field(
         default=True,
-        description="Populate park ID cross-references"
+        description='Populate park ID cross-references',
     )
     include_coach_xref: bool = Field(
         default=True,
-        description="Populate coach ID cross-references"
+        description='Populate coach ID cross-references',
     )
     include_umpire_xref: bool = Field(
         default=True,
-        description="Populate umpire ID cross-references"
+        description='Populate umpire ID cross-references',
     )
     include_external_xref: bool = Field(
         default=False,
-        description="Populate external source ID cross-references"
+        description='Populate external source ID cross-references',
     )
-    
+
     # Data Sources
-    chadwick_register_files: Optional[List[str]] = Field(
+    chadwick_register_files: list[str] | None = Field(
         default=None,
-        description="Chadwick register files to ingest (None = all)"
+        description='Chadwick register files to ingest (None = all)',
     )
     gap_fill_from_lahman: bool = Field(
         default=True,
-        description="Use Lahman to fill gaps in player_xref"
+        description='Use Lahman to fill gaps in player_xref',
     )
-    
+
     # Validation
     run_validation_tests: bool = Field(
         default=True,
-        description="Run validation tests after population"
+        description='Run validation tests after population',
     )
-    min_coverage_pct: Dict[str, float] = Field(
+    min_coverage_pct: dict[str, float] = Field(
         default_factory=lambda: {
-            "player_mlb": 95.0,
-            "player_retrosheet": 20.0,
-            "team_retrosheet": 100.0,
-            "pitch_data": 100.0,
+            'player_mlb': 95.0,
+            'player_retrosheet': 20.0,
+            'team_retrosheet': 100.0,
+            'pitch_data': 100.0,
         },
-        description="Minimum coverage percentages for validation"
+        description='Minimum coverage percentages for validation',
     )
-    
+
     # Source-Preserved Options
     preserve_source_data: bool = Field(
         default=True,
-        description="Keep source data files for reproducibility"
+        description='Keep source data files for reproducibility',
     )
-    
-    @model_validator(mode="after")
+
+    @model_validator(mode='after')
     def validate_dependencies(self) -> BridgePopulationConfig:
         """Ensure required dependencies are enabled."""
         # game_xref requires team_xref
         if self.include_game_xref and not self.include_team_xref:
-            raise ValueError("game_xref requires team_xref (enable both)")
+            raise ValueError('game_xref requires team_xref (enable both)')
         return self
 
 
 class IngestOperationConfig(OperationConfig):
-    """
-    Configuration for data ingestion operations.
+    """Configuration for data ingestion operations.
     
     Controls how external data is downloaded and loaded into database.
     Supports multiple data sources with source-specific options.
@@ -399,97 +394,96 @@ class IngestOperationConfig(OperationConfig):
         )
         ```
     """
-    
+
     # Data Source
     source: DataSource = Field(
         ...,  # Required
-        description="Data source to ingest from"
+        description='Data source to ingest from',
     )
-    
+
     # Time Range (one of these required)
-    seasons: List[int] = Field(
+    seasons: list[int] = Field(
         default_factory=list,
-        description="Seasons to ingest (e.g., [2024, 2025])"
+        description='Seasons to ingest (e.g., [2024, 2025])',
     )
-    date_range: Optional[tuple[str, str]] = Field(
+    date_range: tuple[str, str] | None = Field(
         default=None,
-        description="Date range as (start_date, end_date) in YYYY-MM-DD format"
+        description='Date range as (start_date, end_date) in YYYY-MM-DD format',
     )
-    
+
     # Data Quality
     validate_checksums: bool = Field(
         default=True,
-        description="Verify data integrity with checksums"
+        description='Verify data integrity with checksums',
     )
     deduplicate: bool = Field(
         default=True,
-        description="Remove duplicate records"
+        description='Remove duplicate records',
     )
-    
+
     # API Configuration
     use_cache: bool = Field(
         default=True,
-        description="Use local cache for API responses"
+        description='Use local cache for API responses',
     )
     api_delay_seconds: float = Field(
         default=1.0,
         ge=0.0,
         le=60.0,
-        description="Delay between API calls (rate limiting)"
+        description='Delay between API calls (rate limiting)',
     )
     max_api_calls_per_minute: int = Field(
         default=60,
         ge=1,
         le=300,
-        description="Rate limit for API calls"
+        description='Rate limit for API calls',
     )
-    
+
     # Data Types to Fetch
     fetch_play_by_play: bool = Field(default=True)
     fetch_player_stats: bool = Field(default=True)
     fetch_team_stats: bool = Field(default=True)
     fetch_schedule: bool = Field(default=True)
     fetch_boxscores: bool = Field(default=True)
-    
+
     # Source-Specific Options
-    statcast_options: Dict[str, Any] = Field(
+    statcast_options: dict[str, Any] = Field(
         default_factory=dict,
-        description="Options specific to Statcast ingestion"
+        description='Options specific to Statcast ingestion',
     )
-    mlb_api_options: Dict[str, Any] = Field(
+    mlb_api_options: dict[str, Any] = Field(
         default_factory=dict,
-        description="Options specific to MLB API ingestion"
+        description='Options specific to MLB API ingestion',
     )
-    
-    @model_validator(mode="after")
+
+    @model_validator(mode='after')
     def validate_time_range(self) -> IngestOperationConfig:
         """Ensure either seasons or date_range is provided."""
         if not self.seasons and not self.date_range:
-            raise ValueError("Either seasons or date_range must be provided")
+            raise ValueError('Either seasons or date_range must be provided')
         if self.seasons and self.date_range:
-            raise ValueError("Provide either seasons OR date_range, not both")
+            raise ValueError('Provide either seasons OR date_range, not both')
         return self
-    
-    @field_validator("date_range")
+
+    @field_validator('date_range')
     @classmethod
-    def validate_date_range(cls, v: Optional[tuple[str, str]]) -> Optional[tuple[str, str]]:
+    def validate_date_range(cls, v: tuple[str, str] | None) -> tuple[str, str] | None:
         """Validate date range format."""
         if v is None:
             return v
         start, end = v
         try:
-            start_dt = datetime.strptime(start, "%Y-%m-%d")
-            end_dt = datetime.strptime(end, "%Y-%m-%d")
+            start_dt = datetime.strptime(start, '%Y-%m-%d')
+            end_dt = datetime.strptime(end, '%Y-%m-%d')
             if start_dt > end_dt:
-                raise ValueError("Start date must be before end date")
+                raise ValueError('Start date must be before end date')
         except ValueError as e:
-            raise ValueError(f"Invalid date range format: {e}. Use YYYY-MM-DD") from e
+            raise ValueError(f'Invalid date range format: {e}. Use YYYY-MM-DD') from e
         return v
 
 
 class ValidationConfig(OperationConfig):
-    """
-    Configuration for data validation operations.
+    """Configuration for data validation operations.
     
     Controls how data quality checks are performed.
     Supports comprehensive validation across all data sources.
@@ -516,26 +510,26 @@ class ValidationConfig(OperationConfig):
         )
         ```
     """
-    
+
     # Validation Types
-    validation_types: Set[str] = Field(
+    validation_types: set[str] = Field(
         default_factory=lambda: {
-            "completeness", "foreign_keys", "nulls", 
-            "duplicates", "freshness", "coverage"
+            'completeness', 'foreign_keys', 'nulls',
+            'duplicates', 'freshness', 'coverage',
         },
-        description="Types of validation to run"
+        description='Types of validation to run',
     )
-    
+
     # Scope
-    tables_to_validate: List[str] = Field(
+    tables_to_validate: list[str] = Field(
         default_factory=list,
-        description="Specific tables to validate (empty = all tables)"
+        description='Specific tables to validate (empty = all tables)',
     )
-    schemas_to_validate: List[str] = Field(
-        default_factory=lambda: ["core", "bridge", "features_pitch"],
-        description="Schemas to validate"
+    schemas_to_validate: list[str] = Field(
+        default_factory=lambda: ['core', 'bridge', 'features_pitch'],
+        description='Schemas to validate',
     )
-    
+
     # Checks
     check_foreign_keys: bool = Field(default=True)
     check_null_counts: bool = Field(default=True)
@@ -543,35 +537,34 @@ class ValidationConfig(OperationConfig):
     check_data_freshness: bool = Field(default=True)
     check_completeness: bool = Field(default=True)
     check_row_counts: bool = Field(default=True)
-    
+
     # Thresholds
-    coverage_thresholds: Dict[str, float] = Field(
+    coverage_thresholds: dict[str, float] = Field(
         default_factory=lambda: {
-            "core.games": 100.0,
-            "core.events": 95.0,
-            "bridge.player_xref": 95.0,
+            'core.games': 100.0,
+            'core.events': 95.0,
+            'bridge.player_xref': 95.0,
         },
-        description="Minimum coverage percentages by table"
+        description='Minimum coverage percentages by table',
     )
     max_null_pct: float = Field(
         default=5.0,
         ge=0.0,
         le=100.0,
-        description="Maximum acceptable NULL percentage"
+        description='Maximum acceptable NULL percentage',
     )
-    
+
     # Reporting
     generate_report: bool = Field(default=True)
     report_format: str = Field(
-        default="markdown",
-        pattern="^(markdown|json|html)$"
+        default='markdown',
+        pattern='^(markdown|json|html)$',
     )
     fail_on_warning: bool = Field(default=False)
 
 
 class ModelTrainingConfig(OperationConfig):
-    """
-    Configuration for model training operations.
+    """Configuration for model training operations.
     
     Controls how ML models are trained on populated features.
     Integrates with MLB Predict Framework.
@@ -604,62 +597,62 @@ class ModelTrainingConfig(OperationConfig):
         )
         ```
     """
-    
+
     # Model Configuration
     model_type: str = Field(
         ...,
-        description="Model type: xgboost, lightgbm, logistic, mlp"
+        description='Model type: xgboost, lightgbm, logistic, mlp',
     )
     target_variable: str = Field(
         ...,
-        description="Target variable to predict"
+        description='Target variable to predict',
     )
-    feature_categories: List[str] = Field(
-        default_factory=lambda: ["physics", "location", "context"],
-        description="Feature categories to include"
+    feature_categories: list[str] = Field(
+        default_factory=lambda: ['physics', 'location', 'context'],
+        description='Feature categories to include',
     )
-    
+
     # Data Split
-    train_seasons: List[int] = Field(
+    train_seasons: list[int] = Field(
         default_factory=list,
-        description="Seasons for training data"
+        description='Seasons for training data',
     )
-    test_seasons: List[int] = Field(
+    test_seasons: list[int] = Field(
         default_factory=list,
-        description="Seasons for test data"
+        description='Seasons for test data',
     )
     validation_pct: float = Field(
         default=0.2,
         ge=0.1,
         le=0.5,
-        description="Validation split percentage"
+        description='Validation split percentage',
     )
-    
+
     # Training Options
-    hyperparameters: Dict[str, Any] = Field(
+    hyperparameters: dict[str, Any] = Field(
         default_factory=dict,
-        description="Model hyperparameters"
+        description='Model hyperparameters',
     )
     cross_validate: bool = Field(default=True)
     cv_folds: int = Field(default=5, ge=2, le=10)
     early_stopping: bool = Field(default=True)
     early_stopping_rounds: int = Field(default=50, ge=10, le=200)
-    
+
     # Output
     save_model: bool = Field(default=True)
     register_in_db: bool = Field(default=True)
-    calibration_method: Optional[str] = Field(
-        default="platt",
-        pattern="^(platt|isotonic|none)$"
+    calibration_method: str | None = Field(
+        default='platt',
+        pattern='^(platt|isotonic|none)$',
     )
-    
+
     # Database Integration
     use_engineered_features: bool = Field(default=True)
     min_feature_population_pct: float = Field(
         default=90.0,
         ge=50.0,
         le=100.0,
-        description="Minimum feature population before training"
+        description='Minimum feature population before training',
     )
 
 

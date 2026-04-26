@@ -51,7 +51,7 @@ SELECT
     ROUND(SUM(p.er) * 9.0::NUMERIC / NULLIF(SUM(p.outs_played), 0), 2) AS era,
     ROUND(SUM(p.bb + p.h)::NUMERIC / NULLIF(SUM(p.outs_played), 0), 3) AS whip
 FROM core.plate_appearances AS p
-WHERE p.pitching_appearance = true
+WHERE p.pitching_appearance = TRUE
 GROUP BY p.player_id, p.season, p.team_id
 WITH DATA;
 
@@ -91,4 +91,3 @@ CREATE INDEX idx_player_game_panel_season ON features.player_game_panel (season)
 COMMENT ON MATERIALIZED VIEW features.player_season_batting IS 'Player-season aggregated batting statistics for panel data analysis';
 COMMENT ON MATERIALIZED VIEW features.player_season_pitching IS 'Player-season aggregated pitching statistics for panel data analysis';
 COMMENT ON MATERIALIZED VIEW features.player_game_panel IS 'Player-game level panel data for detailed analysis';
-

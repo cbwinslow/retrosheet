@@ -5,10 +5,7 @@
     "target": "win_probability",
     "feature_set": "basic",
     "model_family": "logistic_regression",
-    "families": [
-      "xgboost",
-      "lightgbm"
-    ],
+    "families": ["xgboost", "lightgbm"],
     "compare": false,
     "min_season": 2023,
     "max_season": 2024,
@@ -41,10 +38,7 @@
             "strikes",
             "home_score_diff"
           ],
-          "categorical": [
-            "batter_hand",
-            "pitcher_hand"
-          ]
+          "categorical": ["batter_hand", "pitcher_hand"]
         },
         "data": {
           "min_season": 2023,

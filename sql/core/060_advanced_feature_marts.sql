@@ -20,15 +20,15 @@ SELECT
     pitcher_hand,
     outs_before,
     start_bases,
-    count(*)::integer AS prior_pa,
+    COUNT(*)::integer AS prior_pa,
     season + 1 AS feature_season,
-    round(avg(is_hit::integer)::numeric, 4) AS prior_hit_rate,
-    round(avg(is_walk::integer)::numeric, 4) AS prior_walk_rate,
-    round(avg(is_strikeout::integer)::numeric, 4) AS prior_strikeout_rate,
-    round(avg(is_home_run::integer)::numeric, 4) AS prior_home_run_rate,
-    round(avg(is_reach_base::integer)::numeric, 4) AS prior_reach_base_rate,
-    round(avg(is_extra_base_hit::integer)::numeric, 4) AS prior_extra_base_hit_rate,
-    round(avg(final_batting_team_win::integer)::numeric, 4) AS prior_batting_team_win_rate
+    ROUND(AVG(is_hit::integer)::numeric, 4) AS prior_hit_rate,
+    ROUND(AVG(is_walk::integer)::numeric, 4) AS prior_walk_rate,
+    ROUND(AVG(is_strikeout::integer)::numeric, 4) AS prior_strikeout_rate,
+    ROUND(AVG(is_home_run::integer)::numeric, 4) AS prior_home_run_rate,
+    ROUND(AVG(is_reach_base::integer)::numeric, 4) AS prior_reach_base_rate,
+    ROUND(AVG(is_extra_base_hit::integer)::numeric, 4) AS prior_extra_base_hit_rate,
+    ROUND(AVG(final_batting_team_win::integer)::numeric, 4) AS prior_batting_team_win_rate
 FROM features.plate_appearance_examples
 GROUP BY
     season,
@@ -58,19 +58,19 @@ WITH seasons AS (
 SELECT
     seasons.feature_season,
     examples.batter_id,
-    count(*)::integer AS career_prior_pa,
-    count(*) FILTER (WHERE examples.is_at_bat)::integer AS career_prior_at_bats,
-    count(*) FILTER (WHERE examples.is_hit)::integer AS career_prior_hits,
-    count(*) FILTER (WHERE examples.is_walk)::integer AS career_prior_walks,
-    count(*) FILTER (WHERE examples.is_strikeout)::integer AS career_prior_strikeouts,
-    count(*) FILTER (WHERE examples.is_home_run)::integer AS career_prior_home_runs,
-    count(*) FILTER (WHERE examples.is_extra_base_hit)::integer AS career_prior_extra_base_hits,
-    round(avg(examples.is_hit::integer)::numeric, 4) AS career_prior_hit_rate,
-    round(avg(examples.is_walk::integer)::numeric, 4) AS career_prior_walk_rate,
-    round(avg(examples.is_strikeout::integer)::numeric, 4) AS career_prior_strikeout_rate,
-    round(avg(examples.is_home_run::integer)::numeric, 4) AS career_prior_home_run_rate,
-    round(avg(examples.is_reach_base::integer)::numeric, 4) AS career_prior_reach_base_rate,
-    round(avg(examples.is_extra_base_hit::integer)::numeric, 4) AS career_prior_extra_base_hit_rate
+    COUNT(*)::integer AS career_prior_pa,
+    COUNT(*) FILTER (WHERE examples.is_at_bat)::integer AS career_prior_at_bats,
+    COUNT(*) FILTER (WHERE examples.is_hit)::integer AS career_prior_hits,
+    COUNT(*) FILTER (WHERE examples.is_walk)::integer AS career_prior_walks,
+    COUNT(*) FILTER (WHERE examples.is_strikeout)::integer AS career_prior_strikeouts,
+    COUNT(*) FILTER (WHERE examples.is_home_run)::integer AS career_prior_home_runs,
+    COUNT(*) FILTER (WHERE examples.is_extra_base_hit)::integer AS career_prior_extra_base_hits,
+    ROUND(AVG(examples.is_hit::integer)::numeric, 4) AS career_prior_hit_rate,
+    ROUND(AVG(examples.is_walk::integer)::numeric, 4) AS career_prior_walk_rate,
+    ROUND(AVG(examples.is_strikeout::integer)::numeric, 4) AS career_prior_strikeout_rate,
+    ROUND(AVG(examples.is_home_run::integer)::numeric, 4) AS career_prior_home_run_rate,
+    ROUND(AVG(examples.is_reach_base::integer)::numeric, 4) AS career_prior_reach_base_rate,
+    ROUND(AVG(examples.is_extra_base_hit::integer)::numeric, 4) AS career_prior_extra_base_hit_rate
 FROM seasons
 INNER JOIN features.plate_appearance_examples AS examples
     ON seasons.feature_season > examples.season
@@ -92,18 +92,18 @@ WITH seasons AS (
 SELECT
     seasons.feature_season,
     examples.pitcher_id,
-    count(*)::integer AS career_prior_batters_faced,
-    count(*) FILTER (WHERE examples.is_hit)::integer AS career_prior_hits_allowed,
-    count(*) FILTER (WHERE examples.is_walk)::integer AS career_prior_walks_allowed,
-    count(*) FILTER (WHERE examples.is_strikeout)::integer AS career_prior_strikeouts,
-    count(*) FILTER (WHERE examples.is_home_run)::integer AS career_prior_home_runs_allowed,
-    count(*) FILTER (WHERE examples.is_extra_base_hit)::integer AS career_prior_extra_base_hits_allowed,
-    round(avg(examples.is_hit::integer)::numeric, 4) AS career_prior_hit_allowed_rate,
-    round(avg(examples.is_walk::integer)::numeric, 4) AS career_prior_walk_allowed_rate,
-    round(avg(examples.is_strikeout::integer)::numeric, 4) AS career_prior_strikeout_rate,
-    round(avg(examples.is_home_run::integer)::numeric, 4) AS career_prior_home_run_allowed_rate,
-    round(avg(examples.is_reach_base::integer)::numeric, 4) AS career_prior_reach_base_allowed_rate,
-    round(avg(examples.is_extra_base_hit::integer)::numeric, 4) AS career_prior_extra_base_hit_allowed_rate
+    COUNT(*)::integer AS career_prior_batters_faced,
+    COUNT(*) FILTER (WHERE examples.is_hit)::integer AS career_prior_hits_allowed,
+    COUNT(*) FILTER (WHERE examples.is_walk)::integer AS career_prior_walks_allowed,
+    COUNT(*) FILTER (WHERE examples.is_strikeout)::integer AS career_prior_strikeouts,
+    COUNT(*) FILTER (WHERE examples.is_home_run)::integer AS career_prior_home_runs_allowed,
+    COUNT(*) FILTER (WHERE examples.is_extra_base_hit)::integer AS career_prior_extra_base_hits_allowed,
+    ROUND(AVG(examples.is_hit::integer)::numeric, 4) AS career_prior_hit_allowed_rate,
+    ROUND(AVG(examples.is_walk::integer)::numeric, 4) AS career_prior_walk_allowed_rate,
+    ROUND(AVG(examples.is_strikeout::integer)::numeric, 4) AS career_prior_strikeout_rate,
+    ROUND(AVG(examples.is_home_run::integer)::numeric, 4) AS career_prior_home_run_allowed_rate,
+    ROUND(AVG(examples.is_reach_base::integer)::numeric, 4) AS career_prior_reach_base_allowed_rate,
+    ROUND(AVG(examples.is_extra_base_hit::integer)::numeric, 4) AS career_prior_extra_base_hit_allowed_rate
 FROM seasons
 INNER JOIN features.plate_appearance_examples AS examples
     ON seasons.feature_season > examples.season
@@ -120,23 +120,23 @@ CREATE MATERIALIZED VIEW features.batter_pitcher_prior_matchup_summary AS
 SELECT
     batter_id,
     pitcher_id,
-    count(*)::integer AS prior_matchup_pa,
-    count(*) FILTER (WHERE is_hit)::integer AS prior_matchup_hits,
-    count(*) FILTER (WHERE is_walk)::integer AS prior_matchup_walks,
-    count(*) FILTER (WHERE is_strikeout)::integer AS prior_matchup_strikeouts,
-    count(*) FILTER (WHERE is_home_run)::integer AS prior_matchup_home_runs,
+    COUNT(*)::integer AS prior_matchup_pa,
+    COUNT(*) FILTER (WHERE is_hit)::integer AS prior_matchup_hits,
+    COUNT(*) FILTER (WHERE is_walk)::integer AS prior_matchup_walks,
+    COUNT(*) FILTER (WHERE is_strikeout)::integer AS prior_matchup_strikeouts,
+    COUNT(*) FILTER (WHERE is_home_run)::integer AS prior_matchup_home_runs,
     season + 1 AS feature_season,
-    round(avg(is_hit::integer)::numeric, 4) AS prior_matchup_hit_rate,
-    round(avg(is_walk::integer)::numeric, 4) AS prior_matchup_walk_rate,
-    round(avg(is_strikeout::integer)::numeric, 4) AS prior_matchup_strikeout_rate,
-    round(avg(is_home_run::integer)::numeric, 4) AS prior_matchup_home_run_rate,
-    round(avg(is_reach_base::integer)::numeric, 4) AS prior_matchup_reach_base_rate
+    ROUND(AVG(is_hit::integer)::numeric, 4) AS prior_matchup_hit_rate,
+    ROUND(AVG(is_walk::integer)::numeric, 4) AS prior_matchup_walk_rate,
+    ROUND(AVG(is_strikeout::integer)::numeric, 4) AS prior_matchup_strikeout_rate,
+    ROUND(AVG(is_home_run::integer)::numeric, 4) AS prior_matchup_home_run_rate,
+    ROUND(AVG(is_reach_base::integer)::numeric, 4) AS prior_matchup_reach_base_rate
 FROM features.plate_appearance_examples
 WHERE
     batter_id IS NOT NULL
     AND pitcher_id IS NOT NULL
 GROUP BY season, batter_id, pitcher_id
-HAVING count(*) >= 2
+HAVING COUNT(*) >= 2
 WITH DATA;
 
 CREATE UNIQUE INDEX batter_pitcher_prior_matchup_summary_pk
@@ -147,13 +147,13 @@ ON features.batter_pitcher_prior_matchup_summary (feature_season, prior_matchup_
 CREATE MATERIALIZED VIEW features.park_prior_season_run_environment AS
 SELECT
     games.park_id,
-    count(*)::integer AS prior_games,
+    COUNT(*)::integer AS prior_games,
     games.season + 1 AS feature_season,
-    round(avg((games.home_score + games.away_score)::numeric), 3) AS prior_total_runs_per_game,
-    round(avg(games.home_score::numeric), 3) AS prior_home_runs_per_game,
-    round(avg(games.away_score::numeric), 3) AS prior_away_runs_per_game,
-    round(avg(games.home_win::integer)::numeric, 4) AS prior_home_win_rate,
-    round(avg(coalesce(games.temperature_f, 70))::numeric, 2) AS prior_avg_temperature_f
+    ROUND(AVG((games.home_score + games.away_score)::numeric), 3) AS prior_total_runs_per_game,
+    ROUND(AVG(games.home_score::numeric), 3) AS prior_home_runs_per_game,
+    ROUND(AVG(games.away_score::numeric), 3) AS prior_away_runs_per_game,
+    ROUND(AVG(games.home_win::integer)::numeric, 4) AS prior_home_win_rate,
+    ROUND(AVG(COALESCE(games.temperature_f, 70))::numeric, 2) AS prior_avg_temperature_f
 FROM core.games AS games
 WHERE games.park_id IS NOT NULL
 GROUP BY games.season, games.park_id
@@ -194,11 +194,11 @@ WITH team_games AS (
 rolling AS (
     SELECT
         team_games.*,
-        count(*) OVER prior_games AS rolling_30_games,
-        sum(team_games.won::integer) OVER prior_games AS rolling_30_wins,
-        avg(team_games.won::integer) OVER prior_games AS rolling_30_win_rate,
-        avg(team_games.runs_scored) OVER prior_games AS rolling_30_runs_scored_per_game,
-        avg(team_games.runs_allowed) OVER prior_games AS rolling_30_runs_allowed_per_game
+        COUNT(*) OVER prior_games AS rolling_30_games,
+        SUM(team_games.won::integer) OVER prior_games AS rolling_30_wins,
+        AVG(team_games.won::integer) OVER prior_games AS rolling_30_win_rate,
+        AVG(team_games.runs_scored) OVER prior_games AS rolling_30_runs_scored_per_game,
+        AVG(team_games.runs_allowed) OVER prior_games AS rolling_30_runs_allowed_per_game
     FROM team_games
     WINDOW prior_games AS (
         PARTITION BY team_id
@@ -214,11 +214,11 @@ SELECT
     team_id,
     opponent_team_id,
     is_home_team,
-    coalesce(rolling_30_games, 0)::integer AS rolling_30_games,
-    coalesce(rolling_30_wins, 0)::integer AS rolling_30_wins,
-    round(rolling_30_win_rate::numeric, 4) AS rolling_30_win_rate,
-    round(rolling_30_runs_scored_per_game::numeric, 3) AS rolling_30_runs_scored_per_game,
-    round(rolling_30_runs_allowed_per_game::numeric, 3) AS rolling_30_runs_allowed_per_game
+    COALESCE(rolling_30_games, 0)::integer AS rolling_30_games,
+    COALESCE(rolling_30_wins, 0)::integer AS rolling_30_wins,
+    ROUND(rolling_30_win_rate::numeric, 4) AS rolling_30_win_rate,
+    ROUND(rolling_30_runs_scored_per_game::numeric, 3) AS rolling_30_runs_scored_per_game,
+    ROUND(rolling_30_runs_allowed_per_game::numeric, 3) AS rolling_30_runs_allowed_per_game
 FROM rolling
 WITH DATA;
 
@@ -380,31 +380,30 @@ LEFT JOIN features.team_rolling_30_game_summary AS away_form
 CREATE OR REPLACE VIEW features.advanced_feature_mart_validation_summary AS
 SELECT
     'features.pa_context_coarse_prior_season_rates' AS object_name,
-    count(*) AS row_count
+    COUNT(*) AS row_count
 FROM features.pa_context_coarse_prior_season_rates
 UNION ALL
 SELECT
     'features.batter_career_prior_pa_summary',
-    count(*)
+    COUNT(*)
 FROM features.batter_career_prior_pa_summary
 UNION ALL
 SELECT
     'features.pitcher_career_prior_pa_summary',
-    count(*)
+    COUNT(*)
 FROM features.pitcher_career_prior_pa_summary
 UNION ALL
 SELECT
     'features.batter_pitcher_prior_matchup_summary',
-    count(*)
+    COUNT(*)
 FROM features.batter_pitcher_prior_matchup_summary
 UNION ALL
 SELECT
     'features.park_prior_season_run_environment',
-    count(*)
+    COUNT(*)
 FROM features.park_prior_season_run_environment
 UNION ALL
 SELECT
     'features.team_rolling_30_game_summary',
-    count(*)
+    COUNT(*)
 FROM features.team_rolling_30_game_summary;
-

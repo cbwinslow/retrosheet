@@ -97,4 +97,3 @@ COMMENT ON PROCEDURE bridge.populate_player_xref () IS
 -- Grant execute permission
 -- ============================================================================
 GRANT EXECUTE ON PROCEDURE bridge.populate_player_xref() TO postgres;
-

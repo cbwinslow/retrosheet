@@ -2,6 +2,81 @@
 
 This project builds a reproducible baseball prediction warehouse from free/open data sources.
 
+## Current Migration Phase (April 2026)
+
+The repository is undergoing a **phased migration** to a unified `baseball` CLI architecture. Before making changes, review:
+
+| Document | Purpose |
+|----------|---------|
+| `docs/migration_plan.md` | Overall migration strategy and phases |
+| `docs/migration_map.md` | File-to-file mapping (old → new locations) |
+| `docs/migration_backlog.md` | Detailed task list with priorities |
+| `docs/architecture.md` | Target architecture specification |
+| `docs/keys_and_grains.md` | Entity keys and table grains |
+
+### Current Phase: Phase 6-7 In Progress
+
+Phase 0-5 are complete. Phase 6-7 (Feature/Model Expansion + Serving) is in progress with Win Expectancy, Leverage Index, and Model Registry foundation complete.
+
+**Completed Work**:
+- ✅ Phase 0: Migration planning documents
+- ✅ Phase 1: `baseball` CLI framework, source adapter pattern, admin SQL tables
+- ✅ Phase 2: All 5 historical source adapters (MLB, Retrosheet, Statcast, ESPN, Lahman)
+- ✅ Phase 3: Live data source adapter (`LiveMlbSource`), real-time prediction pipeline
+- ✅ Phase 5: Bridge layer (`XrefManager`, `player_xref.py`, `team_xref.py`, `game_xref.py`)
+- 🔄 Phase 6-7: WE/LI features, Model Registry SQL, feature calculators foundation
+
+### GitHub Issues
+
+| Issue | Phase | Title | Status |
+|-------|-------|-------|--------|
+| [#92](https://github.com/cbwinslow/retrosheet/issues/92) | 0 | [MIGRATION] Phase 0 Complete: Migration Planning | ✅ Complete |
+| [#93](https://github.com/cbwinslow/retrosheet/issues/93) | 1 | [MIGRATION] Phase 1: Framework Foundation | ✅ Complete |
+| [#94](https://github.com/cbwinslow/retrosheet/issues/94) | 2 | [MIGRATION] Phase 2: Historical Wrapper | ✅ Complete |
+| [#95](https://github.com/cbwinslow/retrosheet/issues/95) | 3 | [MIGRATION] Phase 3: MLB Live Vertical Slice | ✅ Complete |
+| [#96](https://github.com/cbwinslow/retrosheet/issues/96) | 4 | [MIGRATION] Phase 4: ESPN + Statcast | ✅ Merged into Phase 2 |
+| [#97](https://github.com/cbwinslow/retrosheet/issues/97) | 5 | [MIGRATION] Phase 5: Bridge Consolidation | ✅ Complete |
+| [#98](https://github.com/cbwinslow/retrosheet/issues/98) | 6-7 | [MIGRATION] Phase 6-7: Feature/Model + Serving | 🔄 In Progress |
+
+### Source Adapters Available
+
+| Source | Adapter | CLI Commands | Status |
+|--------|---------|--------------|--------|
+| MLB Stats API | `MlbSource` | `mlb download/ingest/validate/today` | ✅ Complete |
+| Retrosheet | `RetrosheetSource` | `retrosheet download/ingest/validate/seasons` | ✅ Complete |
+| Statcast | `StatcastSource` | `statcast download/ingest/validate/seasons` | ✅ Complete |
+| ESPN | `EspnSource` | `espn download/ingest/validate/seasons` | ✅ Complete |
+| Lahman | `LahmanSource` | `lahman download/ingest/validate/tables` | ✅ Complete |
+| Live MLB | `LiveMlbSource` | `live games/watch/poll/predict/server` | 🔄 In Progress |
+| Bridge | `XrefManager` | `bridge resolve/match/lookup` | ✅ Complete |
+
+### Production Deployment
+
+**Domain**: `cloudcurio.cc`
+
+| Service | URL | Status |
+|---------|-----|--------|
+| Dashboard | `https://cloudcurio.cc/dashboard` | ⏳ Pending deploy |
+| WebSocket | `wss://cloudcurio.cc/ws` | ⏳ Pending deploy |
+| API | `https://predictions.cloudcurio.cc` | ⏳ Pending deploy |
+
+**Deployment Artifacts**:
+- `docs/deployment/systemd/mlb-live-server.service` - Systemd service
+- `Dockerfile.live` - Docker container
+- `ecosystem.config.js` - PM2 configuration
+- `docs/deployment/nginx/mlb-live-server.conf` - Nginx reverse proxy
+
+### Agent Specialization
+
+| Agent Type | Guidance File | Scope |
+|------------|---------------|-------|
+| Architecture | `docs/agents/architecture_agent.md` | System design, data flow, integration patterns |
+| Python | `docs/agents/python_agent.md` | Source adapters, CLI, services, models |
+| SQL | `docs/agents/sql_agent.md` | Schema, migrations, queries, optimization |
+| ML | `docs/agents/ml_agent.md` | Feature engineering, model training, inference |
+| Live Data | `docs/agents/live_agent.md` | Real-time ingestion, streaming, prediction loops |
+| Documentation | `docs/agents/docs_agent.md` | Docs, comments, FILE_INVENTORY, PROJECT_LOG |
+
 ## Mission
 
 - Build a PostgreSQL warehouse from Retrosheet historical data.

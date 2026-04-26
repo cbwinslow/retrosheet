@@ -16,20 +16,19 @@ Usage:
     uv run python scripts/analysis/pitch_clustering_analysis.py --method gmm --n-clusters 12
 """
 
-import os
-import json
 import argparse
+import json
+import os
 from datetime import datetime
-from typing import Optional, List
 
 import numpy as np
 import pandas as pd
 import psycopg2
-from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.cluster import KMeans
+from sklearn.metrics import calinski_harabasz_score, silhouette_score
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-from sklearn.metrics import silhouette_score, calinski_harabasz_score
+
 
 DB_URL = os.getenv('DATABASE_URL', 'postgresql://localhost:5432/retrosheet')
 
@@ -37,7 +36,7 @@ DB_URL = os.getenv('DATABASE_URL', 'postgresql://localhost:5432/retrosheet')
 def load_pitch_data(conn, sample_size: int = 100000) -> pd.DataFrame:
     """Load pitch data with physics characteristics."""
 
-    print(f"Loading {sample_size:,} pitches for clustering...")
+    print(f'Loading {sample_size:,} pitches for clustering...')
 
     query = """
     SELECT
@@ -71,7 +70,7 @@ def load_pitch_data(conn, sample_size: int = 100000) -> pd.DataFrame:
     """
 
     df = pd.read_sql(query, conn, params={'limit': sample_size})
-    print(f"Loaded {len(df):,} pitches")
+    print(f'Loaded {len(df):,} pitches')
 
     return df
 
@@ -95,7 +94,7 @@ def prepare_features(df: pd.DataFrame, feature_set: str = 'physics') -> tuple:
 
     # Select available features
     available = [f for f in features if f in df.columns]
-    print(f"Using {len(available)} features: {available}")
+    print(f'Using {len(available)} features: {available}')
 
     X = df[available].values
 
@@ -104,7 +103,7 @@ def prepare_features(df: pd.DataFrame, feature_set: str = 'physics') -> tuple:
     X_clean = X[mask]
     df_clean = df.iloc[mask].copy()
 
-    print(f"Clean data shape: {X_clean.shape} (removed {len(df) - len(df_clean)} rows with NaN)")
+    print(f'Clean data shape: {X_clean.shape} (removed {len(df) - len(df_clean)} rows with NaN)')
 
     # Standardize
     scaler = StandardScaler()
@@ -116,7 +115,7 @@ def prepare_features(df: pd.DataFrame, feature_set: str = 'physics') -> tuple:
 def run_kmeans(X: np.ndarray, n_clusters: int, df: pd.DataFrame) -> dict:
     """Run K-Means clustering."""
 
-    print(f"\nRunning K-Means with {n_clusters} clusters...")
+    print(f'\nRunning K-Means with {n_clusters} clusters...')
 
     kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
     labels = kmeans.fit_predict(X)
@@ -125,8 +124,8 @@ def run_kmeans(X: np.ndarray, n_clusters: int, df: pd.DataFrame) -> dict:
     silhouette = silhouette_score(X, labels)
     calinski = calinski_harabasz_score(X, labels)
 
-    print(f"  Silhouette score: {silhouette:.3f}")
-    print(f"  Calinski-Harabasz: {calinski:.1f}")
+    print(f'  Silhouette score: {silhouette:.3f}')
+    print(f'  Calinski-Harabasz: {calinski:.1f}')
 
     # Cluster analysis
     df['cluster'] = labels
@@ -137,12 +136,12 @@ def run_kmeans(X: np.ndarray, n_clusters: int, df: pd.DataFrame) -> dict:
 
         stats = {
             'cluster_id': int(cluster_id),
-            'n_pitches': int(len(cluster_data)),
+            'n_pitches': len(cluster_data),
             'pct_of_data': round(len(cluster_data) / len(df) * 100, 2),
             'velocity_mean': round(cluster_data['velocity'].mean(), 2) if 'velocity' in cluster_data else None,
             'velocity_std': round(cluster_data['velocity'].std(), 2) if 'velocity' in cluster_data else None,
             'top_pitch_types': cluster_data['pitch_type'].value_counts().head(3).to_dict() if 'pitch_type' in cluster_data else {},
-            'inertia': float(kmeans.inertia_)
+            'inertia': float(kmeans.inertia_),
         }
         cluster_stats.append(stats)
 
@@ -157,14 +156,14 @@ def run_kmeans(X: np.ndarray, n_clusters: int, df: pd.DataFrame) -> dict:
         'inertia': float(kmeans.inertia_),
         'cluster_centers': kmeans.cluster_centers_.tolist(),
         'cluster_stats': cluster_stats,
-        'labels': labels.tolist()
+        'labels': labels.tolist(),
     }
 
 
 def run_gmm(X: np.ndarray, n_clusters: int, df: pd.DataFrame) -> dict:
     """Run Gaussian Mixture Model clustering."""
 
-    print(f"\nRunning Gaussian Mixture Model with {n_clusters} components...")
+    print(f'\nRunning Gaussian Mixture Model with {n_clusters} components...')
 
     gmm = GaussianMixture(n_components=n_clusters, random_state=42, n_init=3)
     labels = gmm.fit_predict(X)
@@ -175,8 +174,8 @@ def run_gmm(X: np.ndarray, n_clusters: int, df: pd.DataFrame) -> dict:
     aic = gmm.aic(X)
     bic = gmm.bic(X)
 
-    print(f"  Silhouette score: {silhouette:.3f}")
-    print(f"  AIC: {aic:.1f}, BIC: {bic:.1f}")
+    print(f'  Silhouette score: {silhouette:.3f}')
+    print(f'  AIC: {aic:.1f}, BIC: {bic:.1f}')
 
     # Cluster analysis
     df['cluster'] = labels
@@ -188,12 +187,12 @@ def run_gmm(X: np.ndarray, n_clusters: int, df: pd.DataFrame) -> dict:
 
         stats = {
             'cluster_id': int(cluster_id),
-            'n_pitches': int(len(cluster_data)),
+            'n_pitches': len(cluster_data),
             'pct_of_data': round(len(cluster_data) / len(df) * 100, 2),
             'mean_confidence': round(cluster_data['max_prob'].mean(), 3),
             'velocity_mean': round(cluster_data['velocity'].mean(), 2) if 'velocity' in cluster_data else None,
             'top_pitch_types': cluster_data['pitch_type'].value_counts().head(3).to_dict() if 'pitch_type' in cluster_data else {},
-            'weight': float(gmm.weights_[cluster_id])
+            'weight': float(gmm.weights_[cluster_id]),
         }
         cluster_stats.append(stats)
 
@@ -207,14 +206,14 @@ def run_gmm(X: np.ndarray, n_clusters: int, df: pd.DataFrame) -> dict:
         'bic': float(bic),
         'cluster_stats': cluster_stats,
         'labels': labels.tolist(),
-        'covariance_type': gmm.covariance_type
+        'covariance_type': gmm.covariance_type,
     }
 
 
 def find_optimal_clusters(X: np.ndarray, max_clusters: int = 15) -> dict:
     """Find optimal cluster count using elbow method and silhouette."""
 
-    print(f"\nFinding optimal cluster count (2 to {max_clusters})...")
+    print(f'\nFinding optimal cluster count (2 to {max_clusters})...')
 
     results = []
 
@@ -227,10 +226,10 @@ def find_optimal_clusters(X: np.ndarray, max_clusters: int = 15) -> dict:
         results.append({
             'k': k,
             'inertia': float(kmeans.inertia_),
-            'silhouette': float(silhouette)
+            'silhouette': float(silhouette),
         })
 
-        print(f"  k={k:2d}: silhouette={silhouette:.3f}, inertia={kmeans.inertia_:.1f}")
+        print(f'  k={k:2d}: silhouette={silhouette:.3f}, inertia={kmeans.inertia_:.1f}')
 
     # Find elbow (simplified - max silhouette)
     best_k = max(results, key=lambda x: x['silhouette'])['k']
@@ -238,7 +237,7 @@ def find_optimal_clusters(X: np.ndarray, max_clusters: int = 15) -> dict:
     return {
         'optimal_k': int(best_k),
         'silhouette_scores': {r['k']: r['silhouette'] for r in results},
-        'inertias': {r['k']: r['inertia'] for r in results}
+        'inertias': {r['k']: r['inertia'] for r in results},
     }
 
 
@@ -253,17 +252,17 @@ def save_results(results: dict, output_dir: str = 'models/clustering'):
     with open(output_file, 'w') as f:
         json.dump(results, f, indent=2)
 
-    print(f"\nResults saved to: {output_file}")
+    print(f'\nResults saved to: {output_file}')
 
     # Print summary
-    print("\n" + "="*60)
-    print("CLUSTERING SUMMARY")
-    print("="*60)
+    print('\n' + '='*60)
+    print('CLUSTERING SUMMARY')
+    print('='*60)
     print(f"Method: {results['method']}")
     print(f"Clusters: {results['n_clusters']}")
     print(f"Silhouette: {results['silhouette_score']:.3f}")
 
-    print("\nCluster Sizes:")
+    print('\nCluster Sizes:')
     for stat in results['cluster_stats']:
         print(f"  Cluster {stat['cluster_id']}: {stat['n_pitches']:,} pitches ({stat['pct_of_data']}%)")
         if stat.get('velocity_mean'):
@@ -289,13 +288,13 @@ def main():
                        help='Which features to use')
     args = parser.parse_args()
 
-    print("="*70)
-    print("PITCH CLUSTERING ANALYSIS")
-    print("="*70)
-    print(f"Method: {args.method}")
-    print(f"Feature set: {args.feature_set}")
-    print(f"Sample size: {args.sample_size:,}")
-    print("="*70)
+    print('='*70)
+    print('PITCH CLUSTERING ANALYSIS')
+    print('='*70)
+    print(f'Method: {args.method}')
+    print(f'Feature set: {args.feature_set}')
+    print(f'Sample size: {args.sample_size:,}')
+    print('='*70)
 
     conn = psycopg2.connect(DB_URL)
 
@@ -318,7 +317,7 @@ def main():
         elif args.method == 'gmm':
             results = run_gmm(X, args.n_clusters, df_clean)
         else:
-            print(f"Method {args.method} not yet implemented")
+            print(f'Method {args.method} not yet implemented')
             return
 
         # Add metadata
@@ -330,9 +329,9 @@ def main():
         # Save
         save_results(results)
 
-        print("\n" + "="*70)
-        print("ANALYSIS COMPLETE")
-        print("="*70)
+        print('\n' + '='*70)
+        print('ANALYSIS COMPLETE')
+        print('='*70)
 
     finally:
         conn.close()

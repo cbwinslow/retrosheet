@@ -207,6 +207,99 @@ Notes:
 - Logs saved to `logs/bridge_orchestrator_YYYYMMDD_HHMMSS.log`
 - Returns exit code 0 on success, 1 on failure (suitable for CI/CD)
 
+## Source Adapter Data Ingestion (Unified CLI)
+
+Purpose: unified data ingestion from all sources via the `baseball` CLI and source adapter pattern.
+
+### Overview
+
+All data sources now implement the `BaseSource` interface with consistent `download()`, `ingest()`, and `validate()` methods. Each source is accessible via `baseball <source> <command>`.
+
+| Source | Adapter | Years | CLI Group |
+|--------|---------|-------|-----------|
+| Retrosheet | `RetrosheetSource` | 1916-2024 | `baseball retrosheet` |
+| Lahman | `LahmanSource` | 1871-2023 | `baseball lahman` |
+| MLB Stats API | `MlbSource` | 2015-2025 | `baseball mlb` |
+| Statcast | `StatcastSource` | 2015-2025 | `baseball statcast` |
+| ESPN | `EspnSource` | 2005-2025 | `baseball espn` |
+
+### Download Commands
+
+```bash
+# Retrosheet - historical event files
+baseball retrosheet download --year 2024                    # Single year
+baseball retrosheet download --start 2000 --end 2024        # Year range
+baseball retrosheet seasons                                # List available seasons
+
+# Lahman - complete database
+baseball lahman download                                   # Download archive
+baseball lahman tables                                     # Show table counts
+
+# MLB Stats API - live and historical
+baseball mlb download --date 2025-04-26                    # Single date
+baseball mlb download --season 2025                        # Full season
+baseball mlb download --game 12345                       # Specific game
+baseball mlb today                                         # Today's data
+
+# Statcast - pitch-level data
+baseball statcast download --season 2024                   # Season data
+baseball statcast seasons                                 # List seasons (2015+)
+
+# ESPN - schedules and stats
+baseball espn download --season 2024                      # Season data
+baseball espn seasons                                    # List seasons (2005+)
+```
+
+### Ingest Commands
+
+```bash
+# All sources follow the same pattern
+baseball retrosheet ingest
+baseball lahman ingest
+baseball mlb ingest
+baseball statcast ingest
+baseball espn ingest
+```
+
+Each ingest command:
+1. Loads downloaded data into raw_* schema tables
+2. Runs validation checks
+3. Reports row counts and any errors
+
+### Validation Commands
+
+```bash
+# Validate data quality for each source
+baseball retrosheet validate
+baseball lahman validate
+baseball mlb validate
+baseball statcast validate
+baseball espn validate
+```
+
+Validation checks:
+- Table existence and row counts
+- Required columns present
+- Data freshness (recent data available)
+- Cross-reference integrity
+
+### Implementation Details
+
+**Source Adapter Location**: `mlb_predict/sources/`
+
+| File | Purpose |
+|------|---------|
+| `mlb_predict/sources/base.py` | BaseSource ABC, result dataclasses |
+| `mlb_predict/sources/retrosheet.py` | Chadwick event file wrapper |
+| `mlb_predict/sources/lahman.py` | Lahman CSV loader |
+| `mlb_predict/sources/mlb.py` | MLB Stats API wrapper |
+| `mlb_predict/sources/statcast.py` | pybaseball wrapper |
+| `mlb_predict/sources/espn.py` | ESPN API wrapper |
+
+**CLI Location**: `baseball/cli.py`
+
+Commands dispatch to source adapters with consistent error handling and console output via `rich`.
+
 ### Ongoing Live Data Ingestion
 
 Command:

@@ -14,26 +14,30 @@ Usage:
     uv run python scripts/pitch_models/train_swing_probability.py
 """
 
-import os
-import sys
-import time
-import json
-import pickle
 import argparse
+import json
+import os
+import pickle
+import time
 from datetime import datetime
-from typing import Dict, List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split, StratifiedKFold
-from sklearn.metrics import (
-    accuracy_score, precision_score, recall_score, f1_score,
-    roc_auc_score, log_loss, classification_report, confusion_matrix,
-    brier_score_loss, roc_curve, precision_recall_curve
-)
-import xgboost as xgb
 import psycopg2
-from psycopg2 import sql
+import xgboost as xgb
+from sklearn.metrics import (
+    accuracy_score,
+    brier_score_loss,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    log_loss,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
+from sklearn.model_selection import train_test_split
+
 
 # Configuration
 DB_URL = os.getenv('DATABASE_URL', 'postgresql://localhost:5432/retrosheet')
@@ -44,7 +48,7 @@ RESULTS_FILE = f'{MODEL_DIR}/swing_results.json'
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 
-def get_swing_features() -> List[str]:
+def get_swing_features() -> list[str]:
     """
     Features for swing probability prediction.
     Based on research showing swing decisions depend on:
@@ -98,7 +102,7 @@ def get_swing_features() -> List[str]:
     ]
 
 
-def load_swing_data(conn, sample_size: Optional[int] = None) -> pd.DataFrame:
+def load_swing_data(conn, sample_size: int | None = None) -> pd.DataFrame:
     """
     Load training data for swing probability model.
 
@@ -106,10 +110,10 @@ def load_swing_data(conn, sample_size: Optional[int] = None) -> pd.DataFrame:
     - All pitches where we know if batter swung (is_swing IS NOT NULL)
     - Excludes pitchouts, intentional balls, hit by pitch (non-swingable pitches)
     """
-    print("Loading swing probability training data...")
+    print('Loading swing probability training data...')
 
     features = get_swing_features()
-    feature_cols = ', '.join([f"ef.{f}" for f in features])
+    feature_cols = ', '.join([f'ef.{f}' for f in features])
 
     # Build query - exclude non-swingable pitch types
     query = f"""
@@ -131,25 +135,25 @@ def load_swing_data(conn, sample_size: Optional[int] = None) -> pd.DataFrame:
     """
 
     if sample_size:
-        query += f" ORDER BY RANDOM() LIMIT {sample_size}"
+        query += f' ORDER BY RANDOM() LIMIT {sample_size}'
     else:
         # Full dataset - stratified by swing rate
-        query += " ORDER BY RANDOM()"
+        query += ' ORDER BY RANDOM()'
 
-    print(f"Executing query...")
+    print('Executing query...')
     start_time = time.time()
     df = pd.read_sql(query, conn)
     elapsed = time.time() - start_time
 
-    print(f"Loaded {len(df):,} rows in {elapsed:.1f}s")
-    print(f"Class distribution:")
+    print(f'Loaded {len(df):,} rows in {elapsed:.1f}s')
+    print('Class distribution:')
     print(df['target'].value_counts())
     print(f"Swing rate: {df['target'].mean():.1%}")
 
     return df
 
 
-def prepare_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
+def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     """
     Prepare features for XGBoost training.
 
@@ -158,7 +162,7 @@ def prepare_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
     - Missing value imputation
     - Feature engineering for model
     """
-    print("\nPreparing features...")
+    print('\nPreparing features...')
 
     # Separate target
     y = df['target'].astype(int)
@@ -181,13 +185,13 @@ def prepare_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
     for col in numeric_cols:
         X[col] = X[col].fillna(X[col].median())
 
-    print(f"Feature matrix shape: {X.shape}")
-    print(f"Features: {list(X.columns)[:10]}... ({len(X.columns)} total)")
+    print(f'Feature matrix shape: {X.shape}')
+    print(f'Features: {list(X.columns)[:10]}... ({len(X.columns)} total)')
 
     return X, y
 
 
-def train_swing_model(X: pd.DataFrame, y: pd.Series) -> Dict:
+def train_swing_model(X: pd.DataFrame, y: pd.Series) -> dict:
     """
     Train XGBoost binary classifier for swing probability.
 
@@ -197,23 +201,23 @@ def train_swing_model(X: pd.DataFrame, y: pd.Series) -> Dict:
     - Class balancing (scale_pos_weight)
     - Cross-validation for robust evaluation
     """
-    print("\n" + "="*60)
-    print("TRAINING SWING PROBABILITY MODEL")
-    print("="*60)
+    print('\n' + '='*60)
+    print('TRAINING SWING PROBABILITY MODEL')
+    print('='*60)
 
     # Stratified split to maintain class balance
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+        X, y, test_size=0.2, random_state=42, stratify=y,
     )
 
-    print(f"\nTrain set: {len(X_train):,} samples")
-    print(f"Test set: {len(X_test):,} samples")
-    print(f"Train swing rate: {y_train.mean():.1%}")
-    print(f"Test swing rate: {y_test.mean():.1%}")
+    print(f'\nTrain set: {len(X_train):,} samples')
+    print(f'Test set: {len(X_test):,} samples')
+    print(f'Train swing rate: {y_train.mean():.1%}')
+    print(f'Test swing rate: {y_test.mean():.1%}')
 
     # Calculate class weight for imbalance (typically ~63% swing, ~37% take)
     scale_pos_weight = (y_train == 0).sum() / (y_train == 1).sum()
-    print(f"Scale pos weight: {scale_pos_weight:.2f}")
+    print(f'Scale pos weight: {scale_pos_weight:.2f}')
 
     # XGBoost parameters optimized for swing prediction
     # Research shows swing is influenced by multiple interacting factors
@@ -235,24 +239,24 @@ def train_swing_model(X: pd.DataFrame, y: pd.Series) -> Dict:
         'tree_method': 'hist',  # Faster training
     }
 
-    print(f"\nTraining XGBoost with parameters:")
+    print('\nTraining XGBoost with parameters:')
     for k, v in params.items():
-        print(f"  {k}: {v}")
+        print(f'  {k}: {v}')
 
     # Train with early stopping
     model = xgb.XGBClassifier(**params)
 
     eval_set = [(X_train, y_train), (X_test, y_test)]
 
-    print("\nTraining...")
+    print('\nTraining...')
     start_time = time.time()
     model.fit(
         X_train, y_train,
         eval_set=eval_set,
-        verbose=False
+        verbose=False,
     )
     train_time = time.time() - start_time
-    print(f"Training completed in {train_time:.1f}s")
+    print(f'Training completed in {train_time:.1f}s')
 
     # Predictions
     y_pred = model.predict(X_test)
@@ -274,12 +278,12 @@ def train_swing_model(X: pd.DataFrame, y: pd.Series) -> Dict:
             'roc_auc': float(roc_auc_score(y_test, y_pred_proba)),
             'log_loss': float(log_loss(y_test, y_pred_proba)),
             'brier_score': float(brier_score_loss(y_test, y_pred_proba)),
-        }
+        },
     }
 
-    print("\n" + "="*60)
-    print("EVALUATION RESULTS")
-    print("="*60)
+    print('\n' + '='*60)
+    print('EVALUATION RESULTS')
+    print('='*60)
     print(f"\nAccuracy:  {results['metrics']['accuracy']:.4f}")
     print(f"Precision: {results['metrics']['precision']:.4f}")
     print(f"Recall:    {results['metrics']['recall']:.4f}")
@@ -288,23 +292,23 @@ def train_swing_model(X: pd.DataFrame, y: pd.Series) -> Dict:
     print(f"Log Loss:  {results['metrics']['log_loss']:.4f}")
     print(f"Brier:     {results['metrics']['brier_score']:.4f}")
 
-    print("\nClassification Report:")
+    print('\nClassification Report:')
     print(classification_report(y_test, y_pred, target_names=['Take', 'Swing']))
 
-    print("\nConfusion Matrix:")
+    print('\nConfusion Matrix:')
     cm = confusion_matrix(y_test, y_pred)
-    print(f"                 Predicted")
-    print(f"                 Take   Swing")
-    print(f"Actual Take    {cm[0,0]:5d}  {cm[0,1]:5d}  (Specificity: {cm[0,0]/(cm[0,0]+cm[0,1]):.3f})")
-    print(f"       Swing   {cm[1,0]:5d}  {cm[1,1]:5d}  (Sensitivity: {cm[1,1]/(cm[1,0]+cm[1,1]):.3f})")
+    print('                 Predicted')
+    print('                 Take   Swing')
+    print(f'Actual Take    {cm[0,0]:5d}  {cm[0,1]:5d}  (Specificity: {cm[0,0]/(cm[0,0]+cm[0,1]):.3f})')
+    print(f'       Swing   {cm[1,0]:5d}  {cm[1,1]:5d}  (Sensitivity: {cm[1,1]/(cm[1,0]+cm[1,1]):.3f})')
 
     # Feature importance
     importance = pd.DataFrame({
         'feature': X.columns,
-        'importance': model.feature_importances_
+        'importance': model.feature_importances_,
     }).sort_values('importance', ascending=False)
 
-    print("\nTop 15 Most Important Features:")
+    print('\nTop 15 Most Important Features:')
     print(importance.head(15).to_string(index=False))
 
     # Save model
@@ -312,7 +316,7 @@ def train_swing_model(X: pd.DataFrame, y: pd.Series) -> Dict:
     model_file = f'{MODEL_DIR}/swing_xgboost_{timestamp}.pkl'
     with open(model_file, 'wb') as f:
         pickle.dump(model, f)
-    print(f"\nModel saved to: {model_file}")
+    print(f'\nModel saved to: {model_file}')
 
     # Save results
     results['model_file'] = model_file
@@ -321,7 +325,7 @@ def train_swing_model(X: pd.DataFrame, y: pd.Series) -> Dict:
 
     with open(RESULTS_FILE, 'w') as f:
         json.dump(results, f, indent=2)
-    print(f"Results saved to: {RESULTS_FILE}")
+    print(f'Results saved to: {RESULTS_FILE}')
 
     return results
 
@@ -334,9 +338,9 @@ def analyze_by_context(y_test: pd.Series, y_pred_proba: np.ndarray, X_test: pd.D
     - Higher swing rate on pitches in zone
     - Pitch type differences (more swings at fastballs)
     """
-    print("\n" + "="*60)
-    print("CONTEXTUAL ANALYSIS")
-    print("="*60)
+    print('\n' + '='*60)
+    print('CONTEXTUAL ANALYSIS')
+    print('='*60)
 
     # Create analysis dataframe
     analysis_df = X_test.copy()
@@ -345,31 +349,31 @@ def analyze_by_context(y_test: pd.Series, y_pred_proba: np.ndarray, X_test: pd.D
 
     # By count (2 strikes vs not)
     if 'is_two_strike' in analysis_df.columns:
-        print("\nBy Count (2 Strikes):")
+        print('\nBy Count (2 Strikes):')
         for is_two_strike in [False, True]:
             subset = analysis_df[analysis_df['is_two_strike'] == is_two_strike]
             actual = subset['actual_swing'].mean()
             predicted = subset['pred_proba'].mean()
-            label = "2 Strikes" if is_two_strike else "< 2 Strikes"
-            print(f"  {label}: Actual={actual:.1%}, Predicted={predicted:.1%}, n={len(subset):,}")
+            label = '2 Strikes' if is_two_strike else '< 2 Strikes'
+            print(f'  {label}: Actual={actual:.1%}, Predicted={predicted:.1%}, n={len(subset):,}')
 
     # By zone location
     if 'is_in_zone' in analysis_df.columns:
-        print("\nBy Zone Location:")
+        print('\nBy Zone Location:')
         for in_zone in [False, True]:
             subset = analysis_df[analysis_df['is_in_zone'] == in_zone]
             actual = subset['actual_swing'].mean()
             predicted = subset['pred_proba'].mean()
-            label = "In Zone" if in_zone else "Out of Zone"
-            print(f"  {label}: Actual={actual:.1%}, Predicted={predicted:.1%}, n={len(subset):,}")
+            label = 'In Zone' if in_zone else 'Out of Zone'
+            print(f'  {label}: Actual={actual:.1%}, Predicted={predicted:.1%}, n={len(subset):,}')
 
     # Calibration check (binned by predicted probability)
-    print("\nCalibration (binned by predicted probability):")
+    print('\nCalibration (binned by predicted probability):')
     analysis_df['prob_bin'] = pd.qcut(analysis_df['pred_proba'], q=10, duplicates='drop')
     calibration = analysis_df.groupby('prob_bin').agg({
         'actual_swing': 'mean',
         'pred_proba': 'mean',
-        'pitch_id': 'count'
+        'pitch_id': 'count',
     }).reset_index()
     calibration.columns = ['Bin', 'Actual Rate', 'Predicted Rate', 'Count']
     print(calibration.to_string(index=False))
@@ -383,16 +387,16 @@ def main():
                        help='Skip contextual analysis')
     args = parser.parse_args()
 
-    print("="*70)
-    print("SWING PROBABILITY MODEL TRAINING")
-    print("="*70)
-    print(f"Timestamp: {datetime.now().isoformat()}")
-    print(f"Model Dir: {MODEL_DIR}")
+    print('='*70)
+    print('SWING PROBABILITY MODEL TRAINING')
+    print('='*70)
+    print(f'Timestamp: {datetime.now().isoformat()}')
+    print(f'Model Dir: {MODEL_DIR}')
     print(f"Sample Size: {args.sample or 'Full Dataset'}")
-    print("="*70)
+    print('='*70)
 
     # Connect to database
-    print(f"\nConnecting to database...")
+    print('\nConnecting to database...')
     conn = psycopg2.connect(DB_URL)
 
     try:
@@ -409,7 +413,7 @@ def main():
         if not args.skip_analysis:
             # Re-split to get test set for analysis
             X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y
+                X, y, test_size=0.2, random_state=42, stratify=y,
             )
             # Load model and predict
             with open(results['model_file'], 'rb') as f:
@@ -417,10 +421,10 @@ def main():
             y_pred_proba = model.predict_proba(X_test)[:, 1]
             analyze_by_context(y_test, y_pred_proba, X_test)
 
-        print("\n" + "="*70)
-        print("TRAINING COMPLETE")
-        print("="*70)
-        print(f"Results: {RESULTS_FILE}")
+        print('\n' + '='*70)
+        print('TRAINING COMPLETE')
+        print('='*70)
+        print(f'Results: {RESULTS_FILE}')
         print(f"Model: {results['model_file']}")
 
     finally:

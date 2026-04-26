@@ -28,26 +28,26 @@ Usage:
     uv run python scripts/analysis/post_hoc_feature_selection.py --phase 3 --n-features 75
 """
 
-import os
-import json
-import pickle
 import argparse
+import json
+import os
+import pickle
 from datetime import datetime
-from typing import List, Dict, Tuple, Optional
 
 import numpy as np
 import pandas as pd
 import psycopg2
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, log_loss, roc_auc_score
 import xgboost as xgb
+from sklearn.metrics import accuracy_score, log_loss, roc_auc_score
+from sklearn.model_selection import train_test_split
+
 
 DB_URL = os.getenv('DATABASE_URL', 'postgresql://localhost:5432/retrosheet')
 RESULTS_DIR = 'models/post_hoc_selection'
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 
-def load_data_with_features(conn, features: List[str], sample_size: int) -> Tuple[pd.DataFrame, pd.Series]:
+def load_data_with_features(conn, features: list[str], sample_size: int) -> tuple[pd.DataFrame, pd.Series]:
     """Load data with specified features."""
 
     feature_cols = ', '.join([f'ef."{f}"' for f in features])
@@ -83,9 +83,9 @@ def phase_1_train_full_model(sample_size: int = 100000):
     Extract and save feature importance.
     """
 
-    print("="*70)
-    print("PHASE 1: Train Full Model with All Features")
-    print("="*70)
+    print('='*70)
+    print('PHASE 1: Train Full Model with All Features')
+    print('='*70)
 
     conn = psycopg2.connect(DB_URL)
 
@@ -107,18 +107,18 @@ def phase_1_train_full_model(sample_size: int = 100000):
         features_df = pd.read_sql(query, conn)
         all_features = features_df['column_name'].tolist()
 
-        print(f"Found {len(all_features)} features")
-        print(f"Loading {sample_size:,} samples...")
+        print(f'Found {len(all_features)} features')
+        print(f'Loading {sample_size:,} samples...')
 
         # Load data
         X, y = load_data_with_features(conn, all_features, sample_size)
 
-        print(f"Data shape: {X.shape}")
-        print(f"\nTraining XGBoost with ALL {X.shape[1]} features...")
+        print(f'Data shape: {X.shape}')
+        print(f'\nTraining XGBoost with ALL {X.shape[1]} features...')
 
         # Train model
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
+            X, y, test_size=0.2, random_state=42, stratify=y,
         )
 
         model = xgb.XGBClassifier(
@@ -132,7 +132,7 @@ def phase_1_train_full_model(sample_size: int = 100000):
             random_state=42,
             n_jobs=-1,
             tree_method='hist',
-            eval_metric='mlogloss'
+            eval_metric='mlogloss',
         )
 
         model.fit(X_train, y_train, verbose=False)
@@ -146,10 +146,10 @@ def phase_1_train_full_model(sample_size: int = 100000):
             'sample_size': sample_size,
             'accuracy': float(accuracy_score(y_test, y_pred)),
             'log_loss': float(log_loss(y_test, y_pred_proba)),
-            'auc': float(roc_auc_score(y_test, y_pred_proba, multi_class='ovo'))
+            'auc': float(roc_auc_score(y_test, y_pred_proba, multi_class='ovo')),
         }
 
-        print(f"\nFull Model Performance:")
+        print('\nFull Model Performance:')
         print(f"  Accuracy: {full_results['accuracy']:.4f}")
         print(f"  Log Loss: {full_results['log_loss']:.4f}")
         print(f"  AUC:      {full_results['auc']:.4f}")
@@ -164,7 +164,7 @@ def phase_1_train_full_model(sample_size: int = 100000):
             feature_importance.append({
                 'feature': feat,
                 'importance': float(score),
-                'rank': 0  # Will fill in after sorting
+                'rank': 0,  # Will fill in after sorting
             })
 
         # Sort by importance
@@ -178,7 +178,7 @@ def phase_1_train_full_model(sample_size: int = 100000):
             cumsum += fi['importance']
             fi['cumulative_pct'] = round(cumsum / total_importance * 100, 2) if total_importance > 0 else 0
 
-        print(f"\nTop 10 Most Important Features:")
+        print('\nTop 10 Most Important Features:')
         for fi in feature_importance[:10]:
             print(f"  {fi['rank']:2d}. {fi['feature'][:40]:40} = {fi['importance']:,.0f} ({fi['cumulative_pct']:.1f}%)")
 
@@ -197,12 +197,12 @@ def phase_1_train_full_model(sample_size: int = 100000):
                 'timestamp': timestamp,
                 'n_features': len(feature_importance),
                 'full_model_performance': full_results,
-                'feature_importance': feature_importance
+                'feature_importance': feature_importance,
             }, f, indent=2)
 
-        print(f"\nSaved:")
-        print(f"  Model: {model_file}")
-        print(f"  Importance: {importance_file}")
+        print('\nSaved:')
+        print(f'  Model: {model_file}')
+        print(f'  Importance: {importance_file}')
 
         return importance_file
 
@@ -213,7 +213,7 @@ def phase_1_train_full_model(sample_size: int = 100000):
 def phase_2_test_feature_subsets(
     importance_file: str,
     sample_size: int = 50000,
-    subset_sizes: list = None
+    subset_sizes: list = None,
 ):
     """
     Phase 2: Test progressively smaller feature subsets.
@@ -223,19 +223,19 @@ def phase_2_test_feature_subsets(
     Can test BEYOND 50 features (e.g., 200, 150) to find optimal point.
     """
 
-    print("="*70)
-    print("PHASE 2: Test Progressive Feature Subsets")
-    print("="*70)
+    print('='*70)
+    print('PHASE 2: Test Progressive Feature Subsets')
+    print('='*70)
 
     # Load importance
-    with open(importance_file, 'r') as f:
+    with open(importance_file) as f:
         importance_data = json.load(f)
 
     feature_importance = importance_data['feature_importance']
     full_performance = importance_data['full_model_performance']
 
     available_features = len(feature_importance)
-    print(f"Total available features: {available_features}")
+    print(f'Total available features: {available_features}')
 
     # Default subset sizes - can go PAST 50 features (e.g., 200, 150)
     if subset_sizes is None:
@@ -256,7 +256,7 @@ def phase_2_test_feature_subsets(
     # Remove duplicates and sort descending
     subset_sizes = sorted(list(set(subset_sizes)), reverse=True)
 
-    print(f"Testing {len(subset_sizes)} subset sizes: {subset_sizes}")
+    print(f'Testing {len(subset_sizes)} subset sizes: {subset_sizes}')
     print(f"Full model baseline: AUC={full_performance['auc']:.4f}")
 
     conn = psycopg2.connect(DB_URL)
@@ -266,19 +266,19 @@ def phase_2_test_feature_subsets(
 
         for n_features in subset_sizes:
             print(f"\n{'='*70}")
-            print(f"Testing with TOP {n_features} features")
+            print(f'Testing with TOP {n_features} features')
             print(f"{'='*70}")
 
             # Get top N features
             top_features = [fi['feature'] for fi in feature_importance[:n_features]]
 
-            print(f"Loading data...")
+            print('Loading data...')
             X, y = load_data_with_features(conn, top_features, sample_size)
 
-            print(f"Training with {X.shape[1]} features...")
+            print(f'Training with {X.shape[1]} features...')
 
             X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y
+                X, y, test_size=0.2, random_state=42, stratify=y,
             )
 
             model = xgb.XGBClassifier(
@@ -292,7 +292,7 @@ def phase_2_test_feature_subsets(
                 random_state=42,
                 n_jobs=-1,
                 tree_method='hist',
-                eval_metric='mlogloss'
+                eval_metric='mlogloss',
             )
 
             model.fit(X_train, y_train, verbose=False)
@@ -307,7 +307,7 @@ def phase_2_test_feature_subsets(
                 'log_loss': float(log_loss(y_test, y_pred_proba)),
                 'auc': float(roc_auc_score(y_test, y_pred_proba, multi_class='ovo')),
                 'auc_vs_full': 0.0,  # Will calculate
-                'features': top_features[:5]  # Store first 5 for reference
+                'features': top_features[:5],  # Store first 5 for reference
             }
 
             result['auc_vs_full'] = round(result['auc'] - full_performance['auc'], 4)
@@ -319,7 +319,7 @@ def phase_2_test_feature_subsets(
 
             # Early stopping: if performance within 0.5% of full, this is optimal
             if result['auc_vs_full'] > -0.005:
-                print(f"  ✓ Performance within 0.5% of full model - OPTIMAL POINT FOUND")
+                print('  ✓ Performance within 0.5% of full model - OPTIMAL POINT FOUND')
 
         # Save results
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -329,13 +329,13 @@ def phase_2_test_feature_subsets(
             json.dump({
                 'timestamp': timestamp,
                 'full_model_auc': full_performance['auc'],
-                'results': results
+                'results': results,
             }, f, indent=2)
 
         print(f"\n{'='*70}")
-        print("PHASE 2 COMPLETE")
+        print('PHASE 2 COMPLETE')
         print(f"{'='*70}")
-        print(f"Results saved: {results_file}")
+        print(f'Results saved: {results_file}')
 
         # Find optimal
         best = max(results, key=lambda x: x['auc'])
@@ -360,24 +360,24 @@ def phase_3_train_final_model(n_features: int, sample_size: int = 200000):
     Phase 3: Retrain final model with optimal feature count on more data.
     """
 
-    print("="*70)
-    print(f"PHASE 3: Train Final Model with {n_features} Features")
-    print("="*70)
+    print('='*70)
+    print(f'PHASE 3: Train Final Model with {n_features} Features')
+    print('='*70)
 
     # Load importance to get features
     importance_files = sorted([f for f in os.listdir(RESULTS_DIR) if f.startswith('feature_importance_')])
     if not importance_files:
-        print("Error: No importance file found. Run Phase 1 first.")
+        print('Error: No importance file found. Run Phase 1 first.')
         return
 
-    with open(f'{RESULTS_DIR}/{importance_files[-1]}', 'r') as f:
+    with open(f'{RESULTS_DIR}/{importance_files[-1]}') as f:
         importance_data = json.load(f)
 
     feature_importance = importance_data['feature_importance']
     top_features = [fi['feature'] for fi in feature_importance[:n_features]]
 
-    print(f"Using top {n_features} features")
-    print(f"Training on {sample_size:,} samples...")
+    print(f'Using top {n_features} features')
+    print(f'Training on {sample_size:,} samples...')
 
     conn = psycopg2.connect(DB_URL)
 
@@ -385,10 +385,10 @@ def phase_3_train_final_model(n_features: int, sample_size: int = 200000):
         X, y = load_data_with_features(conn, top_features, sample_size)
 
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
+            X, y, test_size=0.2, random_state=42, stratify=y,
         )
 
-        print(f"Final training: {X_train.shape}")
+        print(f'Final training: {X_train.shape}')
 
         model = xgb.XGBClassifier(
             objective='multi:softprob',
@@ -401,7 +401,7 @@ def phase_3_train_final_model(n_features: int, sample_size: int = 200000):
             random_state=42,
             n_jobs=-1,
             tree_method='hist',
-            eval_metric='mlogloss'
+            eval_metric='mlogloss',
         )
 
         model.fit(X_train, y_train, verbose=False)
@@ -416,10 +416,10 @@ def phase_3_train_final_model(n_features: int, sample_size: int = 200000):
             'accuracy': float(accuracy_score(y_test, y_pred)),
             'log_loss': float(log_loss(y_test, y_pred_proba)),
             'auc': float(roc_auc_score(y_test, y_pred_proba, multi_class='ovo')),
-            'features_used': top_features
+            'features_used': top_features,
         }
 
-        print(f"\nFinal Model Performance:")
+        print('\nFinal Model Performance:')
         print(f"  Accuracy: {final_results['accuracy']:.4f}")
         print(f"  Log Loss: {final_results['log_loss']:.4f}")
         print(f"  AUC:      {final_results['auc']:.4f}")
@@ -435,9 +435,9 @@ def phase_3_train_final_model(n_features: int, sample_size: int = 200000):
         with open(results_file, 'w') as f:
             json.dump(final_results, f, indent=2)
 
-        print(f"\nSaved:")
-        print(f"  Model: {model_file}")
-        print(f"  Results: {results_file}")
+        print('\nSaved:')
+        print(f'  Model: {model_file}')
+        print(f'  Results: {results_file}')
 
     finally:
         conn.close()

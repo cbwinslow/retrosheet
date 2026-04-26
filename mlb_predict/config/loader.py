@@ -1,5 +1,4 @@
-"""
-Configuration Loader Utilities
+"""Configuration Loader Utilities
 
 Handles loading and saving configurations with environment variable substitution
 and default paths.
@@ -8,18 +7,20 @@ Author: Agent Cascade
 Date: April 24, 2026
 """
 
-import os
-import yaml
 import json
+import os
 from pathlib import Path
-from typing import Union, Optional, Dict, Any
-from .schemas import ModelConfig, ExperimentConfig
+from typing import Any
+
+import yaml
+
+from .schemas import ExperimentConfig, ModelConfig
 
 
 def load_config(
-    path: Union[str, Path],
-    config_type: str = "model"
-) -> Union[ModelConfig, ExperimentConfig]:
+    path: str | Path,
+    config_type: str = 'model',
+) -> ModelConfig | ExperimentConfig:
     """Load configuration from YAML or JSON file.
     
     Automatically detects format from file extension.
@@ -40,62 +41,59 @@ def load_config(
         exp = load_config("experiments/compare.yaml", config_type="experiment")
     """
     path = Path(path)
-    
+
     if not path.exists():
-        raise FileNotFoundError(f"Config file not found: {path}")
-    
+        raise FileNotFoundError(f'Config file not found: {path}')
+
     # Detect format from extension
     suffix = path.suffix.lower()
-    
+
     if suffix in ['.yaml', '.yml']:
         return load_from_yaml(path, config_type)
-    elif suffix == '.json':
+    if suffix == '.json':
         return load_from_json(path, config_type)
-    else:
-        raise ValueError(f"Unsupported config format: {suffix}. Use .yaml or .json")
+    raise ValueError(f'Unsupported config format: {suffix}. Use .yaml or .json')
 
 
 def load_from_yaml(
-    path: Union[str, Path],
-    config_type: str = "model"
-) -> Union[ModelConfig, ExperimentConfig]:
+    path: str | Path,
+    config_type: str = 'model',
+) -> ModelConfig | ExperimentConfig:
     """Load configuration from YAML file."""
-    with open(path, 'r') as f:
+    with open(path) as f:
         data = yaml.safe_load(f)
-    
+
     # Substitute environment variables
     data = substitute_env_vars(data)
-    
-    if config_type == "model":
+
+    if config_type == 'model':
         return ModelConfig(**data)
-    elif config_type == "experiment":
+    if config_type == 'experiment':
         # Reconstruct nested ModelConfigs
         if 'models' in data:
             data['models'] = [ModelConfig(**m) for m in data['models']]
         return ExperimentConfig(**data)
-    else:
-        raise ValueError(f"Unknown config_type: {config_type}")
+    raise ValueError(f'Unknown config_type: {config_type}')
 
 
 def load_from_json(
-    path: Union[str, Path],
-    config_type: str = "model"
-) -> Union[ModelConfig, ExperimentConfig]:
+    path: str | Path,
+    config_type: str = 'model',
+) -> ModelConfig | ExperimentConfig:
     """Load configuration from JSON file."""
-    with open(path, 'r') as f:
+    with open(path) as f:
         data = json.load(f)
-    
+
     # Substitute environment variables
     data = substitute_env_vars(data)
-    
-    if config_type == "model":
+
+    if config_type == 'model':
         return ModelConfig(**data)
-    elif config_type == "experiment":
+    if config_type == 'experiment':
         if 'models' in data:
             data['models'] = [ModelConfig(**m) for m in data['models']]
         return ExperimentConfig(**data)
-    else:
-        raise ValueError(f"Unknown config_type: {config_type}")
+    raise ValueError(f'Unknown config_type: {config_type}')
 
 
 def substitute_env_vars(obj: Any) -> Any:
@@ -105,30 +103,29 @@ def substitute_env_vars(obj: Any) -> Any:
     """
     if isinstance(obj, dict):
         return {k: substitute_env_vars(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
+    if isinstance(obj, list):
         return [substitute_env_vars(item) for item in obj]
-    elif isinstance(obj, str):
+    if isinstance(obj, str):
         # Handle ${VAR} or ${VAR:default}
         import re
         pattern = r'\$\{([^}:]+)(?::([^}]*))?\}'
-        
+
         def replace(match):
             var_name = match.group(1)
             default_value = match.group(2)
             value = os.getenv(var_name, default_value)
             if value is None:
-                raise ValueError(f"Environment variable {var_name} not set")
+                raise ValueError(f'Environment variable {var_name} not set')
             return value
-        
+
         return re.sub(pattern, replace, obj)
-    else:
-        return obj
+    return obj
 
 
 def save_config(
-    config: Union[ModelConfig, ExperimentConfig],
-    path: Union[str, Path],
-    format: str = "yaml"
+    config: ModelConfig | ExperimentConfig,
+    path: str | Path,
+    format: str = 'yaml',
 ) -> None:
     """Save configuration to file.
     
@@ -139,9 +136,9 @@ def save_config(
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     data = config.model_dump()
-    
+
     if format in ['yaml', 'yml']:
         with open(path, 'w') as f:
             yaml.dump(data, f, default_flow_style=False, sort_keys=False)
@@ -149,12 +146,12 @@ def save_config(
         with open(path, 'w') as f:
             json.dump(data, f, indent=2)
     else:
-        raise ValueError(f"Unknown format: {format}")
+        raise ValueError(f'Unknown format: {format}')
 
 
 def find_configs(
-    directory: Union[str, Path],
-    pattern: str = "*.yaml"
+    directory: str | Path,
+    pattern: str = '*.yaml',
 ) -> list[Path]:
     """Find all config files in directory.
     
@@ -170,9 +167,9 @@ def find_configs(
 
 
 def load_configs_batch(
-    directory: Union[str, Path],
-    config_type: str = "model"
-) -> list[Union[ModelConfig, ExperimentConfig]]:
+    directory: str | Path,
+    config_type: str = 'model',
+) -> list[ModelConfig | ExperimentConfig]:
     """Load all configs from directory.
     
     Args:
@@ -188,7 +185,7 @@ def load_configs_batch(
             config = load_config(path, config_type)
             configs.append(config)
         except Exception as e:
-            print(f"Warning: Failed to load {path}: {e}")
+            print(f'Warning: Failed to load {path}: {e}')
     return configs
 
 
@@ -198,93 +195,93 @@ class ConfigManager:
     Provides a centralized place to store and retrieve configurations
     with versioning and metadata.
     """
-    
-    def __init__(self, base_path: Union[str, Path] = "configs"):
+
+    def __init__(self, base_path: str | Path = 'configs'):
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Subdirectories
-        self.models_path = self.base_path / "models"
-        self.experiments_path = self.base_path / "experiments"
-        self.defaults_path = self.base_path / "defaults"
-        
+        self.models_path = self.base_path / 'models'
+        self.experiments_path = self.base_path / 'experiments'
+        self.defaults_path = self.base_path / 'defaults'
+
         for path in [self.models_path, self.experiments_path, self.defaults_path]:
             path.mkdir(exist_ok=True)
-    
+
     def save_model_config(
         self,
         config: ModelConfig,
-        name: Optional[str] = None
+        name: str | None = None,
     ) -> Path:
         """Save model configuration."""
         if name is None:
             name = config.get_model_id_string()
-        
-        path = self.models_path / f"{name}.yaml"
-        save_config(config, path, "yaml")
+
+        path = self.models_path / f'{name}.yaml'
+        save_config(config, path, 'yaml')
         return path
-    
+
     def save_experiment_config(
         self,
         config: ExperimentConfig,
-        name: Optional[str] = None
+        name: str | None = None,
     ) -> Path:
         """Save experiment configuration."""
         if name is None:
-            name = config.experiment_name.replace(" ", "_").lower()
-        
-        path = self.experiments_path / f"{name}.yaml"
-        save_config(config, path, "yaml")
+            name = config.experiment_name.replace(' ', '_').lower()
+
+        path = self.experiments_path / f'{name}.yaml'
+        save_config(config, path, 'yaml')
         return path
-    
+
     def load_model_config(self, name: str) -> ModelConfig:
         """Load model configuration by name."""
-        path = self.models_path / f"{name}.yaml"
+        path = self.models_path / f'{name}.yaml'
         if not path.exists():
-            path = self.models_path / f"{name}.json"
-        return load_config(path, "model")
-    
+            path = self.models_path / f'{name}.json'
+        return load_config(path, 'model')
+
     def load_experiment_config(self, name: str) -> ExperimentConfig:
         """Load experiment configuration by name."""
-        path = self.experiments_path / f"{name}.yaml"
+        path = self.experiments_path / f'{name}.yaml'
         if not path.exists():
-            path = self.experiments_path / f"{name}.json"
-        return load_config(path, "experiment")
-    
+            path = self.experiments_path / f'{name}.json'
+        return load_config(path, 'experiment')
+
     def list_model_configs(self) -> list[str]:
         """List available model configurations."""
         configs = []
-        for path in self.models_path.glob("*.yaml"):
+        for path in self.models_path.glob('*.yaml'):
             configs.append(path.stem)
-        for path in self.models_path.glob("*.json"):
+        for path in self.models_path.glob('*.json'):
             if path.stem not in configs:
                 configs.append(path.stem)
         return sorted(configs)
-    
+
     def list_experiment_configs(self) -> list[str]:
         """List available experiment configurations."""
         configs = []
-        for path in self.experiments_path.glob("*.yaml"):
+        for path in self.experiments_path.glob('*.yaml'):
             configs.append(path.stem)
-        for path in self.experiments_path.glob("*.json"):
+        for path in self.experiments_path.glob('*.json'):
             if path.stem not in configs:
                 configs.append(path.stem)
         return sorted(configs)
-    
-    def get_default_config(self, name: str) -> Optional[ModelConfig]:
+
+    def get_default_config(self, name: str) -> ModelConfig | None:
         """Load default configuration template."""
         from .schemas import (
-            get_default_xgboost_config,
             get_default_lightgbm_config,
-            get_quick_test_config
+            get_default_xgboost_config,
+            get_quick_test_config,
         )
-        
+
         defaults = {
-            "xgboost": get_default_xgboost_config,
-            "lightgbm": get_default_lightgbm_config,
-            "quick_test": get_quick_test_config,
+            'xgboost': get_default_xgboost_config,
+            'lightgbm': get_default_lightgbm_config,
+            'quick_test': get_quick_test_config,
         }
-        
+
         if name in defaults:
             return defaults[name]()
         return None
@@ -292,20 +289,20 @@ class ConfigManager:
 
 # Convenience functions
 
-def load_model_config(path: Union[str, Path]) -> ModelConfig:
+def load_model_config(path: str | Path) -> ModelConfig:
     """Load a model configuration from file."""
-    return load_config(path, config_type="model")
+    return load_config(path, config_type='model')
 
 
-def load_experiment_config(path: Union[str, Path]) -> ExperimentConfig:
+def load_experiment_config(path: str | Path) -> ExperimentConfig:
     """Load an experiment configuration from file."""
-    return load_config(path, config_type="experiment")
+    return load_config(path, config_type='experiment')
 
 
 def save_model_config(
     config: ModelConfig,
-    path: Union[str, Path],
-    format: str = "yaml"
+    path: str | Path,
+    format: str = 'yaml',
 ) -> None:
     """Save a model configuration to file."""
     save_config(config, path, format)
@@ -313,24 +310,24 @@ def save_model_config(
 
 def save_experiment_config(
     config: ExperimentConfig,
-    path: Union[str, Path],
-    format: str = "yaml"
+    path: str | Path,
+    format: str = 'yaml',
 ) -> None:
     """Save an experiment configuration to file."""
     save_config(config, path, format)
 
 
 __all__ = [
-    "load_config",
-    "load_from_yaml",
-    "load_from_json",
-    "save_config",
-    "find_configs",
-    "load_configs_batch",
-    "ConfigManager",
-    "load_model_config",
-    "load_experiment_config",
-    "save_model_config",
-    "save_experiment_config",
-    "substitute_env_vars",
+    'ConfigManager',
+    'find_configs',
+    'load_config',
+    'load_configs_batch',
+    'load_experiment_config',
+    'load_from_json',
+    'load_from_yaml',
+    'load_model_config',
+    'save_config',
+    'save_experiment_config',
+    'save_model_config',
+    'substitute_env_vars',
 ]

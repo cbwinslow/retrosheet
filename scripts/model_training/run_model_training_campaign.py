@@ -29,14 +29,13 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+
 
 # Add parent to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from sqlalchemy import create_engine, text
-import pandas as pd
 import joblib
+import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.impute import SimpleImputer
@@ -44,13 +43,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, brier_score_loss, log_loss, roc_auc_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-
-from mlb_predict import (
-    ModelConfig, ModelTrainer, ModelFamily, TargetVariable, FeatureSet,
-    TrainResult, Metrics, MetricValue, FeatureImportance,
-    ExperimentRunner, compare_model_families,
-)
-from mlb_predict.integration import LegacyCompatibleTrainer
+from sqlalchemy import create_engine
 
 
 # ============================================================================
@@ -116,7 +109,7 @@ def database_url() -> str:
     user = os.getenv('PGUSER', 'cbwinslow')
     password = os.getenv('PGPASSWORD', '')
     # Use psycopg2 driver explicitly
-    return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}"
+    return f'postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}'
 
 
 def database_kwargs() -> dict:
@@ -152,13 +145,13 @@ def load_training_data(
     """
     target_info = TARGETS[target_id]
     features = FEATURE_SETS[feature_set]
-    
+
     # Build query
     numeric_cols = ', '.join(features['numeric'])
     categorical_cols = ', '.join(features['categorical'])
     target_col = target_info['target_col']
     table = target_info['table']
-    
+
     sql = f"""
     SELECT 
         season,
@@ -169,24 +162,24 @@ def load_training_data(
     WHERE season BETWEEN {min_season} AND {max_season}
       AND {target_col} IS NOT NULL
     """
-    
+
     if sample_rate < 1.0:
-        sql += f"\n      AND random() < {sample_rate}"
-    
-    print(f"[INFO] Loading data from {table}...")
-    print(f"[INFO] Query: {sql[:200]}...")
-    
+        sql += f'\n      AND random() < {sample_rate}'
+
+    print(f'[INFO] Loading data from {table}...')
+    print(f'[INFO] Query: {sql[:200]}...')
+
     df = pd.read_sql(sql, engine)
-    
-    print(f"[INFO] Loaded {len(df)} rows")
-    
+
+    print(f'[INFO] Loaded {len(df)} rows')
+
     # Split by season
     train_df = df[df['season'] <= train_through].copy()
     val_df = df[(df['season'] > train_through) & (df['season'] <= train_through + 1)].copy()
     test_df = df[df['season'] > train_through + 1].copy()
-    
-    print(f"[INFO] Train: {len(train_df)}, Val: {len(val_df)}, Test: {len(test_df)}")
-    
+
+    print(f'[INFO] Train: {len(train_df)}, Val: {len(val_df)}, Test: {len(test_df)}')
+
     return train_df, val_df, test_df
 
 
@@ -195,28 +188,28 @@ def load_training_data(
 # ============================================================================
 
 def build_model_pipeline(
-    numeric_features: List[str],
-    categorical_features: List[str],
+    numeric_features: list[str],
+    categorical_features: list[str],
     model_family: str = 'xgboost',
 ) -> Pipeline:
     """Build sklearn pipeline with preprocessing and model."""
-    
+
     # Preprocessing
     numeric_transformer = Pipeline([
         ('imputer', SimpleImputer(strategy='median')),
         ('scaler', StandardScaler()),
     ])
-    
+
     categorical_transformer = Pipeline([
         ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
         ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False)),
     ])
-    
+
     preprocessor = ColumnTransformer([
         ('num', numeric_transformer, numeric_features),
         ('cat', categorical_transformer, categorical_features),
     ])
-    
+
     # Model
     if model_family == 'xgboost':
         try:
@@ -233,7 +226,7 @@ def build_model_pipeline(
                 eval_metric='logloss',
             )
         except ImportError:
-            print("[WARN] XGBoost not available, using HistGradientBoosting")
+            print('[WARN] XGBoost not available, using HistGradientBoosting')
             model = HistGradientBoostingClassifier(
                 max_iter=200,
                 max_depth=6,
@@ -254,7 +247,7 @@ def build_model_pipeline(
                 verbose=-1,
             )
         except ImportError:
-            print("[WARN] LightGBM not available, using HistGradientBoosting")
+            print('[WARN] LightGBM not available, using HistGradientBoosting')
             model = HistGradientBoostingClassifier(
                 max_iter=200,
                 max_depth=6,
@@ -274,13 +267,13 @@ def build_model_pipeline(
             learning_rate=0.1,
             random_state=42,
         )
-    
+
     # Pipeline
     pipeline = Pipeline([
         ('preprocessor', preprocessor),
         ('model', model),
     ])
-    
+
     return pipeline
 
 
@@ -292,7 +285,7 @@ def compute_metrics(model, X: pd.DataFrame, y: pd.Series) -> dict:
     """Compute evaluation metrics."""
     y_pred = model.predict(X)
     y_prob = model.predict_proba(X)[:, 1]
-    
+
     metrics = {
         'roc_auc': roc_auc_score(y, y_prob),
         'accuracy': accuracy_score(y, y_pred),
@@ -300,7 +293,7 @@ def compute_metrics(model, X: pd.DataFrame, y: pd.Series) -> dict:
         'brier_score': brier_score_loss(y, y_prob),
         'n_samples': len(y),
     }
-    
+
     return metrics
 
 
@@ -325,18 +318,18 @@ def train_model(
         Dict with training results and metrics
     """
     print(f"\n{'='*60}")
-    print(f"Training: {target_id}")
-    print(f"Feature set: {feature_set}")
-    print(f"Model: {model_family}")
+    print(f'Training: {target_id}')
+    print(f'Feature set: {feature_set}')
+    print(f'Model: {model_family}')
     print(f"{'='*60}")
-    
+
     # Create output directory
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-    
+
     # Connect to database
     engine = create_engine(database_url())
-    
+
     try:
         # Load data
         train_df, val_df, test_df = load_training_data(
@@ -348,42 +341,42 @@ def train_model(
             train_through=train_through,
             sample_rate=sample_rate,
         )
-        
+
         if len(train_df) == 0 or len(val_df) == 0:
-            print(f"[ERROR] No data loaded for {target_id}")
+            print(f'[ERROR] No data loaded for {target_id}')
             return {'status': 'failed', 'error': 'no_data'}
-        
+
         # Get features
         features = FEATURE_SETS[feature_set]
         numeric_features = features['numeric']
         categorical_features = features['categorical']
-        
+
         # Prepare data
         X_train = train_df[numeric_features + categorical_features]
         y_train = train_df['target']
         X_val = val_df[numeric_features + categorical_features]
         y_val = val_df['target']
-        
+
         # Build and train model
-        print(f"[INFO] Building {model_family} model...")
+        print(f'[INFO] Building {model_family} model...')
         model = build_model_pipeline(numeric_features, categorical_features, model_family)
-        
-        print(f"[INFO] Training on {len(X_train)} samples...")
+
+        print(f'[INFO] Training on {len(X_train)} samples...')
         model.fit(X_train, y_train)
-        
+
         # Compute metrics
-        print(f"[INFO] Computing metrics...")
+        print('[INFO] Computing metrics...')
         train_metrics = compute_metrics(model, X_train, y_train)
         val_metrics = compute_metrics(model, X_val, y_val)
-        
+
         # Save model
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        model_name = f"{target_id}_{model_family}_{feature_set}_{timestamp}"
-        model_path = output_path / f"{model_name}.joblib"
-        
+        model_name = f'{target_id}_{model_family}_{feature_set}_{timestamp}'
+        model_path = output_path / f'{model_name}.joblib'
+
         joblib.dump(model, model_path)
-        print(f"[INFO] Model saved to {model_path}")
-        
+        print(f'[INFO] Model saved to {model_path}')
+
         # Save metadata
         metadata = {
             'target_id': target_id,
@@ -409,19 +402,19 @@ def train_model(
                 'validation': val_metrics,
             },
         }
-        
-        metadata_path = output_path / f"{model_name}_metadata.json"
+
+        metadata_path = output_path / f'{model_name}_metadata.json'
         with open(metadata_path, 'w') as f:
             json.dump(metadata, f, indent=2)
-        print(f"[INFO] Metadata saved to {metadata_path}")
-        
+        print(f'[INFO] Metadata saved to {metadata_path}')
+
         # Print results
-        print(f"\n[RESULTS]")
+        print('\n[RESULTS]')
         print(f"  Train AUC: {train_metrics['roc_auc']:.4f}")
         print(f"  Val AUC:   {val_metrics['roc_auc']:.4f}")
         print(f"  Val Acc:   {val_metrics['accuracy']:.4f}")
         print(f"  Val Loss:  {val_metrics['log_loss']:.4f}")
-        
+
         return {
             'status': 'success',
             'model_name': model_name,
@@ -430,13 +423,13 @@ def train_model(
             'val_auc': val_metrics['roc_auc'],
             'metadata': metadata,
         }
-        
+
     except Exception as e:
-        print(f"[ERROR] Training failed: {e}")
+        print(f'[ERROR] Training failed: {e}')
         import traceback
         traceback.print_exc()
         return {'status': 'failed', 'error': str(e)}
-    
+
     finally:
         engine.dispose()
 
@@ -462,45 +455,45 @@ Examples:
   
   # Compare models
   python run_model_training_campaign.py --compare --target swing_decision --families xgboost lightgbm
-"""
+""",
     )
-    
+
     parser.add_argument('--all', action='store_true', help='Train all targets')
     parser.add_argument('--target', type=str, choices=list(TARGETS.keys()), help='Target to train')
     parser.add_argument('--feature-set', type=str, default='advanced', choices=['basic', 'advanced'])
     parser.add_argument('--model-family', type=str, default='xgboost', choices=['xgboost', 'lightgbm', 'logistic_regression', 'hist_gradient_boosting'])
     parser.add_argument('--families', nargs='+', default=['xgboost', 'lightgbm'], help='Model families for comparison')
     parser.add_argument('--compare', action='store_true', help='Run comparison')
-    
+
     parser.add_argument('--min-season', type=int, default=2020)
     parser.add_argument('--max-season', type=int, default=2025)
     parser.add_argument('--train-through', type=int, default=2023)
     parser.add_argument('--sample-rate', type=float, default=1.0)
-    
+
     parser.add_argument('--output-dir', type=str, default='models/production')
     parser.add_argument('--summary', type=str, default='models/training_summary.json')
-    
+
     args = parser.parse_args()
-    
+
     # Determine targets
     if args.all:
         targets = list(TARGETS.keys())
     elif args.target:
         targets = [args.target]
     else:
-        print("[ERROR] Must specify --all or --target")
+        print('[ERROR] Must specify --all or --target')
         return 1
-    
+
     # Run training
     results = []
-    
+
     for target_id in targets:
         if args.compare:
             # Run comparison for this target
             print(f"\n{'='*60}")
-            print(f"Comparison for {target_id}")
+            print(f'Comparison for {target_id}')
             print(f"{'='*60}")
-            
+
             for family in args.families:
                 result = train_model(
                     target_id=target_id,
@@ -526,7 +519,7 @@ Examples:
                 output_dir=args.output_dir,
             )
             results.append(result)
-    
+
     # Save summary
     summary = {
         'timestamp': datetime.now().isoformat(),
@@ -535,20 +528,20 @@ Examples:
         'n_success': sum(1 for r in results if r.get('status') == 'success'),
         'n_failed': sum(1 for r in results if r.get('status') == 'failed'),
     }
-    
+
     summary_path = Path(args.summary)
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     with open(summary_path, 'w') as f:
         json.dump(summary, f, indent=2)
-    
+
     print(f"\n{'='*60}")
-    print(f"Training Campaign Complete")
+    print('Training Campaign Complete')
     print(f"{'='*60}")
-    print(f"Total: {len(results)}")
+    print(f'Total: {len(results)}')
     print(f"Success: {summary['n_success']}")
     print(f"Failed: {summary['n_failed']}")
-    print(f"Summary saved to {summary_path}")
-    
+    print(f'Summary saved to {summary_path}')
+
     return 0 if summary['n_failed'] == 0 else 1
 
 

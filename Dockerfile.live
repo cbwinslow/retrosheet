@@ -1,0 +1,85 @@
+# MLB Live Prediction Server Dockerfile
+# Production-ready container for WebSocket prediction server
+
+FROM python:3.10-slim as builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Production stage
+FROM python:3.10-slim as production
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash mlb
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Set working directory
+WORKDIR /app
+
+# Copy application code
+COPY --chown=mlb:mlb mlb_predict/ ./mlb_predict/
+COPY --chown=mlb:mlb baseball/ ./baseball/
+COPY --chown=mlb:mlb scripts/ ./scripts/
+COPY --chown=mlb:mlb sql/ ./sql/
+COPY --chown=mlb:mlb data/models/ ./data/models/
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV LOG_LEVEL=INFO
+ENV WEBSOCKET_HOST=0.0.0.0
+ENV WEBSOCKET_PORT=8765
+ENV CACHE_TTL=5
+ENV POLL_INTERVAL=10
+ENV MAX_CLIENTS=1000
+ENV MAX_CACHE_SIZE=10000
+
+# Switch to non-root user
+USER mlb
+
+# Expose WebSocket port
+EXPOSE 8765
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD python -c "
+import asyncio
+import sys
+from mlb_predict.streaming import PredictionStreamClient
+
+async def health():
+    try:
+        client = PredictionStreamClient('ws://localhost:8765')
+        await asyncio.wait_for(client.connect(), timeout=5.0)
+        await client.disconnect()
+        sys.exit(0)
+    except:
+        sys.exit(1)
+
+asyncio.run(health())
+" || exit 1
+
+# Start the server
+CMD ["python", "-m", "mlb_predict.streaming.server"]

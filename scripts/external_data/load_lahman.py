@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 """
-Load Lahman CSV files into the raw_lahman schema.
+File: scripts/external_data/load_lahman.py
+Purpose: Load ALL Lahman CSV files into raw_lahman schema - ALL tables, ALL columns
+Author: Agent Cascade
+Date: 2026-04-25
+Usage: uv run python scripts/external_data/load_lahman.py --dir data/lahman_csv
 
-The script follows a robust staging-then-upsert pattern:
-1. Create a temporary staging table (all columns TEXT).
-2. COPY the CSV into the staging table.
-3. INSERT … SELECT with explicit casts into the final table,
-   using ON CONFLICT to make the load idempotent.
-4. Drop the staging table.
-
-Usage:
-    python scripts/external_data/load_lahman.py --dir /path/to/lahman_csv
+CRITICAL: This script loads ALL 28 Lahman tables with ALL columns.
+It discovers CSV files dynamically and reads headers to capture every field.
 """
 
 import argparse
+import csv
 import os
 import sys
 from pathlib import Path
@@ -28,76 +26,34 @@ def get_conn():
     return psycopg2.connect(DB_URL)
 
 
-# Mapping of CSV filename → (target table, column list)
-TABLES = {
-    'People.csv': (
-        'people',
-        [
-            'playerID',
-            'birthYear',
-            'birthMonth',
-            'birthDay',
-            'birthCountry',
-            'birthState',
-            'birthCity',
-            'deathYear',
-            'deathMonth',
-            'deathDay',
-            'deathCountry',
-            'deathState',
-            'deathCity',
-            'nameFirst',
-            'nameLast',
-            'nameGiven',
-            'weight',
-            'height',
-            'bats',
-            'throws',
-            'debut',
-            'finalGame',
-            'retroID',
-            'bbrefID',
-        ],
-    ),
-    'Teams.csv': (
-        'teams',
-        [
-            'yearID',
-            'lgID',
-            'teamID',
-            'franchID',
-            'divID',
-            'Rank',
-            'G',
-            'Ghome',
-            'W',
-            'L',
-            'DivWin',
-            'WCWin',
-            'LgWin',
-            'WSWin',
-            'R',
-            'AB',
-            'H',
-            '_2B',
-            '_3B',
-            'HR',
-            'BB',
-            'SO',
-            'SB',
-            'CS',
-            'HBP',
-            'SF',
-            'RA',
-            'ER',
-            'ERA',
-            'CG',
-            'SHO',
-            'SV',
-            'IPouts',
-            'HAA',
-            'HA',
-            'BAA',
+def get_csv_files(csv_dir: Path):
+    """Get all CSV files in directory."""
+    return sorted(csv_dir.glob('*.csv'))
+
+
+def read_csv_headers(csv_path: Path):
+    """Read headers from CSV file."""
+    with open(csv_path, 'r', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        headers = next(reader)
+    return headers
+
+
+def discover_tables(csv_dir: Path):
+    """
+    Discover ALL tables from CSV files.
+    Returns: dict of {csv_filename: (table_name, [columns])}
+    """
+    csv_files = get_csv_files(csv_dir)
+    tables = {}
+    
+    for csv_path in csv_files:
+        # Table name is CSV filename without extension, lowercased
+        table_name = csv_path.stem.lower()
+        headers = read_csv_headers(csv_path)
+        tables[csv_path.name] = (table_name, headers)
+    
+    return tables
             'OAA',
             'OBA',
             'leagueID',

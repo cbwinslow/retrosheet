@@ -98,4 +98,3 @@ COMMENT ON PROCEDURE bridge.populate_umpire_xref () IS
 -- ============================================================================
 GRANT EXECUTE ON PROCEDURE bridge.populate_coach_xref() TO postgres;
 GRANT EXECUTE ON PROCEDURE bridge.populate_umpire_xref() TO postgres;
-

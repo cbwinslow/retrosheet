@@ -1,5 +1,4 @@
-"""
-MLB Prediction Framework
+"""MLB Prediction Framework
 
 Phase 1 & 2 Implementation - Pydantic Configs, Rich Results, ModelTrainer, Plugins
 
@@ -23,97 +22,98 @@ Example:
 
 # Phase 1.1: Configuration - COMPLETE
 from mlb_predict.config import (
-    ModelConfig,
+    CalibrationConfig,
+    CatBoostConfig,
+    ConfigManager,
+    EarlyStoppingConfig,
     ExperimentConfig,
-    ModelFamily,
-    TargetVariable,
+    FeatureImportanceConfig,
     FeatureSet,
+    LightGBMConfig,
+    LoggingConfig,
+    ModelConfig,
+    ModelFamily,
+    SplitConfig,
+    TargetVariable,
     ValidationStrategy,
     XGBoostConfig,
-    LightGBMConfig,
-    CatBoostConfig,
-    SplitConfig,
-    EarlyStoppingConfig,
-    CalibrationConfig,
-    FeatureImportanceConfig,
-    LoggingConfig,
+    get_default_lightgbm_config,
+    get_default_xgboost_config,
+    get_quick_test_config,
     load_config,
     save_config,
-    ConfigManager,
-    get_default_xgboost_config,
-    get_default_lightgbm_config,
-    get_quick_test_config,
-)
-
-# Phase 1.2: Rich Results - COMPLETE
-from mlb_predict.core.results import (
-    TrainResult,
-    PredictResult,
-    Residuals,
-    Metrics,
-    MetricValue,
-    ValidationCurve,
-    FeatureImportance,
-)
-
-# Phase 2.1: ModelTrainer - COMPLETE
-from mlb_predict.core.trainer import ModelTrainer
-
-# Phase 2.2: Plugin Registry - COMPLETE
-from mlb_predict.core.plugin import (
-    BasePluginModel,
-    SklearnPluginModel,
-    PluginRegistry,
-    get_global_registry,
-    register_plugin,
-    get_plugin,
-    list_plugins,
-)
-
-# Phase 2.3: FeatureLoader - COMPLETE
-from mlb_predict.core.feature_loader import (
-    FeatureLoader,
-    FeatureSchema,
-    DataSplit,
-    load_features_for_config,
 )
 
 # Phase 2.4: Experiment Runner - COMPLETE
 from mlb_predict.core.experiment import (
     ExperimentRun,
-    ExperimentSummary,
     ExperimentRunner,
+    ExperimentSummary,
     HyperparameterSweep,
     compare_feature_sets,
     compare_model_families,
 )
 
+# Phase 2.3: FeatureLoader - COMPLETE
+from mlb_predict.core.feature_loader import (
+    DataSplit,
+    FeatureLoader,
+    FeatureSchema,
+    load_features_for_config,
+)
+
+# Phase 2.2: Plugin Registry - COMPLETE
+from mlb_predict.core.plugin import (
+    BasePluginModel,
+    PluginRegistry,
+    SklearnPluginModel,
+    get_global_registry,
+    get_plugin,
+    list_plugins,
+    register_plugin,
+)
+
+# Phase 1.2: Rich Results - COMPLETE
+from mlb_predict.core.results import (
+    FeatureImportance,
+    Metrics,
+    MetricValue,
+    PredictResult,
+    Residuals,
+    TrainResult,
+    ValidationCurve,
+)
+
+# Phase 2.1: ModelTrainer - COMPLETE
+from mlb_predict.core.trainer import ModelTrainer
+
 # Production Integration - Legacy Bridge
 from mlb_predict.integration import (
-    create_config_from_legacy_args,
+    LEGACY_TARGET_MAPPING,
+    LEGACY_TO_FRAMEWORK_FEATURES,
     LegacyCompatibleTrainer,
     convert_legacy_cli_args_to_config,
+    create_config_from_legacy_args,
     print_framework_result_legacy_style,
-    LEGACY_TO_FRAMEWORK_FEATURES,
-    LEGACY_TARGET_MAPPING,
 )
 
 # Phase 3: Database Orchestration - Complete pipeline abstraction
 from mlb_predict.orchestration import (
-    DatabaseOrchestrator,
-    OperationConfig,
-    FeaturePopulationConfig,
     BridgePopulationConfig,
-    IngestOperationConfig,
-    ValidationConfig,
-    ModelTrainingConfig,
-    OperationResult,
-    FeaturePopulationResult,
     BridgePopulationResult,
+    DatabaseOrchestrator,
+    FeaturePopulationConfig,
+    FeaturePopulationResult,
+    IngestOperationConfig,
     IngestResult,
-    ValidationResult,
+    ModelTrainingConfig,
     ModelTrainingResult,
+    OperationConfig,
+    OperationResult,
+    ValidationConfig,
+    ValidationResult,
 )
+
 
 __all__ = [
     # Configuration (Phase 1.1)

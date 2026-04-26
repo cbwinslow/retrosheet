@@ -230,7 +230,8 @@ COMMENT ON TABLE raw_mlb.statcast IS 'Statcast pitch-level data - ALL fields pre
 -- SECTION 11: SUMMARY VIEW FOR MONITORING
 -- ============================================================================
 
-CREATE OR REPLACE VIEW raw_mlb.api_coverage_summary AS
+-- Game-based endpoints (all have mlb_game_pk)
+CREATE OR REPLACE VIEW raw_mlb.api_game_coverage_summary AS
 SELECT
     'live_feed' AS endpoint,
     COUNT(*) AS snapshots,
@@ -289,7 +290,61 @@ SELECT
 FROM raw_mlb.gameday_xml_snapshots
 WHERE http_status = 200;
 
-COMMENT ON VIEW raw_mlb.api_coverage_summary IS 'Monitoring view for MLB API data completeness';
+COMMENT ON VIEW raw_mlb.api_game_coverage_summary IS 'Monitoring view for game-based MLB API endpoints';
+
+-- Reference data endpoints (different primary keys)
+CREATE OR REPLACE VIEW raw_mlb.api_ref_coverage_summary AS
+SELECT
+    'player_stats' AS endpoint,
+    COUNT(*) AS snapshots,
+    COUNT(DISTINCT player_id) AS unique_players,
+    MAX(fetched_at) AS last_fetch
+FROM raw_mlb.player_stats_snapshots
+WHERE http_status = 200
+
+UNION ALL
+
+SELECT
+    'team_stats',
+    COUNT(*),
+    COUNT(DISTINCT team_id) AS unique_teams,
+    MAX(fetched_at)
+FROM raw_mlb.team_stats_snapshots
+WHERE http_status = 200
+
+UNION ALL
+
+SELECT
+    'standings',
+    COUNT(*),
+    NULL::bigint AS unique_teams,
+    MAX(fetched_at)
+FROM raw_mlb.standings_snapshots
+WHERE http_status = 200
+
+UNION ALL
+
+SELECT
+    'rosters',
+    COUNT(*),
+    COUNT(DISTINCT team_id) AS unique_teams,
+    MAX(fetched_at)
+FROM raw_mlb.roster_snapshots
+WHERE http_status = 200;
+
+COMMENT ON VIEW raw_mlb.api_ref_coverage_summary IS 'Monitoring view for reference data MLB API endpoints';
+
+-- Combined coverage summary (union of both views with NULL handling)
+CREATE OR REPLACE VIEW raw_mlb.api_coverage_summary AS
+SELECT endpoint, snapshots, unique_games AS unique_items, last_fetch
+FROM raw_mlb.api_game_coverage_summary
+
+UNION ALL
+
+SELECT endpoint, snapshots, unique_players AS unique_items, last_fetch
+FROM raw_mlb.api_ref_coverage_summary;
+
+COMMENT ON VIEW raw_mlb.api_coverage_summary IS 'Combined monitoring view for all MLB API endpoints';
 
 -- ============================================================================
 -- VALIDATION QUERY

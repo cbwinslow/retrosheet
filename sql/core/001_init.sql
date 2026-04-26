@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS raw_retrosheet.ingest_runs (
     ingest_run_id bigserial PRIMARY KEY,
     source_name text NOT NULL,
     source_version text,
-    started_at timestamptz NOT NULL DEFAULT now(),
+    started_at timestamptz NOT NULL DEFAULT NOW(),
     finished_at timestamptz,
     status text NOT NULL DEFAULT 'running',
     details jsonb NOT NULL DEFAULT '{}'::jsonb
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS raw_retrosheet.chadwick_event_raw (
     row_number integer NOT NULL,
     game_id text,
     event_id integer,
-    loaded_at timestamptz NOT NULL DEFAULT now(),
+    loaded_at timestamptz NOT NULL DEFAULT NOW(),
     c001 text, c002 text, c003 text, c004 text, c005 text, c006 text, c007 text, c008 text, c009 text, c010 text,
     c011 text, c012 text, c013 text, c014 text, c015 text, c016 text, c017 text, c018 text, c019 text, c020 text,
     c021 text, c022 text, c023 text, c024 text, c025 text, c026 text, c027 text, c028 text, c029 text, c030 text,
@@ -62,7 +62,7 @@ ON raw_retrosheet.chadwick_event_raw (season, game_id, event_id);
 CREATE TABLE IF NOT EXISTS raw_mlb.live_feed_snapshots (
     snapshot_id bigserial PRIMARY KEY,
     game_pk bigint NOT NULL,
-    fetched_at timestamptz NOT NULL DEFAULT now(),
+    fetched_at timestamptz NOT NULL DEFAULT NOW(),
     endpoint text NOT NULL,
     payload jsonb NOT NULL
 );
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS bridge.player_xref (
     name_first text,
     name_last text,
     source_notes jsonb NOT NULL DEFAULT '{}'::jsonb,
-    updated_at timestamptz NOT NULL DEFAULT now()
+    updated_at timestamptz NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS bridge.team_xref (
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS bridge.team_xref (
     mlb_team_id bigint UNIQUE,
     abbreviation text,
     name text,
-    updated_at timestamptz NOT NULL DEFAULT now()
+    updated_at timestamptz NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS bridge.park_xref (
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS bridge.park_xref (
     retrosheet_park_id text UNIQUE,
     mlb_venue_id bigint UNIQUE,
     name text,
-    updated_at timestamptz NOT NULL DEFAULT now()
+    updated_at timestamptz NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS bridge.game_xref (
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS bridge.game_xref (
     game_date date,
     home_team_id text,
     away_team_id text,
-    updated_at timestamptz NOT NULL DEFAULT now()
+    updated_at timestamptz NOT NULL DEFAULT NOW()
 );
 
 CREATE OR REPLACE VIEW raw_mlb.latest_live_feed_snapshot AS

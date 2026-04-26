@@ -82,4 +82,3 @@ EXECUTE FUNCTION bridge.update_updated_at_column();
 -- Comments
 COMMENT ON TABLE bridge.coach_xref IS 'Cross-reference table for coaches across Retrosheet, MLB, Lahman, and ESPN data sources';
 COMMENT ON TABLE bridge.umpire_xref IS 'Cross-reference table for umpires across Retrosheet, MLB, Lahman, and ESPN data sources';
-

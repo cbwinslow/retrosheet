@@ -15,25 +15,27 @@ import os
 import sys
 from pathlib import Path
 
+
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from letta_client import Letta
 
+
 # Configuration
-PROJECT_NAME = "retrosheet-warehouse"
-AGENT_NAME = "windsurf"
-AGENT_DESCRIPTION = "Baseball prediction warehouse agent - manages retrosheet data, features, models, and orchestration"
+PROJECT_NAME = 'retrosheet-warehouse'
+AGENT_NAME = 'windsurf'
+AGENT_DESCRIPTION = 'Baseball prediction warehouse agent - manages retrosheet data, features, models, and orchestration'
 
 
 def create_agent(client: Letta) -> str:
     """Create the windsurf agent with memory blocks."""
-    
+
     # Memory blocks organized by function
     memory_blocks = [
         {
-            "label": "persona",
-            "value": """You are windsurf, an expert AI agent specializing in baseball data engineering and predictive modeling.
+            'label': 'persona',
+            'value': """You are windsurf, an expert AI agent specializing in baseball data engineering and predictive modeling.
 
 Your domain expertise includes:
 - Retrosheet historical baseball data (1871-present)
@@ -52,11 +54,11 @@ Your responsibilities:
 5. Document all work following SQL-first development rules
 
 Communication style: terse, direct, fact-based. Always cite file paths with line numbers.
-Never execute ad-hoc SQL without saving to version-controlled files first."""
+Never execute ad-hoc SQL without saving to version-controlled files first.""",
         },
         {
-            "label": "project",
-            "value": """Project: retrosheet-warehouse
+            'label': 'project',
+            'value': """Project: retrosheet-warehouse
 Location: /home/cbwinslow/workspace/retrosheet
 Git: cbwinslow/retrosheet
 
@@ -88,11 +90,11 @@ KEY SCHEMAS:
 - features: ML-ready training tables
 - features_pitch: Pitch-level features with PostGIS
 - predictions: Model outputs and backtests
-- analysis: Validation and monitoring views"""
+- analysis: Validation and monitoring views""",
         },
         {
-            "label": "infrastructure",
-            "value": """PYTHON ENVIRONMENT:
+            'label': 'infrastructure',
+            'value': """PYTHON ENVIRONMENT:
 - Package manager: uv (not pip)
 - Runtime: Python 3.10
 - Auto-activation via direnv
@@ -125,11 +127,11 @@ Abstraction Layers:
 - adapter.py: SQL file execution
 
 Integration verified: All exports added to mlb_predict/__init__.py
-No conflicts with existing ModelConfig, ModelTrainer, FeatureLoader"""
+No conflicts with existing ModelConfig, ModelTrainer, FeatureLoader""",
         },
         {
-            "label": "models",
-            "value": """PRODUCTION MODELS TRAINED (April 25, 2026):
+            'label': 'models',
+            'value': """PRODUCTION MODELS TRAINED (April 25, 2026):
 
 1. Hit Prediction Model
    - Algorithm: HistGradientBoostingClassifier
@@ -159,11 +161,11 @@ MLB PREDICT FRAMEWORK:
 - PluginRegistry: Extensible model plugins
 
 Framework supports: XGBoost, LightGBM, CatBoost, sklearn models
-All models include calibration, feature importance, and metrics tracking"""
+All models include calibration, feature importance, and metrics tracking""",
         },
         {
-            "label": "git_history",
-            "value": """RECENT COMMITS (April 24-25, 2026):
+            'label': 'git_history',
+            'value': """RECENT COMMITS (April 24-25, 2026):
 
 2b17482 - Production model training campaign complete
 - Trained 3 models with performance metrics
@@ -197,11 +199,11 @@ KEY FILES CREATED:
 - mlb_predict/orchestration/adapter.py
 - docs/ORCHESTRATION_ARCHITECTURE.md
 - scripts/bridge/run_bridge_ingestion.py
-- scripts/model_training/run_model_training_campaign.py"""
+- scripts/model_training/run_model_training_campaign.py""",
         },
         {
-            "label": "current_status",
-            "value": """FEATURE POPULATION STATUS (April 25, 2026):
+            'label': 'current_status',
+            'value': """FEATURE POPULATION STATUS (April 25, 2026):
 
 ✅ COMPLETE:
 - Phase 1: Core engineered features (velocity, zone, outcomes)
@@ -235,11 +237,11 @@ PENDING:
 - Fix batch script column references
 - Complete remaining feature phases
 - Additional model types (swing decision, contact made)
-- Real-time inference pipeline"""
+- Real-time inference pipeline""",
         },
         {
-            "label": "commands",
-            "value": """COMMON COMMANDS:
+            'label': 'commands',
+            'value': """COMMON COMMANDS:
 
 Environment:
     direnv allow .                    # Activate uv environment
@@ -266,52 +268,52 @@ Key Tables:
     features.plate_appearance_advanced_examples  # Training data
     bridge.player_xref                     # ID cross-reference
     raw_mlb.statcast                       # Pitch-level data
-    core.games                             # Game records"""
-        }
+    core.games                             # Game records""",
+        },
     ]
-    
+
     # Try different models in order of preference
     models_to_try = [
-        "openai/gpt-4o",
-        "openai/gpt-4o-mini", 
+        'openai/gpt-4o',
+        'openai/gpt-4o-mini',
     ]
-    
+
     agent = None
     last_error = None
-    
+
     for model in models_to_try:
         try:
             agent = client.agents.create(
                 name=AGENT_NAME,
                 description=AGENT_DESCRIPTION,
                 model=model,
-                embedding="openai/text-embedding-3-small",
+                embedding='openai/text-embedding-3-small',
                 memory_blocks=memory_blocks,
                 include_base_tools=True,  # Enable archival memory tools
             )
-            print(f"   Using model: {model}")
+            print(f'   Using model: {model}')
             break
         except Exception as e:
             last_error = e
             continue
-    
+
     if agent is None:
-        raise Exception(f"Failed to create agent with any model. Last error: {last_error}")
-    
-    print(f"✅ Created agent: {agent.name} (ID: {agent.id})")
+        raise Exception(f'Failed to create agent with any model. Last error: {last_error}')
+
+    print(f'✅ Created agent: {agent.name} (ID: {agent.id})')
     print(f"   Memory blocks: {[b['label'] for b in memory_blocks]}")
-    
+
     return agent.id
 
 
 def create_archival_passages(client: Letta, agent_id: str):
     """Create detailed archival passages for searchable knowledge."""
-    
+
     passages = [
         # Technical Architecture Passages
         {
-            "title": "Orchestration Framework Architecture",
-            "text": """The Pydantic orchestration framework provides unified database operation management.
+            'title': 'Orchestration Framework Architecture',
+            'text': """The Pydantic orchestration framework provides unified database operation management.
 
 ARCHITECTURE LAYERS:
 Layer 4 (UI): CLI scripts, Python API
@@ -340,11 +342,11 @@ Each engine wraps SQL procedures:
 - ValidationEngine: analysis.validate_mlb_data()
 - ModelTrainingEngine: Wraps ModelTrainer
 
-Files: mlb_predict/orchestration/*.py (10 files)"""
+Files: mlb_predict/orchestration/*.py (10 files)""",
         },
         {
-            "title": "Database Schema Structure",
-            "text": """Retrosheet warehouse database schemas and their purposes:
+            'title': 'Database Schema Structure',
+            'text': """Retrosheet warehouse database schemas and their purposes:
 
 raw_retrosheet: Source-preserved Chadwick extracts
 - games, events, rosters, schedules
@@ -384,11 +386,11 @@ predictions: Model outputs
 - model_runs, predictions, backtests
 
 analysis: Validation and monitoring
-- data_quality_checks, coverage_reports"""
+- data_quality_checks, coverage_reports""",
         },
         {
-            "title": "Feature Population Pipeline",
-            "text": """Feature population executes in phases via SQL batch processing:
+            'title': 'Feature Population Pipeline',
+            'text': """Feature population executes in phases via SQL batch processing:
 
 PHASE 0: Core Base Features
 - Load from raw_mlb.statcast to features_pitch.base_features
@@ -428,11 +430,11 @@ PHASE 5: Advanced Metrics
 - re24_delta, wpa_delta
 
 SQL Files: sql/features/010-017_populate_*_features.sql
-Current Status: 7.66M rows with core features populated"""
+Current Status: 7.66M rows with core features populated""",
         },
         {
-            "title": "Git Workflow and Reproducibility",
-            "text": """SQL-First Development Rule (CRITICAL):
+            'title': 'Git Workflow and Reproducibility',
+            'text': """SQL-First Development Rule (CRITICAL):
 ALL database operations must be stored in .sql files under version control.
 
 WORKFLOW:
@@ -476,11 +478,11 @@ PAPER TRAIL CHECKLIST:
 - [ ] PROCEDURES.md updated if canonical workflow
 - [ ] PROJECT_LOG.md updated with validation counts
 - [ ] Git commit made with descriptive message
-- [ ] E2E tests pass"""
+- [ ] E2E tests pass""",
         },
         {
-            "title": "Model Training Framework",
-            "text": """MLB Predict Framework provides unified ML pipeline:
+            'title': 'Model Training Framework',
+            'text': """MLB Predict Framework provides unified ML pipeline:
 
 CONFIGURATION (mlb_predict.config):
 - ModelConfig: family, target, feature_set, validation_strategy
@@ -514,11 +516,11 @@ ALGORITHMS SUPPORTED:
 - XGBoost (gradient boosting)
 - LightGBM (Microsoft GBDT)
 - CatBoost (Yandex GBDT)
-- sklearn: LogisticRegression, RandomForest, HistGradientBoosting"""
+- sklearn: LogisticRegression, RandomForest, HistGradientBoosting""",
         },
         {
-            "title": "Bridge Table Population and ID Resolution",
-            "text": """Bridge tables resolve IDs between data sources:
+            'title': 'Bridge Table Population and ID Resolution',
+            'text': """Bridge tables resolve IDs between data sources:
 
 player_xref: Core cross-reference
 - player_id (canonical)
@@ -553,11 +555,11 @@ ORCHESTRATION:
 - run_bridge_ingestion.py: CLI with --skip-download, --skip-validation
 - CheckpointManager: Resumable operations
 - ValidationLayer: Pre-flight checks
-- Error handling: Retry logic + circuit breakers"""
+- Error handling: Retry logic + circuit breakers""",
         },
         {
-            "title": "Complete File Inventory - Key Components",
-            "text": """ORCHESTRATION MODULE (mlb_predict/orchestration/):
+            'title': 'Complete File Inventory - Key Components',
+            'text': """ORCHESTRATION MODULE (mlb_predict/orchestration/):
 - __init__.py: Module exports (DatabaseOrchestrator, configs, engines)
 - config.py: 6 Pydantic config classes with validation
 - results.py: 8 result classes (OperationResult, PhaseResult)
@@ -593,11 +595,11 @@ DOCUMENTATION:
 - docs/agents/FILE_INVENTORY.md: Complete file catalog
 - docs/agents/PROCEDURES.md: Canonical workflows
 - docs/PROJECT_LOG.md: Work history and decisions
-- AGENTS.md: Project conventions and non-negotiables"""
+- AGENTS.md: Project conventions and non-negotiables""",
         },
         {
-            "title": "Data Quality and Validation Standards",
-            "text": """VALIDATION LAYER (mlb_predict/orchestration/validation.py):
+            'title': 'Data Quality and Validation Standards',
+            'text': """VALIDATION LAYER (mlb_predict/orchestration/validation.py):
 
 Pre-flight checks before operations:
 1. Staging table exists and has data
@@ -636,11 +638,11 @@ Every number must be traceable to:
 1. Source data: raw table and fetch date
 2. Transformation: SQL file that performed it
 3. Model training: script with hyperparameters
-4. Evaluation: validation set and metrics"""
+4. Evaluation: validation set and metrics""",
         },
         {
-            "title": "Conversation History - Key Decisions",
-            "text": """KEY DECISIONS FROM DEVELOPMENT WORK:
+            'title': 'Conversation History - Key Decisions',
+            'text': """KEY DECISIONS FROM DEVELOPMENT WORK:
 
 April 25, 2026:
 1. Chadwick Ingestion Bug Fix
@@ -684,92 +686,92 @@ PENDING WORK:
 - Fix column references in batch scripts (inning, outs_when_up)
 - Complete Phase 4-17 feature population
 - Additional models: swing decision, contact made
-- Real-time inference pipeline"""
-        }
+- Real-time inference pipeline""",
+        },
     ]
-    
-    print(f"\n📝 Creating {len(passages)} archival passages...")
-    
+
+    print(f'\n📝 Creating {len(passages)} archival passages...')
+
     for i, passage_data in enumerate(passages, 1):
         try:
             # Create passage
             result = client.agents.passages.create(
                 agent_id=agent_id,
-                text=passage_data["text"],
+                text=passage_data['text'],
             )
             print(f"   {i}. ✅ {passage_data['title']}")
         except Exception as e:
             print(f"   {i}. ❌ {passage_data['title']}: {e}")
-    
-    print(f"\n✅ Archival memory populated with {len(passages)} passages")
+
+    print(f'\n✅ Archival memory populated with {len(passages)} passages')
 
 
 def get_letta_client() -> Letta:
     """Initialize Letta client with local or cloud connection."""
-    
+
     # Try local server first
     try:
         import urllib.request
         req = urllib.request.Request(
-            "http://localhost:8283/v1/health",
-            method="GET",
-            headers={"Accept": "application/json"}
+            'http://localhost:8283/v1/health',
+            method='GET',
+            headers={'Accept': 'application/json'},
         )
         with urllib.request.urlopen(req, timeout=3) as response:
             if response.status == 200:
-                print("   Found local Letta server at http://localhost:8283")
-                return Letta(base_url="http://localhost:8283")
+                print('   Found local Letta server at http://localhost:8283')
+                return Letta(base_url='http://localhost:8283')
     except Exception:
         pass
-    
+
     # Try with API key for cloud
-    api_key = os.getenv("LETTA_API_KEY")
-    if api_key and api_key != "your-letta-key-here":
-        print("   Using Letta Cloud (api.letta.com)")
+    api_key = os.getenv('LETTA_API_KEY')
+    if api_key and api_key != 'your-letta-key-here':
+        print('   Using Letta Cloud (api.letta.com)')
         return Letta(api_key=api_key)
-    
+
     # No connection available
-    print("\n❌ No Letta connection available")
-    print("\nOptions:")
-    print("  1. Start local Letta server:")
-    print("     docker run -d -p 8283:8283 letta/letta:latest")
-    print("  2. Set Letta Cloud API key:")
+    print('\n❌ No Letta connection available')
+    print('\nOptions:')
+    print('  1. Start local Letta server:')
+    print('     docker run -d -p 8283:8283 letta/letta:latest')
+    print('  2. Set Letta Cloud API key:')
     print("     export LETTA_API_KEY='your-api-key-from-app.letta.com'")
-    print("\nGet API key at: https://app.letta.com/api-keys")
+    print('\nGet API key at: https://app.letta.com/api-keys')
     sys.exit(1)
 
 
 def main():
     """Main setup function."""
-    print("=" * 70)
-    print("SETTING UP LETTA MEMORIES FOR RETROSHEET PROJECT")
-    print("=" * 70)
-    
+    print('=' * 70)
+    print('SETTING UP LETTA MEMORIES FOR RETROSHEET PROJECT')
+    print('=' * 70)
+
     # Initialize client
-    print("\n🔌 Connecting to Letta...")
+    print('\n🔌 Connecting to Letta...')
     client = get_letta_client()
-    print("✅ Connected to Letta")
-    
+    print('✅ Connected to Letta')
+
     # Create agent with memory blocks
-    print(f"\n🔧 Creating agent: {AGENT_NAME}")
+    print(f'\n🔧 Creating agent: {AGENT_NAME}')
     agent_id = create_agent(client)
-    
+
     # Create archival passages
     create_archival_passages(client, agent_id)
-    
-    print("\n" + "=" * 70)
-    print("SETUP COMPLETE")
-    print("=" * 70)
-    print(f"\nAgent: {AGENT_NAME}")
-    print(f"Agent ID: {agent_id}")
-    print(f"\nYou can now interact with the agent:")
-    print(f"  - Via Letta Code CLI: letta --agent {agent_id}")
+
+    print('\n' + '=' * 70)
+    print('SETUP COMPLETE')
+    print('=' * 70)
+    print(f'\nAgent: {AGENT_NAME}')
+    print(f'Agent ID: {agent_id}')
+    print('\nYou can now interact with the agent:')
+    print(f'  - Via Letta Code CLI: letta --agent {agent_id}')
     print(f"  - Via API: client.agents.messages.create(agent_id='{agent_id}', ...)")
-    print(f"\nMemory structure:")
-    print(f"  - Core blocks: persona, project, infrastructure, models, git_history, current_status, commands")
-    print(f"  - Archival passages: 10 detailed searchable documents")
+    print('\nMemory structure:')
+    print('  - Core blocks: persona, project, infrastructure, models, git_history, current_status, commands')
+    print('  - Archival passages: 10 detailed searchable documents')
     print()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

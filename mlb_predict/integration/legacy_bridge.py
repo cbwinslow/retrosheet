@@ -1,5 +1,4 @@
-"""
-Legacy Bridge - Connect existing train_models.py to new ModelTrainer framework.
+"""Legacy Bridge - Connect existing train_models.py to new ModelTrainer framework.
 
 Production Integration Step 1: Bridge Layer
 
@@ -13,17 +12,24 @@ Author: Agent Cascade
 Date: April 24, 2026
 """
 
-from typing import Dict, List, Optional, Any, Tuple
-from pathlib import Path
 import json
 import sys
+from pathlib import Path
+from typing import Any
+
 
 # Add scripts to path for importing train_models
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts' / 'model_training'))
 
 from mlb_predict import (
-    ModelConfig, ModelTrainer, ModelFamily, TargetVariable, FeatureSet,
-    TrainResult, Metrics, MetricValue, FeatureImportance,
+    FeatureImportance,
+    FeatureSet,
+    Metrics,
+    MetricValue,
+    ModelConfig,
+    ModelFamily,
+    ModelTrainer,
+    TrainResult,
 )
 
 
@@ -79,8 +85,7 @@ def create_config_from_legacy_args(
     train_through: int = 2022,
     model_family: str = 'xgboost',
 ) -> ModelConfig:
-    """
-    Create ModelConfig from legacy train_models.py arguments.
+    """Create ModelConfig from legacy train_models.py arguments.
     
     Args:
         target_id: Legacy target identifier (e.g., 'swing_outcome', 'game_home_win')
@@ -106,28 +111,28 @@ def create_config_from_legacy_args(
     """
     # Map legacy target to framework target
     framework_target = LEGACY_TARGET_MAPPING.get(target_id, target_id)
-    
+
     # Map legacy feature set
     framework_features = LEGACY_TO_FRAMEWORK_FEATURES.get(feature_set, FeatureSet.ADVANCED)
-    
+
     # Map model family
     try:
         family_enum = ModelFamily(model_family.lower())
     except ValueError:
         family_enum = ModelFamily.XGBOOST
-    
+
     # Create config
     # Determine train/val/test split from train_through
     # Train = seasons <= train_through, Val = seasons > train_through
     val_seasons = [s for s in range(min_season, max_season + 1) if s > train_through]
-    
+
     from mlb_predict.config import SplitConfig, ValidationStrategy
-    
+
     split_config = SplitConfig(
         strategy=ValidationStrategy.TEMPORAL if val_seasons else ValidationStrategy.RANDOM,
         val_seasons=val_seasons if val_seasons else None,
     )
-    
+
     config = ModelConfig(
         family=family_enum,
         target=framework_target,
@@ -135,16 +140,15 @@ def create_config_from_legacy_args(
         seasons=list(range(min_season, max_season + 1)),
         split=split_config,
     )
-    
+
     return config
 
 
 def get_legacy_feature_lists(
     target_id: str,
-    feature_set: str = 'advanced'
-) -> Tuple[List[str], List[str]]:
-    """
-    Get numeric and categorical feature lists for legacy targets.
+    feature_set: str = 'advanced',
+) -> tuple[list[str], list[str]]:
+    """Get numeric and categorical feature lists for legacy targets.
     
     Args:
         target_id: Legacy target identifier
@@ -156,19 +160,16 @@ def get_legacy_feature_lists(
     if target_id == 'game_home_win':
         if feature_set == 'basic':
             return GAME_NUMERIC_FEATURES, GAME_CATEGORICAL_FEATURES
-        else:
-            # For advanced/enriched, return extended lists
-            return GAME_NUMERIC_FEATURES, GAME_CATEGORICAL_FEATURES
-    elif target_id in ['swing_outcome', 'contact_outcome', 'hit_outcome', 'pa_outcome']:
+        # For advanced/enriched, return extended lists
+        return GAME_NUMERIC_FEATURES, GAME_CATEGORICAL_FEATURES
+    if target_id in ['swing_outcome', 'contact_outcome', 'hit_outcome', 'pa_outcome']:
         if feature_set == 'basic':
             return PA_NUMERIC_FEATURES, PA_CATEGORICAL_FEATURES
-        else:
-            return PA_NUMERIC_FEATURES, PA_CATEGORICAL_FEATURES
-    elif target_id.startswith('half_inning_'):
-        return HI_NUMERIC_FEATURES, HI_CATEGORICAL_FEATURES
-    else:
-        # Default to PA features
         return PA_NUMERIC_FEATURES, PA_CATEGORICAL_FEATURES
+    if target_id.startswith('half_inning_'):
+        return HI_NUMERIC_FEATURES, HI_CATEGORICAL_FEATURES
+    # Default to PA features
+    return PA_NUMERIC_FEATURES, PA_CATEGORICAL_FEATURES
 
 
 # ============================================================================
@@ -176,10 +177,9 @@ def get_legacy_feature_lists(
 # ============================================================================
 
 def convert_legacy_metrics_to_framework(
-    legacy_metrics: Dict[str, Any]
+    legacy_metrics: dict[str, Any],
 ) -> Metrics:
-    """
-    Convert legacy metrics dict to framework Metrics object.
+    """Convert legacy metrics dict to framework Metrics object.
     
     Args:
         legacy_metrics: Dict with keys like 'roc_auc', 'accuracy', 'log_loss'
@@ -190,7 +190,7 @@ def convert_legacy_metrics_to_framework(
     return Metrics(
         roc_auc=MetricValue(
             value=legacy_metrics.get('roc_auc', 0.0),
-            confidence_interval=legacy_metrics.get('roc_auc_ci')
+            confidence_interval=legacy_metrics.get('roc_auc_ci'),
         ) if 'roc_auc' in legacy_metrics else None,
         accuracy=MetricValue(
             value=legacy_metrics.get('accuracy', 0.0),
@@ -210,13 +210,12 @@ def create_train_result_from_legacy(
     feature_set: str,
     version: str,
     artifact_path: str,
-    train_metrics: Dict[str, Any],
-    val_metrics: Dict[str, Any],
-    feature_spec: Dict[str, Any],
-    config: Optional[ModelConfig] = None,
+    train_metrics: dict[str, Any],
+    val_metrics: dict[str, Any],
+    feature_spec: dict[str, Any],
+    config: ModelConfig | None = None,
 ) -> TrainResult:
-    """
-    Create TrainResult from legacy training output.
+    """Create TrainResult from legacy training output.
     
     Args:
         model_name: Name of the trained model
@@ -237,11 +236,11 @@ def create_train_result_from_legacy(
             target_id=target_id,
             feature_set=feature_set,
         )
-    
+
     # Convert metrics
     train_metrics_obj = convert_legacy_metrics_to_framework(train_metrics)
     val_metrics_obj = convert_legacy_metrics_to_framework(val_metrics)
-    
+
     # Create feature importance if available
     feature_importance = None
     if 'feature_importance' in feature_spec:
@@ -253,10 +252,10 @@ def create_train_result_from_legacy(
             )
             for i, (name, score) in enumerate(feature_spec['feature_importance'].items())
         ]
-    
+
     result = TrainResult(
         model_id=None,  # Will be set by database
-        model_name=f"{target_id}_{model_name}_{version}",
+        model_name=f'{target_id}_{model_name}_{version}',
         config=config,
         artifact_path=artifact_path,
         train_metrics=train_metrics_obj,
@@ -267,7 +266,7 @@ def create_train_result_from_legacy(
         n_samples_val=val_metrics.get('n_samples', 0),
         status='completed',
     )
-    
+
     return result
 
 
@@ -276,8 +275,7 @@ def create_train_result_from_legacy(
 # ============================================================================
 
 class LegacyCompatibleTrainer:
-    """
-    Trainer that bridges legacy train_models.py with new ModelTrainer.
+    """Trainer that bridges legacy train_models.py with new ModelTrainer.
     
     This allows gradual migration:
     - Uses new framework config and results
@@ -295,17 +293,16 @@ class LegacyCompatibleTrainer:
         ... )
         >>> print(result.summary())
     """
-    
-    def __init__(self, output_dir: Optional[str] = None):
-        """
-        Initialize legacy-compatible trainer.
+
+    def __init__(self, output_dir: str | None = None):
+        """Initialize legacy-compatible trainer.
         
         Args:
             output_dir: Directory for saving models (default: data/models)
         """
         self.output_dir = Path(output_dir) if output_dir else Path('data/models')
         self.output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     def train_legacy_style(
         self,
         target_id: str,
@@ -317,8 +314,7 @@ class LegacyCompatibleTrainer:
         sample_rate: float = 1.0,
         activate: bool = True,
     ) -> TrainResult:
-        """
-        Train using legacy script but return new framework result.
+        """Train using legacy script but return new framework result.
         
         This is a bridge method that:
         1. Creates a ModelConfig
@@ -347,24 +343,23 @@ class LegacyCompatibleTrainer:
             train_through=train_through,
             model_family=model_family,
         )
-        
+
         # Use new ModelTrainer (which may call legacy internally)
         # For now, this creates a mock result with the config
         # In production, this would integrate with actual training
         trainer = ModelTrainer(config)
         result = trainer.train()
-        
+
         # Enrich result with legacy-compatible metadata
         result.config = config
-        
+
         return result
-    
+
     def train_new_style(
         self,
         config: ModelConfig,
     ) -> TrainResult:
-        """
-        Train using fully new framework.
+        """Train using fully new framework.
         
         Args:
             config: ModelConfig with all settings
@@ -381,8 +376,7 @@ class LegacyCompatibleTrainer:
 # ============================================================================
 
 def convert_legacy_cli_args_to_config(args: Any) -> ModelConfig:
-    """
-    Convert legacy CLI args to ModelConfig.
+    """Convert legacy CLI args to ModelConfig.
     
     Args:
         args: argparse.Namespace from legacy CLI
@@ -401,16 +395,15 @@ def convert_legacy_cli_args_to_config(args: Any) -> ModelConfig:
 
 
 def print_framework_result_legacy_style(result: TrainResult) -> None:
-    """
-    Print TrainResult in legacy format for backward compatibility.
+    """Print TrainResult in legacy format for backward compatibility.
     
     Args:
         result: TrainResult to print
     """
-    print(f"trained {result.model_name}: {result.summary()}")
+    print(f'trained {result.model_name}: {result.summary()}')
     if result.artifact_path:
-        print(f"artifact: {result.artifact_path}")
-    
+        print(f'artifact: {result.artifact_path}')
+
     # Print legacy-format metrics
     metrics_dict = {}
     if result.val_metrics:
@@ -420,18 +413,18 @@ def print_framework_result_legacy_style(result: TrainResult) -> None:
             metrics_dict['accuracy'] = result.val_metrics.accuracy.value
         if result.val_metrics.log_loss:
             metrics_dict['log_loss'] = result.val_metrics.log_loss.value
-    
-    print(f"metrics: {json.dumps(metrics_dict, sort_keys=True)}")
+
+    print(f'metrics: {json.dumps(metrics_dict, sort_keys=True)}')
 
 
 __all__ = [
-    'create_config_from_legacy_args',
-    'get_legacy_feature_lists',
-    'convert_legacy_metrics_to_framework',
-    'create_train_result_from_legacy',
+    'LEGACY_TARGET_MAPPING',
+    'LEGACY_TO_FRAMEWORK_FEATURES',
     'LegacyCompatibleTrainer',
     'convert_legacy_cli_args_to_config',
+    'convert_legacy_metrics_to_framework',
+    'create_config_from_legacy_args',
+    'create_train_result_from_legacy',
+    'get_legacy_feature_lists',
     'print_framework_result_legacy_style',
-    'LEGACY_TO_FRAMEWORK_FEATURES',
-    'LEGACY_TARGET_MAPPING',
 ]

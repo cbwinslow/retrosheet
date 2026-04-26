@@ -12,26 +12,26 @@ Usage:
     uv run python scripts/analysis/pca_feature_analysis.py --variance-threshold 0.95
 """
 
-import os
-import json
 import argparse
+import json
+import os
 from datetime import datetime
-from typing import Optional
 
 import numpy as np
 import pandas as pd
 import psycopg2
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
 
 DB_URL = os.getenv('DATABASE_URL', 'postgresql://localhost:5432/retrosheet')
 
 
-def load_features(conn, feature_sample: Optional[int] = None) -> pd.DataFrame:
+def load_features(conn, feature_sample: int | None = None) -> pd.DataFrame:
     """Load numeric features from engineered_features table."""
 
-    print("Loading features for PCA...")
+    print('Loading features for PCA...')
 
     # Get numeric columns (exclude IDs, categoricals, targets)
     query = """
@@ -51,14 +51,14 @@ def load_features(conn, feature_sample: Optional[int] = None) -> pd.DataFrame:
     cols_df = pd.read_sql(query, conn)
     feature_cols = cols_df['column_name'].tolist()
 
-    print(f"Found {len(feature_cols)} numeric features")
+    print(f'Found {len(feature_cols)} numeric features')
 
     if feature_sample and len(feature_cols) > feature_sample:
         # Sample features randomly for quick analysis
         import random
         random.seed(42)
         feature_cols = random.sample(feature_cols, feature_sample)
-        print(f"Sampled {len(feature_cols)} features for quick analysis")
+        print(f'Sampled {len(feature_cols)} features for quick analysis')
 
     # Load data
     col_str = ', '.join([f'"{c}"' for c in feature_cols])
@@ -71,7 +71,7 @@ def load_features(conn, feature_sample: Optional[int] = None) -> pd.DataFrame:
     """
 
     df = pd.read_sql(query, conn)
-    print(f"Loaded {len(df)} rows with {len(feature_cols)} features")
+    print(f'Loaded {len(df)} rows with {len(feature_cols)} features')
 
     return df, feature_cols
 
@@ -79,7 +79,7 @@ def load_features(conn, feature_sample: Optional[int] = None) -> pd.DataFrame:
 def run_pca_analysis(df: pd.DataFrame, feature_cols: list, n_components: int) -> dict:
     """Run PCA and return results."""
 
-    print(f"\nRunning PCA with max {n_components} components...")
+    print(f'\nRunning PCA with max {n_components} components...')
 
     # Extract feature matrix
     X = df[feature_cols].values
@@ -91,7 +91,7 @@ def run_pca_analysis(df: pd.DataFrame, feature_cols: list, n_components: int) ->
             valid_cols.append(col)
 
     if len(valid_cols) < len(feature_cols):
-        print(f"Removed {len(feature_cols) - len(valid_cols)} invalid features")
+        print(f'Removed {len(feature_cols) - len(valid_cols)} invalid features')
         X = df[valid_cols].values
     else:
         valid_cols = feature_cols
@@ -105,15 +105,15 @@ def run_pca_analysis(df: pd.DataFrame, feature_cols: list, n_components: int) ->
     # Fit PCA with standardization
     pipeline = Pipeline([
         ('scaler', StandardScaler()),
-        ('pca', PCA(n_components=min(n_components, len(valid_cols)), random_state=42))
+        ('pca', PCA(n_components=min(n_components, len(valid_cols)), random_state=42)),
     ])
 
     X_transformed = pipeline.fit_transform(X)
     pca = pipeline.named_steps['pca']
 
-    print(f"\nPCA Results:")
-    print(f"  Components: {pca.n_components_}")
-    print(f"  Total variance explained: {sum(pca.explained_variance_ratio_):.2%}")
+    print('\nPCA Results:')
+    print(f'  Components: {pca.n_components_}')
+    print(f'  Total variance explained: {sum(pca.explained_variance_ratio_):.2%}')
 
     # Find components for thresholds
     cumvar = np.cumsum(pca.explained_variance_ratio_)
@@ -122,9 +122,9 @@ def run_pca_analysis(df: pd.DataFrame, feature_cols: list, n_components: int) ->
     n_90 = np.argmax(cumvar >= 0.90) + 1
     n_95 = np.argmax(cumvar >= 0.95) + 1
 
-    print(f"  Components for 80% variance: {n_80}")
-    print(f"  Components for 90% variance: {n_90}")
-    print(f"  Components for 95% variance: {n_95}")
+    print(f'  Components for 80% variance: {n_80}')
+    print(f'  Components for 90% variance: {n_90}')
+    print(f'  Components for 95% variance: {n_95}')
 
     # Component analysis
     components_data = []
@@ -140,15 +140,15 @@ def run_pca_analysis(df: pd.DataFrame, feature_cols: list, n_components: int) ->
 
         # Interpretation
         if i == 0:
-            label = "Overall Pitch Quality/Magnitude"
+            label = 'Overall Pitch Quality/Magnitude'
         elif i == 1:
-            label = "Zone Location (High/Low vs In/Out)"
+            label = 'Zone Location (High/Low vs In/Out)'
         elif i == 2:
-            label = "Count/Leverage Situation"
+            label = 'Count/Leverage Situation'
         elif i == 3:
-            label = "Pitch Movement/Spin"
+            label = 'Pitch Movement/Spin'
         else:
-            label = f"Component {i+1}"
+            label = f'Component {i+1}'
 
         components_data.append({
             'component': i + 1,
@@ -157,7 +157,7 @@ def run_pca_analysis(df: pd.DataFrame, feature_cols: list, n_components: int) ->
             'top_positive': top_pos,
             'top_negative': top_neg,
             'label': label,
-            'n_top_features': len(top_pos) + len(top_neg)
+            'n_top_features': len(top_pos) + len(top_neg),
         })
 
     return {
@@ -186,25 +186,25 @@ def save_results(results: dict, output_dir: str = 'models/pca_analysis'):
     with open(output_file, 'w') as f:
         json.dump(results, f, indent=2)
 
-    print(f"\nResults saved to: {output_file}")
+    print(f'\nResults saved to: {output_file}')
 
     # Print summary
-    print("\n" + "="*60)
-    print("PCA SUMMARY")
-    print("="*60)
+    print('\n' + '='*60)
+    print('PCA SUMMARY')
+    print('='*60)
     print(f"Original features: {results['n_features_original']}")
     print(f"Components analyzed: {results['n_components']}")
     print(f"Total variance explained: {results['total_variance_explained']:.2%}")
-    print(f"\nRecommended component counts:")
+    print('\nRecommended component counts:')
     print(f"  80% variance: {results['components_for_80']} components")
     print(f"  90% variance: {results['components_for_90']} components")
     print(f"  95% variance: {results['components_for_95']} components")
-    print(f"\nReduction ratios:")
+    print('\nReduction ratios:')
     print(f"  80%: {results['components_for_80']}/{results['n_features_original']} = {results['components_for_80']/results['n_features_original']:.1%}")
     print(f"  90%: {results['components_for_90']}/{results['n_features_original']} = {results['components_for_90']/results['n_features_original']:.1%}")
     print(f"  95%: {results['components_for_95']}/{results['n_features_original']} = {results['components_for_95']/results['n_features_original']:.1%}")
 
-    print("\nTop Components by Variance:")
+    print('\nTop Components by Variance:')
     for comp in results['components'][:5]:
         print(f"\n  PC{comp['component']}: {comp['variance_ratio']:.2%} variance ({comp['label']})")
         if comp['top_positive']:
@@ -221,12 +221,12 @@ def main():
                        help='Sample N features for quick analysis')
     args = parser.parse_args()
 
-    print("="*70)
-    print("PCA FEATURE ANALYSIS")
-    print("="*70)
-    print(f"Timestamp: {datetime.now().isoformat()}")
-    print(f"Max components: {args.n_components}")
-    print("="*70)
+    print('='*70)
+    print('PCA FEATURE ANALYSIS')
+    print('='*70)
+    print(f'Timestamp: {datetime.now().isoformat()}')
+    print(f'Max components: {args.n_components}')
+    print('='*70)
 
     conn = psycopg2.connect(DB_URL)
 

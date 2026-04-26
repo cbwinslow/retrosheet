@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS raw_retrosheet.biofile (
     name_change text,
     bat_change text,
     hall_of_fame text,
-    loaded_at timestamptz NOT NULL DEFAULT now()
+    loaded_at timestamptz NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS raw_retrosheet.teams_reference (
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS raw_retrosheet.teams_reference (
     nickname text,
     first_season integer,
     last_season integer,
-    loaded_at timestamptz NOT NULL DEFAULT now()
+    loaded_at timestamptz NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS raw_retrosheet.ballparks_reference (
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS raw_retrosheet.ballparks_reference (
     end_date text,
     league text,
     notes text,
-    loaded_at timestamptz NOT NULL DEFAULT now()
+    loaded_at timestamptz NOT NULL DEFAULT NOW()
 );
 
 ALTER TABLE core.players
@@ -99,18 +99,18 @@ ADD COLUMN IF NOT EXISTS hall_of_fame boolean;
 
 UPDATE core.players players
 SET
-    player_name = coalesce(nullif(bio.first_name || ' ' || bio.last_name, ' '), players.player_name),
-    name_first = nullif(bio.first_name, ''),
-    name_last = nullif(bio.last_name, ''),
-    nickname = nullif(bio.nickname, ''),
+    player_name = COALESCE(NULLIF(bio.first_name || ' ' || bio.last_name, ' '), players.player_name),
+    name_first = NULLIF(bio.first_name, ''),
+    name_last = NULLIF(bio.last_name, ''),
+    nickname = NULLIF(bio.nickname, ''),
     bats = CASE WHEN bio.bats IN ('L', 'R', 'B') THEN bio.bats::char(1) ELSE players.bats END,
     throws = CASE WHEN bio.throws IN ('L', 'R') THEN bio.throws::char(1) ELSE players.throws END,
     play_debut = core.safe_date_mmddyyyy(bio.play_debut),
     play_lastgame = core.safe_date_mmddyyyy(bio.play_lastgame),
-    height = nullif(bio.height, ''),
+    height = NULLIF(bio.height, ''),
     weight = core.safe_int(bio.weight),
-    hall_of_fame = nullif(bio.hall_of_fame, '') IS NOT NULL,
-    updated_at = now()
+    hall_of_fame = NULLIF(bio.hall_of_fame, '') IS NOT NULL,
+    updated_at = NOW()
 FROM raw_retrosheet.biofile AS bio
 WHERE bio.player_id = players.retrosheet_player_id;
 
@@ -122,13 +122,13 @@ ADD COLUMN IF NOT EXISTS team_name text;
 
 UPDATE core.teams teams
 SET
-    league = nullif(ref.league, ''),
-    city = nullif(ref.city, ''),
-    nickname = nullif(ref.nickname, ''),
-    team_name = nullif(trim(coalesce(ref.city, '') || ' ' || coalesce(ref.nickname, '')), ''),
-    first_season = coalesce(ref.first_season, teams.first_season),
-    last_season = coalesce(ref.last_season, teams.last_season),
-    updated_at = now()
+    league = NULLIF(ref.league, ''),
+    city = NULLIF(ref.city, ''),
+    nickname = NULLIF(ref.nickname, ''),
+    team_name = NULLIF(TRIM(COALESCE(ref.city, '') || ' ' || COALESCE(ref.nickname, '')), ''),
+    first_season = COALESCE(ref.first_season, teams.first_season),
+    last_season = COALESCE(ref.last_season, teams.last_season),
+    updated_at = NOW()
 FROM raw_retrosheet.teams_reference AS ref
 WHERE ref.retrosheet_team_id = teams.retrosheet_team_id;
 
@@ -144,15 +144,15 @@ ADD COLUMN IF NOT EXISTS notes text;
 
 UPDATE core.parks parks
 SET
-    name = nullif(ref.name, ''),
-    aka = nullif(ref.aka, ''),
-    city = nullif(ref.city, ''),
-    state = nullif(ref.state, ''),
+    name = NULLIF(ref.name, ''),
+    aka = NULLIF(ref.aka, ''),
+    city = NULLIF(ref.city, ''),
+    state = NULLIF(ref.state, ''),
     start_date = core.safe_date_mmddyyyy(ref.start_date),
     end_date = core.safe_date_mmddyyyy(ref.end_date),
-    league = nullif(ref.league, ''),
-    notes = nullif(ref.notes, ''),
-    updated_at = now()
+    league = NULLIF(ref.league, ''),
+    notes = NULLIF(ref.notes, ''),
+    updated_at = NOW()
 FROM raw_retrosheet.ballparks_reference AS ref
 WHERE ref.retrosheet_park_id = parks.retrosheet_park_id;
 
@@ -165,23 +165,23 @@ INSERT INTO bridge.player_xref (
 )
 SELECT
     player_id,
-    nullif(first_name, ''),
-    nullif(last_name, ''),
-    jsonb_build_object(
+    NULLIF(first_name, ''),
+    NULLIF(last_name, ''),
+    JSONB_BUILD_OBJECT(
         'source', 'retrosheet.biofile',
-        'bats', nullif(bats, ''),
-        'throws', nullif(throws, ''),
-        'play_debut', nullif(play_debut, ''),
-        'play_lastgame', nullif(play_lastgame, '')
+        'bats', NULLIF(bats, ''),
+        'throws', NULLIF(throws, ''),
+        'play_debut', NULLIF(play_debut, ''),
+        'play_lastgame', NULLIF(play_lastgame, '')
     ),
-    now()
+    NOW()
 FROM raw_retrosheet.biofile
 ON CONFLICT (retrosheet_id) DO UPDATE
     SET
         name_first = excluded.name_first,
         name_last = excluded.name_last,
         source_notes = bridge.player_xref.source_notes || excluded.source_notes,
-        updated_at = now();
+        updated_at = NOW();
 
 INSERT INTO bridge.team_xref (
     retrosheet_team_id,
@@ -192,14 +192,14 @@ INSERT INTO bridge.team_xref (
 SELECT
     retrosheet_team_id,
     retrosheet_team_id,
-    nullif(trim(coalesce(city, '') || ' ' || coalesce(nickname, '')), ''),
-    now()
+    NULLIF(TRIM(COALESCE(city, '') || ' ' || COALESCE(nickname, '')), ''),
+    NOW()
 FROM raw_retrosheet.teams_reference
 ON CONFLICT (retrosheet_team_id) DO UPDATE
     SET
         abbreviation = excluded.abbreviation,
         name = excluded.name,
-        updated_at = now();
+        updated_at = NOW();
 
 INSERT INTO bridge.park_xref (
     retrosheet_park_id,
@@ -208,13 +208,13 @@ INSERT INTO bridge.park_xref (
 )
 SELECT
     retrosheet_park_id,
-    nullif(name, ''),
-    now()
+    NULLIF(name, ''),
+    NOW()
 FROM raw_retrosheet.ballparks_reference
 ON CONFLICT (retrosheet_park_id) DO UPDATE
     SET
         name = excluded.name,
-        updated_at = now();
+        updated_at = NOW();
 
 UPDATE core.events events
 SET batter_hand = players.bats
@@ -251,16 +251,16 @@ REFRESH MATERIALIZED VIEW features.plate_appearance_examples;
 CREATE OR REPLACE VIEW core.metadata_validation_summary AS
 SELECT
     'core.players' AS object_name,
-    count(*) AS row_count,
-    count(*) FILTER (WHERE bats IS NOT NULL) AS populated_bats,
-    count(*) FILTER (WHERE throws IS NOT NULL) AS populated_throws
+    COUNT(*) AS row_count,
+    COUNT(*) FILTER (WHERE bats IS NOT NULL) AS populated_bats,
+    COUNT(*) FILTER (WHERE throws IS NOT NULL) AS populated_throws
 FROM core.players
 UNION ALL
 SELECT
     'features.plate_appearance_examples',
-    count(*),
-    count(*) FILTER (WHERE batter_hand <> 'U'),
-    count(*) FILTER (WHERE pitcher_hand <> 'U')
+    COUNT(*),
+    COUNT(*) FILTER (WHERE batter_hand <> 'U'),
+    COUNT(*) FILTER (WHERE pitcher_hand <> 'U')
 FROM features.plate_appearance_examples;
 
 -- Table comments

@@ -1,5 +1,4 @@
-"""
-Checkpoint Models for Resumable Operations.
+"""Checkpoint Models for Resumable Operations.
 
 Provides checkpoint dataclasses for tracking operation progress.
 """
@@ -25,7 +24,7 @@ class Checkpoint:
 class FeaturePhaseCheckpoint(Checkpoint):
     """Checkpoint for feature population phases."""
     phase_number: int = 0
-    phase_name: str = ""
+    phase_name: str = ''
     rows_processed: int = 0
     last_row_id: Any = None
 
@@ -33,7 +32,7 @@ class FeaturePhaseCheckpoint(Checkpoint):
 @dataclass
 class BridgeTableCheckpoint(Checkpoint):
     """Checkpoint for bridge table population."""
-    table_name: str = ""
+    table_name: str = ''
     records_processed: int = 0
     validation_passed: bool = False
 

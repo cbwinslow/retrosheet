@@ -12,33 +12,33 @@ CREATE VIEW features.pitch_sequence_symbol_reference AS
 SELECT *
 FROM (
     VALUES
-    ('+', 'following pickoff throw by catcher', 'marker', false, false, false, false),
-    ('*', 'blocked by catcher', 'marker', false, false, false, false),
-    ('.', 'play not involving batter', 'marker', false, false, false, false),
-    ('1', 'pickoff throw to first', 'pickoff_throw', false, false, false, false),
-    ('2', 'pickoff throw to second', 'pickoff_throw', false, false, false, false),
-    ('3', 'pickoff throw to third', 'pickoff_throw', false, false, false, false),
-    ('>', 'runner going on pitch', 'runner_movement', false, false, false, false),
-    ('A', 'automatic strike', 'automatic_strike', true, false, true, false),
-    ('B', 'ball', 'ball', true, true, false, false),
-    ('C', 'called strike', 'called_strike', true, false, true, false),
-    ('F', 'foul', 'foul', true, false, true, false),
-    ('H', 'hit batter', 'hit_by_pitch', true, false, false, false),
-    ('I', 'intentional ball', 'intentional_ball', true, true, false, false),
-    ('K', 'strike unknown type', 'strike_unknown', true, false, true, false),
-    ('L', 'foul bunt', 'foul_bunt', true, false, true, false),
-    ('M', 'missed bunt attempt', 'missed_bunt', true, false, true, false),
-    ('N', 'no pitch', 'no_pitch', true, false, false, false),
-    ('O', 'foul tip on bunt', 'foul_tip_bunt', true, false, true, false),
-    ('P', 'pitchout', 'pitchout', true, true, false, false),
-    ('Q', 'swinging on pitchout', 'swinging_pitchout', true, false, true, false),
-    ('R', 'foul ball on pitchout', 'foul_pitchout', true, false, true, false),
-    ('S', 'swinging strike', 'swinging_strike', true, false, true, false),
-    ('T', 'foul tip', 'foul_tip', true, false, true, false),
-    ('U', 'unknown or missed pitch', 'unknown_pitch', true, false, false, false),
-    ('V', 'automatic or awarded ball', 'awarded_ball', true, true, false, false),
-    ('X', 'ball put into play', 'in_play', true, false, false, true),
-    ('Y', 'ball put into play on pitchout', 'in_play_pitchout', true, false, false, true)
+    ('+', 'following pickoff throw by catcher', 'marker', FALSE, FALSE, FALSE, FALSE),
+    ('*', 'blocked by catcher', 'marker', FALSE, FALSE, FALSE, FALSE),
+    ('.', 'play not involving batter', 'marker', FALSE, FALSE, FALSE, FALSE),
+    ('1', 'pickoff throw to first', 'pickoff_throw', FALSE, FALSE, FALSE, FALSE),
+    ('2', 'pickoff throw to second', 'pickoff_throw', FALSE, FALSE, FALSE, FALSE),
+    ('3', 'pickoff throw to third', 'pickoff_throw', FALSE, FALSE, FALSE, FALSE),
+    ('>', 'runner going on pitch', 'runner_movement', FALSE, FALSE, FALSE, FALSE),
+    ('A', 'automatic strike', 'automatic_strike', TRUE, FALSE, TRUE, FALSE),
+    ('B', 'ball', 'ball', TRUE, TRUE, FALSE, FALSE),
+    ('C', 'called strike', 'called_strike', TRUE, FALSE, TRUE, FALSE),
+    ('F', 'foul', 'foul', TRUE, FALSE, TRUE, FALSE),
+    ('H', 'hit batter', 'hit_by_pitch', TRUE, FALSE, FALSE, FALSE),
+    ('I', 'intentional ball', 'intentional_ball', TRUE, TRUE, FALSE, FALSE),
+    ('K', 'strike unknown type', 'strike_unknown', TRUE, FALSE, TRUE, FALSE),
+    ('L', 'foul bunt', 'foul_bunt', TRUE, FALSE, TRUE, FALSE),
+    ('M', 'missed bunt attempt', 'missed_bunt', TRUE, FALSE, TRUE, FALSE),
+    ('N', 'no pitch', 'no_pitch', TRUE, FALSE, FALSE, FALSE),
+    ('O', 'foul tip on bunt', 'foul_tip_bunt', TRUE, FALSE, TRUE, FALSE),
+    ('P', 'pitchout', 'pitchout', TRUE, TRUE, FALSE, FALSE),
+    ('Q', 'swinging on pitchout', 'swinging_pitchout', TRUE, FALSE, TRUE, FALSE),
+    ('R', 'foul ball on pitchout', 'foul_pitchout', TRUE, FALSE, TRUE, FALSE),
+    ('S', 'swinging strike', 'swinging_strike', TRUE, FALSE, TRUE, FALSE),
+    ('T', 'foul tip', 'foul_tip', TRUE, FALSE, TRUE, FALSE),
+    ('U', 'unknown or missed pitch', 'unknown_pitch', TRUE, FALSE, FALSE, FALSE),
+    ('V', 'automatic or awarded ball', 'awarded_ball', TRUE, TRUE, FALSE, FALSE),
+    ('X', 'ball put into play', 'in_play', TRUE, FALSE, FALSE, TRUE),
+    ('Y', 'ball put into play on pitchout', 'in_play_pitchout', TRUE, FALSE, FALSE, TRUE)
 ) AS t (
     symbol,
     symbol_meaning,
@@ -88,9 +88,9 @@ WITH exploded AS (
         ordinality::integer AS token_index,
         token.symbol AS raw_symbol
     FROM features.plate_appearance_outcome_examples AS pa
-    CROSS JOIN LATERAL regexp_split_to_table(pa.pitch_seq_tx, '') WITH ORDINALITY AS token (symbol, ordinality)
+    CROSS JOIN LATERAL REGEXP_SPLIT_TO_TABLE(pa.pitch_seq_tx, '') WITH ORDINALITY AS token (symbol, ordinality)
     WHERE
-        pa.pitch_seq_tx IS NOT null
+        pa.pitch_seq_tx IS NOT NULL
         AND pa.pitch_seq_tx <> ''
 ),
 
@@ -98,11 +98,11 @@ annotated AS (
     SELECT
         exploded.*,
         ref.symbol_meaning,
-        coalesce(ref.symbol_group, 'unknown_symbol') AS symbol_group,
-        coalesce(ref.is_pitch_symbol, false) AS is_pitch_symbol,
-        coalesce(ref.counts_toward_ball, false) AS counts_toward_ball,
-        coalesce(ref.counts_toward_strike, false) AS counts_toward_strike,
-        coalesce(ref.is_ball_in_play_symbol, false) AS is_ball_in_play_symbol
+        COALESCE(ref.symbol_group, 'unknown_symbol') AS symbol_group,
+        COALESCE(ref.is_pitch_symbol, FALSE) AS is_pitch_symbol,
+        COALESCE(ref.counts_toward_ball, FALSE) AS counts_toward_ball,
+        COALESCE(ref.counts_toward_strike, FALSE) AS counts_toward_strike,
+        COALESCE(ref.is_ball_in_play_symbol, FALSE) AS is_ball_in_play_symbol
     FROM exploded
     LEFT JOIN features.pitch_sequence_symbol_reference AS ref
         ON exploded.raw_symbol = ref.symbol
@@ -150,11 +150,11 @@ SELECT
     annotated.outcome_total_bases,
     annotated.final_home_win,
     annotated.final_batting_team_win,
-    char_length(annotated.pitch_seq_tx) AS sequence_length,
+    CHAR_LENGTH(annotated.pitch_seq_tx) AS sequence_length,
     CASE
         WHEN annotated.is_pitch_symbol
             THEN
-                sum(annotated.is_pitch_symbol::integer)
+                SUM(annotated.is_pitch_symbol::integer)
                     OVER (
                         PARTITION BY annotated.game_id, annotated.plate_appearance_id
                         ORDER BY annotated.token_index
@@ -164,11 +164,11 @@ SELECT
     CASE
         WHEN annotated.is_pitch_symbol
             THEN
-                max(annotated.token_index)
+                MAX(annotated.token_index)
                 FILTER (WHERE annotated.is_pitch_symbol)
                     OVER (PARTITION BY annotated.game_id, annotated.plate_appearance_id)
                 = annotated.token_index
-        ELSE false
+        ELSE FALSE
     END AS is_terminal_pitch_symbol
 FROM annotated;
 
@@ -181,17 +181,16 @@ WHERE is_pitch_symbol;
 
 CREATE INDEX pitch_sequence_examples_player_idx
 ON features.pitch_sequence_examples (season, batter_id, pitcher_id)
-WHERE batter_id IS NOT null AND pitcher_id IS NOT null;
+WHERE batter_id IS NOT NULL AND pitcher_id IS NOT NULL;
 
 CREATE OR REPLACE VIEW features.pitch_sequence_validation_summary AS
 SELECT
     'features.pitch_sequence_examples' AS object_name,
-    count(*) AS row_count,
-    count(*) FILTER (WHERE is_pitch_symbol) AS pitch_symbol_rows,
-    count(DISTINCT game_id, plate_appearance_id) AS distinct_plate_appearances,
-    round(avg(sequence_length)::numeric, 2) AS avg_sequence_length,
-    round(avg((pitch_number_in_pa IS NOT null)::integer)::numeric, 4) AS pitch_symbol_share,
-    round(avg((is_terminal_pitch_symbol)::integer)::numeric, 4) AS terminal_pitch_symbol_share,
-    count(*) FILTER (WHERE symbol_group = 'unknown_symbol') AS unknown_symbol_rows
+    COUNT(*) AS row_count,
+    COUNT(*) FILTER (WHERE is_pitch_symbol) AS pitch_symbol_rows,
+    COUNT(DISTINCT game_id, plate_appearance_id) AS distinct_plate_appearances,
+    ROUND(AVG(sequence_length)::numeric, 2) AS avg_sequence_length,
+    ROUND(AVG((pitch_number_in_pa IS NOT NULL)::integer)::numeric, 4) AS pitch_symbol_share,
+    ROUND(AVG((is_terminal_pitch_symbol)::integer)::numeric, 4) AS terminal_pitch_symbol_share,
+    COUNT(*) FILTER (WHERE symbol_group = 'unknown_symbol') AS unknown_symbol_rows
 FROM features.pitch_sequence_examples;
-

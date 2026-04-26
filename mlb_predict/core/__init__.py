@@ -1,5 +1,4 @@
-"""
-MLB Predict Core Module - Rich Results and Training
+"""MLB Predict Core Module - Rich Results and Training
 
 Phase 1.2: Rich Result Classes ✅ COMPLETE
 
@@ -27,19 +26,20 @@ Example:
     comparison = result.compare_to(other_result)
 """
 
-__version__ = "0.1.0"
+__version__ = '0.1.0'
 
 # Phase 1.2: Rich Result Classes - COMPLETE
 from mlb_predict.core.results import (
-    MetricValue,
-    Metrics,
-    ValidationCurve,
     FeatureImportance,
-    Residuals,
+    Metrics,
+    MetricValue,
     PredictionRecord,
     PredictResult,
+    Residuals,
     TrainResult,
+    ValidationCurve,
 )
+
 
 # TODO: Phase 2.1 - ModelTrainer
 # from mlb_predict.core.trainer import ModelTrainer

@@ -167,4 +167,3 @@ GROUP BY table_name, confidence_source
 ORDER BY table_name ASC, avg_confidence DESC;
 
 COMMENT ON VIEW bridge.confidence_summary_by_source IS 'Summary statistics of confidence scores by table and source';
-

@@ -134,4 +134,3 @@ END;
 $$;
 
 COMMENT ON PROCEDURE bridge.populate_player_xref_full () IS 'Downloads Chadwick Bureau Register data and populates bridge.player_xref';
-

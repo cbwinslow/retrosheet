@@ -1,5 +1,4 @@
-"""
-Experiment Runner - Multi-model comparison and hyperparameter sweeps.
+"""Experiment Runner - Multi-model comparison and hyperparameter sweeps.
 
 Phase 2.4: Experiment Runner
 
@@ -10,19 +9,17 @@ Author: Agent Cascade
 Date: April 24, 2026
 """
 
-from typing import Dict, List, Optional, Any, Callable, Union
-from dataclasses import dataclass, field
-from pathlib import Path
-from datetime import datetime
-import json
-import time
 import itertools
+import json
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 import pandas as pd
-import numpy as np
 
-from mlb_predict.config import ModelConfig, ExperimentConfig
-from mlb_predict.core.results import TrainResult, Metrics
+from mlb_predict.config import ExperimentConfig, ModelConfig
+from mlb_predict.core.results import Metrics, TrainResult
 from mlb_predict.core.trainer import ModelTrainer
 
 
@@ -31,12 +28,12 @@ class ExperimentRun:
     """Single run within an experiment."""
     run_id: str
     config: ModelConfig
-    result: Optional[TrainResult] = None
-    status: str = "pending"  # pending, running, completed, failed
-    error_message: Optional[str] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    
+    result: TrainResult | None = None
+    status: str = 'pending'  # pending, running, completed, failed
+    error_message: str | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+
     @property
     def duration_seconds(self) -> float:
         """Get run duration."""
@@ -53,11 +50,11 @@ class ExperimentSummary:
     n_runs: int
     n_completed: int
     n_failed: int
-    best_run_id: Optional[str] = None
-    best_metric_value: Optional[float] = None
-    metric_name: str = "val_roc_auc"
-    runs: List[ExperimentRun] = field(default_factory=list)
-    
+    best_run_id: str | None = None
+    best_metric_value: float | None = None
+    metric_name: str = 'val_roc_auc'
+    runs: list[ExperimentRun] = field(default_factory=list)
+
     def to_dataframe(self) -> pd.DataFrame:
         """Convert to DataFrame for analysis."""
         data = []
@@ -67,12 +64,12 @@ class ExperimentSummary:
                 'status': run.status,
                 'duration_seconds': run.duration_seconds,
             }
-            
+
             # Add config info
             row['family'] = run.config.family
             row['target'] = run.config.target
             row['features'] = run.config.features
-            
+
             # Add metrics if completed
             if run.result and run.result.val_metrics:
                 metrics = run.result.val_metrics
@@ -82,18 +79,17 @@ class ExperimentSummary:
                     row['val_accuracy'] = metrics.accuracy.value
                 if metrics.log_loss:
                     row['val_log_loss'] = metrics.log_loss.value
-                
+
                 row['training_time'] = run.result.training_time_seconds
                 row['n_samples_train'] = run.result.n_samples_train
-            
+
             data.append(row)
-        
+
         return pd.DataFrame(data)
 
 
 class ExperimentRunner:
-    """
-    Run and compare multiple model configurations.
+    """Run and compare multiple model configurations.
     
     Supports:
     - Multi-model comparison (XGBoost vs LightGBM vs CatBoost)
@@ -123,18 +119,17 @@ class ExperimentRunner:
         # Generate comparison report
         runner.generate_report("experiments/model_comparison.html")
     """
-    
+
     def __init__(
         self,
         experiment_name: str,
-        configs: List[ModelConfig],
-        experiment_id: Optional[str] = None,
-        metric_name: str = "val_roc_auc",
+        configs: list[ModelConfig],
+        experiment_id: str | None = None,
+        metric_name: str = 'val_roc_auc',
         higher_is_better: bool = True,
-        output_dir: Optional[str] = None
+        output_dir: str | None = None,
     ):
-        """
-        Initialize experiment runner.
+        """Initialize experiment runner.
         
         Args:
             experiment_name: Name of the experiment
@@ -149,36 +144,35 @@ class ExperimentRunner:
         self.configs = configs
         self.metric_name = metric_name
         self.higher_is_better = higher_is_better
-        self.output_dir = Path(output_dir) if output_dir else Path("experiments")
-        
+        self.output_dir = Path(output_dir) if output_dir else Path('experiments')
+
         # Create output directory
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Initialize runs
-        self.runs: List[ExperimentRun] = [
+        self.runs: list[ExperimentRun] = [
             ExperimentRun(
-                run_id=f"run_{i:03d}",
-                config=config
+                run_id=f'run_{i:03d}',
+                config=config,
             )
             for i, config in enumerate(configs)
         ]
-        
-        self._summary: Optional[ExperimentSummary] = None
-    
+
+        self._summary: ExperimentSummary | None = None
+
     @staticmethod
     def _generate_id() -> str:
         """Generate unique experiment ID."""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        return f"exp_{timestamp}"
-    
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        return f'exp_{timestamp}'
+
     def run_all(
         self,
         parallel: bool = False,
         max_workers: int = 4,
-        continue_on_error: bool = True
+        continue_on_error: bool = True,
     ) -> ExperimentSummary:
-        """
-        Run all configurations in the experiment.
+        """Run all configurations in the experiment.
         
         Args:
             parallel: Whether to run in parallel (not implemented yet)
@@ -188,66 +182,63 @@ class ExperimentRunner:
         Returns:
             ExperimentSummary with all results
         """
-        print(f"[INFO] Starting experiment: {self.experiment_name}")
-        print(f"[INFO] Runs: {len(self.runs)}")
-        
+        print(f'[INFO] Starting experiment: {self.experiment_name}')
+        print(f'[INFO] Runs: {len(self.runs)}')
+
         for i, run in enumerate(self.runs):
-            print(f"\n[INFO] Run {i+1}/{len(self.runs)}: {run.run_id}")
-            
+            print(f'\n[INFO] Run {i+1}/{len(self.runs)}: {run.run_id}')
+
             try:
                 self._execute_run(run)
             except Exception as e:
-                run.status = "failed"
+                run.status = 'failed'
                 run.error_message = str(e)
-                print(f"[ERROR] Run {run.run_id} failed: {e}")
-                
+                print(f'[ERROR] Run {run.run_id} failed: {e}')
+
                 if not continue_on_error:
                     break
-        
+
         # Generate summary
         self._summary = self._create_summary()
-        
+
         # Save results
         self._save_results()
-        
+
         return self._summary
-    
+
     def _execute_run(self, run: ExperimentRun) -> None:
         """Execute a single run."""
         run.start_time = datetime.now()
-        run.status = "running"
-        
+        run.status = 'running'
+
         # Create trainer and run
         trainer = ModelTrainer(run.config)
         result = trainer.train()
-        
+
         run.result = result
-        run.status = "completed"
+        run.status = 'completed'
         run.end_time = datetime.now()
-        
-        print(f"[INFO] Run {run.run_id} completed: {result.summary()}")
-    
+
+        print(f'[INFO] Run {run.run_id} completed: {result.summary()}')
+
     def _create_summary(self) -> ExperimentSummary:
         """Create experiment summary from runs."""
-        completed_runs = [r for r in self.runs if r.status == "completed"]
-        failed_runs = [r for r in self.runs if r.status == "failed"]
-        
+        completed_runs = [r for r in self.runs if r.status == 'completed']
+        failed_runs = [r for r in self.runs if r.status == 'failed']
+
         # Find best run
         best_run = None
         best_value = float('-inf') if self.higher_is_better else float('inf')
-        
+
         for run in completed_runs:
             if run.result and run.result.val_metrics:
                 metric_value = self._get_metric_value(run.result.val_metrics)
-                
+
                 if metric_value is not None:
-                    if self.higher_is_better and metric_value > best_value:
+                    if (self.higher_is_better and metric_value > best_value) or (not self.higher_is_better and metric_value < best_value):
                         best_value = metric_value
                         best_run = run
-                    elif not self.higher_is_better and metric_value < best_value:
-                        best_value = metric_value
-                        best_run = run
-        
+
         return ExperimentSummary(
             experiment_id=self.experiment_id,
             experiment_name=self.experiment_name,
@@ -257,24 +248,24 @@ class ExperimentRunner:
             best_run_id=best_run.run_id if best_run else None,
             best_metric_value=best_value if best_run else None,
             metric_name=self.metric_name,
-            runs=self.runs
+            runs=self.runs,
         )
-    
-    def _get_metric_value(self, metrics: Metrics) -> Optional[float]:
+
+    def _get_metric_value(self, metrics: Metrics) -> float | None:
         """Extract metric value from Metrics object."""
-        if self.metric_name == "val_roc_auc" and metrics.roc_auc:
+        if self.metric_name == 'val_roc_auc' and metrics.roc_auc:
             return metrics.roc_auc.value
-        elif self.metric_name == "val_accuracy" and metrics.accuracy:
+        if self.metric_name == 'val_accuracy' and metrics.accuracy:
             return metrics.accuracy.value
-        elif self.metric_name == "val_log_loss" and metrics.log_loss:
+        if self.metric_name == 'val_log_loss' and metrics.log_loss:
             return metrics.log_loss.value
         return None
-    
+
     def _save_results(self) -> None:
         """Save experiment results to disk."""
         exp_dir = self.output_dir / self.experiment_id
         exp_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Save summary as JSON
         summary_dict = {
             'experiment_id': self._summary.experiment_id,
@@ -298,36 +289,35 @@ class ExperimentRunner:
                     'result': {
                         'model_id': run.result.model_id if run.result else None,
                         'model_name': run.result.model_name if run.result else None,
-                        'val_roc_auc': run.result.val_metrics.roc_auc.value 
-                            if run.result and run.result.val_metrics and run.result.val_metrics.roc_auc 
+                        'val_roc_auc': run.result.val_metrics.roc_auc.value
+                            if run.result and run.result.val_metrics and run.result.val_metrics.roc_auc
                             else None,
                     } if run.result else None,
                     'error_message': run.error_message,
                 }
                 for run in self.runs
-            ]
+            ],
         }
-        
-        with open(exp_dir / "summary.json", 'w') as f:
+
+        with open(exp_dir / 'summary.json', 'w') as f:
             json.dump(summary_dict, f, indent=2, default=str)
-        
+
         # Save as CSV
         df = self._summary.to_dataframe()
-        df.to_csv(exp_dir / "results.csv", index=False)
-        
-        print(f"[INFO] Results saved to {exp_dir}")
-    
-    def get_best_run(self) -> Optional[ExperimentRun]:
+        df.to_csv(exp_dir / 'results.csv', index=False)
+
+        print(f'[INFO] Results saved to {exp_dir}')
+
+    def get_best_run(self) -> ExperimentRun | None:
         """Get the best run from the experiment."""
         if self._summary and self._summary.best_run_id:
             for run in self.runs:
                 if run.run_id == self._summary.best_run_id:
                     return run
         return None
-    
-    def compare_runs(self, run_ids: Optional[List[str]] = None) -> pd.DataFrame:
-        """
-        Compare specific runs or all runs.
+
+    def compare_runs(self, run_ids: list[str] | None = None) -> pd.DataFrame:
+        """Compare specific runs or all runs.
         
         Args:
             run_ids: List of run IDs to compare (default: all completed)
@@ -338,8 +328,8 @@ class ExperimentRunner:
         if run_ids:
             runs = [r for r in self.runs if r.run_id in run_ids]
         else:
-            runs = [r for r in self.runs if r.status == "completed"]
-        
+            runs = [r for r in self.runs if r.status == 'completed']
+
         data = []
         for run in runs:
             if run.result:
@@ -351,7 +341,7 @@ class ExperimentRunner:
                     'training_time': run.result.training_time_seconds,
                     'n_samples': run.result.n_samples_train,
                 }
-                
+
                 # Add all metrics
                 if run.result.val_metrics:
                     if run.result.val_metrics.roc_auc:
@@ -360,18 +350,17 @@ class ExperimentRunner:
                         row['val_accuracy'] = run.result.val_metrics.accuracy.value
                     if run.result.val_metrics.log_loss:
                         row['val_log_loss'] = run.result.val_metrics.log_loss.value
-                
+
                 if run.result.train_metrics:
                     if run.result.train_metrics.roc_auc:
                         row['train_auc'] = run.result.train_metrics.roc_auc.value
-                
+
                 data.append(row)
-        
+
         return pd.DataFrame(data)
-    
-    def generate_report(self, output_path: Optional[str] = None) -> str:
-        """
-        Generate HTML report of experiment results.
+
+    def generate_report(self, output_path: str | None = None) -> str:
+        """Generate HTML report of experiment results.
         
         Args:
             output_path: Path for HTML file (default: auto-generated)
@@ -380,15 +369,15 @@ class ExperimentRunner:
             Path to generated report
         """
         if output_path is None:
-            output_path = self.output_dir / self.experiment_id / "report.html"
+            output_path = self.output_dir / self.experiment_id / 'report.html'
         else:
             output_path = Path(output_path)
-        
+
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Build HTML
         df = self._summary.to_dataframe() if self._summary else pd.DataFrame()
-        
+
         html = f"""
 <!DOCTYPE html>
 <html>
@@ -425,17 +414,16 @@ class ExperimentRunner:
 </body>
 </html>
 """
-        
+
         with open(output_path, 'w') as f:
             f.write(html)
-        
-        print(f"[INFO] Report saved to {output_path}")
+
+        print(f'[INFO] Report saved to {output_path}')
         return str(output_path)
-    
+
     @classmethod
     def from_config(cls, config: ExperimentConfig) -> 'ExperimentRunner':
-        """
-        Create runner from ExperimentConfig.
+        """Create runner from ExperimentConfig.
         
         Args:
             config: ExperimentConfig with models to compare
@@ -448,13 +436,12 @@ class ExperimentRunner:
             configs=config.models,
             experiment_id=config.experiment_id,
             metric_name=config.comparison_metric,
-            output_dir=config.output_dir
+            output_dir=config.output_dir,
         )
 
 
 class HyperparameterSweep:
-    """
-    Hyperparameter sweep for a single model.
+    """Hyperparameter sweep for a single model.
     
     Example:
         sweep = HyperparameterSweep(
@@ -468,14 +455,13 @@ class HyperparameterSweep:
         runner = sweep.create_runner(experiment_name="xgb_depth_lr_sweep")
         summary = runner.run_all()
     """
-    
+
     def __init__(
         self,
         base_config: ModelConfig,
-        param_grid: Dict[str, List[Any]]
+        param_grid: dict[str, list[Any]],
     ):
-        """
-        Initialize hyperparameter sweep.
+        """Initialize hyperparameter sweep.
         
         Args:
             base_config: Base ModelConfig to modify
@@ -484,20 +470,20 @@ class HyperparameterSweep:
         """
         self.base_config = base_config
         self.param_grid = param_grid
-    
-    def generate_configs(self) -> List[ModelConfig]:
+
+    def generate_configs(self) -> list[ModelConfig]:
         """Generate all config combinations."""
         # Get param names and values
         param_names = list(self.param_grid.keys())
         param_values = [self.param_grid[name] for name in param_names]
-        
+
         configs = []
-        
+
         # Generate all combinations
         for combo in itertools.product(*param_values):
             # Copy base config
             config_dict = self.base_config.model_dump()
-            
+
             # Update with param values
             for param_name, value in zip(param_names, combo):
                 # Handle nested params like 'xgboost__max_depth'
@@ -507,21 +493,20 @@ class HyperparameterSweep:
                         config_dict[section][param] = value
                 else:
                     config_dict[param_name] = value
-            
+
             # Create new config
             from mlb_predict.config import ModelConfig
             config = ModelConfig(**config_dict)
             configs.append(config)
-        
+
         return configs
-    
+
     def create_runner(
         self,
         experiment_name: str,
-        metric_name: str = "val_roc_auc"
+        metric_name: str = 'val_roc_auc',
     ) -> ExperimentRunner:
-        """
-        Create ExperimentRunner for this sweep.
+        """Create ExperimentRunner for this sweep.
         
         Args:
             experiment_name: Name for the experiment
@@ -531,20 +516,19 @@ class HyperparameterSweep:
             Configured ExperimentRunner
         """
         configs = self.generate_configs()
-        
+
         return ExperimentRunner(
             experiment_name=experiment_name,
             configs=configs,
-            metric_name=metric_name
+            metric_name=metric_name,
         )
 
 
 def compare_feature_sets(
     base_config: ModelConfig,
-    feature_sets: List[str] = ['basic', 'physics', 'advanced', 'complete']
+    feature_sets: list[str] = ['basic', 'physics', 'advanced', 'complete'],
 ) -> ExperimentRunner:
-    """
-    Compare different feature sets.
+    """Compare different feature sets.
     
     Convenience function to quickly compare feature sets.
     
@@ -555,27 +539,24 @@ def compare_feature_sets(
     Returns:
         Configured ExperimentRunner
     """
-    from mlb_predict.config import FeatureSet
-    
     configs = []
     for fs in feature_sets:
         config_dict = base_config.model_dump()
         config_dict['features'] = fs
         configs.append(ModelConfig(**config_dict))
-    
+
     return ExperimentRunner(
-        experiment_name=f"feature_set_comparison_{base_config.target}",
+        experiment_name=f'feature_set_comparison_{base_config.target}',
         configs=configs,
-        metric_name="val_roc_auc"
+        metric_name='val_roc_auc',
     )
 
 
 def compare_model_families(
     base_config: ModelConfig,
-    families: List[str] = ['xgboost', 'lightgbm', 'catboost']
+    families: list[str] = ['xgboost', 'lightgbm', 'catboost'],
 ) -> ExperimentRunner:
-    """
-    Compare different model families.
+    """Compare different model families.
     
     Convenience function to quickly compare model families.
     
@@ -586,25 +567,23 @@ def compare_model_families(
     Returns:
         Configured ExperimentRunner
     """
-    from mlb_predict.config import ModelFamily
-    
     configs = []
     for family in families:
         config_dict = base_config.model_dump()
         config_dict['family'] = family
         configs.append(ModelConfig(**config_dict))
-    
+
     return ExperimentRunner(
-        experiment_name=f"model_family_comparison_{base_config.target}",
+        experiment_name=f'model_family_comparison_{base_config.target}',
         configs=configs,
-        metric_name="val_roc_auc"
+        metric_name='val_roc_auc',
     )
 
 
 __all__ = [
     'ExperimentRun',
-    'ExperimentSummary',
     'ExperimentRunner',
+    'ExperimentSummary',
     'HyperparameterSweep',
     'compare_feature_sets',
     'compare_model_families',

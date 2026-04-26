@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """LLM Sub-Agent for automated code fixing using multi-GPU llama.cpp."""
 
+import json
+import os
 import subprocess
 import sys
-import re
-import os
-import json
 from pathlib import Path
 from typing import Any
+
 
 # Configuration
 LLAMA_CPP_DIR = Path('/home/cbwinslow/llama.cpp')
@@ -107,10 +107,10 @@ Provide ONLY the corrected line(s). No explanation, no markdown, just the fixed 
                     })
                 else:
                     if self._apply_fix(filepath, line_no, fixed_code):
-                        print(f'   ✓ Applied')
+                        print('   ✓ Applied')
                         results['fixed'] += 1
                     else:
-                        print(f'   ✗ Failed to apply')
+                        print('   ✗ Failed to apply')
                         results['failed'] += 1
 
             except Exception as e:

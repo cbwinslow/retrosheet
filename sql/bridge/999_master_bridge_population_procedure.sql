@@ -115,4 +115,3 @@ COMMENT ON PROCEDURE bridge.populate_all_bridge_tables (BOOLEAN) IS
 -- Grant execute permission
 -- ============================================================================
 GRANT EXECUTE ON PROCEDURE bridge.populate_all_bridge_tables(BOOLEAN) TO postgres;
-

@@ -16,8 +16,8 @@ CREATE TABLE core.plate_appearances AS
 SELECT
     events.game_id,
     events.event_id AS plate_appearance_id,
-    row_number() OVER (PARTITION BY events.game_id ORDER BY events.event_sequence)::integer AS game_pa_number,
-    row_number() OVER (
+    ROW_NUMBER() OVER (PARTITION BY events.game_id ORDER BY events.event_sequence)::integer AS game_pa_number,
+    ROW_NUMBER() OVER (
         PARTITION BY events.game_id, events.inning, events.is_bottom_inning
         ORDER BY events.event_sequence
     )::integer AS half_inning_pa_number,
@@ -61,7 +61,7 @@ SELECT
     (events.is_hit OR events.is_walk OR events.event_code IN (16, 17)) AS is_reach_base,
     events.hit_value >= 2 AS is_extra_base_hit,
     events.batting_team_id = games.winning_team_id AS final_batting_team_win,
-    now() AS created_at
+    NOW() AS created_at
 FROM core.events AS events
 INNER JOIN core.games AS games ON events.game_id = games.game_id
 WHERE events.is_plate_appearance;
@@ -163,12 +163,12 @@ SELECT
     rbi,
     final_home_win,
     final_batting_team_win,
-    coalesce(start_bases, 0) AS start_bases,
-    coalesce(balls, 0) AS balls,
-    coalesce(strikes, 0) AS strikes,
+    COALESCE(start_bases, 0) AS start_bases,
+    COALESCE(balls, 0) AS balls,
+    COALESCE(strikes, 0) AS strikes,
     home_score_before - away_score_before AS home_score_diff,
-    coalesce(batter_hand::text, 'U') AS batter_hand,
-    coalesce(pitcher_hand::text, 'U') AS pitcher_hand
+    COALESCE(batter_hand::text, 'U') AS batter_hand,
+    COALESCE(pitcher_hand::text, 'U') AS pitcher_hand
 FROM core.plate_appearances;
 
 CREATE UNIQUE INDEX plate_appearance_examples_pk
@@ -259,19 +259,19 @@ ON CONFLICT (target_id) DO UPDATE
         live_resolution_rule = excluded.live_resolution_rule,
         default_model_family = excluded.default_model_family,
         is_active = excluded.is_active,
-        updated_at = now();
+        updated_at = NOW();
 
 CREATE OR REPLACE VIEW core.plate_appearance_validation_summary AS
 SELECT
     'core.plate_appearances' AS object_name,
-    count(*) AS row_count,
-    count(DISTINCT game_id) AS distinct_games
+    COUNT(*) AS row_count,
+    COUNT(DISTINCT game_id) AS distinct_games
 FROM core.plate_appearances
 UNION ALL
 SELECT
     'features.plate_appearance_examples',
-    count(*),
-    count(DISTINCT game_id)
+    COUNT(*),
+    COUNT(DISTINCT game_id)
 FROM features.plate_appearance_examples;
 
 -- Table comments

@@ -17,22 +17,21 @@ Usage:
     uv run python scripts/pitch_models/feature_ablation_study.py --full
 """
 
-import os
-import sys
-import time
-import json
-import pickle
 import argparse
-from datetime import datetime
-from typing import Dict, List, Tuple, Optional
+import json
+import os
+import pickle
+import time
 from dataclasses import dataclass
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split, StratifiedKFold
-from sklearn.metrics import accuracy_score, log_loss, roc_auc_score
-import xgboost as xgb
 import psycopg2
+import xgboost as xgb
+from sklearn.metrics import accuracy_score, log_loss, roc_auc_score
+from sklearn.model_selection import train_test_split
+
 
 # Configuration
 DB_URL = os.getenv('DATABASE_URL', 'postgresql://localhost:5432/retrosheet')
@@ -45,15 +44,15 @@ class FeatureGroup:
     """Defines a feature group for ablation testing."""
     name: str
     description: str
-    columns: List[str]
-    source_tables: List[str]
+    columns: list[str]
+    source_tables: list[str]
 
 
 # Define feature groups in order of addition
 FEATURE_GROUPS = [
     FeatureGroup(
-        name="baseline",
-        description="Raw Statcast fields (118 columns)",
+        name='baseline',
+        description='Raw Statcast fields (118 columns)',
         columns=[
             'game_year', 'game_pk', 'game_date', 'sv_id',
             'batter_id', 'pitcher_id',
@@ -70,12 +69,12 @@ FEATURE_GROUPS = [
             'home_score', 'away_score', 'bat_score', 'fld_score',
             'delta_home_win_exp', 'delta_run_exp',
         ],
-        source_tables=['features_pitch.base_features']
+        source_tables=['features_pitch.base_features'],
     ),
 
     FeatureGroup(
-        name="velocity_movement",
-        description="Engineered: velocity %iles, strike zone regions, movement (46+)",
+        name='velocity_movement',
+        description='Engineered: velocity %iles, strike zone regions, movement (46+)',
         columns=[
             'velocity_percentile', 'velocity_diff_from_avg',
             'is_fastball', 'is_breaking', 'is_offspeed',
@@ -87,12 +86,12 @@ FEATURE_GROUPS = [
             'extension_effectiveness', 'release_height', 'release_side',
             'total_movement', 'movement_angle', 'spin_axis_quadrant',
         ],
-        source_tables=['features_pitch.engineered_features']
+        source_tables=['features_pitch.engineered_features'],
     ),
 
     FeatureGroup(
-        name="additional",
-        description="Additional engineered: tunneling, spin, platoon, fatigue (25+)",
+        name='additional',
+        description='Additional engineered: tunneling, spin, platoon, fatigue (25+)',
         columns=[
             'pitcher_fatigue_score', 'velocity_change_from_prev',
             'spin_rate_percentile', 'spin_efficiency_score',
@@ -104,12 +103,12 @@ FEATURE_GROUPS = [
             'consecutive_same_type', 'pitcher_repertoire_depth',
             'batter_performance_vs_type', 'batter_swing_rate_vs_type',
         ],
-        source_tables=['features_pitch.engineered_features']
+        source_tables=['features_pitch.engineered_features'],
     ),
 
     FeatureGroup(
-        name="kb_research",
-        description="KB research features: quality, count leverage, TTOP, RE24 (40+)",
+        name='kb_research',
+        description='KB research features: quality, count leverage, TTOP, RE24 (40+)',
         columns=[
             'pitch_quality_score', 'pitch_quality_percentile',
             'count_leverage_index', 'is_payoff_pitch', 'is_3_0_count',
@@ -121,12 +120,12 @@ FEATURE_GROUPS = [
             'is_batter_hot_zone', 'is_batter_cold_zone',
             'score_diff_bucket', 'times_faced_this_game',
         ],
-        source_tables=['features_pitch.engineered_features']
+        source_tables=['features_pitch.engineered_features'],
     ),
 
     FeatureGroup(
-        name="context",
-        description="Context: weather, momentum, umpire, park, attendance (60+)",
+        name='context',
+        description='Context: weather, momentum, umpire, park, attendance (60+)',
         columns=[
             'temp_extreme_flag', 'wind_effect_score', 'altitude_factor',
             'is_shadow_game', 'batting_team_last_5_win_rate',
@@ -137,12 +136,12 @@ FEATURE_GROUPS = [
             'pitcher_days_rest', 'is_short_rest_start',
             'pitcher_season_workload', 'home_field_advantage_score',
         ],
-        source_tables=['features_pitch.engineered_features']
+        source_tables=['features_pitch.engineered_features'],
     ),
 
     FeatureGroup(
-        name="final",
-        description="Final: Markov chains, matchup history, sequence (50+)",
+        name='final',
+        description='Final: Markov chains, matchup history, sequence (50+)',
         columns=[
             'strike_accumulation_rate', 'ball_accumulation_rate',
             'expected_pitches_remaining', 'is_absorbing_state',
@@ -154,12 +153,12 @@ FEATURE_GROUPS = [
             'pitch_sequence_category', 'is_platoon_advantage_batter',
             'is_rookie_batter', 'batter_experience_level',
         ],
-        source_tables=['features_pitch.engineered_features']
+        source_tables=['features_pitch.engineered_features'],
     ),
 ]
 
 
-def build_cumulative_groups() -> List[Tuple[str, List[str]]]:
+def build_cumulative_groups() -> list[tuple[str, list[str]]]:
     """
     Build cumulative feature groups for ablation testing.
     Returns: [(group_name, all_features_up_to_this_point), ...]
@@ -170,20 +169,20 @@ def build_cumulative_groups() -> List[Tuple[str, List[str]]]:
     for group in FEATURE_GROUPS:
         all_features.extend(group.columns)
         cumulative.append((
-            f"baseline+{group.name}",
+            f'baseline+{group.name}',
             all_features.copy(),
-            group.description
+            group.description,
         ))
 
     return cumulative
 
 
-def load_data_for_features(conn, features: List[str], sample_size: Optional[int] = None) -> pd.DataFrame:
+def load_data_for_features(conn, features: list[str], sample_size: int | None = None) -> pd.DataFrame:
     """Load data with specified features."""
 
     # Build feature list (check which exist in database)
     # For simplicity, we'll query from engineered_features which has everything
-    feature_cols = ', '.join([f"ef.{f}" for f in features if f not in ['game_year', 'game_pk']])
+    feature_cols = ', '.join([f'ef.{f}' for f in features if f not in ['game_year', 'game_pk']])
 
     query = f"""
     SELECT
@@ -199,13 +198,13 @@ def load_data_for_features(conn, features: List[str], sample_size: Optional[int]
     """
 
     if sample_size:
-        query += f" ORDER BY RANDOM() LIMIT {sample_size}"
+        query += f' ORDER BY RANDOM() LIMIT {sample_size}'
 
     df = pd.read_sql(query, conn)
     return df
 
 
-def prepare_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
+def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     """Prepare features for training."""
     y = df['target']
     X = df.drop(['target', 'pitch_id', 'game_year'], axis=1, errors='ignore')
@@ -228,7 +227,7 @@ def prepare_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
     return X, pd.Series(y_encoded, index=y.index)
 
 
-def train_and_evaluate(X: pd.DataFrame, y: pd.Series, group_name: str) -> Dict:
+def train_and_evaluate(X: pd.DataFrame, y: pd.Series, group_name: str) -> dict:
     """Train model and return metrics."""
 
     # Stratified split by year
@@ -239,7 +238,7 @@ def train_and_evaluate(X: pd.DataFrame, y: pd.Series, group_name: str) -> Dict:
     if len(X_test) == 0:
         # Fallback to random split
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
+            X, y, test_size=0.2, random_state=42, stratify=y,
         )
 
     # XGBoost params (consistent across all tests)
@@ -280,58 +279,58 @@ def train_and_evaluate(X: pd.DataFrame, y: pd.Series, group_name: str) -> Dict:
     return results, model
 
 
-def run_ablation_study(conn, sample_size: Optional[int] = None) -> List[Dict]:
+def run_ablation_study(conn, sample_size: int | None = None) -> list[dict]:
     """Run full ablation study across all feature groups."""
 
     cumulative_groups = build_cumulative_groups()
     all_results = []
 
-    print("="*70)
-    print("FEATURE ABLATION STUDY")
-    print("="*70)
+    print('='*70)
+    print('FEATURE ABLATION STUDY')
+    print('='*70)
     print(f"Sample size: {sample_size or 'FULL DATASET'}")
-    print(f"Testing {len(cumulative_groups)} feature configurations")
-    print("="*70)
+    print(f'Testing {len(cumulative_groups)} feature configurations')
+    print('='*70)
 
     for group_name, features, description in cumulative_groups:
         print(f"\n{'='*70}")
-        print(f"Testing: {group_name}")
-        print(f"Description: {description}")
-        print(f"Features: {len(features)}")
-        print("="*70)
+        print(f'Testing: {group_name}')
+        print(f'Description: {description}')
+        print(f'Features: {len(features)}')
+        print('='*70)
 
         try:
             # Load data
-            print("Loading data...")
+            print('Loading data...')
             df = load_data_for_features(conn, features, sample_size)
-            print(f"Loaded {len(df):,} rows")
+            print(f'Loaded {len(df):,} rows')
 
             if len(df) < 1000:
-                print(f"WARNING: Insufficient data ({len(df)} rows), skipping...")
+                print(f'WARNING: Insufficient data ({len(df)} rows), skipping...')
                 continue
 
             # Prepare features
             X, y = prepare_features(df)
-            print(f"Feature matrix: {X.shape}")
+            print(f'Feature matrix: {X.shape}')
 
             # Train and evaluate
             results, model = train_and_evaluate(X, y, group_name)
             all_results.append(results)
 
             # Print results
-            print(f"\nResults:")
+            print('\nResults:')
             print(f"  Accuracy:  {results['accuracy']:.4f}")
             print(f"  Log Loss:  {results['log_loss']:.4f}")
             print(f"  AUC:       {results['auc_macro']:.4f}")
             print(f"  Train Time: {results['train_time_seconds']:.1f}s")
 
             # Save model
-            model_file = f"{RESULTS_DIR}/{group_name}_model.pkl"
+            model_file = f'{RESULTS_DIR}/{group_name}_model.pkl'
             with open(model_file, 'wb') as f:
                 pickle.dump(model, f)
 
         except Exception as e:
-            print(f"ERROR in {group_name}: {str(e)}")
+            print(f'ERROR in {group_name}: {e!s}')
             import traceback
             traceback.print_exc()
             continue
@@ -339,12 +338,12 @@ def run_ablation_study(conn, sample_size: Optional[int] = None) -> List[Dict]:
     return all_results
 
 
-def analyze_results(results: List[Dict]):
+def analyze_results(results: list[dict]):
     """Analyze and visualize ablation results."""
 
-    print("\n" + "="*70)
-    print("ABLATION STUDY SUMMARY")
-    print("="*70)
+    print('\n' + '='*70)
+    print('ABLATION STUDY SUMMARY')
+    print('='*70)
 
     df = pd.DataFrame(results)
 
@@ -354,20 +353,20 @@ def analyze_results(results: List[Dict]):
     df['auc_gain'] = df['auc_macro'].diff().fillna(0)
     df['time_per_feature'] = df['train_time_seconds'] / df['n_features']
 
-    print("\nFeature Group Performance:")
+    print('\nFeature Group Performance:')
     print(df[['group', 'n_features', 'accuracy', 'log_loss', 'auc_macro',
               'train_time_seconds']].to_string(index=False))
 
-    print("\nMarginal Improvements (vs previous group):")
+    print('\nMarginal Improvements (vs previous group):')
     print(df[['group', 'accuracy_gain', 'log_loss_reduction', 'auc_gain']].to_string(index=False))
 
-    print("\nEfficiency (training time per feature):")
+    print('\nEfficiency (training time per feature):')
     print(df[['group', 'n_features', 'train_time_seconds', 'time_per_feature']].to_string(index=False))
 
     # Recommendations
-    print("\n" + "="*70)
-    print("RECOMMENDATIONS")
-    print("="*70)
+    print('\n' + '='*70)
+    print('RECOMMENDATIONS')
+    print('='*70)
 
     # Find best ROI (accuracy gain / features added)
     df['roi'] = df['accuracy_gain'] / df['n_features']
@@ -379,7 +378,7 @@ def analyze_results(results: List[Dict]):
     print(f"  ROI: {best_roi['roi']:.6f} accuracy per feature")
 
     # Find diminishing returns point
-    print(f"\nDiminishing Returns Analysis:")
+    print('\nDiminishing Returns Analysis:')
     for i, row in df.iterrows():
         if i == 0:
             continue
@@ -387,14 +386,14 @@ def analyze_results(results: List[Dict]):
         gain = row['accuracy'] - prev['accuracy']
         if gain < 0.001:  # Less than 0.1% improvement
             print(f"  Diminishing returns start at: {row['group']}")
-            print(f"    Gain from previous: +{gain:.4f} accuracy")
+            print(f'    Gain from previous: +{gain:.4f} accuracy')
             break
 
     # Save results
     results_file = f"{RESULTS_DIR}/ablation_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     with open(results_file, 'w') as f:
         json.dump(results, f, indent=2)
-    print(f"\nResults saved to: {results_file}")
+    print(f'\nResults saved to: {results_file}')
 
 
 def main():
@@ -407,11 +406,11 @@ def main():
 
     sample_size = 50000 if args.quick else None
     if not args.quick and not args.full:
-        print("Use --quick for 50k sample or --full for complete dataset")
-        print("Defaulting to quick mode...")
+        print('Use --quick for 50k sample or --full for complete dataset')
+        print('Defaulting to quick mode...')
         sample_size = 50000
 
-    print(f"Starting ablation study with sample_size={sample_size}")
+    print(f'Starting ablation study with sample_size={sample_size}')
 
     conn = psycopg2.connect(DB_URL)
     try:

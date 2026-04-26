@@ -377,7 +377,7 @@ COMMENT ON FUNCTION bridge.test_park_xref_retrosheet_coverage(NUMERIC) IS 'Valid
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION bridge.run_all_bridge_tests(
-    p_verbose BOOLEAN DEFAULT true
+    p_verbose BOOLEAN DEFAULT TRUE
 )
 RETURNS TABLE (
     test_name TEXT,
@@ -452,48 +452,58 @@ COMMENT ON FUNCTION bridge.get_bridge_test_summary() IS 'Returns a summary of al
 
 CREATE OR REPLACE VIEW bridge.vw_bridge_coverage_gap_analysis AS
 WITH player_gaps AS (
-    SELECT 
-        'player_xref' as table_name,
-        'mlb_id' as id_type,
-        COUNT(*) FILTER (WHERE mlb_id IS NULL) as null_count,
-        COUNT(*) as total_count,
-        ROUND(COUNT(*) FILTER (WHERE mlb_id IS NULL)::numeric / 
-              NULLIF(COUNT(*), 0) * 100, 2) as gap_pct
+    SELECT
+        'player_xref' AS table_name,
+        'mlb_id' AS id_type,
+        COUNT(*) FILTER (WHERE mlb_id IS NULL) AS null_count,
+        COUNT(*) AS total_count,
+        ROUND(
+            COUNT(*) FILTER (WHERE mlb_id IS NULL)::NUMERIC
+            / NULLIF(COUNT(*), 0) * 100, 2
+        ) AS gap_pct
     FROM bridge.player_xref
     UNION ALL
-    SELECT 
+    SELECT
         'player_xref',
         'retrosheet_id',
         COUNT(*) FILTER (WHERE retrosheet_id IS NULL),
         COUNT(*),
-        ROUND(COUNT(*) FILTER (WHERE retrosheet_id IS NULL)::numeric / 
-              NULLIF(COUNT(*), 0) * 100, 2)
+        ROUND(
+            COUNT(*) FILTER (WHERE retrosheet_id IS NULL)::NUMERIC
+            / NULLIF(COUNT(*), 0) * 100, 2
+        )
     FROM bridge.player_xref
     UNION ALL
-    SELECT 
+    SELECT
         'player_xref',
         'baseball_reference_id',
         COUNT(*) FILTER (WHERE baseball_reference_id IS NULL),
         COUNT(*),
-        ROUND(COUNT(*) FILTER (WHERE baseball_reference_id IS NULL)::numeric / 
-              NULLIF(COUNT(*), 0) * 100, 2)
+        ROUND(
+            COUNT(*) FILTER (WHERE baseball_reference_id IS NULL)::NUMERIC
+            / NULLIF(COUNT(*), 0) * 100, 2
+        )
     FROM bridge.player_xref
 ),
+
 pitch_data_gaps AS (
-    SELECT 
-        'pitch_data_players' as table_name,
-        'linked_to_bridge' as id_type,
+    SELECT
+        'pitch_data_players' AS table_name,
+        'linked_to_bridge' AS id_type,
         COUNT(DISTINCT p.player_id) FILTER (WHERE px.player_xref_id IS NULL),
         COUNT(DISTINCT p.player_id),
-        ROUND(COUNT(DISTINCT p.player_id) FILTER (WHERE px.player_xref_id IS NULL)::numeric / 
-              NULLIF(COUNT(DISTINCT p.player_id), 0) * 100, 2)
+        ROUND(
+            COUNT(DISTINCT p.player_id) FILTER (WHERE px.player_xref_id IS NULL)::NUMERIC
+            / NULLIF(COUNT(DISTINCT p.player_id), 0) * 100, 2
+        )
     FROM (
-        SELECT pitcher_id as player_id FROM features_pitch.base_features
+        SELECT pitcher_id AS player_id FROM features_pitch.base_features
         UNION
-        SELECT batter_id as player_id FROM features_pitch.base_features
-    ) p
-    LEFT JOIN bridge.player_xref px ON p.player_id::text = px.mlb_id::text
+        SELECT batter_id AS player_id FROM features_pitch.base_features
+    ) AS p
+    LEFT JOIN bridge.player_xref AS px ON p.player_id::TEXT = px.mlb_id::TEXT
 )
+
 SELECT * FROM player_gaps
 UNION ALL
 SELECT * FROM pitch_data_gaps

@@ -1,11 +1,9 @@
-"""
-Main Database Orchestrator.
+"""Main Database Orchestrator.
 
 Central controller for all database operations.
 Integrates engines, manages checkpoints, and provides unified interface.
 """
 
-from typing import Dict, Type
 
 from mlb_predict.orchestration.config import (
     BridgePopulationConfig,
@@ -27,8 +25,7 @@ from mlb_predict.orchestration.results import OperationResult
 
 
 class DatabaseOrchestrator:
-    """
-    Central orchestrator for all database operations.
+    """Central orchestrator for all database operations.
 
     Usage:
         orch = DatabaseOrchestrator(db_url="postgresql://localhost:5432/retrosheet")
@@ -44,7 +41,7 @@ class DatabaseOrchestrator:
 
     def __init__(self, db_url: str):
         self.db_url = db_url
-        self.engines: Dict[Type[OperationConfig], BaseOperationEngine] = {
+        self.engines: dict[type[OperationConfig], BaseOperationEngine] = {
             FeaturePopulationConfig: FeaturePopulationEngine(db_url),
             BridgePopulationConfig: BridgePopulationEngine(db_url),
             IngestOperationConfig: IngestionEngine(db_url),
@@ -57,17 +54,17 @@ class DatabaseOrchestrator:
         config_type = type(config)
 
         if config_type not in self.engines:
-            raise ValueError(f"No engine registered for config type: {config_type}")
+            raise ValueError(f'No engine registered for config type: {config_type}')
 
         engine = self.engines[config_type]
 
         if not engine.validate_config(config):
-            raise ValueError(f"Config validation failed for {config_type}")
+            raise ValueError(f'Config validation failed for {config_type}')
 
         return engine.run(config)
 
-    def get_engine(self, config_type: Type[OperationConfig]) -> BaseOperationEngine:
+    def get_engine(self, config_type: type[OperationConfig]) -> BaseOperationEngine:
         """Get the engine for a specific config type."""
         if config_type not in self.engines:
-            raise ValueError(f"No engine registered for: {config_type}")
+            raise ValueError(f'No engine registered for: {config_type}')
         return self.engines[config_type]

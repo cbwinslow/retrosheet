@@ -1,5 +1,4 @@
-"""
-Markov Chain Game Simulator for Baseball
+"""Markov Chain Game Simulator for Baseball
 
 Models game states as Markov chains and simulates innings/games.
 
@@ -12,9 +11,9 @@ Date: April 24, 2026
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 from enum import IntEnum
-from typing import Dict, List, Optional, Tuple, Callable
 
 import numpy as np
 
@@ -24,8 +23,7 @@ import numpy as np
 # ============================================================================
 
 class BaseState(IntEnum):
-    """
-    Enumeration of all 8 possible base states.
+    """Enumeration of all 8 possible base states.
     
     Encoding: (runner on 3rd, runner on 2nd, runner on 1st) as binary
     """
@@ -40,7 +38,7 @@ class BaseState(IntEnum):
 
 
 # Base state transitions for each outcome
-BASE_TRANSITIONS: Dict[str, Dict[BaseState, List[Tuple[float, BaseState, int]]]] = {
+BASE_TRANSITIONS: dict[str, dict[BaseState, list[tuple[float, BaseState, int]]]] = {
     # Single: batter to 1st, runners advance 1-2 bases
     'single': {
         BaseState.EMPTY: [(1.0, BaseState.FIRST, 0)],
@@ -138,8 +136,7 @@ BASE_TRANSITIONS['hit_by_pitch'] = BASE_TRANSITIONS['walk']
 
 @dataclass
 class GameState:
-    """
-    Complete state of a baseball game.
+    """Complete state of a baseball game.
     """
     inning: int = 1                    # Current inning (1-9+)
     is_bottom: bool = False            # Bottom of inning?
@@ -147,8 +144,8 @@ class GameState:
     bases: BaseState = BaseState.EMPTY # Base runner state
     home_score: int = 0                # Home team runs
     away_score: int = 0                # Away team runs
-    
-    def copy(self) -> 'GameState':
+
+    def copy(self) -> GameState:
         """Create a copy of the state."""
         return GameState(
             inning=self.inning,
@@ -158,22 +155,22 @@ class GameState:
             home_score=self.home_score,
             away_score=self.away_score,
         )
-    
+
     @property
     def score_diff(self) -> int:
         """Home score minus away score."""
         return self.home_score - self.away_score
-    
+
     @property
     def batting_team_score(self) -> int:
         """Score of team currently batting."""
         return self.home_score if self.is_bottom else self.away_score
-    
+
     @property
     def fielding_team_score(self) -> int:
         """Score of team currently fielding."""
         return self.away_score if self.is_bottom else self.home_score
-    
+
     def is_game_over(self) -> bool:
         """Check if game has ended."""
         # Game ends after 9 innings if not tied
@@ -183,7 +180,7 @@ class GameState:
         if self.inning > 9 and self.is_bottom and self.home_score > self.away_score:
             return True
         return False
-    
+
     def advance_inning(self):
         """Move to next half-inning."""
         if self.is_bottom:
@@ -193,7 +190,7 @@ class GameState:
             self.is_bottom = True
         self.outs = 0
         self.bases = BaseState.EMPTY
-    
+
     def __str__(self) -> str:
         team = 'Home' if self.is_bottom else 'Away'
         base_str = format(int(self.bases), '03b')
@@ -205,19 +202,17 @@ class GameState:
 # ============================================================================
 
 class MarkovChainSimulator:
-    """
-    Simulates baseball games using Markov chains.
+    """Simulates baseball games using Markov chains.
     
     Given P(outcome | state), simulates full innings and games.
     """
-    
+
     def __init__(
         self,
-        outcome_probs_fn: Callable[[GameState], Dict[str, float]],
+        outcome_probs_fn: Callable[[GameState], dict[str, float]],
         max_innings: int = 12,
     ):
-        """
-        Parameters:
+        """Parameters:
         -----------
         outcome_probs_fn : callable
             Function that takes GameState and returns {outcome: probability}
@@ -226,14 +221,13 @@ class MarkovChainSimulator:
         """
         self.outcome_probs_fn = outcome_probs_fn
         self.max_innings = max_innings
-        
+
     def simulate_plate_appearance(
         self,
         state: GameState,
-        rng: Optional[np.random.Generator] = None,
-    ) -> Tuple[str, int, BaseState]:
-        """
-        Simulate a single plate appearance.
+        rng: np.random.Generator | None = None,
+    ) -> tuple[str, int, BaseState]:
+        """Simulate a single plate appearance.
         
         Returns:
         --------
@@ -241,33 +235,32 @@ class MarkovChainSimulator:
         """
         if rng is None:
             rng = np.random.default_rng()
-        
+
         # Get outcome probabilities for current state
         probs = self.outcome_probs_fn(state)
-        
+
         # Sample outcome
         outcomes = list(probs.keys())
         probabilities = list(probs.values())
         outcome = rng.choice(outcomes, p=probabilities)
-        
+
         # Get transition for this outcome
         transitions = BASE_TRANSITIONS.get(outcome, BASE_TRANSITIONS['ball_in_play_out'])
         state_transitions = transitions.get(state.bases, [(1.0, state.bases, 0)])
-        
+
         # Sample from possible transitions
         probs_t = [t[0] for t in state_transitions]
         idx = rng.choice(len(state_transitions), p=np.array(probs_t) / sum(probs_t))
         _, new_bases, runs_scored = state_transitions[idx]
-        
+
         return outcome, runs_scored, new_bases
-    
+
     def simulate_half_inning(
         self,
         initial_state: GameState,
-        rng: Optional[np.random.Generator] = None,
-    ) -> Tuple[GameState, int, List[str]]:
-        """
-        Simulate a half-inning.
+        rng: np.random.Generator | None = None,
+    ) -> tuple[GameState, int, list[str]]:
+        """Simulate a half-inning.
         
         Returns:
         --------
@@ -275,37 +268,36 @@ class MarkovChainSimulator:
         """
         if rng is None:
             rng = np.random.default_rng()
-        
+
         state = initial_state.copy()
         runs_scored = 0
         outcomes = []
-        
+
         while state.outs < 3 and not state.is_game_over():
             outcome, runs, new_bases = self.simulate_plate_appearance(state, rng)
             outcomes.append(outcome)
-            
+
             # Update state
             runs_scored += runs
             if state.is_bottom:
                 state.home_score += runs
             else:
                 state.away_score += runs
-            
+
             # Update bases and outs
             state.bases = new_bases
-            
+
             # Check for out
             if outcome in ['strikeout', 'ball_in_play_out', 'sacrifice']:
                 state.outs += 1
-        
+
         return state, runs_scored, outcomes
-    
+
     def simulate_game(
         self,
-        rng: Optional[np.random.Generator] = None,
-    ) -> Tuple[GameState, Dict]:
-        """
-        Simulate a complete game.
+        rng: np.random.Generator | None = None,
+    ) -> tuple[GameState, dict]:
+        """Simulate a complete game.
         
         Returns:
         --------
@@ -313,19 +305,19 @@ class MarkovChainSimulator:
         """
         if rng is None:
             rng = np.random.default_rng()
-        
+
         state = GameState()
         game_log = {
             'innings': [],
             'total_plate_appearances': 0,
             'outcomes': [],
         }
-        
+
         while not state.is_game_over() and state.inning <= self.max_innings:
             # Simulate half-inning
             state_copy = state.copy()
             final_state, runs, outcomes = self.simulate_half_inning(state_copy, rng)
-            
+
             # Log inning
             inning_log = {
                 'inning': state.inning,
@@ -337,33 +329,32 @@ class MarkovChainSimulator:
             game_log['innings'].append(inning_log)
             game_log['total_plate_appearances'] += len(outcomes)
             game_log['outcomes'].extend(outcomes)
-            
+
             # Update state
             state.home_score = final_state.home_score
             state.away_score = final_state.away_score
-            
+
             # Advance inning
             state.advance_inning()
-        
+
         game_log['final_score'] = (state.away_score, state.home_score)
         game_log['home_win'] = state.home_score > state.away_score
-        
+
         return state, game_log
-    
+
     def simulate_many_games(
         self,
         n_sims: int = 1000,
         seed: int = 42,
-    ) -> Dict:
-        """
-        Run Monte Carlo simulation of many games.
+    ) -> dict:
+        """Run Monte Carlo simulation of many games.
         
         Returns:
         --------
         Dict with win probabilities and statistics
         """
         rng = np.random.default_rng(seed)
-        
+
         results = {
             'home_wins': 0,
             'away_wins': 0,
@@ -373,10 +364,10 @@ class MarkovChainSimulator:
             'score_diffs': [],
             'game_lengths': [],
         }
-        
+
         for _ in range(n_sims):
             final_state, game_log = self.simulate_game(rng)
-            
+
             # Record result
             if final_state.home_score > final_state.away_score:
                 results['home_wins'] += 1
@@ -384,12 +375,12 @@ class MarkovChainSimulator:
                 results['away_wins'] += 1
             else:
                 results['ties'] += 1
-            
+
             results['total_runs_home'].append(final_state.home_score)
             results['total_runs_away'].append(final_state.away_score)
             results['score_diffs'].append(final_state.score_diff)
             results['game_lengths'].append(final_state.inning - 1)
-        
+
         # Compute statistics
         total = n_sims
         results['home_win_prob'] = results['home_wins'] / total
@@ -399,7 +390,7 @@ class MarkovChainSimulator:
         results['avg_runs_away'] = np.mean(results['total_runs_away'])
         results['avg_score_diff'] = np.mean(results['score_diffs'])
         results['avg_game_length'] = np.mean(results['game_lengths'])
-        
+
         return results
 
 
@@ -409,13 +400,12 @@ class MarkovChainSimulator:
 
 def calculate_win_probability(
     state: GameState,
-    outcome_probs_fn: Callable[[GameState], Dict[str, float]],
+    outcome_probs_fn: Callable[[GameState], dict[str, float]],
     n_sims: int = 1000,
     seed: int = 42,
     team: str = 'batting',  # 'batting' or 'home'
 ) -> float:
-    """
-    Calculate win probability from current game state using Monte Carlo.
+    """Calculate win probability from current game state using Monte Carlo.
     
     Parameters:
     -----------
@@ -436,20 +426,20 @@ def calculate_win_probability(
     """
     simulator = MarkovChainSimulator(outcome_probs_fn, max_innings=12)
     rng = np.random.default_rng(seed)
-    
+
     wins = 0
-    
+
     for _ in range(n_sims):
         # Copy state
         sim_state = state.copy()
-        
+
         # Simulate remainder of game
         while not sim_state.is_game_over() and sim_state.inning <= 12:
             final_state, _, _ = simulator.simulate_half_inning(sim_state, rng)
             sim_state.home_score = final_state.home_score
             sim_state.away_score = final_state.away_score
             sim_state.advance_inning()
-        
+
         # Check win
         if team == 'home':
             if sim_state.home_score > sim_state.away_score:
@@ -461,7 +451,7 @@ def calculate_win_probability(
             else:
                 if sim_state.away_score > sim_state.home_score:
                     wins += 1
-    
+
     return wins / n_sims
 
 
@@ -470,22 +460,21 @@ def calculate_win_probability(
 # ============================================================================
 
 def compute_expected_runs_matrix(
-    outcome_probs_fn: Callable[[BaseState, int], Dict[str, float]],
+    outcome_probs_fn: Callable[[BaseState, int], dict[str, float]],
     n_sims: int = 10000,
     seed: int = 42,
 ) -> np.ndarray:
-    """
-    Compute expected runs matrix for all base/out states.
+    """Compute expected runs matrix for all base/out states.
     
     Returns 8x3 matrix: E[runs | bases, outs]
     """
     rng = np.random.default_rng(seed)
     expected_runs = np.zeros((8, 3))
-    
+
     for base_state in BaseState:
         for outs in range(3):
             total_runs = 0
-            
+
             for _ in range(n_sims):
                 # Create temporary game state
                 state = GameState(
@@ -496,7 +485,7 @@ def compute_expected_runs_matrix(
                     home_score=0,
                     away_score=0,
                 )
-                
+
                 # Simulate remainder of inning
                 simulator = MarkovChainSimulator(
                     lambda s: outcome_probs_fn(s.bases, s.outs),
@@ -504,7 +493,7 @@ def compute_expected_runs_matrix(
                 )
                 final_state, runs, _ = simulator.simulate_half_inning(state, rng)
                 total_runs += runs
-            
+
             expected_runs[int(base_state), outs] = total_runs / n_sims
-    
+
     return expected_runs

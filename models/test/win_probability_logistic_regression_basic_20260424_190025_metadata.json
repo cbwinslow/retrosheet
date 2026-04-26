@@ -15,10 +15,7 @@
       "strikes",
       "home_score_diff"
     ],
-    "categorical": [
-      "batter_hand",
-      "pitcher_hand"
-    ]
+    "categorical": ["batter_hand", "pitcher_hand"]
   },
   "data": {
     "min_season": 2023,

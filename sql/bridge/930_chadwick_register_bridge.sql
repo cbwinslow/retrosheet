@@ -205,7 +205,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON PROCEDURE bridge.upsert_chadwick_to_player_xref() IS 'Merges Chadwick Register staging data into bridge.player_xref, inserting new records and updating existing ones with additional IDs.';
+COMMENT ON PROCEDURE bridge.upsert_chadwick_to_player_xref () IS 'Merges Chadwick Register staging data into bridge.player_xref, inserting new records and updating existing ones with additional IDs.';
 
 -- ============================================================================
 -- STAGE 3: Create function to load Chadwick data from CSV
@@ -264,30 +264,30 @@ COMMENT ON FUNCTION bridge.load_chadwick_from_csv(TEXT, TEXT) IS 'Loads a Chadwi
 -- ============================================================================
 
 CREATE OR REPLACE VIEW bridge.vw_chadwick_coverage AS
-SELECT 
-    'Chadwick Register Coverage' as metric_category,
-    COUNT(*) as total_players,
-    COUNT(key_mlbam) as with_mlb_id,
-    COUNT(key_retro) as with_retrosheet_id,
-    COUNT(key_bbref) as with_bbref_id,
-    COUNT(key_fangraphs) as with_fangraphs_id,
-    COUNT(lahman_id) as with_lahman_id,
-    ROUND(COUNT(key_mlbam)::numeric / NULLIF(COUNT(*), 0) * 100, 2) as mlb_coverage_pct,
-    ROUND(COUNT(key_retro)::numeric / NULLIF(COUNT(*), 0) * 100, 2) as retro_coverage_pct,
-    ROUND(COUNT(key_bbref)::numeric / NULLIF(COUNT(*), 0) * 100, 2) as bbref_coverage_pct
+SELECT
+    'Chadwick Register Coverage' AS metric_category,
+    COUNT(*) AS total_players,
+    COUNT(key_mlbam) AS with_mlb_id,
+    COUNT(key_retro) AS with_retrosheet_id,
+    COUNT(key_bbref) AS with_bbref_id,
+    COUNT(key_fangraphs) AS with_fangraphs_id,
+    COUNT(lahman_id) AS with_lahman_id,
+    ROUND(COUNT(key_mlbam)::NUMERIC / NULLIF(COUNT(*), 0) * 100, 2) AS mlb_coverage_pct,
+    ROUND(COUNT(key_retro)::NUMERIC / NULLIF(COUNT(*), 0) * 100, 2) AS retro_coverage_pct,
+    ROUND(COUNT(key_bbref)::NUMERIC / NULLIF(COUNT(*), 0) * 100, 2) AS bbref_coverage_pct
 FROM bridge._staging_chadwick_register
 UNION ALL
-SELECT 
-    'Player Xref Coverage' as metric_category,
-    COUNT(*) as total_players,
-    COUNT(mlb_id) as with_mlb_id,
-    COUNT(retrosheet_id) as with_retrosheet_id,
-    COUNT(baseball_reference_id) as with_bbref_id,
-    NULL::bigint as with_fangraphs_id,
-    NULL::bigint as with_lahman_id,
-    ROUND(COUNT(mlb_id)::numeric / NULLIF(COUNT(*), 0) * 100, 2) as mlb_coverage_pct,
-    ROUND(COUNT(retrosheet_id)::numeric / NULLIF(COUNT(*), 0) * 100, 2) as retro_coverage_pct,
-    ROUND(COUNT(baseball_reference_id)::numeric / NULLIF(COUNT(*), 0) * 100, 2) as bbref_coverage_pct
+SELECT
+    'Player Xref Coverage' AS metric_category,
+    COUNT(*) AS total_players,
+    COUNT(mlb_id) AS with_mlb_id,
+    COUNT(retrosheet_id) AS with_retrosheet_id,
+    COUNT(baseball_reference_id) AS with_bbref_id,
+    NULL::BIGINT AS with_fangraphs_id,
+    NULL::BIGINT AS with_lahman_id,
+    ROUND(COUNT(mlb_id)::NUMERIC / NULLIF(COUNT(*), 0) * 100, 2) AS mlb_coverage_pct,
+    ROUND(COUNT(retrosheet_id)::NUMERIC / NULLIF(COUNT(*), 0) * 100, 2) AS retro_coverage_pct,
+    ROUND(COUNT(baseball_reference_id)::NUMERIC / NULLIF(COUNT(*), 0) * 100, 2) AS bbref_coverage_pct
 FROM bridge.player_xref;
 
 COMMENT ON VIEW bridge.vw_chadwick_coverage IS 'Compares ID coverage between Chadwick Register staging and bridge.player_xref for gap analysis.';

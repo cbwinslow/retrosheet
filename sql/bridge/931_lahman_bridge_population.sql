@@ -51,8 +51,8 @@ CREATE TABLE bridge._staging_lahman_people (
 );
 
 -- Add indexes
-CREATE INDEX IF NOT EXISTS idx_staging_lahman_retro ON bridge._staging_lahman_people(retrosheet_id);
-CREATE INDEX IF NOT EXISTS idx_staging_lahman_bbref ON bridge._staging_lahman_people(baseball_reference_id);
+CREATE INDEX IF NOT EXISTS idx_staging_lahman_retro ON bridge._staging_lahman_people (retrosheet_id);
+CREATE INDEX IF NOT EXISTS idx_staging_lahman_bbref ON bridge._staging_lahman_people (baseball_reference_id);
 
 -- ============================================================================
 -- STAGE 2: Create procedure to load Lahman data into staging
@@ -239,7 +239,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON PROCEDURE bridge.gap_fill_player_xref_from_lahman() IS 'Fills gaps in bridge.player_xref using Lahman People data: new players, missing Retrosheet IDs, missing BBRef IDs, and missing names.';
+COMMENT ON PROCEDURE bridge.gap_fill_player_xref_from_lahman () IS 'Fills gaps in bridge.player_xref using Lahman People data: new players, missing Retrosheet IDs, missing BBRef IDs, and missing names.';
 
 -- ============================================================================
 -- STAGE 4: Create view for Lahman vs Chadwick comparison
@@ -247,46 +247,49 @@ COMMENT ON PROCEDURE bridge.gap_fill_player_xref_from_lahman() IS 'Fills gaps in
 
 CREATE OR REPLACE VIEW bridge.vw_lahman_chadwick_comparison AS
 WITH lahman_summary AS (
-    SELECT 
-        COUNT(*) as total_lahman,
-        COUNT(retrosheet_id) as lahman_with_retro,
-        COUNT(baseball_reference_id) as lahman_with_bbref
+    SELECT
+        COUNT(*) AS total_lahman,
+        COUNT(retrosheet_id) AS lahman_with_retro,
+        COUNT(baseball_reference_id) AS lahman_with_bbref
     FROM bridge._staging_lahman_people
 ),
+
 chadwick_summary AS (
-    SELECT 
-        COUNT(*) as total_chadwick,
-        COUNT(key_retro) as chadwick_with_retro,
-        COUNT(key_bbref) as chadwick_with_bbref
+    SELECT
+        COUNT(*) AS total_chadwick,
+        COUNT(key_retro) AS chadwick_with_retro,
+        COUNT(key_bbref) AS chadwick_with_bbref
     FROM bridge._staging_chadwick_register
 ),
+
 bridge_summary AS (
-    SELECT 
-        COUNT(*) as total_bridge,
-        COUNT(retrosheet_id) as bridge_with_retro,
-        COUNT(mlb_id) as bridge_with_mlb,
-        COUNT(baseball_reference_id) as bridge_with_bbref
+    SELECT
+        COUNT(*) AS total_bridge,
+        COUNT(retrosheet_id) AS bridge_with_retro,
+        COUNT(mlb_id) AS bridge_with_mlb,
+        COUNT(baseball_reference_id) AS bridge_with_bbref
     FROM bridge.player_xref
 )
-SELECT 
-    'Total Records' as metric,
-    l.total_lahman as lahman_count,
-    c.total_chadwick as chadwick_count,
-    b.total_bridge as bridge_count
-FROM lahman_summary l, chadwick_summary c, bridge_summary b
+
+SELECT
+    'Total Records' AS metric,
+    l.total_lahman AS lahman_count,
+    c.total_chadwick AS chadwick_count,
+    b.total_bridge AS bridge_count
+FROM lahman_summary AS l, chadwick_summary AS c, bridge_summary AS b
 UNION ALL
-SELECT 
+SELECT
     'With Retrosheet ID',
     l.lahman_with_retro,
     c.chadwick_with_retro,
     b.bridge_with_retro
-FROM lahman_summary l, chadwick_summary c, bridge_summary b
+FROM lahman_summary AS l, chadwick_summary AS c, bridge_summary AS b
 UNION ALL
-SELECT 
+SELECT
     'With BBRef ID',
     l.lahman_with_bbref,
     c.chadwick_with_bbref,
     b.bridge_with_bbref
-FROM lahman_summary l, chadwick_summary c, bridge_summary b;
+FROM lahman_summary AS l, chadwick_summary AS c, bridge_summary AS b;
 
 COMMENT ON VIEW bridge.vw_lahman_chadwick_comparison IS 'Compares ID coverage across Lahman, Chadwick Register, and bridge.player_xref for gap analysis.';

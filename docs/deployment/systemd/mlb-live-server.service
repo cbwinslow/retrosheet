@@ -1,0 +1,40 @@
+[Unit]
+Description=MLB Live Prediction Server
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=mlb
+Group=mlb
+WorkingDirectory=/opt/retrosheet
+Environment=PYTHONPATH=/opt/retrosheet
+Environment=PGHOST=localhost
+Environment=PGPORT=5432
+Environment=PGDATABASE=retrosheet
+Environment=PGUSER=mlb
+Environment=PGPASSWORD=${PGPASSWORD}
+Environment=MODEL_DIR=/opt/retrosheet/data/models
+Environment=CACHE_TTL=5
+Environment=POLL_INTERVAL=10
+Environment=LOG_LEVEL=INFO
+Environment=WEBSOCKET_HOST=0.0.0.0
+Environment=WEBSOCKET_PORT=8765
+Environment=MAX_CLIENTS=1000
+Environment=MAX_CACHE_SIZE=10000
+ExecStart=/opt/retrosheet/.venv/bin/python -m mlb_predict.streaming.server
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/retrosheet/logs /opt/retrosheet/data/models
+
+[Install]
+WantedBy=multi-user.target

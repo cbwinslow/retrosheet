@@ -174,4 +174,3 @@ SELECT
     ROUND(AVG((pitch_seq_tx IS NOT NULL AND pitch_seq_tx <> '')::integer)::numeric, 4) AS pitch_sequence_coverage,
     ROUND(AVG((battedball_cd IS NOT NULL AND battedball_cd <> '')::integer)::numeric, 4) AS batted_ball_coverage
 FROM features.plate_appearance_outcome_examples;
-

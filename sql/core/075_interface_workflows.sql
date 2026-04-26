@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS predictions.simulation_runs (
     simulation_run_id bigserial PRIMARY KEY,
     run_name text,
     run_mode text NOT NULL,
-    requested_at timestamptz NOT NULL DEFAULT now(),
+    requested_at timestamptz NOT NULL DEFAULT NOW(),
     requested_by text,
     filters jsonb NOT NULL DEFAULT '{}'::jsonb,
     summary jsonb NOT NULL DEFAULT '{}'::jsonb,
