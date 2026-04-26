@@ -1170,6 +1170,23 @@ for cmd in commands:
     print(f"• {cmd}")
 ```
 
+### CLI Usage
+
+```bash
+# Interactive chat mode
+baseball chatbot chat --interactive
+
+# Single query
+baseball chatbot chat -m "What's the Yankees win probability?"
+
+# Run demo conversation
+baseball chatbot demo
+```
+
+**Interactive Mode Commands:**
+- Type `help` to see example queries
+- Type `quit`, `exit`, or `bye` to exit
+
 ## Testing (`scripts/`)
 
 **End-to-end testing for Phase 3 components.**
