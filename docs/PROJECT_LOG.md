@@ -884,6 +884,88 @@ print(f"Run probability: {result['run_probability']:.1%}")
 
 ---
 
+### 2026-04-26: Natural Language Chatbot
+
+25. **Chatbot Interface** (`baseball/chatbot/`)
+    - `IntentParser`: Pattern-based intent recognition (9 intent types)
+    - `EntityExtractor`: Extract teams, players, dates, stats from text
+    - `ConversationManager`: Track history, context, user preferences
+    - `ResponseGenerator`: Natural language response templates
+    - `Chatbot`: Main orchestrator combining all components
+
+#### Components
+
+**IntentParser** (`baseball/chatbot/intent_parser.py`):
+- 9 intent types: prediction, game_info, player_stats, standings, schedule, comparison, explanation, greeting, help
+- Regex pattern matching with confidence scoring
+- Parameter extraction for each intent
+
+**EntityExtractor** (`baseball/chatbot/entity_extractor.py`):
+- Team name recognition (30 MLB teams with aliases)
+- Player name extraction (common players + database lookup)
+- Date parsing (relative, absolute, numeric formats)
+- Number and stat extraction
+
+**ConversationManager** (`baseball/chatbot/conversation_manager.py`):
+- Message history with configurable limits
+- Context tracking (active game, team, player)
+- Follow-up question detection
+- Session serialization/deserialization
+
+**ResponseGenerator** (`baseball/chatbot/response_generator.py`):
+- Template-based response generation
+- Context-aware responses
+- Clarification prompts
+- Prediction detail formatting
+
+**Chatbot** (`baseball/chatbot/chatbot.py`):
+- Unified `chat()` interface
+- Intent-specific query handlers
+- Context resolution for follow-ups
+- Conversation summary and reset
+
+#### Usage Example
+
+```python
+from baseball.chatbot import Chatbot
+
+bot = Chatbot(model_server=ms, db_connection=conn)
+
+# Single query
+response = bot.chat("What's the Yankees win probability?")
+print(response)  # "The Yankees are looking strong with a 65% chance..."
+
+# Contextual conversation
+bot.chat("What's Judge's batting average?")
+response = bot.chat("How about his home runs?")  # Contextual follow-up
+
+# Get supported commands
+for cmd in bot.get_supported_commands():
+    print(f"• {cmd}")
+```
+
+#### Supported Queries
+
+| Category | Examples |
+|---|---|
+| Predictions | "Will the Yankees win?", "Run probability?", "Who's favored?" |
+| Game Info | "Who's pitching?", "Current score?", "What inning?" |
+| Player Stats | "Judge's BA?", "Ohtani's ERA?", "Trout's OPS?" |
+| Standings | "Where are the Red Sox?", "Wildcard race?" |
+| Schedule | "When do the Cubs play?", "Next game?" |
+| Comparison | "Compare Judge and Ohtani", "Who's better?" |
+| Explanation | "How do predictions work?", "Why 65%?" |
+
+#### Stats
+- **Python**: 6 modules, ~1,700 lines
+- **Intent Types**: 9
+- **Teams Recognized**: 30 MLB teams + aliases
+- **Common Players**: 10 star players pre-loaded
+
+**Status**: ✅ Phase 8 Complete (Natural Language Chatbot)
+
+---
+
 7. **Live Dashboard UI** (`dashboard/`) - ✅ Complete
    - `dashboard/index.html` - Real-time visualization
    - `dashboard/README.md` - Setup and usage documentation

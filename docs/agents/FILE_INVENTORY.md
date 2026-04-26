@@ -1111,6 +1111,65 @@ result = server.predict('next_run', {
 print(f"Run probability: {result['run_probability']:.1%}")
 ```
 
+## Phase 8: Chatbot (`baseball/chatbot/`)
+
+**Natural language interface for baseball queries.**
+
+### Chatbot Components
+
+| File | Purpose | Components |
+|---|---|---|
+| `baseball/chatbot/__init__.py` | Module exports. | Chatbot, IntentParser, EntityExtractor, etc. |
+| `baseball/chatbot/intent_parser.py` | **INTENT PARSING** - `IntentParser` class. Pattern matching for intents: prediction, game_info, player_stats, standings, schedule, comparison, explanation, greeting, help. | 300+ lines |
+| `baseball/chatbot/entity_extractor.py` | **ENTITY EXTRACTION** - `EntityExtractor` class. Extracts teams (30 MLB teams), players, dates, numbers, stats from text. | 350+ lines |
+| `baseball/chatbot/conversation_manager.py` | **CONVERSATION STATE** - `ConversationManager` class. Tracks history, context (active game/team/player), user preferences. `Message` and `ConversationContext` dataclasses. | 300+ lines |
+| `baseball/chatbot/response_generator.py` | **RESPONSE GENERATION** - `ResponseGenerator` class. Natural language templates for each intent type. Handles greetings, help, predictions, stats, standings, schedules. | 350+ lines |
+| `baseball/chatbot/chatbot.py` | **MAIN ORCHESTRATOR** - `Chatbot` class. Combines all components. Query handlers for each intent. `chat()` method for single interaction. | 400+ lines |
+
+### Supported Intents
+
+| Intent | Examples |
+|---|---|
+| `prediction` | "What's the win probability?", "Will the Yankees win?", "Run probability?" |
+| `game_info` | "Who's pitching?", "What's the score?", "Current inning?" |
+| `player_stats` | "Judge's batting average?", "Ohtani's ERA?", "Trout's OPS?" |
+| `standings` | "Where are the Red Sox?", "Division standings?", "Wildcard race?" |
+| `schedule` | "When do the Cubs play?", "Next game?", "Upcoming schedule?" |
+| `comparison` | "Compare Judge and Ohtani", "Who's better, Trout or Betts?" |
+| `explanation` | "How do predictions work?", "Why is the probability 65%?" |
+| `greeting` | "Hello", "Hi", "Hey there" |
+| `help` | "What can you do?", "Help", "Commands?" |
+
+### Usage
+
+```python
+from baseball.chatbot import Chatbot
+
+# Create chatbot
+bot = Chatbot(model_server=ms, db_connection=conn)
+
+# Single interaction
+response = bot.chat("What's the Yankees win probability?")
+print(response)
+
+# Contextual conversation
+bot.chat("What's the win probability for the Yankees?")
+response = bot.chat("How about the Red Sox?")  # Remembers context
+print(response)
+
+# Get conversation summary
+summary = bot.get_conversation_summary()
+print(f"Messages: {summary['session_info']['message_count']}")
+
+# Reset conversation
+bot.reset_conversation()
+
+# Get supported commands
+commands = bot.get_supported_commands()
+for cmd in commands:
+    print(f"• {cmd}")
+```
+
 ## Testing (`scripts/`)
 
 **End-to-end testing for Phase 3 components.**
