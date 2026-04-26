@@ -283,6 +283,14 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/ingest_live_games.py` | Orchestrates batch live game ingestion using environment-driven Postgres settings. | Live bridge work. |
 | `scripts/transform_live_game.py` | Transforms stored MLB live snapshots into canonical `core.live_games` / `core.live_events` with upserts and raw JSON preservation. | Live bridge work. |
 
+## Bridge Table Population (Fill Empty Tables)
+
+| File | Purpose | Critical For |
+|---|---|---|
+| `scripts/populate_all_missing_data.sh` | **MASTER SCRIPT** - Runs all population scripts in correct order. Populates ALL empty tables. | One-command data fix. |
+| `scripts/bridge/populate_mlb_players_venues_complete.py` | **NEW** - Populates mlb.players and mlb.venues from MLB API. Links venues to Retrosheet parks. | **CRITICAL**: features_pitch.mv_park_context needs venues! |
+| `scripts/bridge/populate_live_plate_appearances.py` | **NEW** - Populates core.live_plate_appearances from raw_mlb.live_feed_snapshots. | Fills 0-row table. |
+
 ## External Data Ingestion (Complete Coverage)
 
 | File | Purpose | Use When |
@@ -292,6 +300,8 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/external_data/load_lahman_complete.py` | **NEW** - Dynamic Lahman loader that reads CSV headers to discover ALL columns. Loads ALL 28 tables with 100% field coverage. Replaces selective load_lahman.py. | Loading Lahman data. |
 | `scripts/data_ingestion/fetch_mlb_stats_api_complete.py` | **NEW** - Fetches ALL MLB Stats API endpoints (boxscore, PBP, pitch metrics, WP, Gameday XML, rosters, standings). Stores source-preserved JSONB. | Fetching MLB API data. |
 | `docs/DATA_INGESTION_FIX_REPORT.md` | **NEW** - Detailed report on data ingestion gaps and fixes applied. | Understanding the fix. |
+| `scripts/data_ingestion/fetch_espn_complete.py` | **NEW** - Fetches ALL ESPN data: player stats, team stats, plays. Fills empty raw_espn tables. | ESPN data population. |
+| `scripts/data_ingestion/fetch_baseball_reference_complete.py` | **NEW** - Fetches Baseball-Reference game logs using pybaseball. Fills empty raw_baseball_reference.game_logs. | BR data population. |
 | `scripts/replay_live_bridge_backfill.py` | Replays stored latest-successful MLB raw snapshots through `scripts/transform_live_game.py`, optionally targeting only rows that still carry `MLB###` fallback ids. | Controlled live bridge refresh after mapping or transform fixes. |
 | `scripts/backup_sql_files.sh` | Copies all `.sql` files from the `sql/` directory into a timestamped backup folder for Git versioning. | Backup of schema definitions. |
 | `scripts/backup_procedures.sh` | Backs up all database objects (functions, procedures, views, materialized views) to a timestamped SQL dump. | Database maintenance, disaster recovery. |
@@ -481,6 +491,125 @@ The flexible feature mart follows the principle: **"All fields available, select
 | `mlb_predict/cli/main.py` | **UNIFIED CLI** - Command-line interface with train, experiment, sweep, info subcommands. argparse dispatch. | CLI entry point |
 | `mlb_predict/cli/__init__.py` | CLI module exports. | create_parser, main |
 
+### Source Adapters (`mlb_predict/sources/`)
+
+**Unified data ingestion adapters implementing the BaseSource interface.**
+
+| File | Purpose | Components |
+|---|---|---|
+| `mlb_predict/sources/__init__.py` | Source module exports. Exports BaseSource, all adapter classes, result dataclasses. | Public API |
+| `mlb_predict/sources/base.py` | **BASE SOURCE INTERFACE** - BaseSource abstract base class with download(), ingest(), validate() methods. DownloadResult, IngestResult, ValidationResult dataclasses. | BaseSource, result classes |
+| `mlb_predict/sources/mlb.py` | **MLB STATS API ADAPTER** - MlbSource class wrapping MLB Stats API scripts. Supports date ranges, seasons, individual games. fetch_today(), fetch_season() methods. | MlbSource |
+| `mlb_predict/sources/retrosheet.py` | **RETROSHEET ADAPTER** - RetrosheetSource class wrapping Chadwick tools. Year range downloads, Chadwick event file parsing. get_seasons_available() for year discovery. | RetrosheetSource |
+| `mlb_predict/sources/statcast.py` | **STATCAST ADAPTER** - StatcastSource class wrapping pybaseball. Season downloads, pitch-level data. get_available_seasons() (2015+). | StatcastSource |
+| `mlb_predict/sources/espn.py` | **ESPN ADAPTER** - EspnSource class wrapping ESPN API scripts. Schedule, boxscores, player/team stats. Season-based downloads. | EspnSource |
+| `mlb_predict/sources/lahman.py` | **LAHMAN ADAPTER** - LahmanSource class for Lahman Baseball Databank. CSV archive download, multi-table ingestion. get_table_counts() for row statistics. | LahmanSource |
+| `mlb_predict/sources/live.py` | **LIVE ADAPTER** - LiveMlbSource class for real-time MLB game tracking. State polling, change detection, callbacks. Integration with existing ingest scripts. | LiveMlbSource, GameState |
+
+**CLI Integration**: All adapters accessible via `baseball <source> <command>`:
+```bash
+baseball mlb {download,ingest,validate,today}
+baseball retrosheet {download,ingest,validate,seasons}
+baseball statcast {download,ingest,validate,seasons}
+baseball espn {download,ingest,validate,seasons}
+baseball lahman {download,ingest,validate,tables}
+baseball live {games,watch,poll,predict,server}
+```
+
+### Live Pipeline (`mlb_predict/pipeline/`)
+
+**Real-time prediction pipeline for live MLB games. Phase 3 implementation.**
+
+| File | Purpose | Components |
+|---|---|---|
+| `mlb_predict/pipeline/__init__.py` | Pipeline module exports. | LivePredictionPipeline, LiveGameContext, PredictionResult, LiveModelManager |
+| `mlb_predict/pipeline/live_prediction.py` | **LIVE PREDICTION PIPELINE** - Real-time prediction engine. `LivePredictionPipeline` class integrates `LiveFeatureStore` and `LiveModelManager`. Prediction caching, streaming predictions generator. Performance metrics (latency, cache hit rate). WebSocket-ready. | LivePredictionPipeline, LiveGameContext, PredictionResult |
+| `mlb_predict/pipeline/model_manager.py` | **MODEL MANAGER** - `LiveModelManager` class. Loads trained models from disk/database (joblib/pickle). Lazy loading, model caching, fallback to heuristic. Feature validation. Prediction with confidence scoring. Integrates with existing model registry. | LiveModelManager, ModelMetadata |
+
+**Key Features**:
+- Incremental feature computation (only recompute changed features)
+- Prediction caching with configurable TTL (default 5s)
+- Sub-100ms latency target
+- Real model loading (disk or database registry)
+- Automatic fallback to heuristic when models unavailable
+- State change callbacks for reactive updates
+- Streaming predictions generator for WebSocket
+
+**CLI Commands**:
+```bash
+baseball live games                    # Show active games
+baseball live watch --game 123         # Watch single game with updates
+baseball live poll --interval 30       # Poll all games
+baseball live predict --game 123       # Real-time predictions
+baseball live server                   # Start WebSocket server
+```
+
+### Streaming (`mlb_predict/streaming/`)
+
+**WebSocket infrastructure for real-time prediction streaming. Phase 3 implementation.**
+
+| File | Purpose | Components |
+|---|---|---|
+| `mlb_predict/streaming/__init__.py` | Streaming module exports. | PredictionWebSocketServer, PredictionStreamClient |
+| `mlb_predict/streaming/server.py` | **WEBSOCKET SERVER** - `PredictionWebSocketServer` class. Multi-client support, per-game subscriptions, automatic polling, heartbeat/ping-pong, JSON message protocol. | PredictionWebSocketServer |
+| `mlb_predict/streaming/client.py` | **WEBSOCKET CLIENT** - `PredictionStreamClient` class. Async client for consuming prediction streams. Callback-based API (on_prediction, on_connect, on_disconnect). Subscribe/unsubscribe to games. | PredictionStreamClient |
+
+**WebSocket Protocol**:
+```json
+// Client -> Server
+{"command": "subscribe", "game_pk": 12345}
+{"command": "unsubscribe", "game_pk": 12345}
+{"command": "games"}
+{"command": "ping"}
+
+// Server -> Client
+{"type": "connected", "message": "...", "commands": [...]}
+{"type": "prediction", "game_pk": 12345, "game_state": {...}, "prediction": {...}}
+{"type": "subscribed", "game_pk": 12345}
+{"type": "pong"}
+```
+
+**Usage**:
+```bash
+# Start server
+baseball live server --port 8765
+
+# Python client
+from mlb_predict.streaming import PredictionStreamClient
+client = PredictionStreamClient("ws://localhost:8765")
+await client.connect()
+await client.subscribe(12345)
+```
+
+### Features (`mlb_predict/features/`)
+
+**Incremental feature computation for live predictions. Phase 3 implementation.**
+
+| File | Purpose | Components |
+|---|---|---|
+| `mlb_predict/features/__init__.py` | Features module exports. | LiveFeatureStore, FeatureComputation, GameStateFeatures |
+| `mlb_predict/features/live_features.py` | **INCREMENTAL FEATURE COMPUTATION** - `LiveFeatureStore` class with feature caching and partial updates. `GameStateFeatures` dataclass with feature vector generation. Change detection, hash-based cache invalidation, LRU eviction. Feature computation metadata tracking. | LiveFeatureStore, GameStateFeatures, FeatureComputation |
+
+**Key Features**:
+- Incremental feature computation (only recompute changed features)
+- Hash-based cache keys for fast lookup
+- LRU cache eviction (configurable size)
+- Feature change tracking
+- Sub-millisecond compute time for cache hits
+
+**Usage**:
+```python
+from mlb_predict.features import LiveFeatureStore, LiveGameContext
+
+store = LiveFeatureStore(max_cache_size=1000)
+result = store.compute_features(context)
+
+# Check what changed
+print(f"Changed: {result.features_changed}")
+print(f"Cache hit: {result.cache_hit}")
+print(f"Compute time: {result.compute_time_ms:.2f}ms")
+```
+
 ### Models (`mlb_predict/models/`)
 
 | File | Purpose | Components |
@@ -548,6 +677,459 @@ The flexible feature mart follows the principle: **"All fields available, select
 | `baseball-chatbot-ui/node_modules/` | Frontend dependencies. | Do not commit. |
 | `baseball-chatbot-ui/.next/` | Frontend build output. | Do not commit. |
 | `__pycache__/`, `.mypy_cache/`, `.ruff_cache/` | Python/tool caches. | Do not commit. |
+
+## Unified CLI (baseball)
+
+**Unified Typer CLI entry point for all data operations.**
+
+| File | Purpose | Commands |
+|---|---|---|
+| `baseball/__init__.py` | Package version info. | Version constant |
+| `baseball/__main__.py` | Module entry point (`python -m baseball`). | CLI launcher |
+| `baseball/cli.py` | **UNIFIED CLI** - Typer app with all command groups. 600+ lines. System commands (doctor, status, version), data source commands (mlb, retrosheet, statcast, espn, lahman), ML commands (train, experiment), skeleton commands (predict, models, features). | All `baseball` commands |
+
+**CLI Entry Point**:
+```bash
+baseball --help                    # Show all commands
+baseball doctor                    # Check system health
+baseball status                    # Show pipeline runs
+baseball version                   # Show version info
+
+# Data sources
+baseball mlb {download,ingest,validate,today}
+baseball retrosheet {download,ingest,validate,seasons}
+baseball statcast {download,ingest,validate,seasons}
+baseball espn {download,ingest,validate,seasons}
+baseball lahman {download,ingest,validate,tables}
+
+# ML workflow
+baseball train --config configs/xgboost.yaml
+baseball experiment --target swing_decision
+```
+
+## Admin SQL Tables
+
+**Pipeline control and monitoring tables.**
+
+| File | Purpose | Tables |
+|---|---|---|
+| `sql/00_admin/000_admin_pipeline_control.sql` | **ADMIN TABLES** - Pipeline tracking, checkpoints, error logging. Run once to create admin schema. | `admin.pipeline_runs`, `admin.pipeline_checkpoints`, `admin.pipeline_errors`, `admin.v_recent_pipeline_runs` |
+
+**Table Descriptions**:
+- `admin.pipeline_runs` - Tracks every pipeline execution with UUID, command, status, timing, metadata
+- `admin.pipeline_checkpoints` - Resume capability with phase/position tracking
+- `admin.pipeline_errors` - Error logging with stack traces and context
+- `admin.v_recent_pipeline_runs` - Summary view with duration calculation
+
+**Usage**:
+```sql
+-- View recent pipeline runs
+SELECT * FROM admin.v_recent_pipeline_run ORDER BY started_at DESC LIMIT 10;
+
+-- Check for failed runs
+SELECT * FROM admin.pipeline_runs WHERE status = 'failed' ORDER BY started_at DESC;
+```
+
+## Live Dashboard (`dashboard/`)
+
+**Real-time WebSocket-based dashboard for MLB predictions. Phase 3 implementation.**
+
+| File | Purpose | Technology |
+|---|---|---|
+| `dashboard/index.html` | **LIVE DASHBOARD UI** - Single-page application for real-time game visualization. WebSocket client, auto-discovery of active games, win probability visualization, game situation display, connection status, debug logging. Pure HTML/CSS/JavaScript - no build step required. | HTML5, CSS3, JavaScript (ES6+) |
+| `dashboard/README.md` | Dashboard documentation - setup, usage, troubleshooting. | Markdown |
+
+**Features**:
+- Real-time WebSocket connection to prediction server
+- Auto-discovery of active MLB games
+- Visual win probability bar (green = home, red = away)
+- Live game situation (inning, outs, count, runners)
+- Confidence scores and latency metrics
+- Connection status with debug log
+- Responsive dark mode UI
+
+**Usage**:
+```bash
+# 1. Start WebSocket server
+baseball live server --port 8765
+
+# 2. Open dashboard
+python3 -m http.server 8080 --directory dashboard
+# Open http://localhost:8080
+
+# 3. Connect to WebSocket
+# Enter ws://localhost:8765 and click Connect
+```
+
+**Browser Compatibility**: Chrome 80+, Firefox 75+, Safari 13.1+, Edge 80+
+
+## Deployment (`docs/deployment/`)
+
+**Production deployment artifacts for Phase 3 live server.**
+
+| File | Purpose |
+|---|---|
+| `docs/deployment/live_server.md` | **DEPLOYMENT GUIDE** - Complete documentation for production deployment. Systemd service setup, Docker containerization, PM2 process management, Nginx reverse proxy, SSL/TLS with Let's Encrypt, monitoring, performance tuning, troubleshooting. | Markdown |
+| `docs/deployment/systemd/mlb-live-server.service` | **SYSTEMD SERVICE** - Production systemd service unit file. Security hardening, auto-restart, logging, environment variables. Ready for `systemctl enable mlb-live-server`. | systemd unit |
+| `docs/deployment/nginx/mlb-live-server.conf` | **NGINX CONFIG** - WebSocket-enabled reverse proxy configuration. SSL/TLS, rate limiting, upstream backend, health checks, security headers. | nginx conf |
+| `Dockerfile.live` | **DOCKER IMAGE** - Multi-stage Dockerfile for containerized deployment. Python 3.10 slim base, virtual environment, non-root user, health check. | Dockerfile |
+| `ecosystem.config.js` | **PM2 CONFIG** - Process manager configuration. Auto-restart, memory limits, log rotation, deployment hooks. | PM2 config |
+
+**Deployment Options**:
+
+**1. Systemd Service (Recommended for Linux)**:
+```bash
+cp docs/deployment/systemd/mlb-live-server.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable mlb-live-server
+systemctl start mlb-live-server
+```
+
+**2. Docker Container**:
+```bash
+docker build -f Dockerfile.live -t mlb-live-server .
+docker run -p 8765:8765 \
+  -e PGHOST=host.docker.internal \
+  -e PGPASSWORD=secret \
+  mlb-live-server
+```
+
+**3. PM2 Process Manager**:
+```bash
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup
+```
+
+**4. Nginx Reverse Proxy**:
+```bash
+cp docs/deployment/nginx/mlb-live-server.conf /etc/nginx/sites-available/
+ln -s /etc/nginx/sites-available/mlb-live-server.conf /etc/nginx/sites-enabled/
+nginx -t && systemctl reload nginx
+```
+
+**SSL/TLS with Let's Encrypt**:
+```bash
+certbot --nginx -d cloudcurio.cc -d www.cloudcurio.cc -d predictions.cloudcurio.cc
+```
+
+**Production URLs**:
+- Dashboard: `https://cloudcurio.cc/dashboard`
+- WebSocket: `wss://cloudcurio.cc/ws`
+- API: `https://predictions.cloudcurio.cc`
+
+## Bridge Layer (`baseball/bridge/`)
+
+**Phase 5: Cross-source ID resolution service. Maps entity IDs between MLB API, Retrosheet, ESPN, Lahman.**
+
+| File | Purpose | Components |
+|---|---|---|
+| `baseball/bridge/__init__.py` | Bridge module exports. | PlayerXrefService, TeamXrefService, GameXrefService, XrefManager |
+| `baseball/bridge/player_xref.py` | **PLAYER ID RESOLUTION** - Maps player IDs across MLB API (mlb_id), Retrosheet (retro_id), ESPN (espn_id), Lahman (lahman_id), Baseball-Reference (bbref_id), FanGraphs (fg_id). PlayerXref dataclass, lookup by any source, merge records. | PlayerXref, PlayerXrefService |
+| `baseball/bridge/team_xref.py` | **TEAM ID RESOLUTION** - Maps team IDs across data sources. Canonical MLB team mappings loaded by default. 30 MLB teams with league/division info. | TeamXref, TeamXrefService |
+| `baseball/bridge/game_xref.py` | **GAME ID RESOLUTION** - Maps game IDs between MLB API (game_pk), Retrosheet (YYYYMMDDTHH format), ESPN. Date-based indexing for range queries. | GameXref, GameXrefService |
+| `baseball/bridge/xref_manager.py` | **COORDINATOR** - Unified manager for all xref services. High-level resolve methods, find games by matchup, load for season. | XrefManager |
+| `sql/300_bridge_schema.sql` | **DATABASE SCHEMA** - bridge.player_xref, bridge.team_xref, bridge.game_xref tables with constraints and indexes. Helper functions for name/date lookups. | SQL DDL |
+
+**Features**:
+- Canonical ID resolution across 5+ data sources
+- Bidirectional lookup (any source → canonical → all sources)
+- Record merging with source priority
+- In-memory caching + database persistence
+- Date range queries for games
+- Team matchup search
+
+**Usage**:
+```python
+from baseball.bridge import XrefManager
+
+manager = XrefManager(db_connection=conn)
+manager.load_all()
+
+# Resolve player by MLB ID
+player = manager.resolve_player('mlb', 12345)
+print(player.retro_id, player.espn_id)
+
+# Look up team by code
+team = manager.teams.lookup_by_code('NYY')
+
+# Find games by Retrosheet ID
+game = manager.games.lookup_by_retro('202604040NYY01')
+```
+
+## Phase 6: Features (`sql/`, `baseball/features/`)
+
+**ML-ready feature computation layer.**
+
+### Feature SQL Schema
+
+| File | Purpose | Components |
+|---|---|---|
+| `sql/500_features_win_expectancy.sql` | **WIN EXPECTANCY** - WE matrix table, functions, views. Tables: `win_expectancy_matrix`, `game_state_we`, `win_expectancy_history`. | SQL |
+| `sql/501_features_leverage_index.sql` | **LEVERAGE INDEX** - LI matrix, clutch stats. Tables: `leverage_index_matrix`, `game_state_li`, `player_clutch_stats`. | SQL |
+| `sql/502_features_matchup.sql` | **MATCHUP** - Batter vs pitcher features. Tables: `batter_vs_pitcher_matchups`, `platoon_splits`, `matchup_features`. Functions: `get_matchup_features()`, `calculate_platoon_advantage()`. | SQL |
+| `sql/503_features_rolling_form.sql` | **ROLLING FORM** - Recent performance. Tables: `batter_rolling_form`, `pitcher_rolling_form`, `rolling_form_features`. Views: `hot_batters`, `hot_pitchers`, `cold_batters`, `cold_pitchers`. | SQL |
+| `sql/504_features_bullpen.sql` | **BULLPEN** - Fatigue and depth. Tables: `bullpen_status`, `reliever_fatigue`, `bullpen_features`. Functions: `calculate_reliever_fatigue_score()`, `calculate_team_bullpen_fatigue()`. | SQL |
+
+### Feature Python Classes
+
+| File | Purpose | Components |
+|---|---|---|
+| `baseball/features/__init__.py` | Module exports. | All calculators and dataclasses |
+| `baseball/features/base.py` | **BASE CLASSES** - `FeatureStore`, `FeatureConfig`, `FeatureResult`, `GameState`. Enums: `FeatureScope`, `FeatureStatus`. | 300+ lines |
+| `baseball/features/win_expectancy.py` | **WE CALCULATOR** - `WinExpectancyCalculator`. Win probability, WPA, game series. | 300+ lines |
+| `baseball/features/leverage_index.py` | **LI CALCULATOR** - `LeverageIndexCalculator`. Leverage ratings, clutch tracking. | 350+ lines |
+| `baseball/features/matchup.py` | **MATCHUP CALCULATOR** - `MatchupCalculator`, `MatchupHistory`, `PlatoonSplit`. Head-to-head history, platoon advantage, matchup scores. | 350+ lines |
+| `baseball/features/rolling_form.py` | **FORM CALCULATOR** - `RollingFormCalculator`, `BatterForm`, `PitcherForm`. 7/14/30 day windows, hot/cold detection, trends. | 400+ lines |
+| `baseball/features/bullpen.py` | **BULLPEN CALCULATOR** - `BullpenCalculator`, `TeamBullpenStatus`, `RelieverFatigue`. Fatigue scoring, availability, bullpen advantage. | 450+ lines |
+
+### Key Features
+
+**Win Expectancy (WE)**:
+- Probability of home team winning from any game state
+- 24 base states (outs × base runners) × innings × score differentials
+- WPA (Win Probability Added) for play-by-play analysis
+
+**Leverage Index (LI)**:
+- Situational importance (1.0 = average, 2.0+ = high leverage)
+- Categorical ratings: low, medium, high, very_high
+- Clutch performance tracking by player
+
+**Matchup Features**:
+- Career head-to-head history (batter vs pitcher)
+- Platoon splits (lefty/righty performance)
+- Combined matchup score (0-1)
+- `features.hot_batters` and `features.hot_pitchers` views
+
+**Rolling Form**:
+- 7/14/30 day performance windows
+- Hot/cold detection with thresholds
+- Trend direction (improving/declining/stable)
+- Form advantage calculations
+
+**Bullpen Features**:
+- Individual reliever fatigue scores
+- Team bullpen availability counts
+- Fatigue and depth scores (0-1)
+- Comparative bullpen advantage
+
+**Usage**:
+```python
+from baseball.features import (
+    WinExpectancyCalculator, LeverageIndexCalculator,
+    MatchupCalculator, RollingFormCalculator, BullpenCalculator,
+    GameState
+)
+
+# Win Expectancy
+calc = WinExpectancyCalculator(db_connection=conn)
+calc.load_from_db(season=2026)
+state = GameState(inning=9, is_top=False, outs=2, runner_1b=True)
+we = calc.compute(state)
+
+# Matchup
+calc = MatchupCalculator(db_connection=conn)
+score = calc.compute_matchup_score(batter_id=123, pitcher_id=456, season=2026)
+is_advantage = calc.is_platoon_advantage(batter_id=123, pitcher_id=456)
+
+# Rolling Form
+calc = RollingFormCalculator(db_connection=conn)
+form = calc.get_batter_form(player_id=123, season=2026)
+if form.is_hot:
+    print(f"Hot batter! L14 OPS: {form.l14_ops:.3f}")
+
+# Bullpen
+calc = BullpenCalculator(db_connection=conn)
+advantage = calc.get_bullpen_advantage(home_id=147, away_id=118, game_pk=777777, season=2026)
+print(advantage['narrative'])
+```
+
+## Phase 6.4/6.5: Models (`sql/`, `baseball/models/`)
+
+**Prediction models for next-run probability and PA outcomes.**
+
+### Model SQL Schema
+
+| File | Purpose | Components |
+|---|---|---|
+| `sql/601_models_next_run.sql` | **NEXT-RUN MODEL** - Binary classification (will a run score?). Tables: `next_run_training_data`, `next_run_features`, `next_run_predictions`. Functions: `populate_next_run_training()`, `compute_next_run_features()`. Views: `next_run_calibration`, `next_run_performance`. | SQL |
+| `sql/602_models_pa_outcome.sql` | **PA OUTCOME MODEL** - Multi-class classification (out/walk/single/double/triple/HR). Tables: `pa_outcome_training_data`, `pa_outcome_features`, `pa_outcome_predictions`. Type: `pa_outcome_category`. Views: `pa_outcome_accuracy`, `batter_prediction_summary`. | SQL |
+
+### Model Python Classes
+
+| File | Purpose | Components |
+|---|---|---|
+| `baseball/models/__init__.py` | Module exports. | BaseModel, ModelConfig, NextRunProbabilityModel, PAOutcomeModel |
+| `baseball/models/base.py` | **BASE CLASSES** - `BaseModel` (abstract), `SklearnBaseModel`, `ModelConfig`, `TrainingConfig`, `ModelResult`, `ModelVersion`. Enums: `ModelType`, `ModelStatus`. | 400+ lines |
+| `baseball/models/next_run_model.py` | **NEXT-RUN MODEL** - `NextRunProbabilityModel`. Binary classifier (XGBoost/RF/LogReg) predicting P(run scores). Features: game state, WE, LI, matchup, form. | 350+ lines |
+| `baseball/models/pa_outcome_model.py` | **PA OUTCOME MODEL** - `PAOutcomeModel`. Multi-class classifier for 6 outcome categories. Class probabilities, expected bases, expected runs. | 400+ lines |
+
+### Key Model Features
+
+**Next-Run Probability Model**:
+- Binary classification: will at least one run score in remainder of inning?
+- Features: game state, win expectancy, leverage index, matchup, form
+- Target: `did_run_score` from training data
+- Evaluation: accuracy, precision, recall, ROC-AUC, Brier score
+
+**PA Outcome Model**:
+- Multi-class: out, walk, single, double, triple, home run
+- Class probabilities sum to 1.0
+- Derived metrics: P(hit), P(on base), expected bases, expected runs
+- Per-class precision/recall tracking
+
+**Usage**:
+```python
+from baseball.models import NextRunProbabilityModel, PAOutcomeModel
+
+# Next-Run Model
+model = NextRunProbabilityModel(db_connection=conn)
+config = TrainingConfig(train_seasons=[2024, 2025], test_seasons=[2026])
+result = model.train(config)
+print(f"Training accuracy: {result.metrics['val_accuracy']:.3f}")
+
+# Predict
+prob = model.predict_run_probability({
+    'inning': 7, 'outs': 1, 'base_state': 5,
+    'run_diff': 2, 'matchup_score': 0.6
+})
+print(f"Run probability: {prob:.1%}")
+
+# PA Outcome Model
+model = PAOutcomeModel(db_connection=conn)
+result = model.train(config)
+
+# Predict class probabilities
+probs = model.predict_class_probabilities({
+    'inning': 5, 'outs': 1, 'base_state': 1,
+    'matchup_score': 0.6, 'batter_l14_ops': 0.920
+})
+print(f"HR probability: {probs['home_run']:.1%}")
+
+# Full prediction with derived metrics
+pred = model.predict_pa(features)
+print(f"Expected bases: {pred['expected_bases']:.2f}")
+print(f"Expected runs: {pred['expected_runs']:.3f}")
+```
+
+## Model Training (`scripts/models/`)
+
+**Training pipeline for prediction models.**
+
+| File | Purpose |
+|---|---|---|
+| `scripts/models/train_models.py` | **TRAINING PIPELINE** - Complete training workflow. Populates training data, computes features, trains Next-Run and PA Outcome models, evaluates, saves models, generates predictions. 400+ lines with CLI args for seasons, models, sampling. | Python CLI |
+
+**Usage**:
+```bash
+# Train both models (2024-2025 train, 2026 test)
+uv run python scripts/models/train_models.py \\
+    --train-seasons 2024 2025 \\
+    --test-seasons 2026 \\
+    --models all
+
+# Train only Next-Run model
+uv run python scripts/models/train_models.py \\
+    --train-seasons 2023 2024 2025 \\
+    --test-seasons 2026 \\
+    --models next_run
+
+# Quick test mode (10% sample)
+uv run python scripts/models/train_models.py \\
+    --train-seasons 2025 \\
+    --test-seasons 2026 \\
+    --sample-rate 0.1
+
+# Skip data prep (use existing training data)
+uv run python scripts/models/train_models.py \\
+    --train-seasons 2024 2025 \\
+    --test-seasons 2026 \\
+    --skip-data-prep
+```
+
+## Phase 7: Model Serving (`baseball/serving/`)
+
+**Production model serving infrastructure.**
+
+### Model Serving Components
+
+| File | Purpose | Components |
+|---|---|---|
+| `baseball/serving/__init__.py` | Module exports. | ModelServer, ModelCache, PredictionAPI, WebSocketServer |
+| `baseball/serving/model_server.py` | **MODEL SERVER** - `ModelServer` class. Loads models from disk, manages versions, prediction caching, hot-reloading. `ModelCache` LRU cache with TTL. | 400+ lines |
+| `baseball/serving/prediction_api.py` | **REST API** - `PredictionAPI` Flask app. Endpoints: health, models, predict, batch, cache management. CORS enabled. | 300+ lines |
+| `baseball/serving/websocket_server.py` | **WEBSOCKET** - `WebSocketServer` for real-time updates. Game subscriptions, client management, prediction streaming. | 350+ lines |
+
+### Key Features
+
+**ModelServer**:
+- Load models: `latest`, `production`, specific version
+- LRU prediction cache with configurable TTL
+- Health checks and statistics
+- Hot model reloading
+
+**PredictionAPI (REST)**:
+- `GET /health` - Health check
+- `GET /models` - List loaded models
+- `GET /models/<name>` - Model info
+- `POST /models/<name>/load` - Load model
+- `POST /predict/<model>` - Single prediction
+- `POST /predict/<model>/batch` - Batch predictions
+- `GET /cache/stats` - Cache statistics
+- `POST /cache/clear` - Clear cache
+- `GET /stats` - Server statistics
+- `POST /reload` - Reload all models
+
+**WebSocketServer**:
+- Real-time prediction streaming
+- Game-specific subscriptions
+- Client management with ping/pong
+- Message types: `subscribe`, `unsubscribe`, `predict`, `ping`
+
+**Usage**:
+```python
+from baseball.serving import ModelServer, create_app, WebSocketServer
+
+# Model Server
+server = ModelServer(model_dir='models')
+server.load_model('next_run', 'latest')
+server.load_model('pa_outcome', 'latest')
+
+# REST API
+app = create_app(model_dir='models')
+app.run(host='0.0.0.0', port=5000)
+
+# WebSocket
+ws = WebSocketServer(model_server=server, host='0.0.0.0', port=8765)
+await ws.start()
+
+# Make prediction
+result = server.predict('next_run', {
+    'inning': 7, 'outs': 1, 'base_state': 5,
+    'we': 0.65, 'li': 1.8
+})
+print(f"Run probability: {result['run_probability']:.1%}")
+```
+
+## Testing (`scripts/`)
+
+**End-to-end testing for Phase 3 components.**
+
+| File | Purpose |
+|---|---|---|
+| `scripts/test_live_pipeline.py` | **E2E TEST SUITE** - Validates all Phase 3 components. Tests LiveMlbSource, LiveFeatureStore, LiveModelManager, LivePredictionPipeline, WebSocket server/client. 400+ lines of comprehensive tests. | Python CLI |
+
+**Usage**:
+```bash
+# Quick tests (5 seconds)
+uv run python scripts/test_live_pipeline.py --quick
+
+# Full tests (30 seconds)
+uv run python scripts/test_live_pipeline.py
+
+# Start server for manual testing
+uv run python scripts/test_live_pipeline.py --server
+```
 
 ## If You Are About To Add A New File
 

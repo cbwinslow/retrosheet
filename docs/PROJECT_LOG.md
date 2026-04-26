@@ -1,5 +1,920 @@
 # Project Log
 
+## 2026-04-26 (Migration Planning Complete - Phase 0)
+
+### Summary
+
+Completed comprehensive migration planning to refactor the repository into a unified `baseball` CLI architecture. This represents the foundation for the next major evolution of the baseball prediction warehouse.
+
+### Documents Created
+
+| Document | Location | Purpose |
+|----------|----------|---------|
+| **Migration Plan** | `docs/migration_plan.md` | 7-phase migration strategy with 40 detailed tasks |
+| **Migration Map** | `docs/migration_map.md` | File-to-file mapping (162 items tracked) |
+| **Migration Backlog** | `docs/migration_backlog.md` | Detailed task list with priorities and effort estimates |
+| **Architecture** | `docs/architecture.md` | Target system architecture, data flows, integration patterns |
+| **Keys & Grains** | `docs/keys_and_grains.md` | Entity keys, table grains, join patterns |
+
+### Agent Guidance Updated
+
+| Document | Purpose |
+|----------|---------|
+| `AGENTS.md` | Updated with migration phase section |
+| `docs/agents/architecture_agent.md` | System design, data flow patterns |
+| `docs/agents/python_agent.md` | Source adapters, CLI, services |
+| `docs/agents/sql_agent.md` | Schema, migrations, queries |
+| `docs/agents/ml_agent.md` | Feature engineering, model training |
+| `docs/agents/live_agent.md` | Real-time ingestion, streaming |
+| `docs/agents/docs_agent.md` | Documentation standards |
+
+### GitHub Issues Created
+
+| Issue | Title | Phase |
+|-------|-------|-------|
+| #92 | [MIGRATION] Phase 0 Complete: Migration Planning | Planning (COMPLETE) |
+| #93 | [MIGRATION] Phase 1: Framework Foundation | Foundation |
+| #94 | [MIGRATION] Phase 2: Historical Wrapper | Retrosheet Adapter |
+| #95 | [MIGRATION] Phase 3: MLB Live Vertical Slice | First Prediction |
+| #96 | [MIGRATION] Phase 4: ESPN + Statcast | Secondary Sources |
+| #97 | [MIGRATION] Phase 5: Bridge Consolidation | Xref Service |
+| #98 | [MIGRATION] Phase 6-7: Feature/Model + Serving | Completion |
+
+### Migration Overview
+
+**Current State**: Repository has working Retrosheet parsing, MLB live ingestion, and SQL warehouse, but lacks unified architecture and clear entry points.
+
+**Target State**: Unified `baseball` CLI with:
+- Layered SQL architecture (`00_admin` → `80_quality`)
+- Source adapters (`RetrosheetSource`, `MlbSource`, `EspnSource`, `StatcastSource`)
+- Real-time prediction pipeline
+- ML feature engineering framework
+- Model registry and backtesting
+
+### Migration Phases
+
+| Phase | Name | Status | Key Deliverables |
+|-------|------|--------|------------------|
+| 0 | Planning | ✅ **COMPLETE** | Migration docs, architecture spec |
+| 1 | Framework Foundation | ⏳ **NEXT** | Package skeleton, CLI shell, core services |
+| 2 | Historical Wrapper | ⏳ Pending | Retrosheet adapter, SQL migration |
+| 3 | MLB Live Vertical Slice | ⏳ Pending | First end-to-end prediction path |
+| 4 | ESPN + Statcast | ⏳ Pending | Secondary sources |
+| 5 | Bridge Consolidation | ⏳ Pending | Xref service layer |
+| 6-7 | Feature/Model + Serving | ⏳ Pending | Full ML pipeline, serving layer |
+
+### First Vertical Slice
+
+The first end-to-end validation:
+```bash
+baseball mlb download --date TODAY
+baseball mlb ingest --date TODAY
+baseball features build --scope live
+baseball models predict --model win_probability --game-pk <id>
+```
+
+### Metrics
+
+- **Planning docs created**: 5 complete
+- **Agent guidance files**: 6 created
+- **Total tasks identified**: 162
+- **Estimated effort**: 8 weeks (phases 1-7)
+- **Files tracked for migration**: 162 items
+- **GitHub issues created**: 7 (1 per phase)
+
+### Decisions
+
+1. **Typer for CLI framework** - Type-safe, modern, testable
+2. **Layered SQL folders** - Clear separation (00_admin → 80_quality)
+3. **Pydantic for settings** - Validation, env var support
+4. **Source adapter pattern** - Unified interface for all data sources
+5. **Wrap, don't rewrite** - Preserve existing working code
+6. **CLI-first** - All operations through `baseball` command
+7. **Real-time ready** - Architecture supports low-latency inference
+
+### Migration Principles
+
+1. **Preserve working code first** - wrap, don't rewrite
+2. **Incremental changes** - reviewable phases
+3. **No orphan scripts** - everything has a home
+4. **CLI-first** - all operations through `baseball` command
+5. **Real-time ready** - architecture supports low-latency inference
+
+### Related
+
+- GitHub Epic: #92
+- Phase 1: #93 (Next)
+- `docs/migration_plan.md`
+- `docs/migration_backlog.md`
+
+---
+
+## 2026-04-26 (Phase 1: Framework Foundation - Started)
+
+### Summary
+
+Began Phase 1 implementation by auditing existing infrastructure and adapting the migration plan. Key realization: `mlb_predict` package already has substantial infrastructure (Pydantic configs, ModelTrainer, FeatureLoader, CLI) - no need to duplicate.
+
+### Key Decision: Extend, Don't Duplicate
+
+**Existing Infrastructure (keep and extend)**:
+- `mlb_predict/config/` - Pydantic configs ✅
+- `mlb_predict/core/` - ModelTrainer, FeatureLoader ✅  
+- `mlb_predict/cli/main.py` - argparse CLI ✅
+- `pyproject.toml` - `mlb-predict` entry point ✅
+
+**What's Missing (create new)**:
+- Data source adapters (Retrosheet, MLB, ESPN, Statcast)
+- Admin SQL tables for pipeline control
+- Unified `baseball` CLI entry point
+- `mlb_predict/sources/` module
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `baseball/__init__.py` | Package version info |
+| `baseball/cli.py` | Unified Typer CLI (wraps mlb_predict) |
+| `mlb_predict/sources/__init__.py` | Source adapter stubs |
+| `sql/00_admin/000_admin_pipeline_control.sql` | Admin tables |
+
+### pyproject.toml Updates
+
+Added dependencies:
+- `typer>=0.12.0` - CLI framework
+- `pydantic>=2.0` - Already used, kept
+- `structlog>=24.0` - Structured logging
+- `rich>=13.0` - Terminal UI
+- `tenacity>=8.0` - Retry logic
+
+Added entry point:
+- `baseball = "baseball.cli:app"` - New unified CLI
+
+### CLI Commands Available
+
+```bash
+# System commands
+baseball doctor              # Check health
+baseball status              # Show recent runs
+baseball version             # Show version
+
+# Data ingestion
+baseball mlb download --date 2025-04-26    # Download MLB data for date
+baseball mlb download --season 2025         # Download full season
+baseball mlb download --game 12345          # Download specific game
+baseball mlb ingest                         # Ingest downloaded MLB data
+baseball mlb validate                       # Validate MLB data quality
+baseball mlb today                          # Fetch today's data
+
+baseball retrosheet download --year 2024    # Download Retrosheet for year
+baseball retrosheet download --start 2000 --end 2024
+baseball retrosheet ingest                  # Ingest with Chadwick
+baseball retrosheet validate                # Validate Retrosheet data
+baseball retrosheet seasons                 # List available seasons
+
+# ML commands (wrappers for mlb-predict)
+baseball train --config configs/xgboost.yaml
+baseball experiment --target swing_decision
+
+# Prediction workflows (skeleton - TODO)
+baseball predict game --game 12345 --model xgboost_v1
+baseball predict today --model xgboost_v1
+baseball predict live --model xgboost_v1 --interval 30
+baseball predict batch --games games.txt --model xgboost_v1
+
+# Model operations (skeleton - TODO)
+baseball models list
+baseball models info <model_name>
+baseball models download <model_name> --version latest
+baseball models archive <model_name>
+baseball models compare <model1> <model2>
+baseball models export <model_name> --format onnx
+```
+
+### Phase 1 Files Created
+
+| File | Purpose |
+|------|---------|
+| `baseball/__init__.py` | Package version info |
+| `baseball/__main__.py` | Module entry point |
+| `baseball/cli.py` | Unified Typer CLI |
+| `mlb_predict/sources/__init__.py` | Source module exports |
+| `mlb_predict/sources/base.py` | BaseSource abstract class |
+| `mlb_predict/sources/mlb.py` | MLB Stats API adapter |
+| `mlb_predict/sources/retrosheet.py` | Retrosheet adapter |
+| `sql/00_admin/000_admin_pipeline_control.sql` | Admin tables |
+
+### Next: Phase 2 - Historical Data Wrapper
+
+Ready to proceed with wrapping remaining ingestion scripts into source adapters.
+
+---
+
+## 2026-04-26 (Phase 2: Historical Data Wrapper - In Progress)
+
+### Summary
+
+Extended source adapter pattern to Statcast and ESPN data sources. All major ingestion scripts now wrapped in unified `BaseSource` interface.
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `mlb_predict/sources/statcast.py` | Statcast/Baseball Savant adapter |
+
+### CLI Commands Added
+
+```bash
+baseball statcast download --season 2024
+baseball statcast ingest
+baseball statcast validate
+baseball statcast seasons
+```
+
+### Source Adapters Complete
+
+| Source | Adapter | Status |
+|--------|---------|--------|
+| MLB Stats API | `MlbSource` | ✅ Complete |
+| Retrosheet | `RetrosheetSource` | ✅ Complete |
+| Statcast | `StatcastSource` | ✅ Complete |
+| ESPN | `EspnSource` | ✅ Complete |
+| Lahman | `LahmanSource` | ✅ Complete |
+
+### Phase 2 Status: ✅ COMPLETE
+
+All historical data source adapters created and integrated into unified CLI.
+
+**Files Added in Phase 2**:
+- `mlb_predict/sources/espn.py` (300+ lines)
+- `mlb_predict/sources/lahman.py` (270+ lines)
+
+**CLI Commands Added**:
+```bash
+# ESPN
+baseball espn download --season 2024
+baseball espn ingest
+baseball espn validate
+baseball espn seasons
+
+# Lahman
+baseball lahman download
+baseball lahman ingest
+baseball lahman validate
+baseball lahman tables
+```
+
+### Phase 3: MLB Live Vertical Slice
+
+**Status**: 🔄 In Progress (April 26, 2026)
+
+**Objective**: Live game state tracking, real-time prediction pipeline, WebSocket infrastructure.
+
+**Components Created**:
+
+1. **Live Source Adapter** (`mlb_predict/sources/live.py`)
+   - `LiveMlbSource` class with real-time polling
+   - `GameState` dataclass for live game state
+   - State change detection with callbacks
+   - Integration with existing ingest scripts
+
+2. **Live Prediction Pipeline** (`mlb_predict/pipeline/live_prediction.py`)
+   - `LivePredictionPipeline` class for real-time inference
+   - `LiveGameContext` for feature computation
+   - Prediction caching with TTL
+   - Performance metrics (latency, cache hit rate)
+   - Streaming predictions generator (WebSocket-ready)
+
+3. **Live CLI Commands** (`baseball/cli.py`)
+   ```bash
+   baseball live games              # Show active games
+   baseball live watch --game 123   # Watch single game
+   baseball live poll               # Poll all active games
+   baseball live predict --game 123 # Real-time predictions
+   ```
+
+**Design Decisions**:
+- Incremental feature computation (only recompute what changed)
+- Sub-100ms latency target
+- Fallback to heuristic when model unavailable
+- State change callbacks for reactive updates
+- WebSocket server for multi-client streaming
+- Async/await architecture for concurrency
+
+**New Components Added** (April 26, 2026):
+
+4. **WebSocket Streaming** (`mlb_predict/streaming/`)
+   - `PredictionWebSocketServer` - Multi-client WebSocket server
+   - `PredictionStreamClient` - Async client for consuming streams
+   - Per-game subscriptions with automatic broadcasting
+   - JSON message protocol with heartbeat/ping-pong
+
+5. **Model Manager** (`mlb_predict/pipeline/model_manager.py`)
+   - `LiveModelManager` - Load and manage trained models
+   - Disk and database registry loading
+   - Lazy loading with model caching
+   - Automatic fallback to heuristic
+
+6. **Incremental Feature Store** (`mlb_predict/features/`)
+   - `LiveFeatureStore` - Incremental feature computation
+   - `GameStateFeatures` - Feature vector generation
+   - Hash-based cache with change detection
+   - Sub-millisecond compute for cache hits
+
+**Completed for Phase 3**:
+
+8. **Testing & Validation** (`scripts/test_live_pipeline.py`) - ✅ Complete
+   - E2E test suite for all Phase 3 components
+   - Tests LiveMlbSource, LiveFeatureStore, LiveModelManager
+   - Tests LivePredictionPipeline and WebSocket integration
+   - Quick mode (5s) and full mode (30s) options
+   - Manual server mode for testing
+
+9. **Deployment Documentation** (`docs/deployment/live_server.md`) - ✅ Complete
+   - Systemd service setup
+   - Docker deployment guide
+   - PM2 process manager configuration
+   - Nginx reverse proxy with WebSocket support
+   - SSL/TLS with Let's Encrypt
+   - Monitoring and performance tuning
+
+**Next Steps for Phase 3**:
+1. End-to-end testing with actual live MLB games
+2. Performance profiling and optimization
+3. Load testing for WebSocket server
+4. Production deployment validation on `cloudcurio.cc`
+
+10. **Production Domain** (`cloudcurio.cc`) - ✅ Configured
+    - SSL/TLS certificates configured for cloudcurio.cc, www.cloudcurio.cc, predictions.cloudcurio.cc
+    - Nginx reverse proxy configured
+    - PM2 deployment hosts configured
+    - Deployment artifacts ready for production
+
+## Phase 5: Bridge Consolidation (In Progress)
+
+**Bridge layer for cross-source ID resolution.**
+
+### Components Added (April 26, 2026):
+
+1. **Player Xref Service** (`baseball/bridge/player_xref.py`)
+   - Maps player IDs across MLB API, Retrosheet, ESPN, Lahman, Baseball-Reference, FanGraphs
+   - PlayerXref dataclass with merge capabilities
+   - Name-based candidate matching
+   - Source priority for conflict resolution
+
+2. **Team Xref Service** (`baseball/bridge/team_xref.py`)
+   - Maps team IDs across data sources
+   - Canonical 30 MLB team mappings loaded by default
+   - League and division organization
+   - Historical team support
+
+3. **Game Xref Service** (`baseball/bridge/game_xref.py`)
+   - Maps game IDs between MLB API, Retrosheet, ESPN
+   - Retrosheet ID parsing (YYYYMMDDTHH format)
+   - Date-based indexing for efficient range queries
+   - Team matchup search
+
+4. **Xref Manager** (`baseball/bridge/xref_manager.py`)
+   - Unified coordinator for all xref services
+   - High-level resolve methods
+   - Find games by matchup
+   - Load by season
+
+5. **Database Schema** (`sql/300_bridge_schema.sql`)
+   - bridge.player_xref table with constraints
+   - bridge.team_xref table
+   - bridge.game_xref table
+   - Active player/team views
+   - Helper functions for name/date lookups
+
+### Features:
+- Canonical ID resolution across 5+ data sources
+- Bidirectional lookup (any source → canonical → all sources)
+- Record merging with source priority
+- In-memory caching + database persistence
+- Date range queries for games
+
+**Usage**:
+```python
+from baseball.bridge import XrefManager
+
+manager = XrefManager(db_connection=conn)
+manager.load_all()
+
+# Resolve player by MLB ID
+player = manager.resolve_player('mlb', 12345)
+
+# Look up team by code
+team = manager.teams.lookup_by_code('NYY')
+
+# Find games by Retrosheet ID
+game = manager.games.lookup_by_retro('202604040NYY01')
+```
+
+**Status**: ✅ Core Implementation Complete
+
+---
+
+## Phase 6: Features (In Progress)
+
+**ML-ready feature computation for win probability and situational importance.**
+
+### 2026-04-26: Win Expectancy (WE) + Leverage Index (LI) Foundation
+
+#### SQL Features Created
+
+1. **Win Expectancy Matrix** (`sql/500_features_win_expectancy.sql`)
+   - `features.win_expectancy_matrix`: 24 base states × innings × score diffs
+   - `features.game_state_we`: WE for each game state instance
+   - `features.win_expectancy_history`: Play-by-play with WE before/after
+   - Functions: `get_win_expectancy()`, `populate_we_matrix()`, `calculate_base_state()`
+
+2. **Leverage Index Matrix** (`sql/501_features_leverage_index.sql`)
+   - `features.leverage_index_matrix`: Importance ratings for game states
+   - `features.game_state_li`: LI for each play
+   - `features.player_clutch_stats`: Clutch performance by player
+   - Functions: `get_leverage_index()`, `get_importance_rating()`, `find_player_by_name()`
+
+#### Python Feature Classes
+
+3. **Base Feature Classes** (`baseball/features/base.py`)
+   - `FeatureStore`: Abstract base for all feature calculators
+   - `FeatureConfig`: Configuration for historical/live/both scopes
+   - `FeatureResult`: Computation results with metadata
+   - `GameState`: Game state dataclass (inning, outs, runners, score)
+   - `FeatureScope`/`FeatureStatus`: Enums for workflow management
+
+4. **Win Expectancy Calculator** (`baseball/features/win_expectancy.py`)
+   - `WinExpectancyCalculator`: Computes WE from game state
+   - Loads WE matrix from database or uses defaults
+   - `compute_wpa()`: Win Probability Added for plays
+   - `compute_game_we_series()`: WE for all plays in a game
+   - Historical and live build modes
+
+5. **Leverage Index Calculator** (`baseball/features/leverage_index.py`)
+   - `LeverageIndexCalculator`: Computes LI from game state
+   - `LeverageRating`: Categorical ratings (low/medium/high/very_high)
+   - `is_high_leverage()`: Check for high-pressure situations
+   - `get_swing_potential()`: Estimate max WE change
+   - Clutch opportunity tracking
+
+#### Usage Examples
+
+```python
+from baseball.features import WinExpectancyCalculator, LeverageIndexCalculator, GameState
+
+# Win Expectancy
+calc = WinExpectancyCalculator(db_connection=conn)
+calc.load_from_db(season=2026)
+
+state = GameState(inning=9, is_top=False, outs=2,
+                  runner_1b=True, score_home=4, score_away=3)
+we = calc.compute(state)  # Returns 0.0-1.0
+
+# Leverage Index
+li_calc = LeverageIndexCalculator(db_connection=conn)
+li_calc.load_from_db()
+
+li = li_calc.compute(state)  # Returns leverage index
+rating = li_calc.get_rating(li)  # LeverageRating.HIGH
+```
+
+### Stats
+- 5 new files, ~1,700 lines of code
+- 2 SQL schema files with functions and views
+- 3 Python modules with 4 classes
+
+**Status**: ✅ Phase 6 Foundation Complete
+
+### 2026-04-26: Phase 6.3 - Matchup, Rolling Form, Bullpen Features
+
+#### Matchup Features SQL (`sql/502_features_matchup.sql`)
+
+6. **Batter vs Pitcher Matchups**
+   - `features.batter_vs_pitcher_matchups`: Career H2H statistics
+   - `features.platoon_splits`: Lefty/righty performance by player
+   - `features.matchup_features`: Pre-computed matchup scores per PA
+   - Functions: `get_matchup_features()`, `calculate_platoon_advantage()`, `populate_game_matchups()`
+   - Views: `career_matchup_leaders`, `platoon_advantage_batters`, `current_game_matchups`
+
+#### Rolling Form SQL (`sql/503_features_rolling_form.sql`)
+
+7. **Rolling Performance Windows**
+   - `features.batter_rolling_form`: 7/14/30 day OPS, PA, trends
+   - `features.pitcher_rolling_form`: 7/14/30 day ERA, WHIP, K/9
+   - `features.rolling_form_features`: Combined form per matchup
+   - Views: `hot_batters` (OPS > 0.850), `cold_batters` (OPS < 0.600)
+   - Views: `hot_pitchers` (ERA < 3.00), `cold_pitchers` (ERA > 6.00)
+
+#### Bullpen SQL (`sql/504_features_bullpen.sql`)
+
+8. **Bullpen Fatigue and Depth**
+   - `features.bullpen_status`: Team bullpen status per game
+   - `features.reliever_fatigue`: Individual reliever workload tracking
+   - `features.bullpen_features`: Comparative bullpen advantage
+   - Functions: `calculate_reliever_fatigue_score()`, `calculate_team_bullpen_fatigue()`
+   - Views: `tired_bullpens`, `strong_bullpens`, `relievers_needing_rest`
+
+#### Python Feature Calculators
+
+9. **Matchup Calculator** (`baseball/features/matchup.py`)
+   - `MatchupCalculator`: Career H2H lookup, platoon advantage detection
+   - `MatchupHistory`: Career/recent statistics dataclass
+   - `PlatoonSplit`: Lefty/righty splits with OPS calculations
+   - `compute_matchup_score()`: 0-1 score (higher = better for batter)
+
+10. **Rolling Form Calculator** (`baseball/features/rolling_form.py`)
+    - `RollingFormCalculator`: Form tracking for batters/pitchers
+    - `BatterForm`/`PitcherForm`: 7/14/30 day metrics with hot/cold flags
+    - `TrendDirection`: Improving/declining/stable enum
+    - `get_form_advantage()`: Compare batter vs pitcher momentum
+
+11. **Bullpen Calculator** (`baseball/features/bullpen.py`)
+    - `BullpenCalculator`: Team bullpen and individual reliever tracking
+    - `TeamBullpenStatus`: Availability counts, fatigue/depth scores
+    - `RelieverFatigue`: Workload metrics with rest calculations
+    - `AvailabilityStatus`: available/tired/rest/injured enum
+    - `get_bullpen_advantage()`: Compare home vs away bullpens
+
+#### Usage Examples
+
+```python
+from baseball.features import (
+    MatchupCalculator, RollingFormCalculator, BullpenCalculator
+)
+
+# Matchup features
+calc = MatchupCalculator(db_connection=conn)
+score = calc.compute_matchup_score(batter_id=123, pitcher_id=456, season=2026)
+is_platoon = calc.is_platoon_advantage(batter_id=123, pitcher_id=456)
+
+# Rolling form
+calc = RollingFormCalculator(db_connection=conn)
+form = calc.get_batter_form(player_id=123, season=2026)
+if form.is_hot:
+    print(f"Hot! L14 OPS: {form.l14_ops:.3f}, Trend: {form.trend.value}")
+
+# Get hot pitchers
+hot_pitchers = calc.get_hot_pitchers(season=2026, min_ip=10)
+
+# Bullpen
+calc = BullpenCalculator(db_connection=conn)
+adv = calc.get_bullpen_advantage(home_id=147, away_id=118, game_pk=777777, season=2026)
+print(f"Advantage: {adv['overall_advantage']} - {adv['narrative']}")
+
+# Check reliever fatigue
+fatigue = calc.get_reliever_fatigue(player_id=12345, team_id=147, season=2026)
+if fatigue.needs_rest:
+    print(f"Rest needed! Fatigue score: {fatigue.fatigue_score:.2f}")
+```
+
+### Phase 6 Stats
+- **Total**: 11 files, ~4,500 lines of code
+- **SQL**: 5 schema files with tables, functions, views
+- **Python**: 6 modules with 8 calculator classes
+
+**Status**: ✅ Phase 6 Complete (Matchup, Rolling Form, Bullpen, WE, LI)
+
+---
+
+## Phase 6.4/6.5: Prediction Models (Complete)
+
+**Trainable models for next-run probability and PA outcomes.**
+
+### 2026-04-26: Next-Run Probability Model
+
+#### SQL Schema (`sql/601_models_next_run.sql`)
+
+12. **Training Data**
+    - `models.next_run_training_data`: Game states with target label (did_run_score)
+    - Encodes game state: inning, outs, base_state, run_diff
+    - Links to matchup and form features
+
+13. **Feature Vectors**
+    - `models.next_run_features`: Pre-computed feature vectors
+    - Features: WE, LI, matchup_score, batter form, pitcher form, bullpen fatigue
+    - Historical run rate from similar states
+
+14. **Predictions & Evaluation**
+    - `models.next_run_predictions`: Model outputs with actual outcomes
+    - Probability bins for calibration analysis
+    - Brier score and log loss for each prediction
+    - Views: `next_run_calibration`, `next_run_performance`
+
+#### Python Implementation (`baseball/models/next_run_model.py`)
+
+15. **NextRunProbabilityModel**
+    - Binary classifier: XGBoost, Random Forest, or Logistic Regression
+    - Features: game state, WE, LI, matchup, form, bullpen
+    - Metrics: accuracy, precision, recall, ROC-AUC, Brier score
+    - Methods: `train()`, `predict_run_probability()`, `predict_for_game()`
+
+---
+
+### 2026-04-26: PA Outcome Model
+
+#### SQL Schema (`sql/602_models_pa_outcome.sql`)
+
+16. **Training Data**
+    - `models.pa_outcome_training_data`: PA outcomes with 6 categories
+    - Enum: out, walk, single, double, triple, home_run
+    - Event-level details for debugging
+
+17. **Feature Vectors**
+    - `models.pa_outcome_features`: Comprehensive PA features
+    - Batter form: L7/L14/L30 OPS, hot/cold, platoon splits
+    - Pitcher form: ERA, WHIP, K/9, vs-hand stats
+    - Historical rates by batter/pitcher profile
+
+18. **Predictions & Evaluation**
+    - `models.pa_outcome_predictions`: Multi-class probabilities
+    - Class probabilities sum to 1.0
+    - Derived: P(hit), P(on base), expected bases, expected runs
+    - Views: `pa_outcome_accuracy`, `batter_prediction_summary`, `high_confidence_pa`
+
+#### Python Implementation (`baseball/models/pa_outcome_model.py`)
+
+19. **PAOutcomeModel**
+    - Multi-class classifier: 6 outcome categories
+    - Features: game state, leverage, matchup, batter form, pitcher form
+    - Per-class precision/recall tracking
+    - Methods: `predict_class_probabilities()`, `predict_pa()`, `predict_for_game()`
+
+---
+
+### Model Base Classes (`baseball/models/base.py`)
+
+20. **BaseModel** (Abstract)
+    - Interface: `train()`, `evaluate()`, `predict()`, `save()`, `load()`
+    - Version registry integration
+    - Model lifecycle management (untrained → training → trained → production)
+
+21. **SklearnBaseModel**
+    - scikit-learn integration base class
+    - Standard train/evaluate flow
+    - Feature importance extraction
+    - Model serialization with joblib
+
+22. **Configuration Classes**
+    - `ModelConfig`: Model type, version, hyperparameters, features
+    - `TrainingConfig`: Train/test seasons, validation split, epochs
+    - `ModelResult`: Training metrics, error handling
+    - `ModelVersion`: Registry record with metrics and status
+
+---
+
+### Usage Example
+
+```python
+from baseball.models import NextRunProbabilityModel, PAOutcomeModel, TrainingConfig
+
+# Train Next-Run Model
+nr_model = NextRunProbabilityModel(db_connection=conn)
+config = TrainingConfig(
+    train_seasons=[2023, 2024],
+    test_seasons=[2025],
+    validation_split=0.2
+)
+result = nr_model.train(config)
+print(f"Accuracy: {result.metrics['val_accuracy']:.3f}")
+print(f"ROC-AUC: {result.metrics['val_roc_auc']:.3f}")
+
+# Make prediction
+prob = nr_model.predict_run_probability({
+    'inning': 7, 'outs': 1, 'base_state': 5,  # Runners on 1st & 3rd
+    'we': 0.65, 'li': 1.8,
+    'matchup_score': 0.6
+})
+print(f"Run probability: {prob:.1%}")
+
+# Train PA Outcome Model
+pa_model = PAOutcomeModel(db_connection=conn)
+pa_model.train(config)
+
+# Predict PA outcome
+pred = pa_model.predict_pa({
+    'inning': 5, 'outs': 1, 'base_state': 1,
+    'matchup_score': 0.6,
+    'batter_l14_ops': 0.920,
+    'pitcher_l14_era': 3.20
+})
+print(f"Predicted: {pred['predicted_outcome']}")
+print(f"HR probability: {pred['probabilities']['home_run']:.1%}")
+print(f"Expected bases: {pred['expected_bases']:.2f}")
+```
+
+---
+
+### Phase 6.4/6.5 Stats
+- **SQL**: 2 schema files with training tables, features, predictions
+- **Python**: 4 modules, ~1,600 lines of code
+- **Classes**: BaseModel, SklearnBaseModel, NextRunProbabilityModel, PAOutcomeModel
+- **Supported models**: XGBoost, Random Forest, Logistic Regression
+
+**Status**: ✅ Phase 6.4/6.5 Complete (Models ready for training)
+
+---
+
+### 2026-04-26: Model Training Pipeline
+
+23. **Training Pipeline Script** (`scripts/models/train_models.py`)
+    - Complete end-to-end training workflow
+    - Populates training data from historical games
+    - Computes feature vectors for all examples
+    - Trains Next-Run and/or PA Outcome models
+    - Evaluates models with cross-validation
+    - Saves models to disk (joblib format)
+    - Registers model versions in database
+    - Generates test predictions
+    - Saves results as JSON for review
+
+#### CLI Arguments
+- `--train-seasons`: Seasons to use for training (e.g., 2023 2024 2025)
+- `--test-seasons`: Seasons to hold out for testing (e.g., 2026)
+- `--models`: Which models to train (`next_run`, `pa_outcome`, `all`)
+- `--sample-rate`: Fraction of data to sample (1.0 = all, 0.1 = quick test)
+- `--skip-data-prep`: Use existing training data (skip population)
+- `--skip-predictions`: Don't generate test predictions
+- `--version`: Custom version string (default: timestamp)
+
+#### Pipeline Functions
+- `populate_next_run_training()`: Populate `models.next_run_training_data`
+- `populate_pa_outcome_training()`: Populate `models.pa_outcome_training_data`
+- `compute_next_run_features()`: Build feature vectors with WE/LI/matchup
+- `compute_pa_outcome_features()`: Build feature vectors with form/matchup
+- `train_next_run_model()`: Train binary classifier
+- `train_pa_outcome_model()`: Train multi-class classifier
+- `generate_test_predictions()`: Run inference on test games
+
+#### Example Usage
+```bash
+# Full training workflow
+uv run python scripts/models/train_models.py \\
+    --train-seasons 2023 2024 2025 \\
+    --test-seasons 2026 \\
+    --models all
+
+# Quick test mode (10% sample)
+uv run python scripts/models/train_models.py \\
+    --train-seasons 2025 \\
+    --test-seasons 2026 \\
+    --models next_run \\
+    --sample-rate 0.1
+
+# Retrain with existing data
+uv run python scripts/models/train_models.py \\
+    --train-seasons 2024 2025 \\
+    --test-seasons 2026 \\
+    --skip-data-prep
+```
+
+**Status**: ✅ Model Training Pipeline Complete (Ready to train on historical data)
+
+---
+
+## Phase 7: Model Registry (Started)
+
+**Model versioning, training runs, and prediction storage.**
+
+### 2026-04-26: Model Registry Schema
+
+#### SQL Schema (`sql/600_models_registry.sql`)
+
+| Table | Purpose |
+|-------|---------|
+| `models.registry` | Central model registry with metadata |
+| `models.versions` | Model versions with metrics and status |
+| `models.training_runs` | Training job tracking |
+| `models.artifacts` | Model file storage references |
+| `models.predictions` | Prediction output storage |
+
+#### Views and Functions
+- `models.production_models`: Currently deployed models
+- `models.model_performance`: Performance metrics across versions
+- `models.register_model()`: Register new model
+- `models.create_version()`: Create model version
+- `models.promote_to_production()`: Deploy model
+- `models.log_prediction()`: Log prediction
+
+**Status**: ✅ Model Registry SQL Complete
+
+---
+
+### 2026-04-26: Model Serving Infrastructure
+
+24. **Model Serving** (`baseball/serving/`)
+    - `ModelServer`: Core serving class with model loading, caching, prediction
+    - `ModelCache`: LRU cache with TTL for prediction results
+    - `PredictionAPI`: Flask REST API with CORS
+    - `WebSocketServer`: Real-time prediction streaming
+
+#### Components
+
+**ModelServer** (`baseball/serving/model_server.py`):
+- Load models from disk: `latest`, `production`, specific version
+- Model versioning with database integration
+- Prediction caching with configurable TTL
+- Health checks and server statistics
+- Hot model reloading
+
+**ModelCache** (`baseball/serving/model_server.py`):
+- LRU cache with automatic eviction
+- Hit/miss tracking and statistics
+- Time-based expiration (TTL)
+- Pattern-based invalidation
+
+**PredictionAPI** (`baseball/serving/prediction_api.py`):
+- Flask REST API with CORS enabled
+- Endpoints:
+  - `GET /health` - Health check with model status
+  - `GET /models` - List loaded models
+  - `GET /models/<name>` - Model metadata
+  - `POST /models/<name>/load` - Load specific model version
+  - `POST /predict/<model>` - Single prediction
+  - `POST /predict/<model>/batch` - Batch predictions
+  - `GET /cache/stats` - Cache statistics
+  - `POST /cache/clear` - Clear cache
+  - `GET /stats` - Server statistics
+  - `POST /reload` - Reload all models
+
+**WebSocketServer** (`baseball/serving/websocket_server.py`):
+- Real-time WebSocket connections
+- Game-specific subscriptions
+- Message types: `subscribe`, `unsubscribe`, `predict`, `ping`
+- Client management with ping/pong heartbeat
+- Broadcast predictions to subscribed clients
+
+#### Usage Example
+
+```python
+from baseball.serving import ModelServer, create_app, WebSocketServer
+import asyncio
+
+# Start Model Server
+server = ModelServer(model_dir='models')
+server.load_model('next_run', 'latest')
+server.load_model('pa_outcome', 'latest')
+
+# REST API
+app = create_app(model_dir='models')
+app.run(host='0.0.0.0', port=5000)
+
+# WebSocket Server
+ws_server = WebSocketServer(model_server=server, port=8765)
+asyncio.run(ws_server.start())
+
+# Make predictions
+result = server.predict('next_run', {
+    'inning': 7,
+    'outs': 1,
+    'base_state': 5,  # Runners on 1st & 3rd
+    'we': 0.65,
+    'li': 1.8,
+    'matchup_score': 0.6
+})
+print(f"Run probability: {result['run_probability']:.1%}")
+```
+
+#### Stats
+- **Python**: 4 modules, ~1,200 lines
+- **Classes**: ModelServer, ModelCache, PredictionAPI, WebSocketServer
+- **Features**: REST API, WebSocket, Caching, Hot-reloading
+
+**Status**: ✅ Phase 7 Complete (Model Serving Infrastructure)
+
+---
+
+7. **Live Dashboard UI** (`dashboard/`) - ✅ Complete
+   - `dashboard/index.html` - Real-time visualization
+   - `dashboard/README.md` - Setup and usage documentation
+   - WebSocket client with auto-discovery
+   - Visual win probability bars
+   - Responsive dark mode UI
+   - No build step required (pure HTML/CSS/JS)
+
+### Migration Path Adjusted
+
+Instead of creating `baseball/core/` (duplicate), we:
+1. Keep `mlb_predict` as the core framework
+2. Add `mlb_predict/sources/` for data ingestion
+3. Add `mlb_predict/pipeline/` for real-time processing
+4. Use `baseball/cli.py` as unified entry point
+5. Share configuration via existing Pydantic schemas
+
+### Next Steps
+
+1. Complete Phase 3: Connect live pipeline to actual models
+2. Phase 4: Bridge consolidation and cross-reference
+3. Phase 5: Feature/model serving infrastructure
+
+### Related
+
+- Issue #93: Phase 1 Framework Foundation
+- `docs/migration_plan.md` - Updated approach
+- `mlb_predict/` - Existing infrastructure
+
+---
+
 ## 2026-04-25 (Data Ingestion Fix - Complete Data Capture)
 
 ### Problem Identified: Selective Data Loading Dropping Critical Fields
@@ -22,6 +937,11 @@
 | `sql/external/220_mlb_api_complete.sql` | ALL MLB API snapshot tables | 1 endpoint → 10+ endpoints |
 | `scripts/data_ingestion/fetch_mlb_stats_api_complete.py` | Fetches ALL API endpoints | Missing → Complete |
 | `docs/DATA_INGESTION_FIX_REPORT.md` | Detailed audit and fix documentation | N/A |
+| `scripts/bridge/populate_mlb_players_venues_complete.py` | Populates mlb.players/mlb.venues | Empty → Full |
+| `scripts/bridge/populate_live_plate_appearances.py` | Populates core.live_plate_appearances | 0 rows → Live data |
+| `scripts/data_ingestion/fetch_espn_complete.py` | Fetches ESPN player/team/plays | Empty → Full |
+| `scripts/data_ingestion/fetch_baseball_reference_complete.py` | Fetches BR game logs | Empty → Full |
+| `scripts/populate_all_missing_data.sh` | MASTER SCRIPT - runs all above | One-command fix |
 
 ### Key Improvements
 
