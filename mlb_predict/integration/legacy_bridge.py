@@ -55,20 +55,38 @@ LEGACY_TARGET_MAPPING = {
 
 # Legacy feature lists from train_models.py
 GAME_NUMERIC_FEATURES = [
-    'inning', 'is_bottom_inning', 'outs_before', 'start_bases',
-    'balls', 'strikes', 'home_score_diff', 'away_score_before', 'home_score_before',
+    'inning',
+    'is_bottom_inning',
+    'outs_before',
+    'start_bases',
+    'balls',
+    'strikes',
+    'home_score_diff',
+    'away_score_before',
+    'home_score_before',
 ]
 GAME_CATEGORICAL_FEATURES = ['batter_hand', 'pitcher_hand']
 
 PA_NUMERIC_FEATURES = [
-    'inning', 'is_bottom_inning', 'outs_before', 'start_bases',
-    'balls', 'strikes', 'home_score_diff',
+    'inning',
+    'is_bottom_inning',
+    'outs_before',
+    'start_bases',
+    'balls',
+    'strikes',
+    'home_score_diff',
 ]
 PA_CATEGORICAL_FEATURES = ['batter_hand', 'pitcher_hand']
 
 HI_NUMERIC_FEATURES = [
-    'inning', 'is_bottom_inning', 'outs_before', 'start_bases',
-    'balls', 'strikes', 'score_diff', 'runners_on',
+    'inning',
+    'is_bottom_inning',
+    'outs_before',
+    'start_bases',
+    'balls',
+    'strikes',
+    'score_diff',
+    'runners_on',
 ]
 HI_CATEGORICAL_FEATURES = ['batting_team_hand']
 
@@ -76,6 +94,7 @@ HI_CATEGORICAL_FEATURES = ['batting_team_hand']
 # ============================================================================
 # CONFIG GENERATION
 # ============================================================================
+
 
 def create_config_from_legacy_args(
     target_id: str,
@@ -86,7 +105,7 @@ def create_config_from_legacy_args(
     model_family: str = 'xgboost',
 ) -> ModelConfig:
     """Create ModelConfig from legacy train_models.py arguments.
-    
+
     Args:
         target_id: Legacy target identifier (e.g., 'swing_outcome', 'game_home_win')
         feature_set: Feature set name (basic, advanced, enriched)
@@ -94,10 +113,10 @@ def create_config_from_legacy_args(
         max_season: Last season to include
         train_through: Last season for training (validation = after this)
         model_family: Model algorithm to use
-        
+
     Returns:
         ModelConfig compatible with new framework
-        
+
     Example:
         >>> config = create_config_from_legacy_args(
         ...     target_id='swing_outcome',
@@ -149,11 +168,11 @@ def get_legacy_feature_lists(
     feature_set: str = 'advanced',
 ) -> tuple[list[str], list[str]]:
     """Get numeric and categorical feature lists for legacy targets.
-    
+
     Args:
         target_id: Legacy target identifier
         feature_set: Feature set complexity
-        
+
     Returns:
         Tuple of (numeric_features, categorical_features)
     """
@@ -176,14 +195,15 @@ def get_legacy_feature_lists(
 # RESULT CONVERSION
 # ============================================================================
 
+
 def convert_legacy_metrics_to_framework(
     legacy_metrics: dict[str, Any],
 ) -> Metrics:
     """Convert legacy metrics dict to framework Metrics object.
-    
+
     Args:
         legacy_metrics: Dict with keys like 'roc_auc', 'accuracy', 'log_loss'
-        
+
     Returns:
         Metrics object with MetricValue attributes
     """
@@ -191,16 +211,24 @@ def convert_legacy_metrics_to_framework(
         roc_auc=MetricValue(
             value=legacy_metrics.get('roc_auc', 0.0),
             confidence_interval=legacy_metrics.get('roc_auc_ci'),
-        ) if 'roc_auc' in legacy_metrics else None,
+        )
+        if 'roc_auc' in legacy_metrics
+        else None,
         accuracy=MetricValue(
             value=legacy_metrics.get('accuracy', 0.0),
-        ) if 'accuracy' in legacy_metrics else None,
+        )
+        if 'accuracy' in legacy_metrics
+        else None,
         log_loss=MetricValue(
             value=legacy_metrics.get('log_loss', 0.0),
-        ) if 'log_loss' in legacy_metrics else None,
+        )
+        if 'log_loss' in legacy_metrics
+        else None,
         calibration_error=MetricValue(
             value=legacy_metrics.get('calibration_error', 0.0),
-        ) if 'calibration_error' in legacy_metrics else None,
+        )
+        if 'calibration_error' in legacy_metrics
+        else None,
     )
 
 
@@ -216,7 +244,7 @@ def create_train_result_from_legacy(
     config: ModelConfig | None = None,
 ) -> TrainResult:
     """Create TrainResult from legacy training output.
-    
+
     Args:
         model_name: Name of the trained model
         target_id: Legacy target identifier
@@ -227,7 +255,7 @@ def create_train_result_from_legacy(
         val_metrics: Validation set metrics dict
         feature_spec: Feature specification dict
         config: Optional ModelConfig (created if not provided)
-        
+
     Returns:
         TrainResult compatible with new framework
     """
@@ -274,14 +302,15 @@ def create_train_result_from_legacy(
 # BRIDGE TRAINER
 # ============================================================================
 
+
 class LegacyCompatibleTrainer:
     """Trainer that bridges legacy train_models.py with new ModelTrainer.
-    
+
     This allows gradual migration:
     - Uses new framework config and results
     - Calls existing train_models.py for actual training
     - Returns rich TrainResult objects
-    
+
     Example:
         >>> trainer = LegacyCompatibleTrainer()
         >>> result = trainer.train_legacy_style(
@@ -296,7 +325,7 @@ class LegacyCompatibleTrainer:
 
     def __init__(self, output_dir: str | None = None):
         """Initialize legacy-compatible trainer.
-        
+
         Args:
             output_dir: Directory for saving models (default: data/models)
         """
@@ -315,12 +344,12 @@ class LegacyCompatibleTrainer:
         activate: bool = True,
     ) -> TrainResult:
         """Train using legacy script but return new framework result.
-        
+
         This is a bridge method that:
         1. Creates a ModelConfig
         2. Calls existing training infrastructure
         3. Wraps result in TrainResult
-        
+
         Args:
             target_id: Legacy target identifier
             feature_set: Feature set to use
@@ -330,7 +359,7 @@ class LegacyCompatibleTrainer:
             model_family: Model algorithm
             sample_rate: Data sampling rate
             activate: Whether to activate model in registry
-            
+
         Returns:
             TrainResult with all rich analysis capabilities
         """
@@ -360,10 +389,10 @@ class LegacyCompatibleTrainer:
         config: ModelConfig,
     ) -> TrainResult:
         """Train using fully new framework.
-        
+
         Args:
             config: ModelConfig with all settings
-            
+
         Returns:
             TrainResult
         """
@@ -375,12 +404,13 @@ class LegacyCompatibleTrainer:
 # CLI BRIDGE
 # ============================================================================
 
+
 def convert_legacy_cli_args_to_config(args: Any) -> ModelConfig:
     """Convert legacy CLI args to ModelConfig.
-    
+
     Args:
         args: argparse.Namespace from legacy CLI
-        
+
     Returns:
         ModelConfig
     """
@@ -396,7 +426,7 @@ def convert_legacy_cli_args_to_config(args: Any) -> ModelConfig:
 
 def print_framework_result_legacy_style(result: TrainResult) -> None:
     """Print TrainResult in legacy format for backward compatibility.
-    
+
     Args:
         result: TrainResult to print
     """

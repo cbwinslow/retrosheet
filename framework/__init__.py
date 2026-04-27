@@ -6,16 +6,16 @@ and a plugin system.
 
 Example:
     from framework import BaseModel, Experiment, config
-    
+
     class MyModel(BaseModel):
         def train(self, X, y):
             # Your training logic
             pass
-        
+
         def predict(self, X):
             # Your prediction logic
             return predictions
-    
+
     exp = Experiment(config.load('my_experiment.yaml'))
     exp.run(MyModel())
 

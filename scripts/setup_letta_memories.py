@@ -301,7 +301,7 @@ Key Tables:
         raise Exception(f'Failed to create agent with any model. Last error: {last_error}')
 
     print(f'✅ Created agent: {agent.name} (ID: {agent.id})')
-    print(f"   Memory blocks: {[b['label'] for b in memory_blocks]}")
+    print(f'   Memory blocks: {[b["label"] for b in memory_blocks]}')
 
     return agent.id
 
@@ -699,9 +699,9 @@ PENDING WORK:
                 agent_id=agent_id,
                 text=passage_data['text'],
             )
-            print(f"   {i}. ✅ {passage_data['title']}")
+            print(f'   {i}. ✅ {passage_data["title"]}')
         except Exception as e:
-            print(f"   {i}. ❌ {passage_data['title']}: {e}")
+            print(f'   {i}. ❌ {passage_data["title"]}: {e}')
 
     print(f'\n✅ Archival memory populated with {len(passages)} passages')
 
@@ -712,6 +712,7 @@ def get_letta_client() -> Letta:
     # Try local server first
     try:
         import urllib.request
+
         req = urllib.request.Request(
             'http://localhost:8283/v1/health',
             method='GET',
@@ -768,7 +769,9 @@ def main():
     print(f'  - Via Letta Code CLI: letta --agent {agent_id}')
     print(f"  - Via API: client.agents.messages.create(agent_id='{agent_id}', ...)")
     print('\nMemory structure:')
-    print('  - Core blocks: persona, project, infrastructure, models, git_history, current_status, commands')
+    print(
+        '  - Core blocks: persona, project, infrastructure, models, git_history, current_status, commands'
+    )
     print('  - Archival passages: 10 detailed searchable documents')
     print()
 

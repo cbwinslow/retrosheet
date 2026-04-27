@@ -4,15 +4,15 @@ Type-safe configuration management with Pydantic validation.
 
 Example:
     from mlb_predict.config import ModelConfig, ModelFamily
-    
+
     config = ModelConfig(
         family=ModelFamily.XGBOOST,
         target="swing_decision"
     )
-    
+
     # Save for reproducibility
     config.to_yaml("my_config.yaml")
-    
+
     # Load and reproduce
     config = ModelConfig.from_yaml("my_config.yaml")
 """

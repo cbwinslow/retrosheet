@@ -48,12 +48,13 @@ OUTCOME_INDEX = {outcome: i for i, outcome in enumerate(PA_OUTCOMES)}
 # MULTINOMIAL LOGISTIC REGRESSION
 # ============================================================================
 
+
 class MultinomialLogisticRegression(BaseEstimator, ClassifierMixin):
     """Multinomial Logistic Regression for baseball outcomes.
-    
+
     Models:
     P(y = k | X) = exp(β_k · X) / ∑_j exp(β_j · X)
-    
+
     Parameters:
     -----------
     regularization : str
@@ -136,9 +137,10 @@ class MultinomialLogisticRegression(BaseEstimator, ClassifierMixin):
 # GRADIENT BOOSTING WITH SOFT PROBABILITY
 # ============================================================================
 
+
 class MultinomialXGBoost(BaseEstimator, ClassifierMixin):
     """XGBoost with softmax output for multinomial classification.
-    
+
     Parameters:
     -----------
     n_estimators : int
@@ -220,10 +222,12 @@ class MultinomialXGBoost(BaseEstimator, ClassifierMixin):
             raise ValueError('Model not fitted')
 
         importance = self.model_.feature_importances_
-        return pd.DataFrame({
-            'feature': [f'feature_{i}' for i in range(len(importance))],
-            'importance': importance,
-        }).sort_values('importance', ascending=False)
+        return pd.DataFrame(
+            {
+                'feature': [f'feature_{i}' for i in range(len(importance))],
+                'importance': importance,
+            }
+        ).sort_values('importance', ascending=False)
 
 
 class MultinomialLightGBM(BaseEstimator, ClassifierMixin):
@@ -299,9 +303,10 @@ class MultinomialLightGBM(BaseEstimator, ClassifierMixin):
 # PROBABILITY CALIBRATION
 # ============================================================================
 
+
 class PlattScaler:
     """Platt Scaling for probability calibration.
-    
+
     Maps raw scores to calibrated probabilities using logistic function:
     p' = 1 / (1 + exp(A * x + B))
     """
@@ -312,7 +317,7 @@ class PlattScaler:
 
     def fit(self, scores: np.ndarray, y_true: np.ndarray):
         """Fit Platt scaling parameters.
-        
+
         Parameters:
         -----------
         scores : array of raw model scores (e.g., logits)
@@ -344,7 +349,7 @@ class PlattScaler:
 
 class MulticlassCalibration:
     """Calibration for multiclass probabilities.
-    
+
     Applies calibration separately for each class (one-vs-rest).
     """
 
@@ -359,7 +364,7 @@ class MulticlassCalibration:
 
     def fit(self, y_proba: np.ndarray, y_true: np.ndarray):
         """Fit calibration for each class.
-        
+
         Parameters:
         -----------
         y_proba : array of shape (n_samples, n_classes)
@@ -409,9 +414,10 @@ class MulticlassCalibration:
 # NEURAL NETWORK (Simple MLP)
 # ============================================================================
 
+
 class SimpleMLP(BaseEstimator, ClassifierMixin):
     """Simple Multi-Layer Perceptron for baseball outcomes.
-    
+
     Architecture:
     - Input layer
     - Hidden layer(s) with ReLU
@@ -504,7 +510,7 @@ class SimpleMLP(BaseEstimator, ClassifierMixin):
                 total_loss += loss.item()
 
             if self.verbose and (epoch + 1) % 10 == 0:
-                print(f'Epoch {epoch+1}/{self.epochs}, Loss: {total_loss/len(loader):.4f}')
+                print(f'Epoch {epoch + 1}/{self.epochs}, Loss: {total_loss / len(loader):.4f}')
 
         return self
 
@@ -532,9 +538,11 @@ class SimpleMLP(BaseEstimator, ClassifierMixin):
 # MODEL COMPARISON AND SELECTION
 # ============================================================================
 
+
 @dataclass
 class MultinomialMetrics:
     """Metrics for multinomial classification."""
+
     log_loss: float
     brier_score: float
     accuracy: float
@@ -557,13 +565,13 @@ def compute_multinomial_metrics(
     classes: list[str],
 ) -> MultinomialMetrics:
     """Compute metrics for multinomial classification.
-    
+
     Parameters:
     -----------
     y_true : true class labels
     y_proba : predicted probabilities (n_samples, n_classes)
     classes : list of class names
-    
+
     Returns:
     --------
     MultinomialMetrics
@@ -608,7 +616,7 @@ def compute_expected_calibration_error(
     n_bins: int = 10,
 ) -> float:
     """Compute Expected Calibration Error (ECE).
-    
+
     ECE = ∑ (bin_size / N) * |accuracy_in_bin - avg_confidence_in_bin|
     """
     # Get predicted class and confidence
@@ -639,6 +647,7 @@ def compute_expected_calibration_error(
 # CONVENIENCE FUNCTIONS
 # ============================================================================
 
+
 def train_multinomial_model(
     model_type: str,
     X_train: np.ndarray,
@@ -649,14 +658,14 @@ def train_multinomial_model(
     **kwargs,
 ) -> tuple[Any, MulticlassCalibration | None]:
     """Train a multinomial model with optional calibration.
-    
+
     Parameters:
     -----------
     model_type : 'logistic', 'xgboost', 'lightgbm', 'mlp'
     X_train, y_train : training data
     X_val, y_val : validation data for calibration
     calibrate : whether to apply probability calibration
-    
+
     Returns:
     --------
     (model, calibrator) tuple
@@ -694,13 +703,13 @@ def compare_multinomial_models(
     classes: list[str],
 ) -> pd.DataFrame:
     """Compare multiple multinomial models.
-    
+
     Parameters:
     -----------
     models : dict of {name: model}
     X_test, y_test : test data
     classes : list of class names
-    
+
     Returns:
     --------
     DataFrame with comparison results
@@ -711,9 +720,11 @@ def compare_multinomial_models(
         y_proba = model.predict_proba(X_test)
         metrics = compute_multinomial_metrics(y_test, y_proba, classes)
 
-        results.append({
-            'model': name,
-            **metrics.to_dict(),
-        })
+        results.append(
+            {
+                'model': name,
+                **metrics.to_dict(),
+            }
+        )
 
     return pd.DataFrame(results)

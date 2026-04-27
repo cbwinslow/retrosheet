@@ -32,7 +32,8 @@ class StatcastSource(BaseSource):
         cmd = [
             sys.executable,
             'scripts/data_ingestion/download_statcast.py',
-            '--season', str(season),
+            '--season',
+            str(season),
         ]
 
         if force:
@@ -51,17 +52,20 @@ class StatcastSource(BaseSource):
                 return SourceResult(
                     success=True,
                     rows_downloaded=0,  # Would need to parse from output
-                    metadata={'stdout': result.stdout[-1000:] if len(result.stdout) > 1000 else result.stdout},
+                    metadata={
+                        'stdout': result.stdout[-1000:]
+                        if len(result.stdout) > 1000
+                        else result.stdout
+                    },
                 )
-            else:
-                return SourceResult(
-                    success=False,
-                    error_message=f'Statcast download failed: {result.stderr[:500]}',
-                )
+            return SourceResult(
+                success=False,
+                error_message=f'Statcast download failed: {result.stderr[:500]}',
+            )
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'Statcast download error: {str(e)}',
+                error_message=f'Statcast download error: {e!s}',
             )
 
     def ingest(self, source_path: Path) -> SourceResult:
@@ -87,23 +91,27 @@ class StatcastSource(BaseSource):
                 return SourceResult(
                     success=True,
                     rows_inserted=0,
-                    metadata={'stdout': result.stdout[-1000:] if len(result.stdout) > 1000 else result.stdout},
+                    metadata={
+                        'stdout': result.stdout[-1000:]
+                        if len(result.stdout) > 1000
+                        else result.stdout
+                    },
                 )
-            else:
-                return SourceResult(
-                    success=False,
-                    error_message=f'Statcast ingest failed: {result.stderr[:500]}',
-                )
+            return SourceResult(
+                success=False,
+                error_message=f'Statcast ingest failed: {result.stderr[:500]}',
+            )
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'Statcast ingest error: {str(e)}',
+                error_message=f'Statcast ingest error: {e!s}',
             )
 
     def validate(self, ingest_result: SourceResult) -> SourceResult:
         """Validate Statcast data quality."""
-        import psycopg2
         import os
+
+        import psycopg2
 
         try:
             conn = psycopg2.connect(
@@ -115,7 +123,7 @@ class StatcastSource(BaseSource):
             )
 
             with conn.cursor() as cur:
-                cur.execute("SELECT COUNT(*) FROM raw_statcast.events")
+                cur.execute('SELECT COUNT(*) FROM raw_statcast.events')
                 count = cur.fetchone()[0]
 
             conn.close()
@@ -127,7 +135,7 @@ class StatcastSource(BaseSource):
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'Statcast validation error: {str(e)}',
+                error_message=f'Statcast validation error: {e!s}',
             )
 
     def get_available_seasons(self) -> list[int]:

@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 
 class MetricValue(BaseModel):
     """Single metric with confidence interval."""
+
     value: float
     std: float | None = None
     ci_lower: float | None = None
@@ -38,6 +39,7 @@ class MetricValue(BaseModel):
 
 class Metrics(BaseModel):
     """Complete metrics collection for model evaluation."""
+
     # Binary classification metrics
     roc_auc: MetricValue | None = None
     pr_auc: MetricValue | None = None
@@ -88,7 +90,7 @@ class Metrics(BaseModel):
 
     def get_best_metric(self) -> tuple[str, float]:
         """Get the best metric name and value.
-        
+
         For binary classification, prefers ROC AUC.
         For multiclass, prefers accuracy or F1.
         """
@@ -108,7 +110,7 @@ class Metrics(BaseModel):
 
     def compare_to(self, other: 'Metrics') -> dict[str, float]:
         """Compare these metrics to another set.
-        
+
         Returns:
             Dict mapping metric name to difference (self - other)
         """
@@ -125,6 +127,7 @@ class Metrics(BaseModel):
 
 class ValidationCurve(BaseModel):
     """Training/validation curve for monitoring model convergence."""
+
     metric_name: str
     train_values: list[float]
     val_values: list[float]
@@ -135,7 +138,7 @@ class ValidationCurve(BaseModel):
 
     def find_best_iteration(self, mode: str = 'max') -> int:
         """Find the iteration with best validation performance.
-        
+
         Args:
             mode: 'max' for metrics where higher is better (AUC),
                   'min' for metrics where lower is better (loss)
@@ -150,12 +153,15 @@ class ValidationCurve(BaseModel):
         """Convert to pandas DataFrame."""
         try:
             import pandas as pd
-            return pd.DataFrame({
-                'iteration': self.iterations,
-                'train': self.train_values,
-                'val': self.val_values,
-                'gap': [t - v for t, v in zip(self.train_values, self.val_values)],
-            })
+
+            return pd.DataFrame(
+                {
+                    'iteration': self.iterations,
+                    'train': self.train_values,
+                    'val': self.val_values,
+                    'gap': [t - v for t, v in zip(self.train_values, self.val_values)],
+                }
+            )
         except ImportError:
             raise ImportError('pandas required for to_dataframe()')
 
@@ -163,13 +169,19 @@ class ValidationCurve(BaseModel):
         """Plot using matplotlib."""
         try:
             import matplotlib.pyplot as plt
+
             fig, ax = plt.subplots(figsize=figsize)
             ax.plot(self.iterations, self.train_values, label='Train', linewidth=2)
             ax.plot(self.iterations, self.val_values, label='Validation', linewidth=2)
 
             if self.best_iteration is not None:
-                ax.axvline(self.best_iteration, color='red', linestyle='--',
-                          alpha=0.5, label=f'Best ({self.best_iteration})')
+                ax.axvline(
+                    self.best_iteration,
+                    color='red',
+                    linestyle='--',
+                    alpha=0.5,
+                    label=f'Best ({self.best_iteration})',
+                )
 
             ax.set_xlabel('Iteration')
             ax.set_ylabel(self.metric_name)
@@ -184,6 +196,7 @@ class ValidationCurve(BaseModel):
 
 class FeatureImportance(BaseModel):
     """Feature importance score with metadata."""
+
     feature_name: str
     importance_score: float
     importance_rank: int
@@ -197,10 +210,11 @@ class FeatureImportance(BaseModel):
 
 class Residuals(BaseModel):
     """Model residuals for deep analysis.
-    
+
     Provides access to prediction errors and diagnostic tools
     for understanding model performance across different subgroups.
     """
+
     y_true: list[float]
     y_pred: list[float]  # Binary predictions (0 or 1)
     y_prob: list[float]  # Probability predictions
@@ -218,6 +232,7 @@ class Residuals(BaseModel):
         """Convert to pandas DataFrame."""
         try:
             import pandas as pd
+
             data = {
                 'y_true': self.y_true,
                 'y_pred': self.y_pred,
@@ -245,6 +260,7 @@ class Residuals(BaseModel):
             return {}
 
         import numpy as np
+
         res = np.array(self.residuals)
 
         stats = {
@@ -260,6 +276,7 @@ class Residuals(BaseModel):
         if len(res) > 3:
             try:
                 from scipy import stats as scipy_stats
+
                 stats['skewness'] = float(scipy_stats.skew(res))
                 stats['kurtosis'] = float(scipy_stats.kurtosis(res))
             except ImportError:
@@ -284,11 +301,13 @@ class Residuals(BaseModel):
             df = self.to_dataframe()
 
             # Group by feature and compute stats
-            grouped = df.groupby(feature_name).agg({
-                'residual': ['mean', 'std', 'count'],
-                'y_true': 'mean',
-                'y_prob': 'mean',
-            })
+            grouped = df.groupby(feature_name).agg(
+                {
+                    'residual': ['mean', 'std', 'count'],
+                    'y_true': 'mean',
+                    'y_prob': 'mean',
+                }
+            )
 
             return grouped.to_dict()
         except ImportError:
@@ -339,8 +358,7 @@ class Residuals(BaseModel):
             for cls in [0, 1]:
                 mask = pred_classes == cls
                 if mask.any():
-                    ax4.hist(res[mask], bins=30, alpha=0.5,
-                            label=f'Pred {cls}', density=True)
+                    ax4.hist(res[mask], bins=30, alpha=0.5, label=f'Pred {cls}', density=True)
             ax4.set_xlabel('Residual')
             ax4.set_ylabel('Density')
             ax4.set_title('Residuals by Predicted Class')
@@ -411,6 +429,7 @@ class Residuals(BaseModel):
 
 class PredictionRecord(BaseModel):
     """Single prediction record with metadata."""
+
     sample_id: int
     game_pk: int | None = None
     play_id: str | None = None
@@ -530,6 +549,7 @@ class PredictResult(BaseModel):
         """Save predictions to SQL database."""
         try:
             from sqlalchemy import create_engine
+
             df = self.to_dataframe()
             engine = create_engine(connection_string)
             df.to_sql(table_name, engine, if_exists='append', index=False)
@@ -539,7 +559,7 @@ class PredictResult(BaseModel):
 
 class TrainResult(BaseModel):
     """Complete training result with all artifacts for analysis.
-    
+
     This is the main result class returned by ModelTrainer.train().
     It provides access to:
     - Model artifacts and metadata
@@ -625,21 +645,26 @@ class TrainResult(BaseModel):
             elif self.val_metrics:
                 metrics_dict = self.val_metrics.to_dict()
 
-            cur.execute("""
+            cur.execute(
+                """
                 UPDATE models.model_registry
                 SET metrics = %s,
                     feature_spec = %s,
                     updated_at = NOW()
                 WHERE model_id = %s
-            """, (
-                json.dumps(metrics_dict),
-                json.dumps({
-                    'n_features': self.n_features,
-                    'feature_names': self.feature_names,
-                    'training_time_seconds': self.training_time_seconds,
-                }),
-                self.model_id,
-            ))
+            """,
+                (
+                    json.dumps(metrics_dict),
+                    json.dumps(
+                        {
+                            'n_features': self.n_features,
+                            'feature_names': self.feature_names,
+                            'training_time_seconds': self.training_time_seconds,
+                        }
+                    ),
+                    self.model_id,
+                ),
+            )
 
             conn.commit()
             conn.close()
@@ -655,12 +680,22 @@ class TrainResult(BaseModel):
             data = {
                 'model_id': [self.model_id],
                 'model_name': [self.model_name],
-                'family': [self.config.family.value if hasattr(self.config, 'family') else 'unknown'],
-                'target': [self.config.target.value if hasattr(self.config, 'target') else 'unknown'],
+                'family': [
+                    self.config.family.value if hasattr(self.config, 'family') else 'unknown'
+                ],
+                'target': [
+                    self.config.target.value if hasattr(self.config, 'target') else 'unknown'
+                ],
                 'status': [self.status],
-                'train_auc': [self.train_metrics.roc_auc.value if self.train_metrics.roc_auc else None],
+                'train_auc': [
+                    self.train_metrics.roc_auc.value if self.train_metrics.roc_auc else None
+                ],
                 'val_auc': [self.val_metrics.roc_auc.value if self.val_metrics.roc_auc else None],
-                'test_auc': [self.test_metrics.roc_auc.value if self.test_metrics and self.test_metrics.roc_auc else None],
+                'test_auc': [
+                    self.test_metrics.roc_auc.value
+                    if self.test_metrics and self.test_metrics.roc_auc
+                    else None
+                ],
                 'training_time': [self.training_time_seconds],
                 'n_samples_train': [self.n_samples_train],
                 'n_samples_val': [self.n_samples_val],
@@ -714,7 +749,8 @@ class TrainResult(BaseModel):
         # Training time ratio
         comparison['training_time_ratio'] = (
             self.training_time_seconds / other.training_time_seconds
-            if other.training_time_seconds > 0 else float('inf')
+            if other.training_time_seconds > 0
+            else float('inf')
         )
 
         # Sample size comparison
@@ -742,7 +778,7 @@ class TrainResult(BaseModel):
             import matplotlib.pyplot as plt
 
             n_curves = len(self.validation_curves)
-            fig, axes = plt.subplots(1, n_curves, figsize=(6*n_curves, 5))
+            fig, axes = plt.subplots(1, n_curves, figsize=(6 * n_curves, 5))
 
             if n_curves == 1:
                 axes = [axes]
@@ -751,8 +787,7 @@ class TrainResult(BaseModel):
                 curve_plot = curve.plot()
                 # Copy to subplot
                 for line in curve_plot.axes[0].lines:
-                    ax.plot(line.get_xdata(), line.get_ydata(),
-                           label=line.get_label(), linewidth=2)
+                    ax.plot(line.get_xdata(), line.get_ydata(), label=line.get_label(), linewidth=2)
                 ax.set_xlabel('Iteration')
                 ax.set_ylabel(curve.metric_name)
                 ax.set_title(f'{curve.metric_name} - Best: {curve.best_val_value:.4f}')
@@ -804,13 +839,13 @@ class TrainResult(BaseModel):
             '',
             f'**Model ID**: {self.model_id}',
             f'**Status**: {self.status}',
-            f"**Created**: {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}",
+            f'**Created**: {self.created_at.strftime("%Y-%m-%d %H:%M:%S")}',
             f'**Training Time**: {self.training_time_seconds:.1f}s',
             '',
             '## Configuration',
-            f"- Family: {self.config.family.value if hasattr(self.config, 'family') else 'unknown'}",
-            f"- Target: {self.config.target.value if hasattr(self.config, 'target') else 'unknown'}",
-            f"- Features: {self.config.features.value if hasattr(self.config, 'features') else 'unknown'}",
+            f'- Family: {self.config.family.value if hasattr(self.config, "family") else "unknown"}',
+            f'- Target: {self.config.target.value if hasattr(self.config, "target") else "unknown"}',
+            f'- Features: {self.config.features.value if hasattr(self.config, "features") else "unknown"}',
             f'- N Features: {self.n_features}',
             '',
             '## Metrics',
@@ -833,14 +868,18 @@ class TrainResult(BaseModel):
                 if isinstance(metric, MetricValue):
                     lines.append(f'- {metric_name}: {metric}')
 
-        lines.extend([
-            '',
-            '## Feature Importance (Top 10)',
-            '',
-        ])
+        lines.extend(
+            [
+                '',
+                '## Feature Importance (Top 10)',
+                '',
+            ]
+        )
 
         for feat in self.get_best_features(10):
-            lines.append(f'{feat.importance_rank}. {feat.feature_name}: {feat.importance_score:.4f}')
+            lines.append(
+                f'{feat.importance_rank}. {feat.feature_name}: {feat.importance_score:.4f}'
+            )
 
         report = '\n'.join(lines)
 

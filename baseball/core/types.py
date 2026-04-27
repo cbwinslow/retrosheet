@@ -11,6 +11,7 @@ from typing import Any
 @dataclass(frozen=True)
 class SourceRequest:
     """Request object for source adapter operations."""
+
     source: str
     params: dict[str, Any]
 
@@ -18,6 +19,7 @@ class SourceRequest:
 @dataclass(frozen=True)
 class SourceResult:
     """Result object for source adapter operations."""
+
     success: bool
     rows_downloaded: int = 0
     rows_inserted: int = 0

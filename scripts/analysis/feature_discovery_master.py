@@ -25,17 +25,20 @@ DB_URL = os.getenv('DATABASE_URL', 'postgresql://localhost:5432/retrosheet')
 
 def run_correlation_analysis():
     """Run feature correlation analysis."""
-    print('\n' + '='*70)
+    print('\n' + '=' * 70)
     print('STEP 1: FEATURE CORRELATION ANALYSIS')
-    print('='*70)
+    print('=' * 70)
 
     # Create correlation matrix script if not exists
-    script = """
+    script = (
+        """
 import pandas as pd
 import numpy as np
 import psycopg2
 
-conn = psycopg2.connect(""" + f"'{DB_URL}'" + ''')
+conn = psycopg2.connect("""
+        + f"'{DB_URL}'"
+        + ''')
 
 # Get numeric features
 query = """
@@ -94,6 +97,7 @@ with open('models/feature_discovery/high_correlations.json', 'w') as f:
 conn.close()
 print("\\nResults saved to models/feature_discovery/high_correlations.json")
 '''
+    )
 
     os.makedirs('models/feature_discovery', exist_ok=True)
 
@@ -102,7 +106,8 @@ print("\\nResults saved to models/feature_discovery/high_correlations.json")
 
     result = subprocess.run(
         [sys.executable, 'models/feature_discovery/run_correlations.py'],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
 
     print(result.stdout)
@@ -112,14 +117,14 @@ print("\\nResults saved to models/feature_discovery/high_correlations.json")
 
 def run_pca_analysis(n_components: int = 50):
     """Run PCA analysis."""
-    print('\n' + '='*70)
+    print('\n' + '=' * 70)
     print('STEP 2: PCA DIMENSIONALITY ANALYSIS')
-    print('='*70)
+    print('=' * 70)
 
     result = subprocess.run(
-        ['python', 'scripts/analysis/pca_feature_analysis.py',
-         '--n-components', str(n_components)],
-        capture_output=True, text=True,
+        ['python', 'scripts/analysis/pca_feature_analysis.py', '--n-components', str(n_components)],
+        capture_output=True,
+        text=True,
     )
 
     print(result.stdout)
@@ -129,16 +134,23 @@ def run_pca_analysis(n_components: int = 50):
 
 def run_stepwise_selection(method: str = 'forward', max_features: int = 50):
     """Run stepwise feature selection."""
-    print('\n' + '='*70)
+    print('\n' + '=' * 70)
     print('STEP 3: STEPWISE FEATURE SELECTION')
-    print('='*70)
+    print('=' * 70)
 
     result = subprocess.run(
-        ['python', 'scripts/analysis/stepwise_feature_selection.py',
-         '--method', method,
-         '--max-features', str(max_features),
-         '--sample-size', '50000'],
-        capture_output=True, text=True,
+        [
+            'python',
+            'scripts/analysis/stepwise_feature_selection.py',
+            '--method',
+            method,
+            '--max-features',
+            str(max_features),
+            '--sample-size',
+            '50000',
+        ],
+        capture_output=True,
+        text=True,
     )
 
     print(result.stdout)
@@ -149,9 +161,9 @@ def run_stepwise_selection(method: str = 'forward', max_features: int = 50):
 def generate_feature_report():
     """Generate consolidated feature discovery report."""
 
-    print('\n' + '='*70)
+    print('\n' + '=' * 70)
     print('GENERATING CONSOLIDATED REPORT')
-    print('='*70)
+    print('=' * 70)
 
     report = {
         'timestamp': datetime.now().isoformat(),
@@ -162,6 +174,7 @@ def generate_feature_report():
     # Load PCA results
     try:
         import glob
+
         pca_files = glob.glob('models/pca_analysis/pca_results_*.json')
         if pca_files:
             with open(max(pca_files)) as f:
@@ -172,7 +185,8 @@ def generate_feature_report():
                 'variance_80': pca_results['components_for_80'],
                 'variance_90': pca_results['components_for_90'],
                 'reduction_ratio_90': round(
-                    pca_results['components_for_90'] / pca_results['n_features_original'], 2,
+                    pca_results['components_for_90'] / pca_results['n_features_original'],
+                    2,
                 ),
             }
     except Exception as e:
@@ -181,6 +195,7 @@ def generate_feature_report():
     # Load selection results
     try:
         import glob
+
         sel_files = glob.glob('models/feature_selection/forward_selection_*.json')
         if sel_files:
             with open(max(sel_files)) as f:
@@ -219,7 +234,9 @@ def generate_feature_report():
 
     # Save report
     os.makedirs('models/feature_discovery', exist_ok=True)
-    report_file = f"models/feature_discovery/master_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    report_file = (
+        f'models/feature_discovery/master_report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
+    )
 
     with open(report_file, 'w') as f:
         json.dump(report, f, indent=2)
@@ -227,51 +244,48 @@ def generate_feature_report():
     print(f'\nMaster report saved to: {report_file}')
 
     # Print summary
-    print('\n' + '='*70)
+    print('\n' + '=' * 70)
     print('FEATURE DISCOVERY SUMMARY')
-    print('='*70)
-    print(f"Analyses completed: {', '.join(report['analyses_completed'])}")
+    print('=' * 70)
+    print(f'Analyses completed: {", ".join(report["analyses_completed"])}')
 
     if 'pca_summary' in report:
         print('\nPCA Recommendation:')
-        print(f"  Use {report['pca_summary']['variance_90']} components for 90% variance")
-        print(f"  Reduction: {report['pca_summary']['reduction_ratio_90']:.1%} of original")
+        print(f'  Use {report["pca_summary"]["variance_90"]} components for 90% variance')
+        print(f'  Reduction: {report["pca_summary"]["reduction_ratio_90"]:.1%} of original')
 
     if 'selection_summary' in report:
         print('\nStepwise Selection:')
-        print(f"  Optimal: {report['selection_summary']['final_n_features']} features")
-        print(f"  Score: {report['selection_summary']['final_score']:.4f}")
+        print(f'  Optimal: {report["selection_summary"]["final_n_features"]} features')
+        print(f'  Score: {report["selection_summary"]["final_score"]:.4f}')
 
     print('\nRecommendations:')
     for use_case, rec in report['recommendations'].items():
-        print(f"  {use_case}: {rec.get('n_features', rec.get('n_components'))} features")
-        print(f"    -> {rec['description']}")
+        print(f'  {use_case}: {rec.get("n_features", rec.get("n_components"))} features')
+        print(f'    -> {rec["description"]}')
 
 
 def main():
     parser = argparse.ArgumentParser(description='Master Feature Discovery Orchestrator')
-    parser.add_argument('--quick', action='store_true',
-                       help='Quick analysis (PCA only, 10k samples)')
-    parser.add_argument('--full', action='store_true',
-                       help='Full analysis (all methods)')
-    parser.add_argument('--skip-correlation', action='store_true',
-                       help='Skip correlation analysis')
-    parser.add_argument('--skip-pca', action='store_true',
-                       help='Skip PCA analysis')
-    parser.add_argument('--skip-selection', action='store_true',
-                       help='Skip stepwise selection')
+    parser.add_argument(
+        '--quick', action='store_true', help='Quick analysis (PCA only, 10k samples)'
+    )
+    parser.add_argument('--full', action='store_true', help='Full analysis (all methods)')
+    parser.add_argument('--skip-correlation', action='store_true', help='Skip correlation analysis')
+    parser.add_argument('--skip-pca', action='store_true', help='Skip PCA analysis')
+    parser.add_argument('--skip-selection', action='store_true', help='Skip stepwise selection')
     args = parser.parse_args()
 
     if not args.quick and not args.full:
         print('Use --quick for fast PCA analysis or --full for complete analysis')
         return
 
-    print('='*70)
+    print('=' * 70)
     print('MASTER FEATURE DISCOVERY ORCHESTRATOR')
-    print('='*70)
-    print(f"Mode: {'QUICK' if args.quick else 'FULL'}")
+    print('=' * 70)
+    print(f'Mode: {"QUICK" if args.quick else "FULL"}')
     print(f'Timestamp: {datetime.now().isoformat()}')
-    print('='*70)
+    print('=' * 70)
 
     if args.quick:
         # Quick mode: PCA only with limited components
@@ -291,9 +305,9 @@ def main():
     # Generate consolidated report
     generate_feature_report()
 
-    print('\n' + '='*70)
+    print('\n' + '=' * 70)
     print('FEATURE DISCOVERY COMPLETE')
-    print('='*70)
+    print('=' * 70)
     print('\nNext steps:')
     print('  1. Review master report in models/feature_discovery/')
     print('  2. Use recommended feature counts for production models')

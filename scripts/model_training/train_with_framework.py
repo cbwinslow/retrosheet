@@ -11,10 +11,10 @@ This script demonstrates Production Integration by:
 Usage:
     # Legacy-style (backward compatible)
     python train_with_framework.py --target-id swing_outcome --feature-set advanced
-    
+
     # New-style with config file
     python train_with_framework.py --config configs/xgboost_swing.yaml
-    
+
     # Compare multiple models
     python train_with_framework.py --compare --target swing_outcome --families xgboost lightgbm
 
@@ -69,45 +69,56 @@ Examples:
     )
 
     # Mode selection
-    parser.add_argument('--config', '-c', type=str,
-                       help='Path to ModelConfig YAML file (new-style)')
-    parser.add_argument('--compare', action='store_true',
-                       help='Run comparison experiment')
+    parser.add_argument(
+        '--config', '-c', type=str, help='Path to ModelConfig YAML file (new-style)'
+    )
+    parser.add_argument('--compare', action='store_true', help='Run comparison experiment')
 
     # Legacy-style arguments
-    parser.add_argument('--target-id', type=str,
-                       help='Target to train (e.g., swing_outcome, hit_outcome)')
-    parser.add_argument('--feature-set', type=str, default='advanced',
-                       choices=['basic', 'advanced', 'enriched', 'complete'],
-                       help='Feature set complexity')
-    parser.add_argument('--min-season', type=int, default=2020,
-                       help='First season to include')
-    parser.add_argument('--max-season', type=int, default=2025,
-                       help='Last season to include')
-    parser.add_argument('--train-through', type=int, default=2023,
-                       help='Last season for training (validation = after)')
-    parser.add_argument('--model-family', type=str, default='xgboost',
-                       choices=['xgboost', 'lightgbm', 'catboost'],
-                       help='Model algorithm family')
+    parser.add_argument(
+        '--target-id', type=str, help='Target to train (e.g., swing_outcome, hit_outcome)'
+    )
+    parser.add_argument(
+        '--feature-set',
+        type=str,
+        default='advanced',
+        choices=['basic', 'advanced', 'enriched', 'complete'],
+        help='Feature set complexity',
+    )
+    parser.add_argument('--min-season', type=int, default=2020, help='First season to include')
+    parser.add_argument('--max-season', type=int, default=2025, help='Last season to include')
+    parser.add_argument(
+        '--train-through',
+        type=int,
+        default=2023,
+        help='Last season for training (validation = after)',
+    )
+    parser.add_argument(
+        '--model-family',
+        type=str,
+        default='xgboost',
+        choices=['xgboost', 'lightgbm', 'catboost'],
+        help='Model algorithm family',
+    )
 
     # Comparison arguments
-    parser.add_argument('--target', type=str,
-                       help='Target for comparison (when using --compare)')
-    parser.add_argument('--families', nargs='+',
-                       default=['xgboost', 'lightgbm'],
-                       help='Model families to compare')
-    parser.add_argument('--feature-sets', nargs='+',
-                       help='Feature sets to compare (optional)')
+    parser.add_argument('--target', type=str, help='Target for comparison (when using --compare)')
+    parser.add_argument(
+        '--families', nargs='+', default=['xgboost', 'lightgbm'], help='Model families to compare'
+    )
+    parser.add_argument('--feature-sets', nargs='+', help='Feature sets to compare (optional)')
 
     # Output options
-    parser.add_argument('--output', '-o', type=str, default='results',
-                       help='Output directory for results')
-    parser.add_argument('--save-config', type=str,
-                       help='Save generated config to YAML file')
-    parser.add_argument('--report', action='store_true',
-                       help='Generate HTML report (for experiments)')
-    parser.add_argument('--legacy-output', action='store_true',
-                       help='Print results in legacy format')
+    parser.add_argument(
+        '--output', '-o', type=str, default='results', help='Output directory for results'
+    )
+    parser.add_argument('--save-config', type=str, help='Save generated config to YAML file')
+    parser.add_argument(
+        '--report', action='store_true', help='Generate HTML report (for experiments)'
+    )
+    parser.add_argument(
+        '--legacy-output', action='store_true', help='Print results in legacy format'
+    )
 
     return parser.parse_args()
 
@@ -115,17 +126,19 @@ Examples:
 def train_legacy_style(args: argparse.Namespace) -> TrainResult:
     """
     Train using legacy-style arguments but new framework.
-    
+
     Args:
         args: Command line arguments
-        
+
     Returns:
         TrainResult with rich analysis
     """
     print('[INFO] Training with legacy-style arguments')
     print(f'[INFO] Target: {args.target_id}')
     print(f'[INFO] Feature set: {args.feature_set}')
-    print(f'[INFO] Seasons: {args.min_season}-{args.max_season} (train through {args.train_through})')
+    print(
+        f'[INFO] Seasons: {args.min_season}-{args.max_season} (train through {args.train_through})'
+    )
     print(f'[INFO] Model family: {args.model_family}')
 
     # Create config from legacy args
@@ -160,11 +173,11 @@ def train_legacy_style(args: argparse.Namespace) -> TrainResult:
 def train_new_style(config_path: str, output_dir: str) -> TrainResult:
     """
     Train using new-style config file.
-    
+
     Args:
         config_path: Path to ModelConfig YAML
         output_dir: Output directory for results
-        
+
     Returns:
         TrainResult
     """
@@ -186,7 +199,7 @@ def train_new_style(config_path: str, output_dir: str) -> TrainResult:
 def run_comparison(args: argparse.Namespace) -> None:
     """
     Run comparison experiment.
-    
+
     Args:
         args: Command line arguments
     """
@@ -216,9 +229,9 @@ def run_comparison(args: argparse.Namespace) -> None:
     summary = runner.run_all()
 
     # Print results
-    print(f"\n{'='*60}")
+    print(f'\n{"=" * 60}')
     print('Comparison Results')
-    print(f"{'='*60}")
+    print(f'{"=" * 60}')
     print(f'Total runs: {summary.n_runs}')
     print(f'Completed: {summary.n_completed}')
     print(f'Failed: {summary.n_failed}')
@@ -240,7 +253,7 @@ def run_comparison(args: argparse.Namespace) -> None:
     output_path = Path(args.output)
     output_path.mkdir(parents=True, exist_ok=True)
     df.to_csv(output_path / 'comparison_results.csv', index=False)
-    print(f"[INFO] Results saved to {output_path / 'comparison_results.csv'}")
+    print(f'[INFO] Results saved to {output_path / "comparison_results.csv"}')
 
 
 def main() -> int:
@@ -261,9 +274,9 @@ def main() -> int:
             if args.legacy_output:
                 print_framework_result_legacy_style(result)
             else:
-                print(f"\n{'='*60}")
+                print(f'\n{"=" * 60}')
                 print(result.summary())
-                print(f"{'='*60}")
+                print(f'{"=" * 60}')
 
                 if result.val_metrics and result.val_metrics.roc_auc:
                     print(f'Val AUC: {result.val_metrics.roc_auc.value:.4f}')
@@ -271,7 +284,9 @@ def main() -> int:
                 if result.feature_importance:
                     print('\nTop 5 features:')
                     for feat in result.get_best_features(5):
-                        print(f'  {feat.importance_rank}. {feat.feature_name}: {feat.importance_score:.4f}')
+                        print(
+                            f'  {feat.importance_rank}. {feat.feature_name}: {feat.importance_score:.4f}'
+                        )
 
         elif args.target_id:
             # Legacy-style training
@@ -281,9 +296,9 @@ def main() -> int:
             if args.legacy_output:
                 print_framework_result_legacy_style(result)
             else:
-                print(f"\n{'='*60}")
+                print(f'\n{"=" * 60}')
                 print(result.summary())
-                print(f"{'='*60}")
+                print(f'{"=" * 60}')
 
         else:
             print('[ERROR] Must specify either --config, --target-id, or --compare')
@@ -295,6 +310,7 @@ def main() -> int:
     except Exception as e:
         print(f'[ERROR] Training failed: {e}')
         import traceback
+
         traceback.print_exc()
         return 1
 

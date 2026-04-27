@@ -55,33 +55,50 @@ Examples:
     train_parser = subparsers.add_parser('train', help='Train a single model')
     train_parser.add_argument('--config', '-c', required=True, help='Path to config YAML file')
     train_parser.add_argument('--output', '-o', help='Output directory for results')
-    train_parser.add_argument('--mock', action='store_true', help='Use mock training (no DB required)')
+    train_parser.add_argument(
+        '--mock', action='store_true', help='Use mock training (no DB required)'
+    )
 
     # Experiment command
     exp_parser = subparsers.add_parser('experiment', help='Run comparison experiments')
-    exp_parser.add_argument('--compare-families', nargs='+',
-                           choices=['xgboost', 'lightgbm', 'catboost'],
-                           help='Model families to compare')
-    exp_parser.add_argument('--compare-features', nargs='+',
-                           choices=['basic', 'physics', 'advanced', 'complete'],
-                           help='Feature sets to compare')
-    exp_parser.add_argument('--target', '-t', required=True,
-                           choices=['swing_decision', 'contact_made', 'hit_outcome'],
-                           help='Target variable')
-    exp_parser.add_argument('--seasons', nargs='+', type=int, default=[2023, 2024, 2025],
-                           help='Seasons to use')
-    exp_parser.add_argument('--output', '-o', default='experiments',
-                           help='Output directory for results')
-    exp_parser.add_argument('--report', action='store_true',
-                           help='Generate HTML report')
+    exp_parser.add_argument(
+        '--compare-families',
+        nargs='+',
+        choices=['xgboost', 'lightgbm', 'catboost'],
+        help='Model families to compare',
+    )
+    exp_parser.add_argument(
+        '--compare-features',
+        nargs='+',
+        choices=['basic', 'physics', 'advanced', 'complete'],
+        help='Feature sets to compare',
+    )
+    exp_parser.add_argument(
+        '--target',
+        '-t',
+        required=True,
+        choices=['swing_decision', 'contact_made', 'hit_outcome'],
+        help='Target variable',
+    )
+    exp_parser.add_argument(
+        '--seasons', nargs='+', type=int, default=[2023, 2024, 2025], help='Seasons to use'
+    )
+    exp_parser.add_argument(
+        '--output', '-o', default='experiments', help='Output directory for results'
+    )
+    exp_parser.add_argument('--report', action='store_true', help='Generate HTML report')
 
     # Sweep command
     sweep_parser = subparsers.add_parser('sweep', help='Run hyperparameter sweep')
     sweep_parser.add_argument('--config', '-c', required=True, help='Base config file')
-    sweep_parser.add_argument('--param', action='append', nargs=2, metavar=('NAME', 'VALUES'),
-                             help='Parameter and values (e.g., --param max_depth 3,5,7)')
-    sweep_parser.add_argument('--output', '-o', default='experiments',
-                             help='Output directory')
+    sweep_parser.add_argument(
+        '--param',
+        action='append',
+        nargs=2,
+        metavar=('NAME', 'VALUES'),
+        help='Parameter and values (e.g., --param max_depth 3,5,7)',
+    )
+    sweep_parser.add_argument('--output', '-o', default='experiments', help='Output directory')
 
     # Info command
     info_parser = subparsers.add_parser('info', help='Show framework info')
@@ -116,9 +133,9 @@ def cmd_train(args: argparse.Namespace) -> int:
         return 1
 
     # Print results
-    print(f"\n{'='*60}")
+    print(f'\n{"=" * 60}')
     print('Training Complete!')
-    print(f"{'='*60}")
+    print(f'{"=" * 60}')
     print(f'Model ID: {result.model_id}')
     print(f'Model Name: {result.model_name}')
     print(f'Training Time: {result.training_time_seconds:.1f}s')
@@ -146,8 +163,12 @@ def cmd_train(args: argparse.Namespace) -> int:
             'model_name': result.model_name,
             'config': config.model_dump(),
             'metrics': {
-                'train_auc': result.train_metrics.roc_auc.value if result.train_metrics and result.train_metrics.roc_auc else None,
-                'val_auc': result.val_metrics.roc_auc.value if result.val_metrics and result.val_metrics.roc_auc else None,
+                'train_auc': result.train_metrics.roc_auc.value
+                if result.train_metrics and result.train_metrics.roc_auc
+                else None,
+                'val_auc': result.val_metrics.roc_auc.value
+                if result.val_metrics and result.val_metrics.roc_auc
+                else None,
             },
             'training_time': result.training_time_seconds,
         }
@@ -193,9 +214,9 @@ def cmd_experiment(args: argparse.Namespace) -> int:
         return 1
 
     # Print results
-    print(f"\n{'='*60}")
+    print(f'\n{"=" * 60}')
     print('Experiment Complete!')
-    print(f"{'='*60}")
+    print(f'{"=" * 60}')
     print(f'Experiment ID: {summary.experiment_id}')
     print(f'Total Runs: {summary.n_runs}')
     print(f'Completed: {summary.n_completed}')
@@ -262,9 +283,9 @@ def cmd_sweep(args: argparse.Namespace) -> int:
         return 1
 
     # Print results
-    print(f"\n{'='*60}")
+    print(f'\n{"=" * 60}')
     print('Hyperparameter Sweep Complete!')
-    print(f"{'='*60}")
+    print(f'{"=" * 60}')
     print(f'Total Runs: {summary.n_runs}')
 
     if summary.best_run_id:

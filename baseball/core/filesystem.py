@@ -9,10 +9,10 @@ from pathlib import Path
 
 def ensure_dir(path: str | Path) -> Path:
     """Ensure directory exists, create if necessary.
-    
+
     Args:
         path: Directory path to ensure exists
-        
+
     Returns:
         Path object for the directory
     """

@@ -53,8 +53,12 @@ class EspnSource(BaseSource):
             )
 
         cmd = [
-            'uv', 'run', 'python', str(script),
-            '--season', str(season),
+            'uv',
+            'run',
+            'python',
+            str(script),
+            '--season',
+            str(season),
         ]
         if force:
             cmd.append('--force')
@@ -112,8 +116,12 @@ class EspnSource(BaseSource):
             )
 
         cmd = [
-            'uv', 'run', 'python', str(script),
-            '--game-id', espn_game_id,
+            'uv',
+            'run',
+            'python',
+            str(script),
+            '--game-id',
+            espn_game_id,
             '--boxscore-only',
         ]
 
@@ -197,7 +205,7 @@ class EspnSource(BaseSource):
             with conn.cursor() as cur:
                 # Check ESPN tables exist
                 cur.execute(
-                    "SELECT COUNT(*) FROM information_schema.tables "
+                    'SELECT COUNT(*) FROM information_schema.tables '
                     "WHERE table_schema = 'external' AND table_name LIKE 'espn_%'",
                 )
                 table_count = cur.fetchone()[0]
@@ -209,7 +217,7 @@ class EspnSource(BaseSource):
                 # Check for recent ESPN data
                 try:
                     cur.execute(
-                        "SELECT COUNT(*) FROM external.espn_schedule "
+                        'SELECT COUNT(*) FROM external.espn_schedule '
                         "WHERE game_date >= CURRENT_DATE - INTERVAL '30 days'",
                     )
                     recent_count = cur.fetchone()[0]

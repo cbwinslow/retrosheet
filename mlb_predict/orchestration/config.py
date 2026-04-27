@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 class DataSource(str, Enum):
     """Supported data sources for ingestion."""
+
     STATCAST = 'statcast'
     MLB_API = 'mlb_api'
     ESPN = 'espn'
@@ -27,25 +28,28 @@ class DataSource(str, Enum):
 
 class OperationMode(str, Enum):
     """Operation execution modes."""
-    FULL = 'full'           # Run complete operation
-    RESUME = 'resume'       # Resume from last checkpoint
-    DRY_RUN = 'dry_run'     # Show what would be executed
-    QUICK = 'quick'         # Skip expensive operations
-    VALIDATE = 'validate'   # Only run validation
+
+    FULL = 'full'  # Run complete operation
+    RESUME = 'resume'  # Resume from last checkpoint
+    DRY_RUN = 'dry_run'  # Show what would be executed
+    QUICK = 'quick'  # Skip expensive operations
+    VALIDATE = 'validate'  # Only run validation
 
 
 class OperationStatus(str, Enum):
     """Operation execution status."""
+
     PENDING = 'pending'
     RUNNING = 'running'
     COMPLETED = 'completed'
     FAILED = 'failed'
-    PARTIAL = 'partial'     # Some phases completed
+    PARTIAL = 'partial'  # Some phases completed
     ABORTED = 'aborted'
 
 
 class LogLevel(str, Enum):
     """Logging verbosity levels."""
+
     DEBUG = 'debug'
     INFO = 'info'
     WARNING = 'warning'
@@ -54,10 +58,10 @@ class LogLevel(str, Enum):
 
 class OperationConfig(BaseModel, ABC):
     """Base configuration for any database operation.
-    
+
     All operation configs inherit from this base class.
     Provides common validation, logging, and resume capabilities.
-    
+
     Attributes:
         dry_run: If True, show what would be executed without running
         resume_from: Checkpoint ID to resume from (None = start fresh)
@@ -68,14 +72,11 @@ class OperationConfig(BaseModel, ABC):
         timeout_seconds: Max operation time before auto-abort
         max_retries: Number of retries on transient failures
         validate_after: Run validation after operation completes
-    
+
     Example:
         ```python
         config = OperationConfig(
-            dry_run=False,
-            batch_size=100000,
-            parallel_workers=4,
-            validate_after=True
+            dry_run=False, batch_size=100000, parallel_workers=4, validate_after=True
         )
         ```
     """
@@ -153,10 +154,10 @@ class OperationConfig(BaseModel, ABC):
 
 class FeaturePopulationConfig(OperationConfig):
     """Configuration for feature population operations.
-    
+
     Controls how ML features are populated from raw data.
     Supports phased execution for incremental feature building.
-    
+
     Attributes:
         phases: List of phase numbers to run (empty = all phases)
         skip_verification: Skip post-population verification
@@ -166,7 +167,7 @@ class FeaturePopulationConfig(OperationConfig):
         include_context_features: Include game context features
         include_matchup_features: Include batter-pitcher matchup features
         feature_categories: Categories of features to populate
-    
+
     Phases:
         0: Prerequisites (verify base_features exists)
         1: Core Engineered (velocity, movement, outcomes)
@@ -176,14 +177,14 @@ class FeaturePopulationConfig(OperationConfig):
         5: Final (Markov chains, matchups, postseason)
         6: Specialized (attendance, stadium physics)
         7: Verification & Views
-    
+
     Example:
         ```python
         config = FeaturePopulationConfig(
             phases=[1, 2, 3],  # Run phases 1-3 only
             batch_size=100000,
             checkpoint_interval=100000,
-            validate_after=True
+            validate_after=True,
         )
         ```
     """
@@ -213,7 +214,11 @@ class FeaturePopulationConfig(OperationConfig):
 
     feature_categories: set[str] = Field(
         default_factory=lambda: {
-            'physics', 'location', 'context', 'matchup', 'quality',
+            'physics',
+            'location',
+            'context',
+            'matchup',
+            'quality',
         },
         description='Categories of features to populate',
     )
@@ -252,10 +257,10 @@ class FeaturePopulationConfig(OperationConfig):
 
 class BridgePopulationConfig(OperationConfig):
     """Configuration for bridge table population operations.
-    
+
     Controls how ID cross-reference tables are populated.
     Links IDs across Retrosheet, MLB API, Lahman, and other sources.
-    
+
     Attributes:
         include_player_xref: Populate player ID cross-references
         include_team_xref: Populate team ID cross-references
@@ -267,7 +272,7 @@ class BridgePopulationConfig(OperationConfig):
         chadwick_register_files: List of Chadwick register files to ingest
         gap_fill_from_lahman: Use Lahman to fill gaps in player_xref
         run_validation_tests: Run validation tests after population
-    
+
     Dependency Order:
         1. team_xref (required by others)
         2. park_xref
@@ -275,14 +280,14 @@ class BridgePopulationConfig(OperationConfig):
         4. game_xref
         5. coach_xref
         6. umpire_xref
-    
+
     Example:
         ```python
         config = BridgePopulationConfig(
             include_player_xref=True,  # Slow operation
             include_game_xref=True,
             include_team_xref=True,
-            run_validation_tests=True
+            run_validation_tests=True,
         )
         ```
     """
@@ -359,10 +364,10 @@ class BridgePopulationConfig(OperationConfig):
 
 class IngestOperationConfig(OperationConfig):
     """Configuration for data ingestion operations.
-    
+
     Controls how external data is downloaded and loaded into database.
     Supports multiple data sources with source-specific options.
-    
+
     Attributes:
         source: Data source to ingest from
         seasons: List of seasons to ingest
@@ -375,7 +380,7 @@ class IngestOperationConfig(OperationConfig):
         fetch_play_by_play: Include play-by-play data
         fetch_player_stats: Include player statistics
         fetch_team_stats: Include team statistics
-    
+
     Example:
         ```python
         # Ingest Statcast for 2024-2025
@@ -383,14 +388,14 @@ class IngestOperationConfig(OperationConfig):
             source=DataSource.STATCAST,
             seasons=[2024, 2025],
             validate_checksums=True,
-            api_delay_seconds=1.0
+            api_delay_seconds=1.0,
         )
-        
+
         # Ingest ESPN data for date range
         config = IngestOperationConfig(
             source=DataSource.ESPN,
-            date_range=("2024-04-01", "2024-10-01"),
-            use_cache=True
+            date_range=('2024-04-01', '2024-10-01'),
+            use_cache=True,
         )
         ```
     """
@@ -484,10 +489,10 @@ class IngestOperationConfig(OperationConfig):
 
 class ValidationConfig(OperationConfig):
     """Configuration for data validation operations.
-    
+
     Controls how data quality checks are performed.
     Supports comprehensive validation across all data sources.
-    
+
     Attributes:
         validation_types: Types of validation to run
         tables_to_validate: Specific tables to validate (empty = all)
@@ -499,14 +504,14 @@ class ValidationConfig(OperationConfig):
         coverage_thresholds: Minimum coverage percentages
         generate_report: Generate validation report
         fail_on_warning: Treat warnings as failures
-    
+
     Example:
         ```python
         config = ValidationConfig(
-            validation_types=["completeness", "foreign_keys", "nulls"],
-            tables_to_validate=["core.games", "core.events"],
-            coverage_thresholds={"core.games": 100.0, "core.events": 95.0},
-            generate_report=True
+            validation_types=['completeness', 'foreign_keys', 'nulls'],
+            tables_to_validate=['core.games', 'core.events'],
+            coverage_thresholds={'core.games': 100.0, 'core.events': 95.0},
+            generate_report=True,
         )
         ```
     """
@@ -514,8 +519,12 @@ class ValidationConfig(OperationConfig):
     # Validation Types
     validation_types: set[str] = Field(
         default_factory=lambda: {
-            'completeness', 'foreign_keys', 'nulls',
-            'duplicates', 'freshness', 'coverage',
+            'completeness',
+            'foreign_keys',
+            'nulls',
+            'duplicates',
+            'freshness',
+            'coverage',
         },
         description='Types of validation to run',
     )
@@ -565,10 +574,10 @@ class ValidationConfig(OperationConfig):
 
 class ModelTrainingConfig(OperationConfig):
     """Configuration for model training operations.
-    
+
     Controls how ML models are trained on populated features.
     Integrates with MLB Predict Framework.
-    
+
     Attributes:
         model_type: Type of model to train
         target_variable: Variable to predict
@@ -583,17 +592,17 @@ class ModelTrainingConfig(OperationConfig):
         cv_folds: Number of CV folds
         early_stopping: Use early stopping
         calibration_method: Probability calibration method
-    
+
     Example:
         ```python
         config = ModelTrainingConfig(
-            model_type="xgboost",
-            target_variable="pa_outcome",
-            feature_categories=["physics", "location", "context"],
+            model_type='xgboost',
+            target_variable='pa_outcome',
+            feature_categories=['physics', 'location', 'context'],
             train_seasons=[2015, 2023],
             test_seasons=[2024],
-            hyperparameters={"max_depth": 6, "n_estimators": 100},
-            save_model=True
+            hyperparameters={'max_depth': 6, 'n_estimators': 100},
+            save_model=True,
         )
         ```
     """
@@ -657,4 +666,11 @@ class ModelTrainingConfig(OperationConfig):
 
 
 # Type alias for any config type
-OperationConfigType = OperationConfig | FeaturePopulationConfig | BridgePopulationConfig | IngestOperationConfig | ValidationConfig | ModelTrainingConfig
+OperationConfigType = (
+    OperationConfig
+    | FeaturePopulationConfig
+    | BridgePopulationConfig
+    | IngestOperationConfig
+    | ValidationConfig
+    | ModelTrainingConfig
+)

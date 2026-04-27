@@ -264,10 +264,10 @@ def run_phase(phase_num: int, batch_mode: bool = False, dry_run: bool = False) -
 
     _, name, description, sql_files = phase
 
-    print(f"\n{'='*70}")
+    print(f'\n{"=" * 70}')
     print(f'PHASE {phase_num}: {name}')
     print(f'Description: {description}')
-    print(f"{'='*70}")
+    print(f'{"=" * 70}')
 
     if not sql_files:
         print('No SQL files to execute (prerequisite check only)')
@@ -292,19 +292,40 @@ def run_phase(phase_num: int, batch_mode: bool = False, dry_run: bool = False) -
 
 def verify_population(conn) -> None:
     """Verify feature population status."""
-    print('\n' + '='*70)
+    print('\n' + '=' * 70)
     print('FEATURE POPULATION VERIFICATION')
-    print('='*70)
+    print('=' * 70)
 
     checks = [
         ('Total rows', 'SELECT COUNT(*) FROM features_pitch.engineered_features'),
-        ('Base features (velocity_percentile)', 'SELECT COUNT(velocity_percentile) FROM features_pitch.engineered_features'),
-        ('Core outcomes (outcome_tier1)', 'SELECT COUNT(outcome_tier1) FROM features_pitch.engineered_features'),
-        ('Additional features (velocity_change_from_prev)', 'SELECT COUNT(velocity_change_from_prev) FROM features_pitch.engineered_features'),
-        ('Extended features (pitch_quality_score)', 'SELECT COUNT(*) FROM features_pitch.engineered_features WHERE pitch_quality_score IS NOT NULL'),
-        ('Context features (temp_extreme_flag)', 'SELECT COUNT(*) FROM features_pitch.engineered_features WHERE temp_extreme_flag IS NOT NULL'),
-        ('Final features (strike_accumulation_rate)', 'SELECT COUNT(*) FROM features_pitch.engineered_features WHERE strike_accumulation_rate IS NOT NULL'),
-        ('Matchup features (matchup_prior_pa_count)', 'SELECT COUNT(*) FROM features_pitch.engineered_features WHERE matchup_prior_pa_count IS NOT NULL'),
+        (
+            'Base features (velocity_percentile)',
+            'SELECT COUNT(velocity_percentile) FROM features_pitch.engineered_features',
+        ),
+        (
+            'Core outcomes (outcome_tier1)',
+            'SELECT COUNT(outcome_tier1) FROM features_pitch.engineered_features',
+        ),
+        (
+            'Additional features (velocity_change_from_prev)',
+            'SELECT COUNT(velocity_change_from_prev) FROM features_pitch.engineered_features',
+        ),
+        (
+            'Extended features (pitch_quality_score)',
+            'SELECT COUNT(*) FROM features_pitch.engineered_features WHERE pitch_quality_score IS NOT NULL',
+        ),
+        (
+            'Context features (temp_extreme_flag)',
+            'SELECT COUNT(*) FROM features_pitch.engineered_features WHERE temp_extreme_flag IS NOT NULL',
+        ),
+        (
+            'Final features (strike_accumulation_rate)',
+            'SELECT COUNT(*) FROM features_pitch.engineered_features WHERE strike_accumulation_rate IS NOT NULL',
+        ),
+        (
+            'Matchup features (matchup_prior_pa_count)',
+            'SELECT COUNT(*) FROM features_pitch.engineered_features WHERE matchup_prior_pa_count IS NOT NULL',
+        ),
     ]
 
     with conn.cursor() as cur:
@@ -437,10 +458,10 @@ def main():
 
     # Summary
     duration = datetime.now() - start_time
-    print(f"\n{'='*70}")
+    print(f'\n{"=" * 70}')
     print(f'SUMMARY: {completed}/{total_phases} phases completed')
     print(f'Duration: {duration}')
-    print(f"{'='*70}")
+    print(f'{"=" * 70}')
 
     # Final verification if all phases ran
     if completed == total_phases and not args.dry_run:

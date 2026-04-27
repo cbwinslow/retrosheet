@@ -26,6 +26,7 @@ from mlb_predict.core.trainer import ModelTrainer
 @dataclass
 class ExperimentRun:
     """Single run within an experiment."""
+
     run_id: str
     config: ModelConfig
     result: TrainResult | None = None
@@ -45,6 +46,7 @@ class ExperimentRun:
 @dataclass
 class ExperimentSummary:
     """Summary of experiment results."""
+
     experiment_id: str
     experiment_name: str
     n_runs: int
@@ -90,13 +92,13 @@ class ExperimentSummary:
 
 class ExperimentRunner:
     """Run and compare multiple model configurations.
-    
+
     Supports:
     - Multi-model comparison (XGBoost vs LightGBM vs CatBoost)
     - Hyperparameter sweeps
     - Feature set comparison (basic vs advanced vs complete)
     - A/B testing different approaches
-    
+
     Example:
         # Compare model families
         configs = [
@@ -104,18 +106,18 @@ class ExperimentRunner:
             ModelConfig(family='lightgbm', target='swing_decision'),
             ModelConfig(family='catboost', target='swing_decision'),
         ]
-        
+
         runner = ExperimentRunner(
             experiment_name="model_family_comparison",
             configs=configs
         )
-        
+
         summary = runner.run_all()
-        
+
         # Get best model
         best_run = summary.runs[0]  # Already sorted by metric
         print(f"Best: {best_run.config.family} with AUC={best_run.result.val_metrics.roc_auc}")
-        
+
         # Generate comparison report
         runner.generate_report("experiments/model_comparison.html")
     """
@@ -130,7 +132,7 @@ class ExperimentRunner:
         output_dir: str | None = None,
     ):
         """Initialize experiment runner.
-        
+
         Args:
             experiment_name: Name of the experiment
             configs: List of ModelConfig to compare
@@ -173,12 +175,12 @@ class ExperimentRunner:
         continue_on_error: bool = True,
     ) -> ExperimentSummary:
         """Run all configurations in the experiment.
-        
+
         Args:
             parallel: Whether to run in parallel (not implemented yet)
             max_workers: Max parallel workers if parallel=True
             continue_on_error: Whether to continue if one run fails
-            
+
         Returns:
             ExperimentSummary with all results
         """
@@ -186,7 +188,7 @@ class ExperimentRunner:
         print(f'[INFO] Runs: {len(self.runs)}')
 
         for i, run in enumerate(self.runs):
-            print(f'\n[INFO] Run {i+1}/{len(self.runs)}: {run.run_id}')
+            print(f'\n[INFO] Run {i + 1}/{len(self.runs)}: {run.run_id}')
 
             try:
                 self._execute_run(run)
@@ -235,7 +237,9 @@ class ExperimentRunner:
                 metric_value = self._get_metric_value(run.result.val_metrics)
 
                 if metric_value is not None:
-                    if (self.higher_is_better and metric_value > best_value) or (not self.higher_is_better and metric_value < best_value):
+                    if (self.higher_is_better and metric_value > best_value) or (
+                        not self.higher_is_better and metric_value < best_value
+                    ):
                         best_value = metric_value
                         best_run = run
 
@@ -290,9 +294,11 @@ class ExperimentRunner:
                         'model_id': run.result.model_id if run.result else None,
                         'model_name': run.result.model_name if run.result else None,
                         'val_roc_auc': run.result.val_metrics.roc_auc.value
-                            if run.result and run.result.val_metrics and run.result.val_metrics.roc_auc
-                            else None,
-                    } if run.result else None,
+                        if run.result and run.result.val_metrics and run.result.val_metrics.roc_auc
+                        else None,
+                    }
+                    if run.result
+                    else None,
                     'error_message': run.error_message,
                 }
                 for run in self.runs
@@ -318,10 +324,10 @@ class ExperimentRunner:
 
     def compare_runs(self, run_ids: list[str] | None = None) -> pd.DataFrame:
         """Compare specific runs or all runs.
-        
+
         Args:
             run_ids: List of run IDs to compare (default: all completed)
-            
+
         Returns:
             DataFrame with comparison
         """
@@ -361,10 +367,10 @@ class ExperimentRunner:
 
     def generate_report(self, output_path: str | None = None) -> str:
         """Generate HTML report of experiment results.
-        
+
         Args:
             output_path: Path for HTML file (default: auto-generated)
-            
+
         Returns:
             Path to generated report
         """
@@ -424,10 +430,10 @@ class ExperimentRunner:
     @classmethod
     def from_config(cls, config: ExperimentConfig) -> 'ExperimentRunner':
         """Create runner from ExperimentConfig.
-        
+
         Args:
             config: ExperimentConfig with models to compare
-            
+
         Returns:
             ExperimentRunner instance
         """
@@ -442,7 +448,7 @@ class ExperimentRunner:
 
 class HyperparameterSweep:
     """Hyperparameter sweep for a single model.
-    
+
     Example:
         sweep = HyperparameterSweep(
             base_config=ModelConfig(family='xgboost', target='swing_decision'),
@@ -451,7 +457,7 @@ class HyperparameterSweep:
                 'xgboost__learning_rate': [0.01, 0.1, 0.3],
             }
         )
-        
+
         runner = sweep.create_runner(experiment_name="xgb_depth_lr_sweep")
         summary = runner.run_all()
     """
@@ -462,7 +468,7 @@ class HyperparameterSweep:
         param_grid: dict[str, list[Any]],
     ):
         """Initialize hyperparameter sweep.
-        
+
         Args:
             base_config: Base ModelConfig to modify
             param_grid: Dict mapping param paths to lists of values
@@ -496,6 +502,7 @@ class HyperparameterSweep:
 
             # Create new config
             from mlb_predict.config import ModelConfig
+
             config = ModelConfig(**config_dict)
             configs.append(config)
 
@@ -507,11 +514,11 @@ class HyperparameterSweep:
         metric_name: str = 'val_roc_auc',
     ) -> ExperimentRunner:
         """Create ExperimentRunner for this sweep.
-        
+
         Args:
             experiment_name: Name for the experiment
             metric_name: Metric to optimize
-            
+
         Returns:
             Configured ExperimentRunner
         """
@@ -529,13 +536,13 @@ def compare_feature_sets(
     feature_sets: list[str] = ['basic', 'physics', 'advanced', 'complete'],
 ) -> ExperimentRunner:
     """Compare different feature sets.
-    
+
     Convenience function to quickly compare feature sets.
-    
+
     Args:
         base_config: Base config (family, target, etc.)
         feature_sets: List of feature sets to compare
-        
+
     Returns:
         Configured ExperimentRunner
     """
@@ -557,13 +564,13 @@ def compare_model_families(
     families: list[str] = ['xgboost', 'lightgbm', 'catboost'],
 ) -> ExperimentRunner:
     """Compare different model families.
-    
+
     Convenience function to quickly compare model families.
-    
+
     Args:
         base_config: Base config (target, features, etc.)
         families: List of model families to compare
-        
+
     Returns:
         Configured ExperimentRunner
     """

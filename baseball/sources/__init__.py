@@ -21,6 +21,7 @@ from baseball.sources.mlb import MlbSource
 from baseball.sources.retrosheet import RetrosheetSource
 from baseball.sources.statcast import StatcastSource
 
+
 __all__ = [
     'BaseSource',
     'EspnSource',

@@ -18,6 +18,7 @@ import psycopg2
 @dataclass
 class OperationMetrics:
     """Metrics for a single operation run."""
+
     operation_id: str
     operation_type: str  # chadwick_ingestion, feature_population, etc.
     start_time: datetime
@@ -196,7 +197,8 @@ class MetricsCollector:
                     return
 
                 # Insert metrics
-                cur.execute("""
+                cur.execute(
+                    """
                     INSERT INTO monitoring.operation_metrics (
                         operation_id, operation_type, start_time, end_time,
                         success, duration_seconds, records_processed,
@@ -204,24 +206,26 @@ class MetricsCollector:
                         validation_passed, validation_errors, validation_warnings,
                         error_count, retry_count, parameters
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """, (
-                    metrics.operation_id,
-                    metrics.operation_type,
-                    metrics.start_time,
-                    metrics.end_time,
-                    metrics.success,
-                    metrics.duration_seconds,
-                    metrics.records_processed,
-                    metrics.records_inserted,
-                    metrics.records_updated,
-                    metrics.records_failed,
-                    metrics.validation_passed,
-                    metrics.validation_errors,
-                    metrics.validation_warnings,
-                    metrics.error_count,
-                    metrics.retry_count,
-                    json.dumps(metrics.parameters),
-                ))
+                """,
+                    (
+                        metrics.operation_id,
+                        metrics.operation_type,
+                        metrics.start_time,
+                        metrics.end_time,
+                        metrics.success,
+                        metrics.duration_seconds,
+                        metrics.records_processed,
+                        metrics.records_inserted,
+                        metrics.records_updated,
+                        metrics.records_failed,
+                        metrics.validation_passed,
+                        metrics.validation_errors,
+                        metrics.validation_warnings,
+                        metrics.error_count,
+                        metrics.retry_count,
+                        json.dumps(metrics.parameters),
+                    ),
+                )
             conn.commit()
         finally:
             conn.close()
@@ -287,7 +291,9 @@ class MetricsReporter:
                 'successful': len(successful),
                 'failed': len(failed),
                 'success_rate': len(successful) / len(ops) if ops else 0,
-                'avg_duration_seconds': sum(o.duration_seconds for o in ops) / len(ops) if ops else 0,
+                'avg_duration_seconds': sum(o.duration_seconds for o in ops) / len(ops)
+                if ops
+                else 0,
                 'total_records_processed': sum(o.records_processed for o in ops),
                 'total_errors': sum(o.error_count for o in ops),
                 'total_retries': sum(o.retry_count for o in ops),
@@ -304,18 +310,18 @@ class MetricsReporter:
         print('=' * 70)
 
         if 'message' in summary:
-            print(f"\n{summary['message']}")
+            print(f'\n{summary["message"]}')
             return
 
-        print(f"\nTotal Operations: {summary['total_operations']}")
+        print(f'\nTotal Operations: {summary["total_operations"]}')
 
         for op_type, stats in summary['by_operation_type'].items():
             print(f'\n📊 {op_type}')
-            print(f"  Runs: {stats['total_runs']} (✓ {stats['successful']}, ✗ {stats['failed']})")
-            print(f"  Success Rate: {stats['success_rate']*100:.1f}%")
-            print(f"  Avg Duration: {stats['avg_duration_seconds']:.1f}s")
-            print(f"  Records Processed: {stats['total_records_processed']:,}")
-            print(f"  Errors: {stats['total_errors']}, Retries: {stats['total_retries']}")
+            print(f'  Runs: {stats["total_runs"]} (✓ {stats["successful"]}, ✗ {stats["failed"]})')
+            print(f'  Success Rate: {stats["success_rate"] * 100:.1f}%')
+            print(f'  Avg Duration: {stats["avg_duration_seconds"]:.1f}s')
+            print(f'  Records Processed: {stats["total_records_processed"]:,}')
+            print(f'  Errors: {stats["total_errors"]}, Retries: {stats["total_retries"]}')
 
         print('\n' + '=' * 70)
 
@@ -324,7 +330,9 @@ class MetricsReporter:
         return OperationMetrics(
             operation_id=data['operation_id'],
             operation_type=data['operation_type'],
-            start_time=datetime.fromisoformat(data['start_time']) if data.get('start_time') else datetime.now(),
+            start_time=datetime.fromisoformat(data['start_time'])
+            if data.get('start_time')
+            else datetime.now(),
             end_time=datetime.fromisoformat(data['end_time']) if data.get('end_time') else None,
             success=data.get('success', False),
             duration_seconds=data.get('duration_seconds', 0.0),

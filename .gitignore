@@ -143,4 +143,5 @@ current_mappings.txt
 !data/**/*.csv
 .direnv/
 tmp/
+scripts_legacy/
 .aider*

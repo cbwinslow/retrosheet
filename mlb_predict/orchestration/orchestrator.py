@@ -4,7 +4,6 @@ Central controller for all database operations.
 Integrates engines, manages checkpoints, and provides unified interface.
 """
 
-
 from mlb_predict.orchestration.config import (
     BridgePopulationConfig,
     FeaturePopulationConfig,

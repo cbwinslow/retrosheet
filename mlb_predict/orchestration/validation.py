@@ -15,6 +15,7 @@ import psycopg2
 @dataclass
 class ValidationRule:
     """A single validation rule with check logic."""
+
     name: str
     check: Callable[[psycopg2.extensions.connection], tuple[bool, str, Any]]
     severity: str = 'error'  # error, warning, info
@@ -24,6 +25,7 @@ class ValidationRule:
 @dataclass
 class ValidationResult:
     """Result of a validation check."""
+
     rule_name: str
     passed: bool
     message: str
@@ -34,15 +36,13 @@ class ValidationResult:
 @dataclass
 class ValidationReport:
     """Complete validation report with all checks."""
+
     checks: list[ValidationResult] = field(default_factory=list)
 
     @property
     def passed(self) -> bool:
         """True if no errors found."""
-        return not any(
-            c for c in self.checks
-            if not c.passed and c.severity == 'error'
-        )
+        return not any(c for c in self.checks if not c.passed and c.severity == 'error')
 
     @property
     def error_count(self) -> int:
@@ -106,7 +106,9 @@ class ChadwickValidationRules:
 
         return (
             empty_count == 0,
-            f'Found {empty_count} empty key_retro values in staging' if empty_count > 0 else 'No empty key_retro values',
+            f'Found {empty_count} empty key_retro values in staging'
+            if empty_count > 0
+            else 'No empty key_retro values',
             {'empty_count': empty_count},
         )
 
@@ -125,7 +127,9 @@ class ChadwickValidationRules:
 
         return (
             len(duplicates) == 0,
-            f'Found {len(duplicates)} duplicate key_retro values' if duplicates else 'No duplicate key_retro values',
+            f'Found {len(duplicates)} duplicate key_retro values'
+            if duplicates
+            else 'No duplicate key_retro values',
             {'duplicates': [{'id': d[0], 'count': d[1]} for d in duplicates[:5]]},
         )
 
@@ -143,7 +147,9 @@ class ChadwickValidationRules:
         )
 
     @staticmethod
-    def check_player_xref_constraints(conn: psycopg2.extensions.connection) -> tuple[bool, str, Any]:
+    def check_player_xref_constraints(
+        conn: psycopg2.extensions.connection,
+    ) -> tuple[bool, str, Any]:
         """Verify player_xref unique constraints are intact."""
         with conn.cursor() as cur:
             # Check for null retrosheet_id duplicates
@@ -250,21 +256,25 @@ class Validator:
         for rule in self.rules:
             try:
                 passed, message, details = rule.check(conn)
-                report.checks.append(ValidationResult(
-                    rule_name=rule.name,
-                    passed=passed,
-                    message=message,
-                    details=details,
-                    severity=rule.severity,
-                ))
+                report.checks.append(
+                    ValidationResult(
+                        rule_name=rule.name,
+                        passed=passed,
+                        message=message,
+                        details=details,
+                        severity=rule.severity,
+                    )
+                )
             except Exception as e:
-                report.checks.append(ValidationResult(
-                    rule_name=rule.name,
-                    passed=False,
-                    message=f'Validation failed with exception: {e}',
-                    details={'exception': str(e)},
-                    severity='error',
-                ))
+                report.checks.append(
+                    ValidationResult(
+                        rule_name=rule.name,
+                        passed=False,
+                        message=f'Validation failed with exception: {e}',
+                        details={'exception': str(e)},
+                        severity='error',
+                    )
+                )
 
         return report
 
@@ -312,8 +322,14 @@ class DataQualityReport:
                 'records_with_bbref_id': self.records_with_bbref_id,
                 'empty_retro_count': self.empty_retro_count,
                 'empty_mlb_count': self.empty_mlb_count,
-                'retro_coverage_pct': round(self.records_with_retro_id / self.total_records * 100, 2) if self.total_records else 0,
-                'mlb_coverage_pct': round(self.records_with_mlb_id / self.total_records * 100, 2) if self.total_records else 0,
+                'retro_coverage_pct': round(
+                    self.records_with_retro_id / self.total_records * 100, 2
+                )
+                if self.total_records
+                else 0,
+                'mlb_coverage_pct': round(self.records_with_mlb_id / self.total_records * 100, 2)
+                if self.total_records
+                else 0,
             },
             'id_coverage': self.id_coverage,
             'duplicates': {
@@ -325,8 +341,16 @@ class DataQualityReport:
                 'total_players': self.existing_player_count,
                 'with_retrosheet_id': self.existing_with_retro,
                 'with_mlb_id': self.existing_with_mlb,
-                'retro_coverage_pct': round(self.existing_with_retro / self.existing_player_count * 100, 2) if self.existing_player_count else 0,
-                'mlb_coverage_pct': round(self.existing_with_mlb / self.existing_player_count * 100, 2) if self.existing_player_count else 0,
+                'retro_coverage_pct': round(
+                    self.existing_with_retro / self.existing_player_count * 100, 2
+                )
+                if self.existing_player_count
+                else 0,
+                'mlb_coverage_pct': round(
+                    self.existing_with_mlb / self.existing_player_count * 100, 2
+                )
+                if self.existing_player_count
+                else 0,
             },
             'projected_changes': {
                 'new_records': self.new_records,
@@ -343,17 +367,25 @@ class DataQualityReport:
 
         print('\n📊 STAGING TABLE STATISTICS')
         print(f'  Total records:                    {self.total_records:,}')
-        print(f'  With Retrosheet ID:                 {self.records_with_retro_id:,} ({self.records_with_retro_id/self.total_records*100:.1f}%)')
-        print(f'  With MLB ID:                        {self.records_with_mlb_id:,} ({self.records_with_mlb_id/self.total_records*100:.1f}%)')
-        print(f'  With Baseball-Reference ID:         {self.records_with_bbref_id:,} ({self.records_with_bbref_id/self.total_records*100:.1f}%)')
-        print(f'  Empty Retrosheet IDs:               {self.empty_retro_count:,} (will be filtered)')
+        print(
+            f'  With Retrosheet ID:                 {self.records_with_retro_id:,} ({self.records_with_retro_id / self.total_records * 100:.1f}%)'
+        )
+        print(
+            f'  With MLB ID:                        {self.records_with_mlb_id:,} ({self.records_with_mlb_id / self.total_records * 100:.1f}%)'
+        )
+        print(
+            f'  With Baseball-Reference ID:         {self.records_with_bbref_id:,} ({self.records_with_bbref_id / self.total_records * 100:.1f}%)'
+        )
+        print(
+            f'  Empty Retrosheet IDs:               {self.empty_retro_count:,} (will be filtered)'
+        )
         print(f'  Empty MLB IDs:                      {self.empty_mlb_count:,}')
 
         print('\n🔍 DUPLICATE DETECTION')
         if self.duplicate_retro_ids:
             print(f'  ⚠️  Found {len(self.duplicate_retro_ids)} duplicate Retrosheet IDs')
             for dup in self.duplicate_retro_ids[:3]:
-                print(f"      - {dup['id']}: {dup['count']} occurrences")
+                print(f'      - {dup["id"]}: {dup["count"]} occurrences')
         else:
             print('  ✓ No duplicate Retrosheet IDs')
 
@@ -364,8 +396,12 @@ class DataQualityReport:
 
         print('\n📋 EXISTING PLAYER_XREF STATE')
         print(f'  Total players:                      {self.existing_player_count:,}')
-        print(f'  With Retrosheet ID:                 {self.existing_with_retro:,} ({self.existing_with_retro/self.existing_player_count*100:.1f}%)')
-        print(f'  With MLB ID:                        {self.existing_with_mlb:,} ({self.existing_with_mlb/self.existing_player_count*100:.1f}%)')
+        print(
+            f'  With Retrosheet ID:                 {self.existing_with_retro:,} ({self.existing_with_retro / self.existing_player_count * 100:.1f}%)'
+        )
+        print(
+            f'  With MLB ID:                        {self.existing_with_mlb:,} ({self.existing_with_mlb / self.existing_player_count * 100:.1f}%)'
+        )
 
         print('\n📈 PROJECTED CHANGES')
         print(f'  New records to insert:              {self.new_records:,}')
@@ -411,9 +447,7 @@ def generate_preflight_report(conn: psycopg2.extensions.connection) -> DataQuali
             ORDER BY COUNT(*) DESC
             LIMIT 10
         """)
-        report.duplicate_retro_ids = [
-            {'id': row[0], 'count': row[1]} for row in cur.fetchall()
-        ]
+        report.duplicate_retro_ids = [{'id': row[0], 'count': row[1]} for row in cur.fetchall()]
 
         cur.execute("""
             SELECT key_mlbam, COUNT(*) as cnt
@@ -424,9 +458,7 @@ def generate_preflight_report(conn: psycopg2.extensions.connection) -> DataQuali
             ORDER BY COUNT(*) DESC
             LIMIT 10
         """)
-        report.duplicate_mlb_ids = [
-            {'id': row[0], 'count': row[1]} for row in cur.fetchall()
-        ]
+        report.duplicate_mlb_ids = [{'id': row[0], 'count': row[1]} for row in cur.fetchall()]
 
         # Existing player_xref stats
         cur.execute('SELECT COUNT(*) FROM bridge.player_xref')

@@ -11,10 +11,10 @@ This script trains the 4 core models for baseball prediction:
 Usage:
     # Train all models
     python run_model_training_campaign.py --all
-    
+
     # Train specific model
     python run_model_training_campaign.py --target swing_decision
-    
+
     # Train with custom seasons
     python run_model_training_campaign.py --all --min-season 2020 --max-season 2025 --train-through 2023
 
@@ -83,14 +83,31 @@ TARGETS = {
 
 FEATURE_SETS = {
     'basic': {
-        'numeric': ['inning', 'is_bottom_inning', 'outs_before', 'start_bases', 'balls', 'strikes', 'home_score_diff'],
+        'numeric': [
+            'inning',
+            'is_bottom_inning',
+            'outs_before',
+            'start_bases',
+            'balls',
+            'strikes',
+            'home_score_diff',
+        ],
         'categorical': ['batter_hand', 'pitcher_hand'],
     },
     'advanced': {
         'numeric': [
-            'inning', 'is_bottom_inning', 'outs_before', 'start_bases', 'balls', 'strikes', 'home_score_diff',
-            'batter_career_prior_pa', 'batter_career_prior_hit_rate', 'batter_career_prior_walk_rate',
-            'pitcher_career_prior_batters_faced', 'pitcher_career_prior_hit_allowed_rate',
+            'inning',
+            'is_bottom_inning',
+            'outs_before',
+            'start_bases',
+            'balls',
+            'strikes',
+            'home_score_diff',
+            'batter_career_prior_pa',
+            'batter_career_prior_hit_rate',
+            'batter_career_prior_walk_rate',
+            'pitcher_career_prior_batters_faced',
+            'pitcher_career_prior_hit_allowed_rate',
         ],
         'categorical': ['batter_hand', 'pitcher_hand', 'park_id'],
     },
@@ -100,9 +117,11 @@ FEATURE_SETS = {
 # DATABASE CONNECTION
 # ============================================================================
 
+
 def database_url() -> str:
     """Get database URL from environment."""
     import os
+
     host = os.getenv('PGHOST', 'localhost')
     port = os.getenv('PGPORT', '5432')
     db = os.getenv('PGDATABASE', 'retrosheet')
@@ -115,6 +134,7 @@ def database_url() -> str:
 def database_kwargs() -> dict:
     """Get database connection kwargs."""
     import os
+
     return {
         'host': os.getenv('PGHOST', 'localhost'),
         'port': os.getenv('PGPORT', '5432'),
@@ -128,6 +148,7 @@ def database_kwargs() -> dict:
 # DATA LOADING
 # ============================================================================
 
+
 def load_training_data(
     engine,
     target_id: str,
@@ -139,7 +160,7 @@ def load_training_data(
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Load training data from database.
-    
+
     Returns:
         Tuple of (train_df, val_df, test_df)
     """
@@ -187,6 +208,7 @@ def load_training_data(
 # MODEL BUILDERS
 # ============================================================================
 
+
 def build_model_pipeline(
     numeric_features: list[str],
     categorical_features: list[str],
@@ -195,25 +217,32 @@ def build_model_pipeline(
     """Build sklearn pipeline with preprocessing and model."""
 
     # Preprocessing
-    numeric_transformer = Pipeline([
-        ('imputer', SimpleImputer(strategy='median')),
-        ('scaler', StandardScaler()),
-    ])
+    numeric_transformer = Pipeline(
+        [
+            ('imputer', SimpleImputer(strategy='median')),
+            ('scaler', StandardScaler()),
+        ]
+    )
 
-    categorical_transformer = Pipeline([
-        ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
-        ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False)),
-    ])
+    categorical_transformer = Pipeline(
+        [
+            ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
+            ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False)),
+        ]
+    )
 
-    preprocessor = ColumnTransformer([
-        ('num', numeric_transformer, numeric_features),
-        ('cat', categorical_transformer, categorical_features),
-    ])
+    preprocessor = ColumnTransformer(
+        [
+            ('num', numeric_transformer, numeric_features),
+            ('cat', categorical_transformer, categorical_features),
+        ]
+    )
 
     # Model
     if model_family == 'xgboost':
         try:
             from xgboost import XGBClassifier
+
             model = XGBClassifier(
                 n_estimators=200,
                 max_depth=6,
@@ -236,6 +265,7 @@ def build_model_pipeline(
     elif model_family == 'lightgbm':
         try:
             from lightgbm import LGBMClassifier
+
             model = LGBMClassifier(
                 n_estimators=200,
                 max_depth=6,
@@ -269,10 +299,12 @@ def build_model_pipeline(
         )
 
     # Pipeline
-    pipeline = Pipeline([
-        ('preprocessor', preprocessor),
-        ('model', model),
-    ])
+    pipeline = Pipeline(
+        [
+            ('preprocessor', preprocessor),
+            ('model', model),
+        ]
+    )
 
     return pipeline
 
@@ -280,6 +312,7 @@ def build_model_pipeline(
 # ============================================================================
 # METRICS
 # ============================================================================
+
 
 def compute_metrics(model, X: pd.DataFrame, y: pd.Series) -> dict:
     """Compute evaluation metrics."""
@@ -301,6 +334,7 @@ def compute_metrics(model, X: pd.DataFrame, y: pd.Series) -> dict:
 # TRAINING
 # ============================================================================
 
+
 def train_model(
     target_id: str,
     feature_set: str = 'advanced',
@@ -313,15 +347,15 @@ def train_model(
 ) -> dict:
     """
     Train a single model and return results.
-    
+
     Returns:
         Dict with training results and metrics
     """
-    print(f"\n{'='*60}")
+    print(f'\n{"=" * 60}')
     print(f'Training: {target_id}')
     print(f'Feature set: {feature_set}')
     print(f'Model: {model_family}')
-    print(f"{'='*60}")
+    print(f'{"=" * 60}')
 
     # Create output directory
     output_path = Path(output_dir)
@@ -410,10 +444,10 @@ def train_model(
 
         # Print results
         print('\n[RESULTS]')
-        print(f"  Train AUC: {train_metrics['roc_auc']:.4f}")
-        print(f"  Val AUC:   {val_metrics['roc_auc']:.4f}")
-        print(f"  Val Acc:   {val_metrics['accuracy']:.4f}")
-        print(f"  Val Loss:  {val_metrics['log_loss']:.4f}")
+        print(f'  Train AUC: {train_metrics["roc_auc"]:.4f}')
+        print(f'  Val AUC:   {val_metrics["roc_auc"]:.4f}')
+        print(f'  Val Acc:   {val_metrics["accuracy"]:.4f}')
+        print(f'  Val Loss:  {val_metrics["log_loss"]:.4f}')
 
         return {
             'status': 'success',
@@ -427,6 +461,7 @@ def train_model(
     except Exception as e:
         print(f'[ERROR] Training failed: {e}')
         import traceback
+
         traceback.print_exc()
         return {'status': 'failed', 'error': str(e)}
 
@@ -437,6 +472,7 @@ def train_model(
 # ============================================================================
 # MAIN
 # ============================================================================
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -460,9 +496,21 @@ Examples:
 
     parser.add_argument('--all', action='store_true', help='Train all targets')
     parser.add_argument('--target', type=str, choices=list(TARGETS.keys()), help='Target to train')
-    parser.add_argument('--feature-set', type=str, default='advanced', choices=['basic', 'advanced'])
-    parser.add_argument('--model-family', type=str, default='xgboost', choices=['xgboost', 'lightgbm', 'logistic_regression', 'hist_gradient_boosting'])
-    parser.add_argument('--families', nargs='+', default=['xgboost', 'lightgbm'], help='Model families for comparison')
+    parser.add_argument(
+        '--feature-set', type=str, default='advanced', choices=['basic', 'advanced']
+    )
+    parser.add_argument(
+        '--model-family',
+        type=str,
+        default='xgboost',
+        choices=['xgboost', 'lightgbm', 'logistic_regression', 'hist_gradient_boosting'],
+    )
+    parser.add_argument(
+        '--families',
+        nargs='+',
+        default=['xgboost', 'lightgbm'],
+        help='Model families for comparison',
+    )
     parser.add_argument('--compare', action='store_true', help='Run comparison')
 
     parser.add_argument('--min-season', type=int, default=2020)
@@ -490,9 +538,9 @@ Examples:
     for target_id in targets:
         if args.compare:
             # Run comparison for this target
-            print(f"\n{'='*60}")
+            print(f'\n{"=" * 60}')
             print(f'Comparison for {target_id}')
-            print(f"{'='*60}")
+            print(f'{"=" * 60}')
 
             for family in args.families:
                 result = train_model(
@@ -534,12 +582,12 @@ Examples:
     with open(summary_path, 'w') as f:
         json.dump(summary, f, indent=2)
 
-    print(f"\n{'='*60}")
+    print(f'\n{"=" * 60}')
     print('Training Campaign Complete')
-    print(f"{'='*60}")
+    print(f'{"=" * 60}')
     print(f'Total: {len(results)}')
-    print(f"Success: {summary['n_success']}")
-    print(f"Failed: {summary['n_failed']}")
+    print(f'Success: {summary["n_success"]}')
+    print(f'Failed: {summary["n_failed"]}')
     print(f'Summary saved to {summary_path}')
 
     return 0 if summary['n_failed'] == 0 else 1

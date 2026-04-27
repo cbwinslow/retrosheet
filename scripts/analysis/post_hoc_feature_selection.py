@@ -47,7 +47,9 @@ RESULTS_DIR = 'models/post_hoc_selection'
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 
-def load_data_with_features(conn, features: list[str], sample_size: int) -> tuple[pd.DataFrame, pd.Series]:
+def load_data_with_features(
+    conn, features: list[str], sample_size: int
+) -> tuple[pd.DataFrame, pd.Series]:
     """Load data with specified features."""
 
     feature_cols = ', '.join([f'ef."{f}"' for f in features])
@@ -83,9 +85,9 @@ def phase_1_train_full_model(sample_size: int = 100000):
     Extract and save feature importance.
     """
 
-    print('='*70)
+    print('=' * 70)
     print('PHASE 1: Train Full Model with All Features')
-    print('='*70)
+    print('=' * 70)
 
     conn = psycopg2.connect(DB_URL)
 
@@ -118,7 +120,11 @@ def phase_1_train_full_model(sample_size: int = 100000):
 
         # Train model
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y,
+            X,
+            y,
+            test_size=0.2,
+            random_state=42,
+            stratify=y,
         )
 
         model = xgb.XGBClassifier(
@@ -150,9 +156,9 @@ def phase_1_train_full_model(sample_size: int = 100000):
         }
 
         print('\nFull Model Performance:')
-        print(f"  Accuracy: {full_results['accuracy']:.4f}")
-        print(f"  Log Loss: {full_results['log_loss']:.4f}")
-        print(f"  AUC:      {full_results['auc']:.4f}")
+        print(f'  Accuracy: {full_results["accuracy"]:.4f}')
+        print(f'  Log Loss: {full_results["log_loss"]:.4f}')
+        print(f'  AUC:      {full_results["auc"]:.4f}')
 
         # Extract feature importance using sklearn API
         importance_scores = model.feature_importances_
@@ -161,11 +167,13 @@ def phase_1_train_full_model(sample_size: int = 100000):
         feature_importance = []
         for i, feat in enumerate(X.columns):
             score = importance_scores[i]
-            feature_importance.append({
-                'feature': feat,
-                'importance': float(score),
-                'rank': 0,  # Will fill in after sorting
-            })
+            feature_importance.append(
+                {
+                    'feature': feat,
+                    'importance': float(score),
+                    'rank': 0,  # Will fill in after sorting
+                }
+            )
 
         # Sort by importance
         feature_importance.sort(key=lambda x: x['importance'], reverse=True)
@@ -176,11 +184,15 @@ def phase_1_train_full_model(sample_size: int = 100000):
         for i, fi in enumerate(feature_importance):
             fi['rank'] = i + 1
             cumsum += fi['importance']
-            fi['cumulative_pct'] = round(cumsum / total_importance * 100, 2) if total_importance > 0 else 0
+            fi['cumulative_pct'] = (
+                round(cumsum / total_importance * 100, 2) if total_importance > 0 else 0
+            )
 
         print('\nTop 10 Most Important Features:')
         for fi in feature_importance[:10]:
-            print(f"  {fi['rank']:2d}. {fi['feature'][:40]:40} = {fi['importance']:,.0f} ({fi['cumulative_pct']:.1f}%)")
+            print(
+                f'  {fi["rank"]:2d}. {fi["feature"][:40]:40} = {fi["importance"]:,.0f} ({fi["cumulative_pct"]:.1f}%)'
+            )
 
         # Save everything
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -193,12 +205,16 @@ def phase_1_train_full_model(sample_size: int = 100000):
         # Save importance
         importance_file = f'{RESULTS_DIR}/feature_importance_{timestamp}.json'
         with open(importance_file, 'w') as f:
-            json.dump({
-                'timestamp': timestamp,
-                'n_features': len(feature_importance),
-                'full_model_performance': full_results,
-                'feature_importance': feature_importance,
-            }, f, indent=2)
+            json.dump(
+                {
+                    'timestamp': timestamp,
+                    'n_features': len(feature_importance),
+                    'full_model_performance': full_results,
+                    'feature_importance': feature_importance,
+                },
+                f,
+                indent=2,
+            )
 
         print('\nSaved:')
         print(f'  Model: {model_file}')
@@ -223,9 +239,9 @@ def phase_2_test_feature_subsets(
     Can test BEYOND 50 features (e.g., 200, 150) to find optimal point.
     """
 
-    print('='*70)
+    print('=' * 70)
     print('PHASE 2: Test Progressive Feature Subsets')
-    print('='*70)
+    print('=' * 70)
 
     # Load importance
     with open(importance_file) as f:
@@ -257,7 +273,7 @@ def phase_2_test_feature_subsets(
     subset_sizes = sorted(list(set(subset_sizes)), reverse=True)
 
     print(f'Testing {len(subset_sizes)} subset sizes: {subset_sizes}')
-    print(f"Full model baseline: AUC={full_performance['auc']:.4f}")
+    print(f'Full model baseline: AUC={full_performance["auc"]:.4f}')
 
     conn = psycopg2.connect(DB_URL)
 
@@ -265,9 +281,9 @@ def phase_2_test_feature_subsets(
         results = []
 
         for n_features in subset_sizes:
-            print(f"\n{'='*70}")
+            print(f'\n{"=" * 70}')
             print(f'Testing with TOP {n_features} features')
-            print(f"{'='*70}")
+            print(f'{"=" * 70}')
 
             # Get top N features
             top_features = [fi['feature'] for fi in feature_importance[:n_features]]
@@ -278,7 +294,11 @@ def phase_2_test_feature_subsets(
             print(f'Training with {X.shape[1]} features...')
 
             X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y,
+                X,
+                y,
+                test_size=0.2,
+                random_state=42,
+                stratify=y,
             )
 
             model = xgb.XGBClassifier(
@@ -314,8 +334,8 @@ def phase_2_test_feature_subsets(
 
             results.append(result)
 
-            print(f"  Accuracy: {result['accuracy']:.4f}")
-            print(f"  AUC:      {result['auc']:.4f} ({result['auc_vs_full']:+.4f} vs full)")
+            print(f'  Accuracy: {result["accuracy"]:.4f}')
+            print(f'  AUC:      {result["auc"]:.4f} ({result["auc_vs_full"]:+.4f} vs full)')
 
             # Early stopping: if performance within 0.5% of full, this is optimal
             if result['auc_vs_full'] > -0.005:
@@ -326,28 +346,36 @@ def phase_2_test_feature_subsets(
         results_file = f'{RESULTS_DIR}/subset_results_{timestamp}.json'
 
         with open(results_file, 'w') as f:
-            json.dump({
-                'timestamp': timestamp,
-                'full_model_auc': full_performance['auc'],
-                'results': results,
-            }, f, indent=2)
+            json.dump(
+                {
+                    'timestamp': timestamp,
+                    'full_model_auc': full_performance['auc'],
+                    'results': results,
+                },
+                f,
+                indent=2,
+            )
 
-        print(f"\n{'='*70}")
+        print(f'\n{"=" * 70}')
         print('PHASE 2 COMPLETE')
-        print(f"{'='*70}")
+        print(f'{"=" * 70}')
         print(f'Results saved: {results_file}')
 
         # Find optimal
         best = max(results, key=lambda x: x['auc'])
-        print(f"\nBest performance: {best['auc']:.4f} with {best['n_features']} features")
+        print(f'\nBest performance: {best["auc"]:.4f} with {best["n_features"]} features')
 
         # Find smallest within 0.5% of full
         threshold = full_performance['auc'] - 0.005
         efficient = [r for r in results if r['auc'] >= threshold]
         if efficient:
             smallest_efficient = min(efficient, key=lambda x: x['n_features'])
-            print(f"Most efficient: {smallest_efficient['auc']:.4f} with {smallest_efficient['n_features']} features")
-            print(f"  ({smallest_efficient['n_features']}/{available_features} = {smallest_efficient['n_features']/available_features:.0%} of features)")
+            print(
+                f'Most efficient: {smallest_efficient["auc"]:.4f} with {smallest_efficient["n_features"]} features'
+            )
+            print(
+                f'  ({smallest_efficient["n_features"]}/{available_features} = {smallest_efficient["n_features"] / available_features:.0%} of features)'
+            )
 
         return results_file
 
@@ -360,12 +388,14 @@ def phase_3_train_final_model(n_features: int, sample_size: int = 200000):
     Phase 3: Retrain final model with optimal feature count on more data.
     """
 
-    print('='*70)
+    print('=' * 70)
     print(f'PHASE 3: Train Final Model with {n_features} Features')
-    print('='*70)
+    print('=' * 70)
 
     # Load importance to get features
-    importance_files = sorted([f for f in os.listdir(RESULTS_DIR) if f.startswith('feature_importance_')])
+    importance_files = sorted(
+        [f for f in os.listdir(RESULTS_DIR) if f.startswith('feature_importance_')]
+    )
     if not importance_files:
         print('Error: No importance file found. Run Phase 1 first.')
         return
@@ -385,7 +415,11 @@ def phase_3_train_final_model(n_features: int, sample_size: int = 200000):
         X, y = load_data_with_features(conn, top_features, sample_size)
 
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y,
+            X,
+            y,
+            test_size=0.2,
+            random_state=42,
+            stratify=y,
         )
 
         print(f'Final training: {X_train.shape}')
@@ -393,9 +427,9 @@ def phase_3_train_final_model(n_features: int, sample_size: int = 200000):
         model = xgb.XGBClassifier(
             objective='multi:softprob',
             num_class=len(np.unique(y)),
-            max_depth=8,              # Slightly deeper for final model
-            learning_rate=0.05,       # Lower LR for final model
-            n_estimators=500,         # More trees
+            max_depth=8,  # Slightly deeper for final model
+            learning_rate=0.05,  # Lower LR for final model
+            n_estimators=500,  # More trees
             subsample=0.9,
             colsample_bytree=0.9,
             random_state=42,
@@ -420,9 +454,9 @@ def phase_3_train_final_model(n_features: int, sample_size: int = 200000):
         }
 
         print('\nFinal Model Performance:')
-        print(f"  Accuracy: {final_results['accuracy']:.4f}")
-        print(f"  Log Loss: {final_results['log_loss']:.4f}")
-        print(f"  AUC:      {final_results['auc']:.4f}")
+        print(f'  Accuracy: {final_results["accuracy"]:.4f}')
+        print(f'  Log Loss: {final_results["log_loss"]:.4f}')
+        print(f'  AUC:      {final_results["auc"]:.4f}')
 
         # Save
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -445,17 +479,18 @@ def phase_3_train_final_model(n_features: int, sample_size: int = 200000):
 
 def main():
     parser = argparse.ArgumentParser(description='Post-Hoc Feature Selection')
-    parser.add_argument('--phase', type=int, choices=[1, 2, 3], required=True,
-                       help='Which phase to run')
-    parser.add_argument('--sample-size', type=int, default=100000,
-                       help='Sample size for training')
-    parser.add_argument('--n-features', type=int, default=50,
-                       help='Number of features for Phase 3')
-    parser.add_argument('--importance-file', type=str,
-                       help='Path to importance file for Phase 2')
-    parser.add_argument('--subset-sizes', type=str,
-                       help='Comma-separated list of feature counts to test in Phase 2. '
-                            'Can test PAST 50 features (e.g., "200,150,100,75,50,30,20")')
+    parser.add_argument(
+        '--phase', type=int, choices=[1, 2, 3], required=True, help='Which phase to run'
+    )
+    parser.add_argument('--sample-size', type=int, default=100000, help='Sample size for training')
+    parser.add_argument('--n-features', type=int, default=50, help='Number of features for Phase 3')
+    parser.add_argument('--importance-file', type=str, help='Path to importance file for Phase 2')
+    parser.add_argument(
+        '--subset-sizes',
+        type=str,
+        help='Comma-separated list of feature counts to test in Phase 2. '
+        'Can test PAST 50 features (e.g., "200,150,100,75,50,30,20")',
+    )
     args = parser.parse_args()
 
     if args.phase == 1:
@@ -466,7 +501,9 @@ def main():
             importance_file = args.importance_file
         else:
             # Find latest importance file
-            files = sorted([f for f in os.listdir(RESULTS_DIR) if f.startswith('feature_importance_')])
+            files = sorted(
+                [f for f in os.listdir(RESULTS_DIR) if f.startswith('feature_importance_')]
+            )
             if not files:
                 print('Error: No importance file found. Run Phase 1 first.')
                 return

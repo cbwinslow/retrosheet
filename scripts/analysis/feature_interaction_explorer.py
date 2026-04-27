@@ -145,7 +145,9 @@ def find_top_interactions(
 ) -> list[dict]:
     """Find top feature interactions."""
 
-    print(f'\nTesting {len(features)} choose 2 = {len(features) * (len(features) - 1) // 2} interactions...')
+    print(
+        f'\nTesting {len(features)} choose 2 = {len(features) * (len(features) - 1) // 2} interactions...'
+    )
 
     interactions = []
     tested = 0
@@ -162,7 +164,7 @@ def find_top_interactions(
             # Skip problematic pairs
             continue
 
-    print(f"{' '*50}\r", end='')
+    print(f'{" " * 50}\r', end='')
     print(f'Tested {tested} interactions')
 
     # Sort by interaction gain
@@ -188,9 +190,24 @@ def analyze_interaction_types(top_interactions: list[dict]) -> dict:
 
         # Categorize based on feature names
         has_velocity = 'velocity' in f1.lower() or 'velocity' in f2.lower()
-        has_movement = 'movement' in f1.lower() or 'movement' in f2.lower() or 'pfx' in f1.lower() or 'pfx' in f2.lower()
-        has_location = 'plate' in f1.lower() or 'plate' in f2.lower() or 'zone' in f1.lower() or 'zone' in f2.lower()
-        has_count = 'count' in f1.lower() or 'count' in f2.lower() or 'ball' in f1.lower() or 'strike' in f2.lower()
+        has_movement = (
+            'movement' in f1.lower()
+            or 'movement' in f2.lower()
+            or 'pfx' in f1.lower()
+            or 'pfx' in f2.lower()
+        )
+        has_location = (
+            'plate' in f1.lower()
+            or 'plate' in f2.lower()
+            or 'zone' in f1.lower()
+            or 'zone' in f2.lower()
+        )
+        has_count = (
+            'count' in f1.lower()
+            or 'count' in f2.lower()
+            or 'ball' in f1.lower()
+            or 'strike' in f2.lower()
+        )
         has_spin = 'spin' in f1.lower() or 'spin' in f2.lower()
 
         if has_velocity and has_movement:
@@ -199,7 +216,9 @@ def analyze_interaction_types(top_interactions: list[dict]) -> dict:
             categories['velocity_location'].append(inter)
         elif has_location and has_count:
             categories['location_count'].append(inter)
-        elif (has_velocity or has_movement or has_spin) and (has_velocity or has_movement or has_spin):
+        elif (has_velocity or has_movement or has_spin) and (
+            has_velocity or has_movement or has_spin
+        ):
             categories['physics_combo'].append(inter)
         else:
             categories['other'].append(inter)
@@ -255,13 +274,21 @@ def test_xgboost_with_interactions(
     sample_idx = np.random.choice(len(X_baseline), size=min(10000, len(X_baseline)), replace=False)
 
     score_baseline = cross_val_score(
-        model, X_baseline.iloc[sample_idx], target.iloc[sample_idx],
-        cv=3, scoring='roc_auc_ovo', n_jobs=-1,
+        model,
+        X_baseline.iloc[sample_idx],
+        target.iloc[sample_idx],
+        cv=3,
+        scoring='roc_auc_ovo',
+        n_jobs=-1,
     ).mean()
 
     score_enhanced = cross_val_score(
-        model, X_enhanced.iloc[sample_idx], target.iloc[sample_idx],
-        cv=3, scoring='roc_auc_ovo', n_jobs=-1,
+        model,
+        X_enhanced.iloc[sample_idx],
+        target.iloc[sample_idx],
+        cv=3,
+        scoring='roc_auc_ovo',
+        n_jobs=-1,
     ).mean()
 
     print(f'  Baseline AUC:  {score_baseline:.4f}')
@@ -272,7 +299,7 @@ def test_xgboost_with_interactions(
         'baseline_auc': round(score_baseline, 4),
         'enhanced_auc': round(score_enhanced, 4),
         'improvement': round(score_enhanced - score_baseline, 4),
-        'top_interactions_added': [f"{i['feature_1']}_x_{i['feature_2']}" for i in top_5],
+        'top_interactions_added': [f'{i["feature_1"]}_x_{i["feature_2"]}' for i in top_5],
     }
 
 
@@ -292,20 +319,21 @@ def save_results(results: dict, output_dir: str = 'models/interaction_analysis')
 
 def main():
     parser = argparse.ArgumentParser(description='Feature Interaction Explorer')
-    parser.add_argument('--top-features', type=int, default=20,
-                       help='Number of top features to test')
-    parser.add_argument('--top-interactions', type=int, default=50,
-                       help='Number of top interactions to return')
-    parser.add_argument('--sample-size', type=int, default=50000,
-                       help='Sample size for analysis')
+    parser.add_argument(
+        '--top-features', type=int, default=20, help='Number of top features to test'
+    )
+    parser.add_argument(
+        '--top-interactions', type=int, default=50, help='Number of top interactions to return'
+    )
+    parser.add_argument('--sample-size', type=int, default=50000, help='Sample size for analysis')
     args = parser.parse_args()
 
-    print('='*70)
+    print('=' * 70)
     print('FEATURE INTERACTION EXPLORER')
-    print('='*70)
+    print('=' * 70)
     print(f'Testing top {args.top_features} features')
     print(f'Sample size: {args.sample_size:,}')
-    print('='*70)
+    print('=' * 70)
 
     conn = psycopg2.connect(DB_URL)
 
@@ -316,7 +344,10 @@ def main():
 
         # Find top interactions
         top_interactions = find_top_interactions(
-            df, features, target, args.top_interactions,
+            df,
+            features,
+            target,
+            args.top_interactions,
         )
 
         # Categorize
@@ -339,7 +370,7 @@ def main():
         # Generate recommendations
         if xgboost_test['improvement'] > 0.01:
             results['recommendations'].append(
-                f"Add top 5 interactions: improves AUC by {xgboost_test['improvement']:.4f}",
+                f'Add top 5 interactions: improves AUC by {xgboost_test["improvement"]:.4f}',
             )
 
         # Top synergistic pairs
@@ -353,31 +384,33 @@ def main():
         for cat, data in categories.items():
             if data['count'] > 0:
                 results['recommendations'].append(
-                    f"{cat}: {data['count']} strong interactions (avg MI: {data['avg_mi']:.4f})",
+                    f'{cat}: {data["count"]} strong interactions (avg MI: {data["avg_mi"]:.4f})',
                 )
 
         # Save
         save_results(results)
 
         # Print summary
-        print('\n' + '='*70)
+        print('\n' + '=' * 70)
         print('INTERACTION ANALYSIS SUMMARY')
-        print('='*70)
+        print('=' * 70)
 
         print('\nTop 5 Feature Interactions:')
         for i, inter in enumerate(top_interactions[:5], 1):
-            print(f"  {i}. {inter['feature_1']} × {inter['feature_2']}")
-            print(f"     MI: {inter['mi_interaction']:.4f} (gain: {inter['interaction_gain']:+.4f})")
+            print(f'  {i}. {inter["feature_1"]} × {inter["feature_2"]}')
+            print(
+                f'     MI: {inter["mi_interaction"]:.4f} (gain: {inter["interaction_gain"]:+.4f})'
+            )
 
         print('\nCategory Breakdown:')
         for cat, data in categories.items():
             if data['count'] > 0:
-                print(f"  {cat}: {data['count']} pairs, avg MI: {data['avg_mi']:.4f}")
+                print(f'  {cat}: {data["count"]} pairs, avg MI: {data["avg_mi"]:.4f}')
 
         print('\nXGBoost Test:')
-        print(f"  Baseline:  {xgboost_test['baseline_auc']:.4f}")
-        print(f"  Enhanced:  {xgboost_test['enhanced_auc']:.4f}")
-        print(f"  Δ:         {xgboost_test['improvement']:+.4f}")
+        print(f'  Baseline:  {xgboost_test["baseline_auc"]:.4f}')
+        print(f'  Enhanced:  {xgboost_test["enhanced_auc"]:.4f}')
+        print(f'  Δ:         {xgboost_test["improvement"]:+.4f}')
 
         print('\nRecommendations:')
         for rec in results['recommendations']:

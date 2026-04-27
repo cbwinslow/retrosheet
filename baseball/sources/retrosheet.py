@@ -12,7 +12,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from baseball.core.types import SourceRequest, SourceResult
+from baseball.core.types import SourceResult
 from baseball.sources.base import BaseSource
 
 
@@ -41,10 +41,14 @@ class RetrosheetSource(BaseSource):
 
         if start_date and end_date:
             # Download specific date range
-            cmd.extend([
-                '--start-date', start_date.isoformat(),
-                '--end-date', end_date.isoformat(),
-            ])
+            cmd.extend(
+                [
+                    '--start-date',
+                    start_date.isoformat(),
+                    '--end-date',
+                    end_date.isoformat(),
+                ]
+            )
 
         if force:
             cmd.append('--force')
@@ -62,17 +66,20 @@ class RetrosheetSource(BaseSource):
                 return SourceResult(
                     success=True,
                     rows_downloaded=0,
-                    metadata={'stdout': result.stdout[-1000:] if len(result.stdout) > 1000 else result.stdout},
+                    metadata={
+                        'stdout': result.stdout[-1000:]
+                        if len(result.stdout) > 1000
+                        else result.stdout
+                    },
                 )
-            else:
-                return SourceResult(
-                    success=False,
-                    error_message=f'Retrosheet download failed: {result.stderr[:500]}',
-                )
+            return SourceResult(
+                success=False,
+                error_message=f'Retrosheet download failed: {result.stderr[:500]}',
+            )
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'Retrosheet download error: {str(e)}',
+                error_message=f'Retrosheet download error: {e!s}',
             )
 
     def ingest(self, validate: bool = True) -> SourceResult:
@@ -102,23 +109,27 @@ class RetrosheetSource(BaseSource):
                 return SourceResult(
                     success=True,
                     rows_inserted=0,
-                    metadata={'stdout': result.stdout[-1000:] if len(result.stdout) > 1000 else result.stdout},
+                    metadata={
+                        'stdout': result.stdout[-1000:]
+                        if len(result.stdout) > 1000
+                        else result.stdout
+                    },
                 )
-            else:
-                return SourceResult(
-                    success=False,
-                    error_message=f'Retrosheet ingest failed: {result.stderr[:500]}',
-                )
+            return SourceResult(
+                success=False,
+                error_message=f'Retrosheet ingest failed: {result.stderr[:500]}',
+            )
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'Retrosheet ingest error: {str(e)}',
+                error_message=f'Retrosheet ingest error: {e!s}',
             )
 
     def validate(self) -> SourceResult:
         """Validate Retrosheet data quality."""
-        import psycopg2
         import os
+
+        import psycopg2
 
         try:
             conn = psycopg2.connect(
@@ -153,7 +164,7 @@ class RetrosheetSource(BaseSource):
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'Retrosheet validation error: {str(e)}',
+                error_message=f'Retrosheet validation error: {e!s}',
             )
 
     def get_seasons_available(self) -> list[int]:

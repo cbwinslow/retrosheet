@@ -4,17 +4,17 @@ Phase 1 & 2 Implementation - Pydantic Configs, Rich Results, ModelTrainer, Plugi
 
 Example:
     from mlb_predict import ModelConfig, ModelTrainer, FeatureLoader
-    
+
     # Create config
     config = ModelConfig(family='xgboost', target='swing_decision')
-    
+
     # Load features
     data = FeatureLoader(config).load_split(train_through=2022)
-    
+
     # Train model
     trainer = ModelTrainer(config)
     result = trainer.train()
-    
+
     # Analyze results
     print(result.summary())
     top_features = result.get_best_features(20)

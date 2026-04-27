@@ -10,6 +10,7 @@ from dataclasses import dataclass
 @dataclass
 class Checkpoint:
     """Checkpoint data structure for pipeline state tracking."""
+
     source: str
     key: str
     value: str

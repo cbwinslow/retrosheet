@@ -8,11 +8,11 @@ Example:
         def __init__(self, config):
             super().__init__(config)
             self.model = xgb.XGBClassifier()
-        
+
         def train(self, X, y):
             self.model.fit(X, y)
             self.log_metric('train_auc', roc_auc_score(y, self.model.predict_proba(X)[:,1]))
-        
+
         def predict(self, X):
             return self.model.predict_proba(X)[:,1]
 """
@@ -76,26 +76,26 @@ class BaseComponent(ABC):
 
 class BaseModel(BaseComponent):
     """Base class for all prediction models.
-    
+
     Supports sklearn-like interface with fit/predict, but also provides
     framework integration for logging, versioning, and experiment tracking.
-    
+
     Args:
         config: Model hyperparameters and settings
-        
+
     Example:
         class XGBoostPitchModel(BaseModel):
             def __init__(self, config):
                 super().__init__(config)
                 self.model = xgb.XGBClassifier(**config.get('xgb_params', {}))
-            
+
             def train(self, X, y):
                 self.model.fit(X, y)
                 self.log_metric('train_accuracy', self.model.score(X, y))
-            
+
             def predict(self, X):
                 return self.model.predict_proba(X)[:, 1]
-            
+
             def get_feature_importance(self):
                 return dict(zip(self.feature_names, self.model.feature_importances_))
     """
@@ -110,7 +110,7 @@ class BaseModel(BaseComponent):
     @abstractmethod
     def train(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Train the model on data.
-        
+
         Args:
             X: Feature DataFrame
             y: Target series
@@ -119,17 +119,17 @@ class BaseModel(BaseComponent):
     @abstractmethod
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """Generate predictions.
-        
+
         Args:
             X: Feature DataFrame
-            
+
         Returns:
             Array of predictions (probabilities for classification)
         """
 
     def evaluate(self, X: pd.DataFrame, y: pd.Series) -> dict[str, float]:
         """Evaluate model performance. Override for custom metrics.
-        
+
         Returns:
             Dictionary of metric_name -> value
         """
@@ -150,18 +150,23 @@ class BaseModel(BaseComponent):
     def save(self, path: str) -> None:
         """Save model to disk. Override for custom serialization."""
         import pickle
+
         with open(path, 'wb') as f:
-            pickle.dump({
-                'model': self.model,
-                'config': self.config,
-                'feature_names': self.feature_names,
-                'is_trained': self.is_trained,
-            }, f)
+            pickle.dump(
+                {
+                    'model': self.model,
+                    'config': self.config,
+                    'feature_names': self.feature_names,
+                    'is_trained': self.is_trained,
+                },
+                f,
+            )
         self.log_message('INFO', f'Model saved to {path}')
 
     def load(self, path: str) -> None:
         """Load model from disk. Override for custom deserialization."""
         import pickle
+
         with open(path, 'rb') as f:
             data = pickle.load(f)
             self.model = data['model']
@@ -176,24 +181,24 @@ class BaseModel(BaseComponent):
 
 class BaseFeature(BaseComponent):
     """Base class for feature transformers/engineering.
-    
+
     Can be SQL-based (computed in database) or Python-based (computed in Python).
     The framework tracks dependencies and computes features in correct order.
-    
+
     Args:
         config: Feature configuration including dependencies
-        
+
     Example:
         class RollingAverageFeature(BaseFeature):
             def __init__(self, config):
                 super().__init__(config)
                 self.window = config.get('window', 5)
                 self.column = config.get('column', 'batting_avg')
-            
+
             def transform(self, df: pd.DataFrame) -> pd.DataFrame:
                 df[f'{self.column}_rolling_{self.window}'] = df[self.column].rolling(self.window).mean()
                 return df
-            
+
             @property
             def sql_expression(self) -> Optional[str]:
                 # Return SQL for database computation
@@ -209,10 +214,10 @@ class BaseFeature(BaseComponent):
     @abstractmethod
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """Transform DataFrame by adding feature column(s).
-        
+
         Args:
             df: Input DataFrame
-            
+
         Returns:
             DataFrame with new feature column(s)
         """
@@ -224,7 +229,7 @@ class BaseFeature(BaseComponent):
     @property
     def sql_expression(self) -> str | None:
         """Return SQL expression for database computation.
-        
+
         If implemented, the framework can compute this feature in SQL
         for better performance. Return None to use Python transform.
         """
@@ -233,12 +238,14 @@ class BaseFeature(BaseComponent):
     def get_metadata(self) -> dict:
         """Get feature metadata including dependencies."""
         meta = super().get_metadata()
-        meta.update({
-            'feature_name': self.feature_name,
-            'dependencies': self.dependencies,
-            'output_column': self.output_column,
-            'has_sql_implementation': self.sql_expression is not None,
-        })
+        meta.update(
+            {
+                'feature_name': self.feature_name,
+                'dependencies': self.dependencies,
+                'output_column': self.output_column,
+                'has_sql_implementation': self.sql_expression is not None,
+            }
+        )
         return meta
 
     def _get_current_operation(self) -> str:
@@ -247,19 +254,19 @@ class BaseFeature(BaseComponent):
 
 class BaseDataLoader(BaseComponent):
     """Base class for data loading.
-    
+
     Provides consistent interface for loading data from various sources:
     database, files, APIs, etc. Supports batching and filtering.
-    
+
     Args:
         config: Data source configuration
-        
+
     Example:
         class StatcastLoader(BaseDataLoader):
             def load(self, game_ids: List[str]) -> pd.DataFrame:
                 query = "SELECT * FROM features_pitch.locations WHERE game_pk = ANY(%s)"
                 return self.execute_query(query, (game_ids,))
-            
+
             def get_schema(self) -> Dict:
                 return {'game_pk': 'int', 'pitch_type': 'text', ...}
     """
@@ -272,23 +279,23 @@ class BaseDataLoader(BaseComponent):
     @abstractmethod
     def load(self, **kwargs) -> pd.DataFrame:
         """Load data from source.
-        
+
         Returns:
             DataFrame with data
         """
 
     def load_batch(self, offset: int, limit: int, **kwargs) -> pd.DataFrame:
         """Load a batch of data. Override for efficient batching.
-        
+
         Args:
             offset: Start row
             limit: Number of rows
-            
+
         Returns:
             DataFrame batch
         """
         df = self.load(**kwargs)
-        return df.iloc[offset:offset+limit]
+        return df.iloc[offset : offset + limit]
 
     def get_total_count(self, **kwargs) -> int:
         """Get total number of rows available. Override for progress tracking."""
@@ -296,7 +303,7 @@ class BaseDataLoader(BaseComponent):
 
     def get_schema(self) -> dict[str, str]:
         """Return schema of data.
-        
+
         Returns:
             Dictionary mapping column names to data types
         """
@@ -308,24 +315,24 @@ class BaseDataLoader(BaseComponent):
 
 class BaseTransformer(BaseComponent):
     """Base class for data transformers (preprocessing, normalization, etc.).
-    
+
     Similar to sklearn transformers with fit/transform pattern, but with
     framework logging integration.
-    
+
     Example:
         class OutlierClipper(BaseTransformer):
             def __init__(self, config):
                 super().__init__(config)
                 self.lower = config.get('lower', 0.01)
                 self.upper = config.get('upper', 0.99)
-            
+
             def fit(self, df: pd.DataFrame) -> 'OutlierClipper':
                 self.bounds_ = {
                     col: (df[col].quantile(self.lower), df[col].quantile(self.upper))
                     for col in df.select_dtypes(include=[np.number]).columns
                 }
                 return self
-            
+
             def transform(self, df: pd.DataFrame) -> pd.DataFrame:
                 result = df.copy()
                 for col, (low, high) in self.bounds_.items():
@@ -356,9 +363,9 @@ class BaseTransformer(BaseComponent):
 
 class BaseMetric(BaseComponent):
     """Base class for custom evaluation metrics.
-    
+
     Allows researchers to define their own metrics beyond standard sklearn.
-    
+
     Example:
         class CalibrationError(BaseMetric):
             def compute(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -382,16 +389,18 @@ class BaseMetric(BaseComponent):
     @abstractmethod
     def compute(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
         """Compute the metric.
-        
+
         Args:
             y_true: Ground truth labels
             y_pred: Predicted probabilities or labels
-            
+
         Returns:
             Metric value
         """
 
-    def compute_batch(self, y_true: np.ndarray, y_pred: np.ndarray, batch_size: int = 10000) -> float:
+    def compute_batch(
+        self, y_true: np.ndarray, y_pred: np.ndarray, batch_size: int = 10000
+    ) -> float:
         """Compute metric in batches for large datasets."""
         if len(y_true) <= batch_size:
             return self.compute(y_true, y_pred)
@@ -406,10 +415,10 @@ class BaseMetric(BaseComponent):
 
 class BaseExperiment(ABC):
     """Base class for experiment orchestration.
-    
+
     Use this to define complex multi-step experiments that go beyond
     the simple train/evaluate flow.
-    
+
     Example:
         class HyperparameterSearch(BaseExperiment):
             def run(self):

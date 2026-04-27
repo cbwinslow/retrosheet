@@ -22,6 +22,7 @@ from mlb_predict.config import ModelConfig
 @dataclass
 class FeatureSchema:
     """Schema definition for features."""
+
     numeric_features: list[str]
     categorical_features: list[str]
     target_column: str
@@ -35,6 +36,7 @@ class FeatureSchema:
 @dataclass
 class DataSplit:
     """Container for train/val/test splits."""
+
     X_train: pd.DataFrame
     y_train: pd.Series
     X_val: pd.DataFrame | None = None
@@ -57,13 +59,13 @@ class DataSplit:
 
 class FeatureLoader:
     """Load features from PostgreSQL for model training.
-    
+
     Wraps existing feature mart queries and provides:
     - Config-driven feature selection
     - Train/val/test splitting
     - Batch loading for large datasets
     - Feature metadata tracking
-    
+
     Example:
         config = ModelConfig(
             family='xgboost',
@@ -71,10 +73,10 @@ class FeatureLoader:
             features='advanced',
             seasons=[2020, 2021, 2022, 2023]
         )
-        
+
         loader = FeatureLoader(config)
         data = loader.load_split(train_through=2022)
-        
+
         # Use in training
         model.fit(data.X_train, data.y_train)
         predictions = model.predict(data.X_val)
@@ -84,55 +86,99 @@ class FeatureLoader:
     FEATURE_SETS = {
         'basic': {
             'numeric': [
-                'balls', 'strikes', 'outs_when_up',
-                'inning', 'score_diff', 'runners_on',
+                'balls',
+                'strikes',
+                'outs_when_up',
+                'inning',
+                'score_diff',
+                'runners_on',
             ],
             'categorical': [
-                'stand', 'p_throws', 'inning_topbot',
+                'stand',
+                'p_throws',
+                'inning_topbot',
             ],
         },
         'physics': {
             'numeric': [
-                'balls', 'strikes', 'outs_when_up',
-                'inning', 'score_diff', 'runners_on',
-                'release_speed', 'release_spin_rate',
-                'plate_x', 'plate_z',
+                'balls',
+                'strikes',
+                'outs_when_up',
+                'inning',
+                'score_diff',
+                'runners_on',
+                'release_speed',
+                'release_spin_rate',
+                'plate_x',
+                'plate_z',
             ],
             'categorical': [
-                'stand', 'p_throws', 'inning_topbot',
+                'stand',
+                'p_throws',
+                'inning_topbot',
                 'pitch_type',
             ],
         },
         'advanced': {
             'numeric': [
-                'balls', 'strikes', 'outs_when_up',
-                'inning', 'score_diff', 'runners_on',
-                'release_speed', 'release_spin_rate',
-                'pfx_x', 'pfx_z', 'plate_x', 'plate_z',
-                'launch_speed', 'launch_angle',
-                'home_score', 'away_score',
+                'balls',
+                'strikes',
+                'outs_when_up',
+                'inning',
+                'score_diff',
+                'runners_on',
+                'release_speed',
+                'release_spin_rate',
+                'pfx_x',
+                'pfx_z',
+                'plate_x',
+                'plate_z',
+                'launch_speed',
+                'launch_angle',
+                'home_score',
+                'away_score',
             ],
             'categorical': [
-                'stand', 'p_throws', 'inning_topbot',
-                'pitch_type', 'bb_type',
+                'stand',
+                'p_throws',
+                'inning_topbot',
+                'pitch_type',
+                'bb_type',
             ],
         },
         'complete': {
             'numeric': [
-                'balls', 'strikes', 'outs_when_up',
-                'inning', 'score_diff', 'runners_on',
-                'release_speed', 'release_spin_rate',
-                'pfx_x', 'pfx_z', 'plate_x', 'plate_z',
-                'launch_speed', 'launch_angle',
-                'home_score', 'away_score',
-                'hit_distance_sc', 'effective_speed',
-                'release_extension', 'release_pos_x',
+                'balls',
+                'strikes',
+                'outs_when_up',
+                'inning',
+                'score_diff',
+                'runners_on',
+                'release_speed',
+                'release_spin_rate',
+                'pfx_x',
+                'pfx_z',
+                'plate_x',
+                'plate_z',
+                'launch_speed',
+                'launch_angle',
+                'home_score',
+                'away_score',
+                'hit_distance_sc',
+                'effective_speed',
+                'release_extension',
+                'release_pos_x',
                 'release_pos_z',
             ],
             'categorical': [
-                'stand', 'p_throws', 'inning_topbot',
-                'pitch_type', 'bb_type', 'events',
-                'description', 'zone',
+                'stand',
+                'p_throws',
+                'inning_topbot',
+                'pitch_type',
+                'bb_type',
+                'events',
+                'description',
+                'zone',
             ],
         },
     }
@@ -149,7 +195,7 @@ class FeatureLoader:
 
     def __init__(self, config: ModelConfig):
         """Initialize feature loader with config.
-        
+
         Args:
             config: ModelConfig with features, target, seasons
         """
@@ -178,7 +224,7 @@ class FeatureLoader:
 
     def get_feature_schema(self) -> FeatureSchema:
         """Get feature schema for current config.
-        
+
         Returns:
             FeatureSchema with numeric/categorical features
         """
@@ -209,12 +255,12 @@ class FeatureLoader:
         where_clause: str | None = None,
     ) -> pd.DataFrame:
         """Load raw data from feature mart.
-        
+
         Args:
             seasons: List of seasons to load (default: config.seasons)
             sample_rate: Fraction of data to sample (0.0-1.0)
             where_clause: Additional SQL WHERE conditions
-            
+
         Returns:
             DataFrame with features and target
         """
@@ -263,13 +309,13 @@ class FeatureLoader:
         sample_rate: float = 1.0,
     ) -> DataSplit:
         """Load data split into train/val/test.
-        
+
         Args:
             train_through: Last season for training (default: max(seasons)-1)
             val_seasons: Seasons for validation (default: [train_through+1])
             test_seasons: Seasons for testing (default: remaining)
             sample_rate: Fraction of data to sample
-            
+
         Returns:
             DataSplit with X/y for each split
         """
@@ -303,10 +349,18 @@ class FeatureLoader:
         split = DataSplit(
             X_train=train_data[schema.all_features],
             y_train=train_data[schema.target_column],
-            X_val=val_data[schema.all_features] if val_data is not None and len(val_data) > 0 else None,
-            y_val=val_data[schema.target_column] if val_data is not None and len(val_data) > 0 else None,
-            X_test=test_data[schema.all_features] if test_data is not None and len(test_data) > 0 else None,
-            y_test=test_data[schema.target_column] if test_data is not None and len(test_data) > 0 else None,
+            X_val=val_data[schema.all_features]
+            if val_data is not None and len(val_data) > 0
+            else None,
+            y_val=val_data[schema.target_column]
+            if val_data is not None and len(val_data) > 0
+            else None,
+            X_test=test_data[schema.all_features]
+            if test_data is not None and len(test_data) > 0
+            else None,
+            y_test=test_data[schema.target_column]
+            if test_data is not None and len(test_data) > 0
+            else None,
         )
 
         print(f'[INFO] Split: train={split.n_train}, val={split.n_val}, test={split.n_test}')
@@ -318,11 +372,11 @@ class FeatureLoader:
         seasons: list[int] | None = None,
     ):
         """Generator for batch loading large datasets.
-        
+
         Args:
             batch_size: Number of rows per batch
             seasons: Seasons to load
-            
+
         Yields:
             Batches of (X, y) tuples
         """
@@ -370,7 +424,7 @@ class FeatureLoader:
 
     def get_feature_info(self) -> dict[str, Any]:
         """Get information about loaded features.
-        
+
         Returns:
             Dict with feature counts, types, etc.
         """
@@ -387,10 +441,10 @@ class FeatureLoader:
 
     def validate_features(self, df: pd.DataFrame) -> list[str]:
         """Validate that DataFrame has all required features.
-        
+
         Args:
             df: DataFrame to validate
-            
+
         Returns:
             List of missing features
         """
@@ -408,11 +462,11 @@ def load_features_for_config(
     train_through: int | None = None,
 ) -> DataSplit:
     """Convenience function to load features for a config.
-    
+
     Args:
         config: ModelConfig with features, target, seasons
         train_through: Last training season
-        
+
     Returns:
         DataSplit ready for training
     """

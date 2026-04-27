@@ -42,7 +42,10 @@ class StatcastSource(BaseSource):
         return self._download_season_range(date.today().year, date.today().year, force)
 
     def _download_season_range(
-        self, start_year: int, end_year: int, force: bool,
+        self,
+        start_year: int,
+        end_year: int,
+        force: bool,
     ) -> DownloadResult:
         """Download Statcast data for season range."""
         script = self._scripts_dir / 'download_statcast.py'
@@ -58,8 +61,12 @@ class StatcastSource(BaseSource):
 
         for year in range(start_year, end_year + 1):
             cmd = [
-                'uv', 'run', 'python', str(script),
-                '--season', str(year),
+                'uv',
+                'run',
+                'python',
+                str(script),
+                '--season',
+                str(year),
             ]
             if force:
                 cmd.append('--force')
@@ -93,9 +100,14 @@ class StatcastSource(BaseSource):
             )
 
         cmd = [
-            'uv', 'run', 'python', str(script),
-            '--start-date', start_date.isoformat(),
-            '--end-date', end_date.isoformat(),
+            'uv',
+            'run',
+            'python',
+            str(script),
+            '--start-date',
+            start_date.isoformat(),
+            '--end-date',
+            end_date.isoformat(),
         ]
 
         result = subprocess.run(cmd, capture_output=True, text=True)
@@ -166,7 +178,7 @@ class StatcastSource(BaseSource):
             with conn.cursor() as cur:
                 # Check for Statcast tables
                 cur.execute(
-                    "SELECT COUNT(*) FROM information_schema.tables "
+                    'SELECT COUNT(*) FROM information_schema.tables '
                     "WHERE table_schema = 'raw_statcast'",
                 )
                 table_count = cur.fetchone()[0]
@@ -174,8 +186,7 @@ class StatcastSource(BaseSource):
 
                 # Check for recent data
                 cur.execute(
-                    'SELECT COUNT(*) FROM raw_statcast.statcast_batting '
-                    'WHERE season >= 2023',
+                    'SELECT COUNT(*) FROM raw_statcast.statcast_batting WHERE season >= 2023',
                 )
                 recent_count = cur.fetchone()[0]
                 checks.append({'check': 'recent_data', 'count': recent_count})

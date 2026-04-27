@@ -10,4 +10,5 @@ from dataclasses import dataclass
 @dataclass
 class HttpClient:
     """HTTP client with configurable timeout."""
+
     timeout_seconds: int = 30

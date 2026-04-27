@@ -16,14 +16,15 @@ from dataclasses import dataclass
 # ODDS CONVERSION
 # ============================================================================
 
+
 def american_to_implied_prob(odds: float) -> float:
     """Convert American odds to implied probability.
-    
+
     Parameters:
     -----------
     odds : float
         American odds (e.g., +150, -200)
-    
+
     Returns:
     --------
     float : Implied probability (0-1)
@@ -35,12 +36,12 @@ def american_to_implied_prob(odds: float) -> float:
 
 def implied_prob_to_american(prob: float) -> float:
     """Convert implied probability to American odds.
-    
+
     Parameters:
     -----------
     prob : float
         Implied probability (0-1)
-    
+
     Returns:
     --------
     float : American odds
@@ -64,20 +65,21 @@ def implied_prob_to_decimal(prob: float) -> float:
 # VIG CALCULATIONS
 # ============================================================================
 
+
 def calculate_vig(
     prob_home: float,
     prob_away: float,
 ) -> float:
     """Calculate bookmaker vig (overround).
-    
+
     vig = (1/prob_home + 1/prob_away) - 1
     """
-    return (1/prob_home + 1/prob_away) - 1
+    return (1 / prob_home + 1 / prob_away) - 1
 
 
 def remove_vig(prob_home: float, prob_away: float) -> tuple[float, float]:
     """Remove vig to get true probabilities.
-    
+
     Uses the proportional method:
     true_prob = implied_prob / (sum of implied_probs)
     """
@@ -89,16 +91,17 @@ def remove_vig(prob_home: float, prob_away: float) -> tuple[float, float]:
 # EXPECTED VALUE
 # ============================================================================
 
+
 def calculate_ev(
     model_prob: float,
     odds: float,
     stake: float = 100.0,
 ) -> float:
     """Calculate expected value of a bet.
-    
+
     Formula:
     EV = (p * payout) - (1 - p) * stake
-    
+
     Parameters:
     -----------
     model_prob : float
@@ -107,7 +110,7 @@ def calculate_ev(
         American odds
     stake : float
         Amount wagered
-    
+
     Returns:
     --------
     float : Expected value in dollars
@@ -131,7 +134,7 @@ def calculate_ev_percent(
     odds: float,
 ) -> float:
     """Calculate EV as percentage of stake.
-    
+
     Returns:
     --------
     float : EV percentage (e.g., 0.05 = +5%)
@@ -145,19 +148,20 @@ def calculate_ev_percent(
 # KELLY CRITERION
 # ============================================================================
 
+
 def kelly_criterion(
     model_prob: float,
     odds: float,
     fraction: float = 0.25,  # Conservative Kelly (1/4 Kelly)
 ) -> float:
     """Calculate Kelly Criterion bet size.
-    
+
     Full Kelly: f* = (bp - q) / b
     Where:
     - b = net odds received (decimal odds - 1)
     - p = probability of win
     - q = probability of loss (1 - p)
-    
+
     Parameters:
     -----------
     model_prob : float
@@ -166,7 +170,7 @@ def kelly_criterion(
         American odds
     fraction : float
         Kelly fraction (0.25 = quarter Kelly, safer)
-    
+
     Returns:
     --------
     float : Recommended bet size as fraction of bankroll
@@ -196,9 +200,11 @@ def kelly_criterion(
 # BET TYPES
 # ============================================================================
 
+
 @dataclass
 class MoneylineBet:
     """Moneyline bet (who wins)."""
+
     team: str  # 'home' or 'away'
     odds: float  # American odds
     model_prob: float  # Model win probability
@@ -228,6 +234,7 @@ class MoneylineBet:
 @dataclass
 class RunLineBet:
     """Run line bet (spread bet, typically +/- 1.5 runs)."""
+
     team: str
     runs: float  # Usually -1.5 or +1.5
     odds: float
@@ -250,6 +257,7 @@ class RunLineBet:
 @dataclass
 class TotalBet:
     """Over/Under total runs bet."""
+
     over_under: str  # 'over' or 'under'
     total: float  # Line (e.g., 8.5)
     odds: float
@@ -273,9 +281,11 @@ class TotalBet:
 # BETTING OPPORTUNITY FINDER
 # ============================================================================
 
+
 @dataclass
 class BettingOpportunity:
     """Represents a profitable betting opportunity."""
+
     bet_type: str
     description: str
     model_prob: float
@@ -302,7 +312,7 @@ class BettingOpportunity:
 
 class EVCalculator:
     """Expected Value calculator for baseball betting.
-    
+
     Identifies profitable bets by comparing model probabilities
     to market implied probabilities.
     """
@@ -321,14 +331,14 @@ class EVCalculator:
         market_odds: dict[str, float],
     ) -> list[BettingOpportunity]:
         """Find all profitable betting opportunities.
-        
+
         Parameters:
         -----------
         model_probs : dict
             {bet_key: model_probability}
         market_odds : dict
             {bet_key: american_odds}
-        
+
         Returns:
         --------
         List of BettingOpportunity
@@ -392,7 +402,7 @@ class EVCalculator:
         under_odds: float | None = None,
     ) -> dict:
         """Comprehensive analysis of a single game.
-        
+
         Returns:
         --------
         Dict with all betting analysis
@@ -447,15 +457,16 @@ class EVCalculator:
 # PORTFOLIO MANAGEMENT
 # ============================================================================
 
+
 def calculate_portfolio_ev(
     bets: list[tuple[float, float, float]],
 ) -> tuple[float, float]:
     """Calculate expected value of a betting portfolio.
-    
+
     Parameters:
     -----------
     bets : list of (stake, model_prob, odds)
-    
+
     Returns:
     --------
     (total_ev, total_stake)
@@ -477,9 +488,9 @@ def optimal_portfolio_allocation(
     max_kelly_fraction: float = 0.025,  # Max 2.5% per bet
 ) -> list[tuple[str, float]]:
     """Calculate optimal bet sizes for a portfolio of opportunities.
-    
+
     Uses fractional Kelly with maximum allocation constraints.
-    
+
     Returns:
     --------
     List of (bet_key, stake_amount)
@@ -505,19 +516,20 @@ def optimal_portfolio_allocation(
 # BACKTESTING
 # ============================================================================
 
+
 def backtest_betting_strategy(
     predictions: list[tuple[float, float, bool]],
     initial_bankroll: float = 1000,
     kelly_fraction: float = 0.25,
 ) -> dict:
     """Backtest a betting strategy.
-    
+
     Parameters:
     -----------
     predictions : list of (model_prob, odds, did_win)
     initial_bankroll : float
     kelly_fraction : float
-    
+
     Returns:
     --------
     Dict with backtest results

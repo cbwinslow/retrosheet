@@ -22,35 +22,35 @@ from mlb_predict.core.results import FeatureImportance
 
 class BasePluginModel(ABC):
     """Abstract base class for custom model plugins.
-    
+
     Any custom model must inherit from this class and implement:
     - fit(X, y, X_val=None, y_val=None)
     - predict(X)
     - predict_proba(X)
     - save(path)
     - load(path) (classmethod)
-    
+
     Example:
         class MyCustomModel(BasePluginModel):
             def __init__(self, config: ModelConfig):
                 super().__init__(config)
                 self.model = None
-            
+
             def fit(self, X, y, X_val=None, y_val=None):
                 from sklearn.ensemble import RandomForestClassifier
                 self.model = RandomForestClassifier(n_estimators=100)
                 self.model.fit(X, y)
                 return self
-            
+
             def predict(self, X):
                 return self.model.predict(X)
-            
+
             def predict_proba(self, X):
                 return self.model.predict_proba(X)[:, 1]
-            
+
             def save(self, path: str):
                 joblib.dump(self.model, path)
-            
+
             @classmethod
             def load(cls, path: str):
                 instance = cls(ModelConfig(family='custom', target='swing_decision'))
@@ -60,7 +60,7 @@ class BasePluginModel(ABC):
 
     def __init__(self, config: ModelConfig):
         """Initialize plugin with config.
-        
+
         Args:
             config: ModelConfig with hyperparameters and settings
         """
@@ -70,17 +70,21 @@ class BasePluginModel(ABC):
         self._feature_importance: dict[str, float] | None = None
 
     @abstractmethod
-    def fit(self, X: np.ndarray, y: np.ndarray,
-            X_val: np.ndarray | None = None,
-            y_val: np.ndarray | None = None) -> 'BasePluginModel':
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        X_val: np.ndarray | None = None,
+        y_val: np.ndarray | None = None,
+    ) -> 'BasePluginModel':
         """Fit the model on training data.
-        
+
         Args:
             X: Training features (n_samples, n_features)
             y: Training targets (n_samples,)
             X_val: Optional validation features
             y_val: Optional validation targets
-            
+
         Returns:
             self (fitted model)
         """
@@ -88,10 +92,10 @@ class BasePluginModel(ABC):
     @abstractmethod
     def predict(self, X: np.ndarray) -> np.ndarray:
         """Make binary predictions.
-        
+
         Args:
             X: Features (n_samples, n_features)
-            
+
         Returns:
             Binary predictions (n_samples,)
         """
@@ -99,10 +103,10 @@ class BasePluginModel(ABC):
     @abstractmethod
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """Make probability predictions.
-        
+
         Args:
             X: Features (n_samples, n_features)
-            
+
         Returns:
             Probability predictions (n_samples,) - probability of positive class
         """
@@ -110,7 +114,7 @@ class BasePluginModel(ABC):
     @abstractmethod
     def save(self, path: str) -> None:
         """Save model to disk.
-        
+
         Args:
             path: File path to save model
         """
@@ -119,17 +123,17 @@ class BasePluginModel(ABC):
     @abstractmethod
     def load(cls, path: str) -> 'BasePluginModel':
         """Load model from disk.
-        
+
         Args:
             path: File path to load model
-            
+
         Returns:
             Loaded model instance
         """
 
     def get_feature_importance(self) -> list[FeatureImportance] | None:
         """Get feature importance if available.
-        
+
         Returns:
             List of FeatureImportance objects or None
         """
@@ -147,7 +151,7 @@ class BasePluginModel(ABC):
             FeatureImportance(
                 feature_name=name,
                 importance_score=score,
-                importance_rank=i+1,
+                importance_rank=i + 1,
                 method='model_specific',
             )
             for i, (name, score) in enumerate(sorted_items)
@@ -155,7 +159,7 @@ class BasePluginModel(ABC):
 
     def get_params(self) -> dict[str, Any]:
         """Get model parameters.
-        
+
         Returns:
             Dict of parameter names to values
         """
@@ -178,19 +182,19 @@ class BasePluginModel(ABC):
 
 class SklearnPluginModel(BasePluginModel):
     """Generic wrapper for scikit-learn models.
-    
+
     Allows using any sklearn classifier as a plugin.
-    
+
     Example:
         from sklearn.ensemble import RandomForestClassifier
-        
+
         config = ModelConfig(family='custom', target='swing_decision')
         model = SklearnPluginModel(config, RandomForestClassifier(n_estimators=100))
     """
 
     def __init__(self, config: ModelConfig, sklearn_model: Any):
         """Initialize with sklearn model.
-        
+
         Args:
             config: ModelConfig
             sklearn_model: Any sklearn classifier with fit/predict/predict_proba
@@ -198,9 +202,13 @@ class SklearnPluginModel(BasePluginModel):
         super().__init__(config)
         self.model = sklearn_model
 
-    def fit(self, X: np.ndarray, y: np.ndarray,
-            X_val: np.ndarray | None = None,
-            y_val: np.ndarray | None = None) -> 'SklearnPluginModel':
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        X_val: np.ndarray | None = None,
+        y_val: np.ndarray | None = None,
+    ) -> 'SklearnPluginModel':
         """Fit the sklearn model."""
         self.model.fit(X, y)
         self._is_fitted = True
@@ -232,13 +240,16 @@ class SklearnPluginModel(BasePluginModel):
 
     def save(self, path: str) -> None:
         """Save using joblib."""
-        joblib.dump({
-            'model': self.model,
-            'config': self.config,
-            'is_fitted': self._is_fitted,
-            'feature_names': self._feature_names,
-            'feature_importance': self._feature_importance,
-        }, path)
+        joblib.dump(
+            {
+                'model': self.model,
+                'config': self.config,
+                'is_fitted': self._is_fitted,
+                'feature_names': self._feature_names,
+                'feature_importance': self._feature_importance,
+            },
+            path,
+        )
 
     @classmethod
     def load(cls, path: str) -> 'SklearnPluginModel':
@@ -253,20 +264,20 @@ class SklearnPluginModel(BasePluginModel):
 
 class PluginRegistry:
     """Registry for managing custom model plugins.
-    
+
     Provides a centralized place to register, discover, and instantiate
     custom models that can be used with ModelTrainer.
-    
+
     Example:
         # Register a custom model
         registry = PluginRegistry()
         registry.register('my_xgboost', MyXGBoostPlugin)
-        
+
         # Use with ModelTrainer
         trainer = ModelTrainer(config)
         trainer.register_plugin('my_xgboost', registry.get('my_xgboost'))
         result = trainer.train()
-        
+
         # Or use directly
         model_class = registry.get('my_xgboost')
         model = model_class(config)
@@ -278,19 +289,23 @@ class PluginRegistry:
         self._plugins: dict[str, type[BasePluginModel]] = {}
         self._metadata: dict[str, dict[str, Any]] = {}
 
-    def register(self, name: str, model_class: type[BasePluginModel],
-                 description: str | None = None,
-                 author: str | None = None,
-                 version: str | None = None) -> None:
+    def register(
+        self,
+        name: str,
+        model_class: type[BasePluginModel],
+        description: str | None = None,
+        author: str | None = None,
+        version: str | None = None,
+    ) -> None:
         """Register a model plugin.
-        
+
         Args:
             name: Unique plugin identifier
             model_class: Class inheriting from BasePluginModel
             description: Optional description
             author: Optional author name
             version: Optional version string
-            
+
         Raises:
             ValueError: If name already registered or class doesn't inherit from BasePluginModel
         """
@@ -299,8 +314,7 @@ class PluginRegistry:
 
         if not issubclass(model_class, BasePluginModel):
             raise ValueError(
-                f'Model class must inherit from BasePluginModel, '
-                f'got {model_class.__name__}',
+                f'Model class must inherit from BasePluginModel, got {model_class.__name__}',
             )
 
         self._plugins[name] = model_class
@@ -314,13 +328,13 @@ class PluginRegistry:
 
     def get(self, name: str) -> type[BasePluginModel]:
         """Get a registered plugin class.
-        
+
         Args:
             name: Plugin identifier
-            
+
         Returns:
             Plugin class
-            
+
         Raises:
             KeyError: If plugin not found
         """
@@ -330,11 +344,11 @@ class PluginRegistry:
 
     def create(self, name: str, config: ModelConfig) -> BasePluginModel:
         """Create an instance of a registered plugin.
-        
+
         Args:
             name: Plugin identifier
             config: ModelConfig for initialization
-            
+
         Returns:
             Instantiated plugin model
         """
@@ -343,7 +357,7 @@ class PluginRegistry:
 
     def unregister(self, name: str) -> None:
         """Unregister a plugin.
-        
+
         Args:
             name: Plugin identifier
         """
@@ -353,7 +367,7 @@ class PluginRegistry:
 
     def list_plugins(self) -> list[str]:
         """List all registered plugin names.
-        
+
         Returns:
             List of plugin names
         """
@@ -361,10 +375,10 @@ class PluginRegistry:
 
     def get_metadata(self, name: str) -> dict[str, Any]:
         """Get metadata for a plugin.
-        
+
         Args:
             name: Plugin identifier
-            
+
         Returns:
             Dict with description, author, version, etc.
         """
@@ -374,7 +388,7 @@ class PluginRegistry:
 
     def get_all_metadata(self) -> dict[str, dict[str, Any]]:
         """Get metadata for all plugins.
-        
+
         Returns:
             Dict mapping plugin names to metadata
         """
@@ -382,10 +396,10 @@ class PluginRegistry:
 
     def is_registered(self, name: str) -> bool:
         """Check if a plugin is registered.
-        
+
         Args:
             name: Plugin identifier
-            
+
         Returns:
             True if registered
         """
@@ -398,13 +412,13 @@ class PluginRegistry:
 
     def discover_from_module(self, module_name: str) -> list[str]:
         """Auto-discover plugins from a module.
-        
+
         Scans module for classes inheriting from BasePluginModel
         and registers them.
-        
+
         Args:
             module_name: Module to scan (e.g., 'my_models.plugins')
-            
+
         Returns:
             List of discovered plugin names
         """
@@ -419,10 +433,11 @@ class PluginRegistry:
             return discovered
 
         for name, obj in inspect.getmembers(module, inspect.isclass):
-            if (issubclass(obj, BasePluginModel) and
-                obj is not BasePluginModel and
-                not name.startswith('_')):
-
+            if (
+                issubclass(obj, BasePluginModel)
+                and obj is not BasePluginModel
+                and not name.startswith('_')
+            ):
                 plugin_name = getattr(obj, 'PLUGIN_NAME', name.lower())
 
                 try:
@@ -446,7 +461,7 @@ _global_registry: PluginRegistry | None = None
 
 def get_global_registry() -> PluginRegistry:
     """Get or create the global plugin registry.
-    
+
     Returns:
         Global PluginRegistry instance
     """
@@ -456,12 +471,11 @@ def get_global_registry() -> PluginRegistry:
     return _global_registry
 
 
-def register_plugin(name: str, model_class: type[BasePluginModel],
-                    **kwargs) -> None:
+def register_plugin(name: str, model_class: type[BasePluginModel], **kwargs) -> None:
     """Register a plugin in the global registry.
-    
+
     Convenience function for quick registration.
-    
+
     Example:
         register_plugin('my_model', MyModelClass, description='My custom model')
     """
@@ -471,7 +485,7 @@ def register_plugin(name: str, model_class: type[BasePluginModel],
 
 def get_plugin(name: str) -> type[BasePluginModel]:
     """Get plugin from global registry.
-    
+
     Example:
         model_class = get_plugin('my_model')
         model = model_class(config)

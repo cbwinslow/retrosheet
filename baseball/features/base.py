@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class FeatureScope(Enum):
     """Scope of feature computation."""
+
     HISTORICAL = 'historical'
     LIVE = 'live'
     BOTH = 'both'
@@ -26,6 +27,7 @@ class FeatureScope(Enum):
 
 class FeatureStatus(Enum):
     """Status of feature computation."""
+
     PENDING = 'pending'
     COMPUTING = 'computing'
     COMPLETE = 'complete'
@@ -35,7 +37,7 @@ class FeatureStatus(Enum):
 @dataclass
 class FeatureConfig:
     """Configuration for feature computation.
-    
+
     Attributes:
         scope: HISTORICAL, LIVE, or BOTH
         start_date: Start date for historical computation
@@ -46,6 +48,7 @@ class FeatureConfig:
         force_recompute: Whether to force recomputation
         parallel_workers: Number of parallel workers
     """
+
     scope: FeatureScope = FeatureScope.BOTH
     start_date: date | None = None
     end_date: date | None = None
@@ -65,7 +68,7 @@ class FeatureConfig:
 @dataclass
 class FeatureResult:
     """Result of feature computation.
-    
+
     Attributes:
         success: Whether computation succeeded
         rows_computed: Number of rows computed
@@ -75,6 +78,7 @@ class FeatureResult:
         status: Computation status
         metadata: Additional metadata
     """
+
     success: bool = False
     rows_computed: int = 0
     rows_inserted: int = 0
@@ -98,7 +102,7 @@ class FeatureResult:
 @dataclass
 class GameState:
     """Represents a game state for feature computation.
-    
+
     Attributes:
         inning: Inning number (1-20+)
         is_top: Top or bottom of inning
@@ -109,6 +113,7 @@ class GameState:
         score_home: Home team score
         score_away: Away team score
     """
+
     inning: int
     is_top: bool
     outs: int
@@ -127,9 +132,9 @@ class GameState:
     def base_state(self) -> str:
         """3-character base state code."""
         return (
-            ('1' if self.runner_1b else '0') +
-            ('1' if self.runner_2b else '0') +
-            ('1' if self.runner_3b else '0')
+            ('1' if self.runner_1b else '0')
+            + ('1' if self.runner_2b else '0')
+            + ('1' if self.runner_3b else '0')
         )
 
     @property
@@ -144,13 +149,13 @@ class GameState:
 
 class FeatureStore(ABC):
     """Abstract base class for feature stores.
-    
+
     All feature calculators must inherit from this class.
     """
 
     def __init__(self, db_connection=None, config: FeatureConfig | None = None):
         """Initialize feature store.
-        
+
         Args:
             db_connection: Database connection for persistence
             config: Feature computation configuration
@@ -172,35 +177,36 @@ class FeatureStore(ABC):
     @abstractmethod
     def compute(self, game_state: GameState) -> float | None:
         """Compute feature for a game state.
-        
+
         Args:
             game_state: Current game state
-            
+
         Returns:
             Computed feature value or None
         """
 
     def compute_batch(self, game_states: list[GameState]) -> list[float | None]:
         """Compute features for multiple game states.
-        
+
         Args:
             game_states: List of game states
-            
+
         Returns:
             List of computed feature values
         """
         return [self.compute(gs) for gs in game_states]
 
-    def save(self, game_pk: int, at_bat_index: int,
-             value: float, metadata: dict | None = None) -> bool:
+    def save(
+        self, game_pk: int, at_bat_index: int, value: float, metadata: dict | None = None
+    ) -> bool:
         """Save computed feature to database.
-        
+
         Args:
             game_pk: Game ID
             at_bat_index: At-bat index within game
             value: Computed feature value
             metadata: Optional additional metadata
-            
+
         Returns:
             True if saved successfully
         """
@@ -218,8 +224,7 @@ class FeatureStore(ABC):
                             feature_value = EXCLUDED.feature_value,
                             metadata = EXCLUDED.metadata,
                             computed_at = NOW()""",
-                    (game_pk, at_bat_index, value,
-                     metadata if metadata else {}),
+                    (game_pk, at_bat_index, value, metadata if metadata else {}),
                 )
             self.db.commit()
             return True
@@ -229,10 +234,10 @@ class FeatureStore(ABC):
 
     def load_from_db(self, game_pk: int | None = None) -> int:
         """Load features from database into cache.
-        
+
         Args:
             game_pk: Optional game ID to filter by
-            
+
         Returns:
             Number of features loaded
         """
@@ -270,11 +275,11 @@ class FeatureStore(ABC):
 
     def get_cached(self, game_pk: int, at_bat_index: int) -> float | None:
         """Get cached feature value.
-        
+
         Args:
             game_pk: Game ID
             at_bat_index: At-bat index
-            
+
         Returns:
             Cached value or None
         """
@@ -284,10 +289,10 @@ class FeatureStore(ABC):
 
     def build(self, config: FeatureConfig | None = None) -> FeatureResult:
         """Build features for configured scope.
-        
+
         Args:
             config: Optional override configuration
-            
+
         Returns:
             FeatureResult with computation results
         """
@@ -314,10 +319,9 @@ class FeatureStore(ABC):
 
         return result
 
-    def _build_historical(self, config: FeatureConfig,
-                          result: FeatureResult) -> None:
+    def _build_historical(self, config: FeatureConfig, result: FeatureResult) -> None:
         """Build historical features.
-        
+
         Args:
             config: Feature configuration
             result: Result object to update
@@ -325,10 +329,9 @@ class FeatureStore(ABC):
         logger.info(f'Building historical {self.feature_name} features')
         # Override in subclasses
 
-    def _build_live(self, config: FeatureConfig,
-                    result: FeatureResult) -> None:
+    def _build_live(self, config: FeatureConfig, result: FeatureResult) -> None:
         """Build live features.
-        
+
         Args:
             config: Feature configuration
             result: Result object to update
@@ -338,7 +341,7 @@ class FeatureStore(ABC):
 
     def get_stats(self) -> dict[str, Any]:
         """Get statistics about computed features.
-        
+
         Returns:
             Dictionary with feature statistics
         """

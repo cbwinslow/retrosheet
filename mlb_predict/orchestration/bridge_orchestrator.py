@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Checkpoint:
     """Checkpoint for resumable operations."""
+
     stage: str
     timestamp: datetime
     completed_steps: list[str]
@@ -61,6 +62,7 @@ class Checkpoint:
 @dataclass
 class StageResult:
     """Result of a pipeline stage."""
+
     stage: str
     success: bool
     duration_seconds: float
@@ -117,7 +119,7 @@ class CheckpointManager:
 
 class BridgeOrchestrator:
     """Orchestrates bridge table population with full error handling.
-    
+
     Usage:
         orch = BridgeOrchestrator(db_url="postgresql://localhost/retrosheet")
         result = orch.run_chadwick_ingestion()
@@ -154,6 +156,7 @@ class BridgeOrchestrator:
 
         # Use environment variables
         import os
+
         return psycopg2.connect(
             host=os.getenv('PGHOST', 'localhost'),
             port=os.getenv('PGPORT', '5432'),
@@ -162,8 +165,11 @@ class BridgeOrchestrator:
             password=os.getenv('PGPASSWORD', ''),
         )
 
-    def _execute_sql_file(self, conn: psycopg2.extensions.connection, file_path: Path) -> OperationResult:
+    def _execute_sql_file(
+        self, conn: psycopg2.extensions.connection, file_path: Path
+    ) -> OperationResult:
         """Execute SQL file with error handling."""
+
         def operation(conn):
             with open(file_path) as f:
                 sql = f.read()
@@ -231,17 +237,17 @@ class BridgeOrchestrator:
         dry_run: bool = False,
     ) -> dict[str, Any]:
         """Run complete Chadwick Register ingestion pipeline.
-        
+
         Args:
             skip_download: Skip download if files already exist
             skip_validation: Skip validation tests
             operation_id: Unique ID for checkpointing/resuming
             dry_run: If True, simulate all operations without committing changes
-            
+
         Returns:
             Complete result dictionary with all stage results
         """
-        operation_id = operation_id or f"chadwick_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        operation_id = operation_id or f'chadwick_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
 
         results = {
             'operation_id': operation_id,
@@ -376,6 +382,7 @@ class BridgeOrchestrator:
             files = download_chadwick_files()
         else:
             import tempfile
+
             temp_dir = Path(tempfile.gettempdir())
             files = list(temp_dir.glob('chadwick_register_*.csv'))
 

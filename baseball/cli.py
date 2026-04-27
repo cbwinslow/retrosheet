@@ -44,6 +44,7 @@ def doctor():
     # Check database connection
     try:
         import psycopg2
+
         conn = psycopg2.connect(
             host='localhost',
             port=5432,
@@ -88,6 +89,7 @@ def status():
     # Show recent pipeline runs
     try:
         import psycopg2
+
         conn = psycopg2.connect(
             host='localhost',
             port=5432,
@@ -109,7 +111,9 @@ def status():
 
                 for run in runs:
                     status_color = 'green' if run[1] == 'completed' else 'red'
-                    runs_table.add_row(run[0], f'[{status_color}]{run[1]}[/{status_color}]', str(run[2]))
+                    runs_table.add_row(
+                        run[0], f'[{status_color}]{run[1]}[/{status_color}]', str(run[2])
+                    )
 
                 console.print(runs_table)
             else:
@@ -126,6 +130,7 @@ def status():
 def version():
     """Show version information."""
     from baseball import __version__
+
     console.print(f'\n[bold blue]Baseball Platform[/bold blue] v{__version__}\n')
 
 
@@ -136,6 +141,7 @@ def version():
 def train(config: str = typer.Option(..., '--config', '-c', help='Path to config YAML file')):
     """Train a model (wrapper for mlb-predict train)."""
     import subprocess
+
     result = subprocess.run(['mlb-predict', 'train', '--config', config])
     sys.exit(result.returncode)
 
@@ -147,6 +153,7 @@ def experiment(
 ):
     """Run comparison experiments (wrapper for mlb-predict experiment)."""
     import subprocess
+
     cmd = ['mlb-predict', 'experiment', '--target', target]
     if compare_families:
         cmd.extend(['--compare-families'] + compare_families)
@@ -161,7 +168,9 @@ features_app = typer.Typer(help='Feature engineering commands', no_args_is_help=
 models_app = typer.Typer(help='ML model commands', no_args_is_help=True)
 chatbot_app = typer.Typer(help='Natural language chatbot interface', no_args_is_help=True)
 bridge_app = typer.Typer(help='Cross-reference and ID resolution commands', no_args_is_help=True)
-pipeline_app = typer.Typer(help='Pipeline orchestration and automation commands', no_args_is_help=True)
+pipeline_app = typer.Typer(
+    help='Pipeline orchestration and automation commands', no_args_is_help=True
+)
 
 
 # Chatbot commands
@@ -216,7 +225,9 @@ def chatbot_chat(
                 console.print('\n[yellow]Goodbye![/yellow]')
                 break
     else:
-        console.print('[yellow]Use --message for single query or --interactive for chat mode[/yellow]')
+        console.print(
+            '[yellow]Use --message for single query or --interactive for chat mode[/yellow]'
+        )
         console.print('[dim]Examples:[/dim]')
         console.print('  baseball chatbot chat -m "What is the Yankees win probability?"')
         console.print('  baseball chatbot chat --interactive')
@@ -234,13 +245,13 @@ def chatbot_demo():
     bot = Chatbot()
 
     demo_queries = [
-        "Hello!",
+        'Hello!',
         "What's the Yankees win probability?",
-        "How about the Red Sox?",
+        'How about the Red Sox?',
         "What's Aaron Judge's batting average?",
         "Who's pitching for the Dodgers?",
-        "How do predictions work?",
-        "Thanks, bye!",
+        'How do predictions work?',
+        'Thanks, bye!',
     ]
 
     console.print('[bold blue]Chatbot Demo[/bold blue]\n')
@@ -253,15 +264,17 @@ def chatbot_demo():
     # Show conversation summary
     summary = bot.get_conversation_summary()
     console.print('[dim]Conversation summary:[/dim]')
-    console.print(f"  Messages: {summary['session_info']['message_count']}")
-    console.print(f"  Active team: {summary['context']['team'] or 'None'}")
-    console.print(f"  Active player: {summary['context']['player'] or 'None'}")
+    console.print(f'  Messages: {summary["session_info"]["message_count"]}')
+    console.print(f'  Active team: {summary["context"]["team"] or "None"}')
+    console.print(f'  Active player: {summary["context"]["player"] or "None"}')
 
 
 # MLB data ingestion commands
 @mlb_app.command(name='download')
 def mlb_download(
-    date_str: str = typer.Option(None, '--date', '-d', help='Date to download (YYYY-MM-DD, default: today)'),
+    date_str: str = typer.Option(
+        None, '--date', '-d', help='Date to download (YYYY-MM-DD, default: today)'
+    ),
     season: int = typer.Option(None, '--season', '-s', help='Download full season'),
     game_pk: int = typer.Option(None, '--game', '-g', help='Specific game ID'),
     force: bool = typer.Option(False, '--force', '-f', help='Force re-download'),
@@ -415,7 +428,7 @@ def retrosheet_seasons():
 
     console.print(f'[bold]Available seasons:[/bold] {len(seasons)} total')
     console.print(f'Range: {min(seasons)} - {max(seasons)}')
-    console.print(f"Recent: {', '.join(str(s) for s in seasons[-5:])}")
+    console.print(f'Recent: {", ".join(str(s) for s in seasons[-5:])}')
 
 
 # Predict command group
@@ -425,19 +438,23 @@ predict_app = typer.Typer(help='Run prediction workflows', no_args_is_help=True)
 @predict_app.command(name='game')
 def predict_game(
     game_pk: int = typer.Option(..., '--game', '-g', help='MLB game ID'),
-    model: str = typer.Option('win_probability', '--model', '-m', help='Model name: win_probability, next_run, pa_outcome'),
+    model: str = typer.Option(
+        'win_probability', '--model', '-m', help='Model name: win_probability, next_run, pa_outcome'
+    ),
     output: str = typer.Option('table', '--output', '-o', help='Output format: table, json, csv'),
-    compute_features: bool = typer.Option(True, '--compute-features/--no-compute-features', help='Compute features before predicting'),
+    compute_features: bool = typer.Option(
+        True, '--compute-features/--no-compute-features', help='Compute features before predicting'
+    ),
     dry_run: bool = typer.Option(False, '--dry-run', help='Show prediction plan without executing'),
 ):
     """Run predictions for a specific game."""
-    from baseball.features import WinExpectancyCalculator, MatchupCalculator
     from baseball.core.db import get_db_connection
+    from baseball.features import WinExpectancyCalculator
 
     console.print(f'[dim]Predicting game {game_pk} using model {model}...[/dim]')
 
     if dry_run:
-        console.print(f'[yellow]Dry run plan:[/yellow]')
+        console.print('[yellow]Dry run plan:[/yellow]')
         console.print(f'  1. Load game {game_pk} from database')
         console.print(f'  2. Compute {model} features')
         console.print(f'  3. Run prediction through {model} model')
@@ -450,8 +467,8 @@ def predict_game(
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT game_pk, home_team_id, away_team_id, status FROM core.games WHERE game_pk = %s",
-            (game_pk,)
+            'SELECT game_pk, home_team_id, away_team_id, status FROM core.games WHERE game_pk = %s',
+            (game_pk,),
         )
         game = cursor.fetchone()
 
@@ -464,7 +481,7 @@ def predict_game(
 
         # Step 2: Compute features if requested
         if compute_features:
-            console.print(f'  Computing features...')
+            console.print('  Computing features...')
             we_calc = WinExpectancyCalculator(db_connection=conn)
             we_result = we_calc.load_from_db()
             console.print(f'    Loaded WE matrix: {we_result} states')
@@ -478,9 +495,9 @@ def predict_game(
             we = 0.52  # Placeholder
             console.print(f'    Home win probability: {we:.1%}')
         elif model == 'next_run':
-            console.print(f'    Next run probability: 42%')
+            console.print('    Next run probability: 42%')
         elif model == 'pa_outcome':
-            console.print(f'    Most likely outcome: Single (18%)')
+            console.print('    Most likely outcome: Single (18%)')
 
         # Display results
         if output == 'table':
@@ -496,6 +513,7 @@ def predict_game(
             console.print(table)
         elif output == 'json':
             import json
+
             result = {
                 'game_pk': game_pk,
                 'model': model,
@@ -503,11 +521,11 @@ def predict_game(
                     'home_win_probability': 0.52,
                     'expected_runs_home': 4.2,
                     'expected_runs_away': 3.8,
-                }
+                },
             }
             console.print(json.dumps(result, indent=2))
 
-        console.print(f'[green]✅ Prediction complete[/green]')
+        console.print('[green]✅ Prediction complete[/green]')
 
     except Exception as e:
         console.print(f'[red]Error during prediction: {e}[/red]')
@@ -581,11 +599,11 @@ def features_compute(
 ):
     """Compute features for historical or live data."""
     from baseball.features import (
-        WinExpectancyCalculator,
+        BullpenCalculator,
         LeverageIndexCalculator,
         MatchupCalculator,
         RollingFormCalculator,
-        BullpenCalculator,
+        WinExpectancyCalculator,
     )
 
     console.print(f'[dim]Computing {feature} features...[/dim]')
@@ -621,7 +639,9 @@ def features_compute(
             console.print(f'[green]Computed {result.rows_computed} rows for game {game_pk}[/green]')
         elif season:
             result = calc.compute_for_season(season)
-            console.print(f'[green]Computed {result.rows_computed} rows for season {season}[/green]')
+            console.print(
+                f'[green]Computed {result.rows_computed} rows for season {season}[/green]'
+            )
         else:
             console.print('[yellow]Please specify --season or --game[/yellow]')
             raise typer.Exit(code=1)
@@ -657,7 +677,7 @@ def features_show(
             raise typer.Exit(code=1)
 
         table = table_map[feature]
-        cursor.execute(f"SELECT * FROM {table} WHERE game_pk = %s LIMIT 5", (game_pk,))
+        cursor.execute(f'SELECT * FROM {table} WHERE game_pk = %s LIMIT 5', (game_pk,))
         rows = cursor.fetchall()
 
         if not rows:
@@ -756,15 +776,17 @@ def models_export(
 def models_train(
     model_type: str = typer.Argument(..., help='Model type: next_run, pa_outcome, win_probability'),
     season: int = typer.Option(..., '--season', '-s', help='Season to train on'),
-    test_season: int = typer.Option(None, '--test-season', help='Season for validation (default: season+1)'),
+    test_season: int = typer.Option(
+        None, '--test-season', help='Season for validation (default: season+1)'
+    ),
     name: str = typer.Option(None, '--name', '-n', help='Custom model name'),
     dry_run: bool = typer.Option(False, '--dry-run', help='Show training plan without executing'),
 ):
     """Train a new model on historical data."""
     from baseball.models import (
+        ModelType,
         NextRunProbabilityModel,
         PAOutcomeModel,
-        ModelType,
         TrainingConfig,
     )
 
@@ -809,7 +831,7 @@ def models_train(
         result = model.train()
 
         if result.success:
-            console.print(f'[green]✅ Training complete![/green]')
+            console.print('[green]✅ Training complete![/green]')
             console.print(f'  Model: {result.model_name}')
             console.print(f'  Training rows: {result.training_rows:,}')
             console.print(f'  Validation AUC: {result.validation_auc:.4f}')
@@ -836,7 +858,9 @@ def statcast_download(
     from mlb_predict.sources import StatcastSource
 
     source = StatcastSource()
-    result = source.download(start_date=date(season, 1, 1), end_date=date(season, 12, 31), force=force)
+    result = source.download(
+        start_date=date(season, 1, 1), end_date=date(season, 12, 31), force=force
+    )
 
     if result.success:
         console.print(f'[green]Downloaded Statcast data for {season}[/green]')
@@ -907,8 +931,8 @@ def espn_download(
     if result.success:
         console.print(f'[green]Downloaded ESPN data for {season}[/green]')
         if result.metadata:
-            console.print(f"  Games: {result.metadata.get('games', 'N/A')}")
-            console.print(f"  Plays: {result.metadata.get('plays', 'N/A')}")
+            console.print(f'  Games: {result.metadata.get("games", "N/A")}')
+            console.print(f'  Plays: {result.metadata.get("plays", "N/A")}')
     else:
         console.print(f'[red]Failed: {result.error_message}[/red]')
         raise typer.Exit(code=1)
@@ -981,7 +1005,7 @@ def lahman_download(
     if result.success:
         console.print('[green]Downloaded Lahman Baseball Databank[/green]')
         if result.metadata and 'files' in result.metadata:
-            console.print(f"  Files: {len(result.metadata['files'])}")
+            console.print(f'  Files: {len(result.metadata["files"])}')
     else:
         console.print(f'[red]Failed: {result.error_message}[/red]')
         raise typer.Exit(code=1)
@@ -1000,7 +1024,7 @@ def lahman_ingest(
     if result.success:
         console.print('[green]Lahman data ingested[/green]')
         if result.metadata and 'files_found' in result.metadata:
-            console.print(f"  Files found: {len(result.metadata['files_found'])}")
+            console.print(f'  Files found: {len(result.metadata["files_found"])}')
     else:
         console.print(f'[red]Failed: {result.error_message}[/red]')
         raise typer.Exit(code=1)
@@ -1041,9 +1065,13 @@ def lahman_tables():
 # Bridge command group
 @bridge_app.command(name='resolve')
 def bridge_resolve(
-    source: str = typer.Option(..., '--source', '-s', help='Source system (retrosheet, mlb, espn, statcast)'),
+    source: str = typer.Option(
+        ..., '--source', '-s', help='Source system (retrosheet, mlb, espn, statcast)'
+    ),
     source_id: str = typer.Option(..., '--id', '-i', help='ID in source system'),
-    entity_type: str = typer.Option('player', '--type', '-t', help='Entity type (player, team, game, park)'),
+    entity_type: str = typer.Option(
+        'player', '--type', '-t', help='Entity type (player, team, game, park)'
+    ),
 ):
     """Resolve a source ID to canonical ID using bridge tables."""
     console.print(f'[dim]Resolving {entity_type} ID {source_id} from {source}...[/dim]')
@@ -1053,7 +1081,9 @@ def bridge_resolve(
 
 @bridge_app.command(name='match')
 def bridge_match(
-    entity_type: str = typer.Option(..., '--type', '-t', help='Entity type (player, team, game, park)'),
+    entity_type: str = typer.Option(
+        ..., '--type', '-t', help='Entity type (player, team, game, park)'
+    ),
     source_a: str = typer.Option(..., '--source-a', help='First source system'),
     source_b: str = typer.Option(..., '--source-b', help='Second source system'),
 ):
@@ -1066,7 +1096,9 @@ def bridge_match(
 @bridge_app.command(name='lookup')
 def bridge_lookup(
     canonical_id: str = typer.Option(..., '--id', '-i', help='Canonical ID'),
-    entity_type: str = typer.Option('player', '--type', '-t', help='Entity type (player, team, game, park)'),
+    entity_type: str = typer.Option(
+        'player', '--type', '-t', help='Entity type (player, team, game, park)'
+    ),
 ):
     """Lookup all source IDs for a canonical ID."""
     console.print(f'[dim]Looking up {entity_type} canonical ID {canonical_id}...[/dim]')
@@ -1079,41 +1111,134 @@ def bridge_lookup(
 def pipeline_run(
     pipeline_name: str = typer.Option(..., '--pipeline', '-p', help='Pipeline name from config'),
     resume: bool = typer.Option(False, '--resume', '-r', help='Resume from last checkpoint'),
+    year: int | None = typer.Option(None, '--year', help='Year for historical pipelines'),
+    date: str | None = typer.Option(None, '--date', help='Date for live pipelines (YYYY-MM-DD)'),
 ):
     """Run a pipeline from config."""
-    console.print(f'[dim]Running pipeline: {pipeline_name}[/dim]')
+    from baseball.services.pipeline import get_pipeline_service
+
+    service = get_pipeline_service()
+
+    # Validate pipeline exists
+    config = service.get_pipeline(pipeline_name)
+    if not config:
+        console.print(f'[red]Error: Pipeline "{pipeline_name}" not found[/red]')
+        console.print('Run [code]baseball pipeline list[/code] to see available pipelines')
+        raise typer.Exit(1)
+
+    console.print(f'[bold blue]Running pipeline: {pipeline_name}[/bold blue]')
     if resume:
         console.print('[dim]Resuming from last checkpoint...[/dim]')
-    # TODO: Load pipeline config, execute steps with checkpointing
-    raise NotImplementedError('Pipeline execution not yet implemented')
+
+    # Build parameters
+    parameters = {}
+    if year:
+        parameters['year'] = year
+    if date:
+        parameters['date'] = date
+
+    # Show steps
+    steps_str = ', '.join(config.steps)
+    console.print(f'\n[dim]Steps: {steps_str}[/dim]\n')
+
+    try:
+        run_id, success, error = service.run_pipeline(
+            pipeline_name, resume=resume, parameters=parameters
+        )
+
+        if success:
+            console.print(f'\n[green]Pipeline completed successfully (run_id: {run_id})[/green]')
+        else:
+            console.print(f'\n[red]Pipeline failed: {error}[/red]')
+            console.print(f'[dim]Run ID: {run_id}[/dim]')
+            raise typer.Exit(1)
+
+    except ValueError as e:
+        console.print(f'[red]Error: {e}[/red]')
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f'[red]Pipeline execution failed: {e}[/red]')
+        raise typer.Exit(1)
 
 
 @pipeline_app.command(name='list')
 def pipeline_list():
     """List available pipelines from config."""
-    console.print('[bold]Available Pipelines:[/bold]\n')
-    # TODO: Load and display pipelines from config/pipelines.yml
-    console.print('  retrosheet_ingest')
-    console.print('  mlb_live_ingest')
-    console.print('  statcast_ingest')
-    console.print('  feature_building')
+    from baseball.services.pipeline import get_pipeline_service
+
+    service = get_pipeline_service()
+    pipelines = service.list_pipelines()
+
+    if not pipelines:
+        console.print('[yellow]No pipelines configured[/yellow]')
+        console.print('[dim]Check config/pipelines.yml[/dim]')
+        return
+
+    table = Table(title='Available Pipelines')
+    table.add_column('Name', style='cyan')
+    table.add_column('Steps', style='green')
+    table.add_column('Checkpoint Table', style='dim')
+
+    for config in pipelines:
+        steps_str = ', '.join(config.steps[:3])
+        if len(config.steps) > 3:
+            steps_str += f' (+{len(config.steps) - 3} more)'
+        table.add_row(config.name, steps_str, config.checkpoint_table)
+
+    console.print(table)
+    console.print(f'\n[dim]Total: {len(pipelines)} pipelines[/dim]')
 
 
 @pipeline_app.command(name='status')
 def pipeline_status(
     pipeline_name: str = typer.Option(None, '--pipeline', '-p', help='Specific pipeline name'),
+    limit: int = typer.Option(10, '--limit', '-n', help='Number of runs to show'),
 ):
     """Show pipeline execution status."""
-    if pipeline_name:
-        console.print(f'[dim]Status for pipeline: {pipeline_name}[/dim]')
-    else:
-        console.print('[dim]Status for all pipelines[/dim]')
-    # TODO: Query admin.pipeline_runs for status
-    raise NotImplementedError('Pipeline status not yet implemented')
+    from baseball.services.pipeline import get_pipeline_service
+
+    service = get_pipeline_service()
+    runs = service.get_recent_runs(pipeline_name=pipeline_name, limit=limit)
+
+    if not runs:
+        console.print('[yellow]No pipeline runs found[/yellow]')
+        return
+
+    table = Table(title='Recent Pipeline Runs' + (f' - {pipeline_name}' if pipeline_name else ''))
+    table.add_column('Run ID', style='dim')
+    table.add_column('Pipeline', style='cyan')
+    table.add_column('Status', style='bold')
+    table.add_column('Started', style='green')
+    table.add_column('Duration', style='dim')
+
+    for run in runs:
+        status_color = {
+            'completed': 'green',
+            'failed': 'red',
+            'partial': 'yellow',
+            'running': 'blue',
+        }.get(run.status.value, 'white')
+
+        duration = ''
+        if run.completed_at:
+            duration_str = str(run.completed_at - run.started_at).split('.')[0]
+            duration = duration_str
+
+        table.add_row(
+            str(run.run_id),
+            run.pipeline_name,
+            f'[{status_color}]{run.status.value}[/{status_color}]',
+            run.started_at.strftime('%Y-%m-%d %H:%M'),
+            duration,
+        )
+
+    console.print(table)
 
 
 # Live command group
-live_app = typer.Typer(help='Live MLB game tracking and real-time predictions', no_args_is_help=True)
+live_app = typer.Typer(
+    help='Live MLB game tracking and real-time predictions', no_args_is_help=True
+)
 
 
 @live_app.command(name='games')
@@ -1133,7 +1258,7 @@ def live_games(
     console.print(f'[bold]Live Games ({len(games)}):[/bold]\n')
     for g in games:
         status_icon = '🔴' if g.is_in_progress else '⚫'
-        inning_str = f"{'Top' if g.is_top else 'Bot'} {g.inning}"
+        inning_str = f'{"Top" if g.is_top else "Bot"} {g.inning}'
         console.print(
             f'{status_icon} Game {g.game_pk}: '
             f'{g.away_team_id} {g.away_score} @ {g.home_team_id} {g.home_score} | '
@@ -1153,12 +1278,14 @@ def live_watch(
 
     source = LiveMlbSource()
 
-    console.print(f'[bold]Watching game {game_pk}[/bold] (interval: {interval}s, predict: {predict})')
+    console.print(
+        f'[bold]Watching game {game_pk}[/bold] (interval: {interval}s, predict: {predict})'
+    )
     console.print('[dim]Press Ctrl+C to stop[/dim]\n')
 
     # Define callback for state changes
     def on_state_change(state):
-        inning_str = f"{'Top' if state.is_top else 'Bot'} {state.inning}"
+        inning_str = f'{"Top" if state.is_top else "Bot"} {state.inning}'
         console.print(
             f'[cyan]{inning_str}[/cyan] | '
             f'{state.away_score}-{state.home_score} | '
@@ -1173,7 +1300,9 @@ def live_watch(
         while True:
             state = source.poll_game(game_pk)
             if state and state.is_complete:
-                console.print(f'[green]Game complete! Final: {state.away_score}-{state.home_score}[/green]')
+                console.print(
+                    f'[green]Game complete! Final: {state.away_score}-{state.home_score}[/green]'
+                )
                 break
             time.sleep(interval)
     except KeyboardInterrupt:
@@ -1237,7 +1366,7 @@ def live_predict(
             return
 
     # Get current game situation
-    inning_str = f"{'Top' if state.is_top else 'Bot'} {state.inning}"
+    inning_str = f'{"Top" if state.is_top else "Bot"} {state.inning}'
     console.print(f'[bold]Game {game_pk}[/bold]')
     console.print(f'Score: {state.away_score} @ {state.home_score}')
     console.print(f'Situation: {inning_str}, {state.outs} outs')

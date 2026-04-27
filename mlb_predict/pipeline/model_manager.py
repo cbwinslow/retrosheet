@@ -22,6 +22,7 @@ import numpy as np
 
 try:
     import joblib
+
     JOBLIB_AVAILABLE = True
 except ImportError:
     JOBLIB_AVAILABLE = False

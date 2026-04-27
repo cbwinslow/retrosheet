@@ -18,12 +18,14 @@ def get_ruff_errors(rule: str, path: str = '.') -> list:
         # Parse: file.py:123:45: RULE message
         match = re.match(r'^(.+\.py):(\d+):(\d+):\s+(\w+)', line)
         if match:
-            errors.append({
-                'file': match.group(1),
-                'line': int(match.group(2)),
-                'col': int(match.group(3)),
-                'rule': match.group(4),
-            })
+            errors.append(
+                {
+                    'file': match.group(1),
+                    'line': int(match.group(2)),
+                    'col': int(match.group(3)),
+                    'rule': match.group(4),
+                }
+            )
     return errors
 
 
@@ -37,7 +39,7 @@ def get_line_context(filepath: str, lineno: int, context: int = 3) -> str:
         result = []
         for i in range(start, end):
             marker = '>>> ' if i == lineno - 1 else '    '
-            result.append(f'{marker}{i+1}: {lines[i]}')
+            result.append(f'{marker}{i + 1}: {lines[i]}')
         return ''.join(result)
     except Exception:
         return ''
@@ -97,7 +99,7 @@ def main():
 
     fixed = 0
     for err in errors[:10]:  # Limit to 10 per run
-        print(f"\nFixing {err['file']}:{err['line']}...")
+        print(f'\nFixing {err["file"]}:{err["line"]}...')
         context = get_line_context(err['file'], err['line'])
 
         fixed_code = fix_with_ollama(context, err['rule'], '')

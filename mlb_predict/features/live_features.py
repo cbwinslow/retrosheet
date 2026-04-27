@@ -115,9 +115,15 @@ class GameStateFeatures:
         """Return set of feature names that changed."""
         changed = set()
         for field_name in [
-            'inning', 'is_top', 'outs', 'base_state',
-            'score_differential', 'run_diff_normalized',
-            'leverage_index', 'pitcher_era', 'batter_avg',
+            'inning',
+            'is_top',
+            'outs',
+            'base_state',
+            'score_differential',
+            'run_diff_normalized',
+            'leverage_index',
+            'pitcher_era',
+            'batter_avg',
         ]:
             if getattr(self, field_name) != getattr(other, field_name):
                 changed.add(field_name)
@@ -248,11 +254,7 @@ class LiveFeatureStore:
     def get_stats(self) -> dict[str, Any]:
         """Get feature store statistics."""
         total_requests = self._stats['computations'] + self._stats['cache_hits']
-        hit_rate = (
-            self._stats['cache_hits'] / total_requests
-            if total_requests > 0
-            else 0.0
-        )
+        hit_rate = self._stats['cache_hits'] / total_requests if total_requests > 0 else 0.0
 
         return {
             'cache_size': len(self._cache),

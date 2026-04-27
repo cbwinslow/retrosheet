@@ -73,7 +73,9 @@ def load_feature_candidates(conn, top_n: int | None = None) -> list[str]:
     return features
 
 
-def load_training_data(conn, features: list[str], sample_size: int = 50000) -> tuple[pd.DataFrame, pd.Series]:
+def load_training_data(
+    conn, features: list[str], sample_size: int = 50000
+) -> tuple[pd.DataFrame, pd.Series]:
     """Load training data with selected features."""
 
     feature_cols = ', '.join([f'ef."{f}"' for f in features])
@@ -144,9 +146,9 @@ def forward_stepwise_selection(
     - No features left
     """
 
-    print('\n' + '='*60)
+    print('\n' + '=' * 60)
     print('FORWARD STEPWISE SELECTION')
-    print('='*60)
+    print('=' * 60)
 
     selected = []
     remaining = candidate_features.copy()
@@ -171,7 +173,7 @@ def forward_stepwise_selection(
         # Test each remaining feature
         for i, feature in enumerate(remaining):
             if i % 10 == 0:
-                print(f'  Testing feature {i+1}/{len(remaining)}: {feature[:30]}...', end='\r')
+                print(f'  Testing feature {i + 1}/{len(remaining)}: {feature[:30]}...', end='\r')
 
             test_features = selected + [feature]
             X, y = load_training_data(conn, test_features, sample_size)
@@ -186,7 +188,7 @@ def forward_stepwise_selection(
                 best_feature_std = std
                 best_feature = feature
 
-        print(f"{' '*60}\r", end='')  # Clear line
+        print(f'{" " * 60}\r', end='')  # Clear line
 
         if best_feature is None:
             print('  No feature improved score. Stopping.')
@@ -207,19 +209,21 @@ def forward_stepwise_selection(
         print(f'  Score: {best_score:.4f} (+{improvement:.4f})')
         print(f'  Selected: {len(selected)}/{max_features}')
 
-        history.append({
-            'step': step,
-            'action': 'add',
-            'feature': best_feature,
-            'score': round(best_score, 6),
-            'improvement': round(improvement, 6),
-            'n_features': len(selected),
-            'std': round(best_feature_std, 6),
-        })
+        history.append(
+            {
+                'step': step,
+                'action': 'add',
+                'feature': best_feature,
+                'score': round(best_score, 6),
+                'improvement': round(improvement, 6),
+                'n_features': len(selected),
+                'std': round(best_feature_std, 6),
+            }
+        )
 
-    print('\n' + '='*60)
+    print('\n' + '=' * 60)
     print('SELECTION COMPLETE')
-    print('='*60)
+    print('=' * 60)
     print(f'Final feature count: {len(selected)}')
     print(f'Final AUC: {best_score:.4f}')
     print(f'Improvement from baseline: +{best_score - baseline_score:.4f}')
@@ -240,9 +244,9 @@ def backward_stepwise_selection(
     Stops when min_features reached.
     """
 
-    print('\n' + '='*60)
+    print('\n' + '=' * 60)
     print('BACKWARD STEPWISE SELECTION')
-    print('='*60)
+    print('=' * 60)
 
     selected = candidate_features.copy()
     history = []
@@ -265,7 +269,7 @@ def backward_stepwise_selection(
         # Test removing each feature
         for i, feature in enumerate(selected):
             if i % 10 == 0:
-                print(f'  Testing removal {i+1}/{len(selected)}...', end='\r')
+                print(f'  Testing removal {i + 1}/{len(selected)}...', end='\r')
 
             test_features = [f for f in selected if f != feature]
             X, y = load_training_data(conn, test_features, sample_size)
@@ -277,7 +281,7 @@ def backward_stepwise_selection(
                 worst_feature_score = score
                 worst_feature = feature
 
-        print(f"{' '*60}\r", end='')
+        print(f'{" " * 60}\r', end='')
 
         if worst_feature is None:
             break
@@ -290,17 +294,19 @@ def backward_stepwise_selection(
         print(f'  Score after removal: {best_score:.4f}')
         print(f'  Remaining: {len(selected)}')
 
-        history.append({
-            'step': step,
-            'action': 'remove',
-            'feature': worst_feature,
-            'score': round(best_score, 6),
-            'n_features': len(selected),
-        })
+        history.append(
+            {
+                'step': step,
+                'action': 'remove',
+                'feature': worst_feature,
+                'score': round(best_score, 6),
+                'n_features': len(selected),
+            }
+        )
 
-    print('\n' + '='*60)
+    print('\n' + '=' * 60)
     print('SELECTION COMPLETE')
-    print('='*60)
+    print('=' * 60)
     print(f'Final feature count: {len(selected)}')
     print(f'Final AUC: {best_score:.4f}')
 
@@ -316,12 +322,16 @@ def save_selection_log(history: list, method: str, experiment_id: int | None = N
     os.makedirs('models/feature_selection', exist_ok=True)
 
     with open(output_file, 'w') as f:
-        json.dump({
-            'method': method,
-            'timestamp': timestamp,
-            'experiment_id': experiment_id,
-            'history': history,
-        }, f, indent=2)
+        json.dump(
+            {
+                'method': method,
+                'timestamp': timestamp,
+                'experiment_id': experiment_id,
+                'history': history,
+            },
+            f,
+            indent=2,
+        )
 
     print(f'\nSelection log saved to: {output_file}')
 
@@ -359,26 +369,33 @@ def save_selection_log(history: list, method: str, experiment_id: int | None = N
 
 def main():
     parser = argparse.ArgumentParser(description='Stepwise Feature Selection')
-    parser.add_argument('--method', choices=['forward', 'backward'], default='forward',
-                       help='Selection method')
-    parser.add_argument('--max-features', type=int, default=50,
-                       help='Maximum features for forward selection')
-    parser.add_argument('--min-features', type=int, default=20,
-                       help='Minimum features for backward selection')
-    parser.add_argument('--sample-size', type=int, default=50000,
-                       help='Training sample size')
-    parser.add_argument('--top-candidates', type=int, default=100,
-                       help='Start with top N candidate features')
-    parser.add_argument('--min-improvement', type=float, default=0.001,
-                       help='Minimum score improvement to add feature')
+    parser.add_argument(
+        '--method', choices=['forward', 'backward'], default='forward', help='Selection method'
+    )
+    parser.add_argument(
+        '--max-features', type=int, default=50, help='Maximum features for forward selection'
+    )
+    parser.add_argument(
+        '--min-features', type=int, default=20, help='Minimum features for backward selection'
+    )
+    parser.add_argument('--sample-size', type=int, default=50000, help='Training sample size')
+    parser.add_argument(
+        '--top-candidates', type=int, default=100, help='Start with top N candidate features'
+    )
+    parser.add_argument(
+        '--min-improvement',
+        type=float,
+        default=0.001,
+        help='Minimum score improvement to add feature',
+    )
     args = parser.parse_args()
 
-    print('='*70)
+    print('=' * 70)
     print('STEPWISE FEATURE SELECTION')
-    print('='*70)
+    print('=' * 70)
     print(f'Method: {args.method}')
     print(f'Sample size: {args.sample_size:,}')
-    print('='*70)
+    print('=' * 70)
 
     conn = psycopg2.connect(DB_URL)
 
@@ -391,14 +408,16 @@ def main():
         # Run selection
         if args.method == 'forward':
             selected, history = forward_stepwise_selection(
-                conn, candidates,
+                conn,
+                candidates,
                 max_features=args.max_features,
                 min_improvement=args.min_improvement,
                 sample_size=args.sample_size,
             )
         else:
             selected, history = backward_stepwise_selection(
-                conn, candidates,
+                conn,
+                candidates,
                 min_features=args.min_features,
                 sample_size=args.sample_size,
             )

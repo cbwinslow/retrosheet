@@ -105,7 +105,8 @@ def store_mlb_players(conn, players: list, season: int):
         current_team_id = player.get('currentTeam', {}).get('id')
 
         try:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO mlb.players (id, full_name, first_name, last_name, 
                                          primary_position, birth_date, current_team_id, 
                                          season, api_data)
@@ -118,8 +119,19 @@ def store_mlb_players(conn, players: list, season: int):
                     current_team_id = EXCLUDED.current_team_id,
                     season = EXCLUDED.season,
                     api_data = EXCLUDED.api_data;
-            """, (player_id, full_name, first_name, last_name, primary_position,
-                  birth_date, current_team_id, season, json.dumps(player)))
+            """,
+                (
+                    player_id,
+                    full_name,
+                    first_name,
+                    last_name,
+                    primary_position,
+                    birth_date,
+                    current_team_id,
+                    season,
+                    json.dumps(player),
+                ),
+            )
             inserted += 1
 
             if inserted % 100 == 0:
@@ -156,7 +168,8 @@ def store_mlb_venues(conn, venues: list, season: int):
         time_zone = location.get('timeZone', '') if isinstance(location, dict) else ''
 
         try:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO mlb.venues (id, name, city, state, country, 
                                        time_zone, latitude, longitude,
                                        season, api_data)
@@ -171,8 +184,20 @@ def store_mlb_venues(conn, venues: list, season: int):
                     longitude = EXCLUDED.longitude,
                     season = EXCLUDED.season,
                     api_data = EXCLUDED.api_data;
-            """, (venue_id, name, city, state, country, time_zone,
-                  latitude, longitude, season, json.dumps(venue)))
+            """,
+                (
+                    venue_id,
+                    name,
+                    city,
+                    state,
+                    country,
+                    time_zone,
+                    latitude,
+                    longitude,
+                    season,
+                    json.dumps(venue),
+                ),
+            )
             inserted += 1
 
             if inserted % 10 == 0:
@@ -194,14 +219,17 @@ def link_venues_to_retrosheet(conn, season: int):
     print('Linking MLB venues to Retrosheet parks...')
 
     # Find venues that might match parks based on city/state
-    cur.execute("""
+    cur.execute(
+        """
         UPDATE mlb.venues v
         SET retrosheet_id = p.park_id
         FROM core.parks p
         WHERE v.retrosheet_id IS NULL
         AND (v.city = p.city OR v.name ILIKE '%' || p.name || '%')
         AND v.season = %s;
-    """, (season,))
+    """,
+        (season,),
+    )
 
     updated = cur.rowcount
     conn.commit()
@@ -216,8 +244,9 @@ def main():
     parser.add_argument('--season', type=int, required=True)
     parser.add_argument('--skip-players', action='store_true')
     parser.add_argument('--skip-venues', action='store_true')
-    parser.add_argument('--link-parks', action='store_true',
-                        help='Link venues to Retrosheet park IDs')
+    parser.add_argument(
+        '--link-parks', action='store_true', help='Link venues to Retrosheet park IDs'
+    )
     args = parser.parse_args()
 
     conn = get_db_conn()

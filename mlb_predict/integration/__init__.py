@@ -4,7 +4,7 @@ Provides bridges between legacy scripts and new framework.
 
 Usage:
     from mlb_predict.integration import LegacyCompatibleTrainer
-    
+
     trainer = LegacyCompatibleTrainer()
     result = trainer.train_legacy_style(
         target_id='swing_outcome',

@@ -104,18 +104,93 @@ def get_column_type(column_name: str) -> str:
         return 'NUMERIC'
 
     # Integer columns (most are integers)
-    int_suffixes = ['id', 'year', 'month', 'day', 'count', 'won', 'wins', 'losses', 'ties',
-                   'games', 'attendance', 'salary', 'rank', 'points', 'votes', 'ballots', 'needed',
-                   'height', 'weight', 'stint', 'innings', 'outs', 'po', 'a', 'e', 'dp', 'tp', 'pb']
+    int_suffixes = [
+        'id',
+        'year',
+        'month',
+        'day',
+        'count',
+        'won',
+        'wins',
+        'losses',
+        'ties',
+        'games',
+        'attendance',
+        'salary',
+        'rank',
+        'points',
+        'votes',
+        'ballots',
+        'needed',
+        'height',
+        'weight',
+        'stint',
+        'innings',
+        'outs',
+        'po',
+        'a',
+        'e',
+        'dp',
+        'tp',
+        'pb',
+    ]
     if any(column_name.lower().endswith(s) for s in int_suffixes):
         return 'INTEGER'
 
-    if column_name.startswith(('G', 'AB', 'R', 'H', '_2B', '_3B', 'HR', 'RBI', 'SB', 'CS',
-                               'BB', 'SO', 'IBB', 'HBP', 'SH', 'SF', 'GIDP', 'W', 'L', 'CG',
-                               'SHO', 'SV', 'IP', 'HA', 'ER', 'HRA', 'BBA', 'SOA', 'GF',
-                               'GS', 'Glf', 'Gcf', 'Grf', 'G_all', 'G_batting', 'G_defense',
-                               'G_p', 'G_c', 'G_1b', 'G_2b', 'G_3b', 'G_ss', 'G_lf', 'G_cf',
-                               'G_rf', 'G_of', 'G_dh', 'G_ph', 'G_pr', 'openings')):
+    if column_name.startswith(
+        (
+            'G',
+            'AB',
+            'R',
+            'H',
+            '_2B',
+            '_3B',
+            'HR',
+            'RBI',
+            'SB',
+            'CS',
+            'BB',
+            'SO',
+            'IBB',
+            'HBP',
+            'SH',
+            'SF',
+            'GIDP',
+            'W',
+            'L',
+            'CG',
+            'SHO',
+            'SV',
+            'IP',
+            'HA',
+            'ER',
+            'HRA',
+            'BBA',
+            'SOA',
+            'GF',
+            'GS',
+            'Glf',
+            'Gcf',
+            'Grf',
+            'G_all',
+            'G_batting',
+            'G_defense',
+            'G_p',
+            'G_c',
+            'G_1b',
+            'G_2b',
+            'G_3b',
+            'G_ss',
+            'G_lf',
+            'G_cf',
+            'G_rf',
+            'G_of',
+            'G_dh',
+            'G_ph',
+            'G_pr',
+            'openings',
+        )
+    ):
         return 'INTEGER'
 
     # Everything else is TEXT
@@ -199,11 +274,14 @@ def upsert_to_main(cur, table_name: str, columns: list[str], pk_columns: list[st
 
 def get_db_column_count(cur, table_name: str) -> int:
     """Get number of columns in the database table."""
-    cur.execute("""
+    cur.execute(
+        """
         SELECT COUNT(*) 
         FROM information_schema.columns 
         WHERE table_schema = 'raw_lahman' AND table_name = %s;
-    """, (table_name,))
+    """,
+        (table_name,),
+    )
     return cur.fetchone()[0]
 
 
@@ -213,11 +291,17 @@ def get_db_row_count(cur, table_name: str) -> int:
     return cur.fetchone()[0]
 
 
-def process_file(csv_dir: Path, filename: str, table_name: str, pk_columns: list[str],
-                 stats: dict, dry_run: bool = False) -> tuple[int, int]:
+def process_file(
+    csv_dir: Path,
+    filename: str,
+    table_name: str,
+    pk_columns: list[str],
+    stats: dict,
+    dry_run: bool = False,
+) -> tuple[int, int]:
     """
     Process a single CSV file: read headers, create staging, copy data, upsert to main.
-    
+
     Returns: (csv_rows, db_rows) tuple for validation
     """
     csv_path = csv_dir / filename
@@ -259,12 +343,16 @@ def process_file(csv_dir: Path, filename: str, table_name: str, pk_columns: list
         col_match = '✅' if db_col_count >= len(csv_columns) else '⚠️'
         row_match = '✅' if db_row_count == csv_row_count else '⚠️'
 
-        print(f'{col_match} {filename}: {len(csv_columns)} CSV cols -> {db_col_count} DB cols, '
-              f'{row_match} {csv_row_count:,} CSV rows -> {db_row_count:,} DB rows')
+        print(
+            f'{col_match} {filename}: {len(csv_columns)} CSV cols -> {db_col_count} DB cols, '
+            f'{row_match} {csv_row_count:,} CSV rows -> {db_row_count:,} DB rows'
+        )
 
         if db_row_count != csv_row_count:
-            print(f'   ⚠️ Row count mismatch: CSV={csv_row_count:,}, DB={db_row_count:,}',
-                  file=sys.stderr)
+            print(
+                f'   ⚠️ Row count mismatch: CSV={csv_row_count:,}, DB={db_row_count:,}',
+                file=sys.stderr,
+            )
             stats['mismatch'] += 1
         else:
             stats['success'] += 1
@@ -285,12 +373,11 @@ def main():
     parser = argparse.ArgumentParser(
         description='Load COMPLETE Lahman database (ALL tables, ALL columns)',
     )
-    parser.add_argument('--dir', type=Path, required=True,
-                        help='Directory containing Lahman CSVs')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Print what would be loaded without actually loading')
-    parser.add_argument('--tables', nargs='+',
-                        help='Specific tables to load (default: all)')
+    parser.add_argument('--dir', type=Path, required=True, help='Directory containing Lahman CSVs')
+    parser.add_argument(
+        '--dry-run', action='store_true', help='Print what would be loaded without actually loading'
+    )
+    parser.add_argument('--tables', nargs='+', help='Specific tables to load (default: all)')
     args = parser.parse_args()
 
     # Statistics tracking
@@ -327,7 +414,12 @@ def main():
         stats['total'] += 1
         try:
             csv_rows, db_rows = process_file(
-                args.dir, filename, table_name, pk_columns, stats, args.dry_run,
+                args.dir,
+                filename,
+                table_name,
+                pk_columns,
+                stats,
+                args.dry_run,
             )
             stats['total_csv_rows'] += csv_rows
             stats['total_db_rows'] += db_rows

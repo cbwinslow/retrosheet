@@ -4,7 +4,7 @@ Phase 1.2: Rich Result Classes ✅ COMPLETE
 
 Example:
     from mlb_predict.core import TrainResult, Residuals, Metrics
-    
+
     result = TrainResult(
         model_id=123,
         model_name="my_model",
@@ -13,15 +13,15 @@ Example:
         val_metrics=Metrics(roc_auc=MetricValue(value=0.83)),
         # ...
     )
-    
+
     # Analyze residuals
     residuals = result.residuals
     stats = residuals.analyze()
     residuals.plot_residuals()
-    
+
     # Get top features
     top_features = result.get_best_features(n=20)
-    
+
     # Compare to another model
     comparison = result.compare_to(other_result)
 """

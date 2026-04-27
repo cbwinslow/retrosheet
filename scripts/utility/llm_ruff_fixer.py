@@ -16,7 +16,10 @@ LLAMA_SIMPLE = LLAMA_CPP_DIR / 'build/bin/llama-simple'
 # Environment for CUDA
 CUDA_ENV = {
     'PATH': '/usr/local/cuda-11.8/bin:' + os.environ.get('PATH', ''),
-    'LD_LIBRARY_PATH': '/usr/local/cuda-11.8/lib64:' + str(LLAMA_CPP_DIR / 'build/bin') + ':' + os.environ.get('LD_LIBRARY_PATH', ''),
+    'LD_LIBRARY_PATH': '/usr/local/cuda-11.8/lib64:'
+    + str(LLAMA_CPP_DIR / 'build/bin')
+    + ':'
+    + os.environ.get('LD_LIBRARY_PATH', ''),
 }
 
 
@@ -31,12 +34,14 @@ def get_ruff_errors(rule: str, path: str = '.') -> list:
     for line in result.stdout.split('\n'):
         match = re.match(r'^(.+\.py):(\d+):(\d+):\s+(\w+)', line)
         if match:
-            errors.append({
-                'file': match.group(1),
-                'line': int(match.group(2)),
-                'col': int(match.group(3)),
-                'rule': match.group(4),
-            })
+            errors.append(
+                {
+                    'file': match.group(1),
+                    'line': int(match.group(2)),
+                    'col': int(match.group(3)),
+                    'rule': match.group(4),
+                }
+            )
     return errors
 
 
@@ -50,7 +55,7 @@ def get_line_context(filepath: str, lineno: int, context: int = 3) -> str:
         result = []
         for i in range(start, end):
             marker = '>>> ' if i == lineno - 1 else '    '
-            result.append(f'{marker}{i+1}: {lines[i]}')
+            result.append(f'{marker}{i + 1}: {lines[i]}')
         return ''.join(result)
     except Exception:
         return ''
@@ -68,12 +73,18 @@ Provide ONLY the fixed line(s). No explanation."""
 
     cmd = [
         str(LLAMA_SIMPLE),
-        '-m', str(MODEL_PATH),
-        '-ts', '0.34,0.33,0.33',  # Multi-GPU split
-        '-ngl', '48',  # All layers on GPU
-        '--temp', '0.1',
-        '-n', '100',
-        '-p', prompt,
+        '-m',
+        str(MODEL_PATH),
+        '-ts',
+        '0.34,0.33,0.33',  # Multi-GPU split
+        '-ngl',
+        '48',  # All layers on GPU
+        '--temp',
+        '0.1',
+        '-n',
+        '100',
+        '-p',
+        prompt,
     ]
 
     result = subprocess.run(
@@ -111,9 +122,9 @@ def main():
 
     fixed = 0
     for err in errors[:5]:  # Limit to 5 per run for testing
-        print(f"\n{'='*60}")
-        print(f"Fixing {err['file']}:{err['line']} ({err['rule']})")
-        print(f"{'='*60}")
+        print(f'\n{"=" * 60}')
+        print(f'Fixing {err["file"]}:{err["line"]} ({err["rule"]})')
+        print(f'{"=" * 60}')
 
         context = get_line_context(err['file'], err['line'])
         print(f'Context:\n{context}')

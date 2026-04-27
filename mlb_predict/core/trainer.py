@@ -66,6 +66,7 @@ try:
         BASIC_NUMERIC_FEATURES,
         train as train_pa_distribution,
     )
+
     EXISTING_SCRIPTS_AVAILABLE = True
 except ImportError as e:
     print(f'Warning: Could not import existing training scripts: {e}')
@@ -87,33 +88,33 @@ except ImportError as e:
 
 class ModelTrainer:
     """ModelTrainer - Wraps existing training scripts with Pydantic config.
-    
+
     This class bridges the new Pydantic framework with existing scripts:
     - Takes ModelConfig (Pydantic) instead of dict
     - Returns TrainResult (rich result) instead of dict
     - Wraps existing train_models.py and train_pa_outcome_distribution.py
     - Integrates with models.model_registry
-    
+
     Example:
         from mlb_predict import ModelTrainer, ModelConfig, ModelFamily, TargetVariable
-        
+
         config = ModelConfig(
             family=ModelFamily.XGBOOST,
             target=TargetVariable.SWING_DECISION,
             features=FeatureSet.ADVANCED
         )
-        
+
         trainer = ModelTrainer(config)
         result = trainer.train()  # Returns TrainResult
-        
+
         # Access rich results
         print(result.summary())
         print(result.train_metrics.roc_auc)
-        
+
         # Analyze residuals
         if result.residuals:
             result.residuals.plot_residuals()
-            
+
         # Get feature importance
         top_features = result.get_best_features(n=20)
     """
@@ -154,7 +155,7 @@ class ModelTrainer:
 
     def __init__(self, config: ModelConfig):
         """Initialize trainer with Pydantic config.
-        
+
         Args:
             config: ModelConfig with family, target, features, etc.
         """
@@ -196,32 +197,33 @@ class ModelTrainer:
         """Lazy load SQLAlchemy engine."""
         if self._engine is None:
             self._engine = create_engine(
-                f"postgresql://{self.db_kwargs['user']}@{self.db_kwargs.get('host', 'localhost')}"
-                f":{self.db_kwargs.get('port', 5432)}/{self.db_kwargs['dbname']}",
+                f'postgresql://{self.db_kwargs["user"]}@{self.db_kwargs.get("host", "localhost")}'
+                f':{self.db_kwargs.get("port", 5432)}/{self.db_kwargs["dbname"]}',
             )
         return self._engine
 
     @classmethod
     def from_config(cls, config_path: str) -> 'ModelTrainer':
         """Load trainer from YAML config file.
-        
+
         Args:
             config_path: Path to YAML config file
-            
+
         Returns:
             ModelTrainer instance
-            
+
         Example:
             trainer = ModelTrainer.from_config('configs/my_experiment.yaml')
             result = trainer.train()
         """
         from mlb_predict.config.loader import load_model_config
+
         config = load_model_config(config_path)
         return cls(config)
 
     def register_plugin(self, name: str, model_class: Callable) -> None:
         """Register a custom model plugin.
-        
+
         The model_class must implement:
         - __init__(config): Initialize with config dict
         - fit(X, y, **kwargs): Train on data
@@ -229,11 +231,11 @@ class ModelTrainer:
         - predict(X): Return binary predictions
         - save(path): Save to disk
         - load(path) (class method): Load from disk
-        
+
         Args:
             name: Plugin name identifier
             model_class: Class implementing the above interface
-            
+
         Example:
             class MyModel:
                 def __init__(self, config): self.config = config
@@ -242,7 +244,7 @@ class ModelTrainer:
                 def save(self, path): joblib.dump(self, path)
                 @classmethod
                 def load(cls, path): return joblib.load(path)
-            
+
             trainer.register_plugin('my_model', MyModel)
             result = trainer.train()  # Uses registered plugin
         """
@@ -250,17 +252,17 @@ class ModelTrainer:
 
     def train(self, model_type: str | None = None) -> TrainResult:
         """Execute training and return rich TrainResult.
-        
+
         This method wraps existing training scripts and returns a TrainResult
         with full metrics, residuals, feature importance, and validation curves.
-        
+
         Args:
             model_type: Optional override for model family from config.
                        If None, uses config.family.value.
-        
+
         Returns:
             TrainResult with complete training artifacts
-            
+
         Example:
             config = ModelConfig(
                 family=ModelFamily.XGBOOST,
@@ -268,11 +270,11 @@ class ModelTrainer:
             )
             trainer = ModelTrainer(config)
             result = trainer.train()
-            
+
             # Access results
             print(result.summary())
             print(f"Val AUC: {result.val_metrics.roc_auc}")
-            
+
             # Analyze
             if result.residuals:
                 stats = result.residuals.analyze()
@@ -309,6 +311,7 @@ class ModelTrainer:
 
     def _train_game_pa(self, model_type: str) -> dict[str, Any]:
         """Wrap existing train_models.py for game/PA binary targets."""
+
         # Build args namespace matching train_models.py expectations
         class Args:
             target_id = self.target
@@ -421,7 +424,7 @@ class ModelTrainer:
 
     def _train_mock(self, model_family: str) -> TrainResult:
         """Mock training for testing without database/existing scripts.
-        
+
         Returns realistic TrainResult with synthetic metrics.
         """
         # Generate synthetic data sizes
@@ -436,18 +439,27 @@ class ModelTrainer:
         # Create feature importance
         feature_importance = []
         feature_names = [
-            'pitch_speed', 'spin_rate', 'plate_x', 'plate_z',
-            'release_speed', 'pfx_x', 'pfx_z', 'balls', 'strikes',
+            'pitch_speed',
+            'spin_rate',
+            'plate_x',
+            'plate_z',
+            'release_speed',
+            'pfx_x',
+            'pfx_z',
+            'balls',
+            'strikes',
         ] + [f'feature_{i}' for i in range(n_features - 9)]
 
         for i, name in enumerate(feature_names[:n_features]):
             score = np.random.exponential(0.1) if i > 9 else np.random.exponential(0.15)
-            feature_importance.append(FeatureImportance(
-                feature_name=name,
-                importance_score=min(score, 0.5),
-                importance_rank=i+1,
-                method='gain',
-            ))
+            feature_importance.append(
+                FeatureImportance(
+                    feature_name=name,
+                    importance_score=min(score, 0.5),
+                    importance_rank=i + 1,
+                    method='gain',
+                )
+            )
 
         # Sort by importance
         feature_importance.sort(key=lambda x: x.importance_score, reverse=True)
@@ -457,8 +469,12 @@ class ModelTrainer:
         # Generate validation curve
         n_iters = 200
         iterations = list(range(0, n_iters, 10))
-        train_curve = [0.5 + 0.4 * (1 - np.exp(-i/50)) + np.random.rand() * 0.01 for i in iterations]
-        val_curve = [0.5 + 0.35 * (1 - np.exp(-i/50)) - 0.02 + np.random.rand() * 0.01 for i in iterations]
+        train_curve = [
+            0.5 + 0.4 * (1 - np.exp(-i / 50)) + np.random.rand() * 0.01 for i in iterations
+        ]
+        val_curve = [
+            0.5 + 0.35 * (1 - np.exp(-i / 50)) - 0.02 + np.random.rand() * 0.01 for i in iterations
+        ]
 
         best_iter = iterations[np.argmax(val_curve)]
 
@@ -516,10 +532,18 @@ class ModelTrainer:
     def _dict_to_metrics(self, metrics_dict: dict[str, float]) -> Metrics:
         """Convert dict of metrics to Metrics object."""
         return Metrics(
-            roc_auc=MetricValue(value=metrics_dict.get('roc_auc', 0.0)) if 'roc_auc' in metrics_dict else None,
-            accuracy=MetricValue(value=metrics_dict.get('accuracy', 0.0)) if 'accuracy' in metrics_dict else None,
-            log_loss=MetricValue(value=metrics_dict.get('log_loss', 0.0)) if 'log_loss' in metrics_dict else None,
-            brier_score=MetricValue(value=metrics_dict.get('brier_score', 0.0)) if 'brier_score' in metrics_dict else None,
+            roc_auc=MetricValue(value=metrics_dict.get('roc_auc', 0.0))
+            if 'roc_auc' in metrics_dict
+            else None,
+            accuracy=MetricValue(value=metrics_dict.get('accuracy', 0.0))
+            if 'accuracy' in metrics_dict
+            else None,
+            log_loss=MetricValue(value=metrics_dict.get('log_loss', 0.0))
+            if 'log_loss' in metrics_dict
+            else None,
+            brier_score=MetricValue(value=metrics_dict.get('brier_score', 0.0))
+            if 'brier_score' in metrics_dict
+            else None,
         )
 
     def _load_data(self) -> tuple:
@@ -594,14 +618,18 @@ class ModelTrainer:
         try:
             with conn.cursor() as cur:
                 # Deactivate old versions
-                cur.execute("""
+                cur.execute(
+                    """
                     UPDATE models.model_registry
                     SET is_active = false
                     WHERE target_id = %s AND model_name = %s
-                """, (self.target, model_name))
+                """,
+                    (self.target, model_name),
+                )
 
                 # Insert new version
-                cur.execute("""
+                cur.execute(
+                    """
                     INSERT INTO models.model_registry (
                         target_id, model_name, model_family, model_version, artifact_uri,
                         feature_spec, metrics, is_active
@@ -609,19 +637,27 @@ class ModelTrainer:
                         %s, %s, %s, %s, %s,
                         %s::jsonb, %s::jsonb, true
                     )
-                """, (
-                    self.target,
-                    model_name,
-                    model_name,
-                    datetime.now().strftime('%Y%m%dT%H%M%SZ'),
-                    str(artifact_path.relative_to(ROOT)),
-                    json.dumps({
-                        'numeric_features': self.FEATURE_SETS.get(self.feature_set, {}).get('numeric', []),
-                        'categorical_features': self.FEATURE_SETS.get(self.feature_set, {}).get('categorical', []),
-                        'feature_set': self.feature_set,
-                    }),
-                    json.dumps(metrics),
-                ))
+                """,
+                    (
+                        self.target,
+                        model_name,
+                        model_name,
+                        datetime.now().strftime('%Y%m%dT%H%M%SZ'),
+                        str(artifact_path.relative_to(ROOT)),
+                        json.dumps(
+                            {
+                                'numeric_features': self.FEATURE_SETS.get(self.feature_set, {}).get(
+                                    'numeric', []
+                                ),
+                                'categorical_features': self.FEATURE_SETS.get(
+                                    self.feature_set, {}
+                                ).get('categorical', []),
+                                'feature_set': self.feature_set,
+                            }
+                        ),
+                        json.dumps(metrics),
+                    ),
+                )
             conn.commit()
         finally:
             conn.close()
@@ -631,13 +667,16 @@ class ModelTrainer:
         conn = psycopg2.connect(**self._db_kwargs)
         try:
             with conn.cursor() as cur:
-                cur.execute("""
+                cur.execute(
+                    """
                     SELECT model_name, model_version, artifact_uri, metrics, feature_spec
                     FROM models.model_registry
                     WHERE target_id = %s AND is_active = true
                     ORDER BY created_at DESC
                     LIMIT 1
-                """, (self.target,))
+                """,
+                    (self.target,),
+                )
 
                 row = cur.fetchone()
                 if row:
@@ -658,10 +697,13 @@ class ModelTrainer:
             conn = psycopg2.connect(**self._db_kwargs)
             try:
                 with conn.cursor() as cur:
-                    cur.execute("""
+                    cur.execute(
+                        """
                         INSERT INTO framework.log (log_level, component, operation, message, run_id)
                         VALUES (%s, %s, %s, %s, %s)
-                    """, (level, 'ModelTrainer', 'train', message, self.experiment_id))
+                    """,
+                        (level, 'ModelTrainer', 'train', message, self.experiment_id),
+                    )
                 conn.commit()
             finally:
                 conn.close()

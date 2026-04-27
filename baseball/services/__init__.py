@@ -9,4 +9,5 @@ preserving working logic while adding the new baseball CLI interface.
 
 from baseball.services.bridge import BridgeService
 
+
 __all__ = ['BridgeService']

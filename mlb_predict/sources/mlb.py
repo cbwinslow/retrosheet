@@ -54,8 +54,12 @@ class MlbSource(BaseSource):
 
         for game_pk in game_pks:
             cmd = [
-                'uv', 'run', 'python', str(script),
-                '--game-pk', str(game_pk),
+                'uv',
+                'run',
+                'python',
+                str(script),
+                '--game-pk',
+                str(game_pk),
             ]
             if force:
                 cmd.append('--force')
@@ -75,7 +79,10 @@ class MlbSource(BaseSource):
         )
 
     def _download_date_range(
-        self, start_date: date, end_date: date, force: bool,
+        self,
+        start_date: date,
+        end_date: date,
+        force: bool,
     ) -> DownloadResult:
         """Download games for a date range."""
         script = self._scripts_dir / 'fetch_mlb_stats_api_complete.py'
@@ -84,10 +91,16 @@ class MlbSource(BaseSource):
         season = start_date.year
 
         cmd = [
-            'uv', 'run', 'python', str(script),
-            '--season', str(season),
-            '--start-date', start_date.isoformat(),
-            '--end-date', end_date.isoformat(),
+            'uv',
+            'run',
+            'python',
+            str(script),
+            '--season',
+            str(season),
+            '--start-date',
+            start_date.isoformat(),
+            '--end-date',
+            end_date.isoformat(),
         ]
         if force:
             cmd.append('--force')
@@ -169,7 +182,7 @@ class MlbSource(BaseSource):
             with conn.cursor() as cur:
                 # Check for recent data
                 cur.execute(
-                    "SELECT COUNT(*) FROM raw_mlb.live_feed_snapshots "
+                    'SELECT COUNT(*) FROM raw_mlb.live_feed_snapshots '
                     "WHERE snapshot_date > CURRENT_DATE - INTERVAL '7 days'",
                 )
                 recent_count = cur.fetchone()[0]

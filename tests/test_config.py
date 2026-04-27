@@ -11,7 +11,6 @@ Author: Agent Cascade
 Date: April 24, 2026
 """
 
-
 import pytest
 
 
@@ -125,13 +124,19 @@ class TestXGBoostConfig:
         """Test that invalid max_depth raises error."""
         with pytest.raises(Exception) as exc_info:
             XGBoostConfig(max_depth=25)  # > 20
-        assert 'max_depth' in str(exc_info.value).lower() or 'validation' in str(exc_info.value).lower()
+        assert (
+            'max_depth' in str(exc_info.value).lower()
+            or 'validation' in str(exc_info.value).lower()
+        )
 
     def test_invalid_learning_rate(self):
         """Test that invalid learning_rate raises error."""
         with pytest.raises(Exception) as exc_info:
             XGBoostConfig(learning_rate=1.5)  # > 1.0
-        assert 'learning_rate' in str(exc_info.value).lower() or 'validation' in str(exc_info.value).lower()
+        assert (
+            'learning_rate' in str(exc_info.value).lower()
+            or 'validation' in str(exc_info.value).lower()
+        )
 
     def test_tree_method_pattern(self):
         """Test that tree_method must be valid."""
@@ -366,14 +371,18 @@ class TestExperimentConfig:
             description='Compare XGBoost and LightGBM',
         )
 
-        exp.add_model(ModelConfig(
-            family=ModelFamily.XGBOOST,
-            target=TargetVariable.SWING_DECISION,
-        ))
-        exp.add_model(ModelConfig(
-            family=ModelFamily.LIGHTGBM,
-            target=TargetVariable.SWING_DECISION,
-        ))
+        exp.add_model(
+            ModelConfig(
+                family=ModelFamily.XGBOOST,
+                target=TargetVariable.SWING_DECISION,
+            )
+        )
+        exp.add_model(
+            ModelConfig(
+                family=ModelFamily.LIGHTGBM,
+                target=TargetVariable.SWING_DECISION,
+            )
+        )
 
         yaml_path = tmp_path / 'experiment.yaml'
         exp.to_yaml(yaml_path)
@@ -531,10 +540,12 @@ class TestConfigManager:
         manager = ConfigManager(tmp_path / 'configs')
 
         exp = ExperimentConfig(experiment_name='test_exp')
-        exp.add_model(ModelConfig(
-            family=ModelFamily.XGBOOST,
-            target=TargetVariable.SWING_DECISION,
-        ))
+        exp.add_model(
+            ModelConfig(
+                family=ModelFamily.XGBOOST,
+                target=TargetVariable.SWING_DECISION,
+            )
+        )
 
         path = manager.save_experiment_config(exp)
         assert path.exists()

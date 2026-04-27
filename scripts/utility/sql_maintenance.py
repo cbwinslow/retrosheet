@@ -181,7 +181,9 @@ def add_comments_to_file(filepath: Path, dry_run: bool = False) -> int:
 
     if comments_section and not dry_run:
         # Add comments at the end of the file
-        new_content = content.rstrip() + '\n\n-- Table comments\n' + '\n'.join(comments_section) + '\n'
+        new_content = (
+            content.rstrip() + '\n\n-- Table comments\n' + '\n'.join(comments_section) + '\n'
+        )
         filepath.write_text(new_content, encoding='utf-8')
         print(f'  Added {len(comments_section)} comments: {filepath}')
 
@@ -317,7 +319,7 @@ def cmd_check_all(args):
         else:
             ok_files += 1
 
-    print(f'\nSummary:')
+    print('\nSummary:')
     print(f'  OK: {ok_files} files')
     print(f'  Missing headers: {missing_headers} files')
     print(f'  Missing comments: {missing_comments} files')
@@ -328,20 +330,22 @@ def main():
     parser = argparse.ArgumentParser(
         description='SQL file maintenance utility',
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='''
+        epilog="""
 Examples:
   python scripts/utility/sql_maintenance.py add-headers
   python scripts/utility/sql_maintenance.py add-headers --check
   python scripts/utility/sql_maintenance.py add-comments --dry-run
   python scripts/utility/sql_maintenance.py fix-headers
   python scripts/utility/sql_maintenance.py check-all
-''',
+""",
     )
 
     subparsers = parser.add_subparsers(dest='command', help='Command to run')
 
     # add-headers
-    headers_parser = subparsers.add_parser('add-headers', help='Add standardized headers to SQL files')
+    headers_parser = subparsers.add_parser(
+        'add-headers', help='Add standardized headers to SQL files'
+    )
     headers_parser.add_argument('--check', action='store_true', help='Only check, do not modify')
 
     # add-comments

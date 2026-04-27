@@ -78,12 +78,14 @@ def fetch_espn_schedule(season: int, limit: int = None):
                 game_date = event.get('date', '')[:10]
 
                 if game_id:
-                    games.append({
-                        'espn_game_id': game_id,
-                        'game_date': game_date,
-                        'name': event.get('name', ''),
-                        'status': event.get('status', {}).get('type', {}).get('name', ''),
-                    })
+                    games.append(
+                        {
+                            'espn_game_id': game_id,
+                            'game_date': game_date,
+                            'name': event.get('name', ''),
+                            'status': event.get('status', {}).get('type', {}).get('name', ''),
+                        }
+                    )
 
         time.sleep(0.5)  # Rate limiting
 
@@ -146,12 +148,14 @@ def fetch_espn_player_stats(season: int):
     categories = data.get('categories', [])
     for category in categories:
         for athlete in category.get('athletes', []):
-            stats.append({
-                'player_id': athlete.get('id'),
-                'player_name': athlete.get('name', ''),
-                'category': category.get('name', ''),
-                'stats': athlete.get('statistics', []),
-            })
+            stats.append(
+                {
+                    'player_id': athlete.get('id'),
+                    'player_name': athlete.get('name', ''),
+                    'category': category.get('name', ''),
+                    'stats': athlete.get('statistics', []),
+                }
+            )
 
     return stats
 
@@ -173,12 +177,14 @@ def fetch_espn_team_stats(season: int):
     teams = []
     for team in data.get('sports', [{}])[0].get('leagues', [{}])[0].get('teams', []):
         team_data = team.get('team', {})
-        teams.append({
-            'team_id': team_data.get('id'),
-            'team_name': team_data.get('name', ''),
-            'abbreviation': team_data.get('abbreviation', ''),
-            'record': team_data.get('record', {}),
-        })
+        teams.append(
+            {
+                'team_id': team_data.get('id'),
+                'team_name': team_data.get('name', ''),
+                'abbreviation': team_data.get('abbreviation', ''),
+                'record': team_data.get('record', {}),
+            }
+        )
 
     return teams
 
@@ -194,13 +200,16 @@ def store_espn_plays(conn, espn_game_id: str, game_date: str, plays_data: dict):
     checksum = hashlib.md5(payload_json.encode()).hexdigest()
 
     try:
-        cur.execute("""
+        cur.execute(
+            """
             INSERT INTO raw_espn.plays_snapshots 
                 (espn_game_id, game_date, http_status, response_time_ms, payload, checksum)
             VALUES (%s, %s, %s, %s, %s::jsonb, %s)
             ON CONFLICT (espn_game_id, checksum) DO NOTHING
             RETURNING id;
-        """, (espn_game_id, game_date, 200, 0, payload_json, checksum))
+        """,
+            (espn_game_id, game_date, 200, 0, payload_json, checksum),
+        )
 
         result = cur.fetchone()
         conn.commit()
@@ -227,15 +236,26 @@ def store_espn_player_stats(conn, season: int, stats: list):
         checksum = hashlib.md5(payload_json.encode()).hexdigest()
 
         try:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO raw_espn.player_stats_snapshots
                     (season, player_id, stat_category, http_status, response_time_ms,
                      request_params, payload, checksum)
                 VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s)
                 ON CONFLICT (season, player_id, stat_category, checksum) DO NOTHING
                 RETURNING id;
-            """, (season, player_id, stat.get('category', 'general'), 200, 0,
-                  json.dumps({'season': season}), payload_json, checksum))
+            """,
+                (
+                    season,
+                    player_id,
+                    stat.get('category', 'general'),
+                    200,
+                    0,
+                    json.dumps({'season': season}),
+                    payload_json,
+                    checksum,
+                ),
+            )
 
             if cur.fetchone():
                 inserted += 1
@@ -265,15 +285,26 @@ def store_espn_team_stats(conn, season: int, teams: list):
         checksum = hashlib.md5(payload_json.encode()).hexdigest()
 
         try:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO raw_espn.team_stats_snapshots
                     (season, team_id, team_name, http_status, response_time_ms,
                      request_params, payload, checksum)
                 VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s)
                 ON CONFLICT (season, team_id, checksum) DO NOTHING
                 RETURNING id;
-            """, (season, team_id, team.get('team_name', ''), 200, 0,
-                  json.dumps({'season': season}), payload_json, checksum))
+            """,
+                (
+                    season,
+                    team_id,
+                    team.get('team_name', ''),
+                    200,
+                    0,
+                    json.dumps({'season': season}),
+                    payload_json,
+                    checksum,
+                ),
+            )
 
             if cur.fetchone():
                 inserted += 1
@@ -318,12 +349,13 @@ def main():
                 play_count = 0
                 for i, game in enumerate(games):
                     if i % 100 == 0:
-                        print(f'  Processing game {i+1}/{len(games)}...', end='\r')
+                        print(f'  Processing game {i + 1}/{len(games)}...', end='\r')
 
                     plays_data = fetch_espn_game_plays(game['espn_game_id'])
                     if plays_data:
-                        if store_espn_plays(conn, game['espn_game_id'],
-                                          game['game_date'], plays_data):
+                        if store_espn_plays(
+                            conn, game['espn_game_id'], game['game_date'], plays_data
+                        ):
                             play_count += 1
 
                     time.sleep(0.1)

@@ -210,6 +210,63 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 - AI Agent Gap-Fill Loop: Run tests → find gaps → create missing files → re-run
 - All scripts must be executable: `chmod +x scripts/test/*.sh`
 
+## Python Unit Tests (Milestone 7a: Testing Infrastructure)
+
+**Comprehensive test suite with 160+ tests covering unit, integration, E2E, compatibility, and functionality testing.**
+
+| File | Purpose | Test Count |
+|---|---|---|
+| `tests/conftest.py` | **SHARED FIXTURES** - pytest fixtures: temp_dir, mock_db_connection, sample_game_state_data, sample_we_matrix, sample_li_matrix, db_available, benchmark_logger, project_root, sql_files, script_files. Hooks: pytest_configure, pytest_collection_modifyitems. | Fixtures |
+| `tests/pytest.ini` | **PYTEST CONFIG** - Test markers: unit, integration, e2e, slow, database, benchmark, compatibility, scripts, queries, functionality. Warning filters, coverage options, console output style. | Config |
+| `tests/run_tests.py` | **TEST RUNNER** - Comprehensive test orchestration with JSON reports. Runs unit, integration, E2E tests. Supports --quick, --e2e, --unit, --benchmark flags. | Orchestrator |
+
+### Unit Tests (`tests/unit/`)
+
+| File | Purpose | Test Count |
+|---|---|---|
+| `tests/unit/test_features_base.py` | **FEATURE BASE TESTS** - FeatureConfig, GameState, FeatureResult, FeatureScope, FeatureStatus, InvalidGameStateError, Serialization/deserialization, FeatureStore base class. | 15+ |
+| `tests/unit/test_win_expectancy.py` | **WE CALCULATOR TESTS** - WinExpectancyCalculator initialization, matrix loading, game state lookup, save/load, build from historical, score differential capping. | 12+ |
+| `tests/unit/test_leverage_index.py` | **LI CALCULATOR TESTS** - LeverageIndexCalculator initialization, matrix loading, leverage computation, base states, score differentials, extra innings. | 10+ |
+| `tests/unit/test_pipeline.py` | **PIPELINE SERVICE TESTS** - PipelineService config loading, database operations, execution flow, checkpoint/resume, singleton pattern. Milestone 8. | 20+ |
+| `tests/unit/test_compatibility.py` | **COMPATIBILITY TESTS** - Python version (3.10+), OS compatibility, database features (PostgreSQL 14+), dependency versions. | 15+ |
+| `tests/unit/test_scripts.py` | **SCRIPT VALIDATION TESTS** - Shell script syntax, Python script syntax, SQL script validation, shebang checks, CLI command validation, import tests. | 20+ |
+| `tests/unit/test_queries.py` | **SQL QUERY TESTS** - Query syntax validation, naming conventions, performance checks, security checks, migration order. | 10+ |
+
+### Integration Tests (`tests/integration/`)
+
+| File | Purpose | Test Count |
+|---|---|---|
+| `tests/integration/test_functionality.py` | **FUNCTIONALITY TESTS** - Data flow, component integration, E2E workflows, error handling, edge cases, data quality, concurrency, performance, reliability, security, monitoring. | 25+ |
+| `tests/integration/conftest.py` | Integration test fixtures. | Fixtures |
+
+### E2E Tests (`tests/e2e/`)
+
+| File | Purpose | Test Count |
+|---|---|---|
+| `tests/e2e/test_features_e2e.py` | **FEATURE E2E TESTS** - End-to-end feature pipeline with database, data loading, calculator integration, verification. | 15+ |
+| `tests/e2e/conftest.py` | E2E test fixtures. | Fixtures |
+
+### Running Tests
+
+```bash
+# Run all tests
+uv run python -m pytest tests/ -v
+
+# Run by category
+uv run python -m pytest tests/unit/ -v
+uv run python -m pytest tests/integration/ -v
+uv run python -m pytest tests/e2e/ -v
+
+# Run by marker
+uv run python -m pytest -m unit -v
+uv run python -m pytest -m integration -v
+uv run python -m pytest -m e2e -v
+uv run python -m pytest -m benchmark -v
+
+# Run comprehensive test runner
+uv run python tests/run_tests.py --all --verbose
+```
+
 ## Knowledge Base Documents
 
 | File | Purpose | Canonical Position |
@@ -282,6 +339,42 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/populate_bridge_tables.py` | Downloads Chadwick Register and populates player mappings plus canonical team/park bridge mappings from the typed MLB reference views. Tolerates current bridge-schema variations in the active database. | Live bridge setup and reconciliation refresh. |
 | `scripts/ingest_live_games.py` | Orchestrates batch live game ingestion using environment-driven Postgres settings. | Live bridge work. |
 | `scripts/transform_live_game.py` | Transforms stored MLB live snapshots into canonical `core.live_games` / `core.live_events` with upserts and raw JSON preservation. | Live bridge work. |
+
+## Legacy Scripts Archive (`scripts_legacy/`)
+
+**Milestone 9: Scripts that have been superseded by the `baseball` CLI and moved to archive.**
+
+These scripts are **NOT actively maintained** but preserved for reference.
+
+| File | Purpose | Migration Path |
+|---|---|---|
+| `scripts_legacy/complete_mlb_ingestion.sh` | End-to-end MLB historical ingestion. | Replaced by `baseball mlb download/ingest` |
+| `scripts_legacy/ingest_all_mlb_parallel.sh` | Parallel MLB data ingestion. | Replaced by `baseball mlb ingest --parallel` |
+| `scripts_legacy/ingest_all_external.sh` | External data ingestion (Lahman, ESPN, etc.). | Replaced by `baseball lahman/espn/statcast` |
+| `scripts_legacy/monitor_mlb_ingestion.sh` | Monitor ingestion progress. | Replaced by `baseball status` |
+| `scripts_legacy/demo_advanced_modeling.py` | Demo script for advanced modeling. | Replaced by `baseball models train` |
+| `scripts_legacy/demo_chatbot_integration.py` | Demo script for chatbot integration. | Replaced by `baseball chatbot` |
+| `scripts_legacy/fix_repo_issues.sh` | One-time repository cleanup script. | Archived |
+| `scripts_legacy/data_ingestion/ingest_all_mlb_data.py` | Legacy MLB data ingestion. | Replaced by `MlbSource` adapter |
+| `scripts_legacy/data_ingestion/download_missing_2023.py` | One-time fix for 2023 data gaps. | Archived |
+| `scripts_legacy/README.md` | Archive documentation with migration guide. | Reference |
+
+**Migration Examples:**
+
+```bash
+# Old way (in scripts_legacy/)
+./scripts/complete_mlb_ingestion.sh
+
+# New way (using baseball CLI)
+baseball mlb download --years 2000-2024
+baseball mlb ingest --years 2000-2024
+
+# Old way
+./scripts/rebuild_warehouse.sh --mode full
+
+# New way
+baseball pipeline run --pipeline historical --year 2024
+```
 
 ## Bridge Table Population (Fill Empty Tables)
 
@@ -705,7 +798,48 @@ baseball lahman {download,ingest,validate,tables}
 # ML workflow
 baseball train --config configs/xgboost.yaml
 baseball experiment --target swing_decision
+
+# Pipeline orchestration
+baseball pipeline list
+baseball pipeline run --pipeline daily
+baseball pipeline status
 ```
+
+## Pipeline Service (`baseball/services/`)
+
+**Pipeline execution and orchestration service. Milestone 8 implementation.**
+
+| File | Purpose | Components |
+|---|---|---|
+| `baseball/services/pipeline.py` | **PIPELINE SERVICE** - `PipelineService`, `PipelineConfig`, `PipelineRun`, `PipelineStatus`, `StepStatus`. Configuration loading from YAML, step execution, checkpointing, resume support. Database integration with admin.pipeline_runs and admin.pipeline_checkpoints. | 507 lines |
+| `config/pipelines.yml` | **PIPELINE CONFIGS** - 7 pipeline definitions (daily, historical, live, retrosheet_ingest, mlb_live_ingest, statcast_ingest, feature_building). Steps, checkpoint tables, poll intervals, parameters. | YAML config |
+
+### Pipeline Commands
+
+```bash
+# List available pipelines
+baseball pipeline list
+
+# Run a pipeline
+baseball pipeline run --pipeline historical --year 2024
+baseball pipeline run --pipeline daily
+baseball pipeline run --pipeline live --date 2026-04-27
+
+# Resume from checkpoint
+baseball pipeline run --pipeline daily --resume
+
+# Check status
+baseball pipeline status
+baseball pipeline status --pipeline daily --limit 5
+```
+
+### Key Features
+
+- **Configuration Loading**: Loads from `config/pipelines.yml`
+- **Checkpointing**: Saves progress to `admin.pipeline_checkpoints`
+- **Resume Support**: `--resume` flag restarts from last successful step
+- **Database Logging**: All runs tracked in `admin.pipeline_runs`
+- **Parameter Support**: `--year`, `--date` for pipeline parameters
 
 ## Admin SQL Tables
 

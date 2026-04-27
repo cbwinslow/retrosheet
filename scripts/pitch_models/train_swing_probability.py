@@ -60,43 +60,52 @@ def get_swing_features() -> list[str]:
     """
     return [
         # Pitch Location (Primary driver)
-        'plate_x', 'plate_z',
+        'plate_x',
+        'plate_z',
         'distance_from_center',  # How far from plate center
-        'is_in_zone', 'is_shadow_zone', 'is_chase_zone',
+        'is_in_zone',
+        'is_shadow_zone',
+        'is_chase_zone',
         'zone',  # 1-9 strike zone grid
-
         # Count Context (Major influence on aggressiveness)
-        'balls', 'strikes',
-        'is_two_strike', 'is_three_ball', 'is_full_count',
+        'balls',
+        'strikes',
+        'is_two_strike',
+        'is_three_ball',
+        'is_full_count',
         'count_leverage_index',  # 0-1, how "important" is this pitch
-
         # Pitch Characteristics
         'pitch_type',  # Categorical: FF, SL, CH, CU, etc.
-        'start_speed', 'effective_speed',
-        'spin_rate', 'spin_axis',
-        'pfx_x', 'pfx_z',  # Movement
-        'horizontal_break', 'vertical_break',
-
+        'start_speed',
+        'effective_speed',
+        'spin_rate',
+        'spin_axis',
+        'pfx_x',
+        'pfx_z',  # Movement
+        'horizontal_break',
+        'vertical_break',
         # Sequence Context
         'prev_pitch_type',  # What came before
         'consecutive_same_type',  # Back-to-back same pitch?
         'pitch_number',  # 1st, 2nd, 3rd pitch of PA
         'pa_pitch_count',  # Pitches thrown in this PA so far
-
         # Game Situation
         'score_diff',  # Run differential
-        'inning', 'inning_topbot',  # Top/bottom
+        'inning',
+        'inning_topbot',  # Top/bottom
         'outs_when_up',
         'base_state_code',  # 0-7 encoding of runners
-        'on_1b', 'on_2b', 'on_3b',  # Boolean runners
-        'is_late_game', 'is_high_leverage',
+        'on_1b',
+        'on_2b',
+        'on_3b',  # Boolean runners
+        'is_late_game',
+        'is_high_leverage',
         'run_expectancy_24',  # Run expectancy given base-out state
-
         # Batter/Pitcher Context
-        'stand', 'p_throws',  # Handedness
+        'stand',
+        'p_throws',  # Handedness
         'is_same_handed_matchup',  # Platoon situation
         'times_faced_this_game',  # 1st, 2nd, 3rd time seeing pitcher
-
         # Environmental (minor effect)
         'is_day_game',
     ]
@@ -148,7 +157,7 @@ def load_swing_data(conn, sample_size: int | None = None) -> pd.DataFrame:
     print(f'Loaded {len(df):,} rows in {elapsed:.1f}s')
     print('Class distribution:')
     print(df['target'].value_counts())
-    print(f"Swing rate: {df['target'].mean():.1%}")
+    print(f'Swing rate: {df["target"].mean():.1%}')
 
     return df
 
@@ -169,8 +178,14 @@ def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     X = df.drop(['target', 'pitch_id', 'description'], axis=1, errors='ignore').copy()
 
     # Handle categorical variables
-    categorical_cols = ['pitch_type', 'prev_pitch_type', 'stand', 'p_throws',
-                       'inning_topbot', 'base_state_code']
+    categorical_cols = [
+        'pitch_type',
+        'prev_pitch_type',
+        'stand',
+        'p_throws',
+        'inning_topbot',
+        'base_state_code',
+    ]
 
     for col in categorical_cols:
         if col in X.columns:
@@ -201,13 +216,17 @@ def train_swing_model(X: pd.DataFrame, y: pd.Series) -> dict:
     - Class balancing (scale_pos_weight)
     - Cross-validation for robust evaluation
     """
-    print('\n' + '='*60)
+    print('\n' + '=' * 60)
     print('TRAINING SWING PROBABILITY MODEL')
-    print('='*60)
+    print('=' * 60)
 
     # Stratified split to maintain class balance
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y,
+        X,
+        y,
+        test_size=0.2,
+        random_state=42,
+        stratify=y,
     )
 
     print(f'\nTrain set: {len(X_train):,} samples')
@@ -251,7 +270,8 @@ def train_swing_model(X: pd.DataFrame, y: pd.Series) -> dict:
     print('\nTraining...')
     start_time = time.time()
     model.fit(
-        X_train, y_train,
+        X_train,
+        y_train,
         eval_set=eval_set,
         verbose=False,
     )
@@ -281,16 +301,16 @@ def train_swing_model(X: pd.DataFrame, y: pd.Series) -> dict:
         },
     }
 
-    print('\n' + '='*60)
+    print('\n' + '=' * 60)
     print('EVALUATION RESULTS')
-    print('='*60)
-    print(f"\nAccuracy:  {results['metrics']['accuracy']:.4f}")
-    print(f"Precision: {results['metrics']['precision']:.4f}")
-    print(f"Recall:    {results['metrics']['recall']:.4f}")
-    print(f"F1-Score:  {results['metrics']['f1']:.4f}")
-    print(f"ROC-AUC:   {results['metrics']['roc_auc']:.4f}")
-    print(f"Log Loss:  {results['metrics']['log_loss']:.4f}")
-    print(f"Brier:     {results['metrics']['brier_score']:.4f}")
+    print('=' * 60)
+    print(f'\nAccuracy:  {results["metrics"]["accuracy"]:.4f}')
+    print(f'Precision: {results["metrics"]["precision"]:.4f}')
+    print(f'Recall:    {results["metrics"]["recall"]:.4f}')
+    print(f'F1-Score:  {results["metrics"]["f1"]:.4f}')
+    print(f'ROC-AUC:   {results["metrics"]["roc_auc"]:.4f}')
+    print(f'Log Loss:  {results["metrics"]["log_loss"]:.4f}')
+    print(f'Brier:     {results["metrics"]["brier_score"]:.4f}')
 
     print('\nClassification Report:')
     print(classification_report(y_test, y_pred, target_names=['Take', 'Swing']))
@@ -299,14 +319,20 @@ def train_swing_model(X: pd.DataFrame, y: pd.Series) -> dict:
     cm = confusion_matrix(y_test, y_pred)
     print('                 Predicted')
     print('                 Take   Swing')
-    print(f'Actual Take    {cm[0,0]:5d}  {cm[0,1]:5d}  (Specificity: {cm[0,0]/(cm[0,0]+cm[0,1]):.3f})')
-    print(f'       Swing   {cm[1,0]:5d}  {cm[1,1]:5d}  (Sensitivity: {cm[1,1]/(cm[1,0]+cm[1,1]):.3f})')
+    print(
+        f'Actual Take    {cm[0, 0]:5d}  {cm[0, 1]:5d}  (Specificity: {cm[0, 0] / (cm[0, 0] + cm[0, 1]):.3f})'
+    )
+    print(
+        f'       Swing   {cm[1, 0]:5d}  {cm[1, 1]:5d}  (Sensitivity: {cm[1, 1] / (cm[1, 0] + cm[1, 1]):.3f})'
+    )
 
     # Feature importance
-    importance = pd.DataFrame({
-        'feature': X.columns,
-        'importance': model.feature_importances_,
-    }).sort_values('importance', ascending=False)
+    importance = pd.DataFrame(
+        {
+            'feature': X.columns,
+            'importance': model.feature_importances_,
+        }
+    ).sort_values('importance', ascending=False)
 
     print('\nTop 15 Most Important Features:')
     print(importance.head(15).to_string(index=False))
@@ -338,9 +364,9 @@ def analyze_by_context(y_test: pd.Series, y_pred_proba: np.ndarray, X_test: pd.D
     - Higher swing rate on pitches in zone
     - Pitch type differences (more swings at fastballs)
     """
-    print('\n' + '='*60)
+    print('\n' + '=' * 60)
     print('CONTEXTUAL ANALYSIS')
-    print('='*60)
+    print('=' * 60)
 
     # Create analysis dataframe
     analysis_df = X_test.copy()
@@ -370,30 +396,36 @@ def analyze_by_context(y_test: pd.Series, y_pred_proba: np.ndarray, X_test: pd.D
     # Calibration check (binned by predicted probability)
     print('\nCalibration (binned by predicted probability):')
     analysis_df['prob_bin'] = pd.qcut(analysis_df['pred_proba'], q=10, duplicates='drop')
-    calibration = analysis_df.groupby('prob_bin').agg({
-        'actual_swing': 'mean',
-        'pred_proba': 'mean',
-        'pitch_id': 'count',
-    }).reset_index()
+    calibration = (
+        analysis_df.groupby('prob_bin')
+        .agg(
+            {
+                'actual_swing': 'mean',
+                'pred_proba': 'mean',
+                'pitch_id': 'count',
+            }
+        )
+        .reset_index()
+    )
     calibration.columns = ['Bin', 'Actual Rate', 'Predicted Rate', 'Count']
     print(calibration.to_string(index=False))
 
 
 def main():
     parser = argparse.ArgumentParser(description='Train Swing Probability Model')
-    parser.add_argument('--sample', type=int, default=None,
-                       help='Use sample of N rows for quick testing')
-    parser.add_argument('--skip-analysis', action='store_true',
-                       help='Skip contextual analysis')
+    parser.add_argument(
+        '--sample', type=int, default=None, help='Use sample of N rows for quick testing'
+    )
+    parser.add_argument('--skip-analysis', action='store_true', help='Skip contextual analysis')
     args = parser.parse_args()
 
-    print('='*70)
+    print('=' * 70)
     print('SWING PROBABILITY MODEL TRAINING')
-    print('='*70)
+    print('=' * 70)
     print(f'Timestamp: {datetime.now().isoformat()}')
     print(f'Model Dir: {MODEL_DIR}')
-    print(f"Sample Size: {args.sample or 'Full Dataset'}")
-    print('='*70)
+    print(f'Sample Size: {args.sample or "Full Dataset"}')
+    print('=' * 70)
 
     # Connect to database
     print('\nConnecting to database...')
@@ -413,7 +445,11 @@ def main():
         if not args.skip_analysis:
             # Re-split to get test set for analysis
             X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y,
+                X,
+                y,
+                test_size=0.2,
+                random_state=42,
+                stratify=y,
             )
             # Load model and predict
             with open(results['model_file'], 'rb') as f:
@@ -421,11 +457,11 @@ def main():
             y_pred_proba = model.predict_proba(X_test)[:, 1]
             analyze_by_context(y_test, y_pred_proba, X_test)
 
-        print('\n' + '='*70)
+        print('\n' + '=' * 70)
         print('TRAINING COMPLETE')
-        print('='*70)
+        print('=' * 70)
         print(f'Results: {RESULTS_FILE}')
-        print(f"Model: {results['model_file']}")
+        print(f'Model: {results["model_file"]}')
 
     finally:
         conn.close()

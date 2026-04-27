@@ -7,8 +7,6 @@ These tests verify that the new baseball/services/bridge.py properly
 WRAP the existing bridge scripts and that they function correctly.
 """
 
-import subprocess
-import sys
 from pathlib import Path
 
 import pytest

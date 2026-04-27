@@ -42,6 +42,7 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 @dataclass
 class FeatureGroup:
     """Defines a feature group for ablation testing."""
+
     name: str
     description: str
     columns: list[str]
@@ -54,104 +55,197 @@ FEATURE_GROUPS = [
         name='baseline',
         description='Raw Statcast fields (118 columns)',
         columns=[
-            'game_year', 'game_pk', 'game_date', 'sv_id',
-            'batter_id', 'pitcher_id',
-            'pitch_type', 'pitch_name', 'pitch_number',
-            'balls', 'strikes', 'outs_when_up', 'inning', 'inning_topbot',
-            'on_1b', 'on_2b', 'on_3b',
-            'stand', 'p_throws', 'home_team', 'away_team', 'type',
-            'start_speed', 'effective_speed', 'release_spin_rate',
-            'release_pos_x', 'release_pos_y', 'release_pos_z', 'release_extension',
-            'pfx_x', 'pfx_z', 'spin_axis',
-            'plate_x', 'plate_z', 'zone', 'sz_top', 'sz_bot',
-            'vx0', 'vy0', 'vz0', 'ax', 'ay', 'az',
-            'launch_speed', 'launch_angle', 'hit_distance',
-            'home_score', 'away_score', 'bat_score', 'fld_score',
-            'delta_home_win_exp', 'delta_run_exp',
+            'game_year',
+            'game_pk',
+            'game_date',
+            'sv_id',
+            'batter_id',
+            'pitcher_id',
+            'pitch_type',
+            'pitch_name',
+            'pitch_number',
+            'balls',
+            'strikes',
+            'outs_when_up',
+            'inning',
+            'inning_topbot',
+            'on_1b',
+            'on_2b',
+            'on_3b',
+            'stand',
+            'p_throws',
+            'home_team',
+            'away_team',
+            'type',
+            'start_speed',
+            'effective_speed',
+            'release_spin_rate',
+            'release_pos_x',
+            'release_pos_y',
+            'release_pos_z',
+            'release_extension',
+            'pfx_x',
+            'pfx_z',
+            'spin_axis',
+            'plate_x',
+            'plate_z',
+            'zone',
+            'sz_top',
+            'sz_bot',
+            'vx0',
+            'vy0',
+            'vz0',
+            'ax',
+            'ay',
+            'az',
+            'launch_speed',
+            'launch_angle',
+            'hit_distance',
+            'home_score',
+            'away_score',
+            'bat_score',
+            'fld_score',
+            'delta_home_win_exp',
+            'delta_run_exp',
         ],
         source_tables=['features_pitch.base_features'],
     ),
-
     FeatureGroup(
         name='velocity_movement',
         description='Engineered: velocity %iles, strike zone regions, movement (46+)',
         columns=[
-            'velocity_percentile', 'velocity_diff_from_avg',
-            'is_fastball', 'is_breaking', 'is_offspeed',
-            'zone_region', 'is_in_zone', 'is_shadow_zone', 'is_chase_zone',
-            'distance_from_center', 'horizontal_break', 'vertical_break',
-            'approach_angle', 'spin_efficiency', 'induced_vertical_break',
-            'plate_x_normalized', 'plate_z_normalized', 'height_above_center',
-            'perceived_velocity', 'velocity_diff', 'release_approach_angle',
-            'extension_effectiveness', 'release_height', 'release_side',
-            'total_movement', 'movement_angle', 'spin_axis_quadrant',
+            'velocity_percentile',
+            'velocity_diff_from_avg',
+            'is_fastball',
+            'is_breaking',
+            'is_offspeed',
+            'zone_region',
+            'is_in_zone',
+            'is_shadow_zone',
+            'is_chase_zone',
+            'distance_from_center',
+            'horizontal_break',
+            'vertical_break',
+            'approach_angle',
+            'spin_efficiency',
+            'induced_vertical_break',
+            'plate_x_normalized',
+            'plate_z_normalized',
+            'height_above_center',
+            'perceived_velocity',
+            'velocity_diff',
+            'release_approach_angle',
+            'extension_effectiveness',
+            'release_height',
+            'release_side',
+            'total_movement',
+            'movement_angle',
+            'spin_axis_quadrant',
         ],
         source_tables=['features_pitch.engineered_features'],
     ),
-
     FeatureGroup(
         name='additional',
         description='Additional engineered: tunneling, spin, platoon, fatigue (25+)',
         columns=[
-            'pitcher_fatigue_score', 'velocity_change_from_prev',
-            'spin_rate_percentile', 'spin_efficiency_score',
-            'is_same_handed_matchup', 'platoon_advantage',
-            'pitch_tunneling_metric', 'release_distance_delta',
-            'pa_pressure_index', 'is_high_pressure_pa',
-            'is_walk_off_situation', 'is_ace_pitcher', 'is_closer_situation',
-            'time_since_prev_pitch', 'prev_was_strike', 'prev_was_ball',
-            'consecutive_same_type', 'pitcher_repertoire_depth',
-            'batter_performance_vs_type', 'batter_swing_rate_vs_type',
+            'pitcher_fatigue_score',
+            'velocity_change_from_prev',
+            'spin_rate_percentile',
+            'spin_efficiency_score',
+            'is_same_handed_matchup',
+            'platoon_advantage',
+            'pitch_tunneling_metric',
+            'release_distance_delta',
+            'pa_pressure_index',
+            'is_high_pressure_pa',
+            'is_walk_off_situation',
+            'is_ace_pitcher',
+            'is_closer_situation',
+            'time_since_prev_pitch',
+            'prev_was_strike',
+            'prev_was_ball',
+            'consecutive_same_type',
+            'pitcher_repertoire_depth',
+            'batter_performance_vs_type',
+            'batter_swing_rate_vs_type',
         ],
         source_tables=['features_pitch.engineered_features'],
     ),
-
     FeatureGroup(
         name='kb_research',
         description='KB research features: quality, count leverage, TTOP, RE24 (40+)',
         columns=[
-            'pitch_quality_score', 'pitch_quality_percentile',
-            'count_leverage_index', 'is_payoff_pitch', 'is_3_0_count',
-            'times_through_order_detailed', 'ttop_penalty_applies',
-            'run_expectancy_24', 'win_probability_added',
-            'is_runner_on_base', 'base_state_code',
-            'game_month', 'is_opening_series', 'is_day_game',
-            'pitch_type_family', 'is_primary_pitch_type',
-            'is_batter_hot_zone', 'is_batter_cold_zone',
-            'score_diff_bucket', 'times_faced_this_game',
+            'pitch_quality_score',
+            'pitch_quality_percentile',
+            'count_leverage_index',
+            'is_payoff_pitch',
+            'is_3_0_count',
+            'times_through_order_detailed',
+            'ttop_penalty_applies',
+            'run_expectancy_24',
+            'win_probability_added',
+            'is_runner_on_base',
+            'base_state_code',
+            'game_month',
+            'is_opening_series',
+            'is_day_game',
+            'pitch_type_family',
+            'is_primary_pitch_type',
+            'is_batter_hot_zone',
+            'is_batter_cold_zone',
+            'score_diff_bucket',
+            'times_faced_this_game',
         ],
         source_tables=['features_pitch.engineered_features'],
     ),
-
     FeatureGroup(
         name='context',
         description='Context: weather, momentum, umpire, park, attendance (60+)',
         columns=[
-            'temp_extreme_flag', 'wind_effect_score', 'altitude_factor',
-            'is_shadow_game', 'batting_team_last_5_win_rate',
-            'pitcher_last_3_era', 'pitcher_last_3_strikeout_rate',
-            'umpire_strike_zone_size', 'umpire_k_friendly',
-            'attendance_vs_capacity_pct', 'is_sellout',
-            'park_elevation_feet', 'park_overall_hr_factor',
-            'pitcher_days_rest', 'is_short_rest_start',
-            'pitcher_season_workload', 'home_field_advantage_score',
+            'temp_extreme_flag',
+            'wind_effect_score',
+            'altitude_factor',
+            'is_shadow_game',
+            'batting_team_last_5_win_rate',
+            'pitcher_last_3_era',
+            'pitcher_last_3_strikeout_rate',
+            'umpire_strike_zone_size',
+            'umpire_k_friendly',
+            'attendance_vs_capacity_pct',
+            'is_sellout',
+            'park_elevation_feet',
+            'park_overall_hr_factor',
+            'pitcher_days_rest',
+            'is_short_rest_start',
+            'pitcher_season_workload',
+            'home_field_advantage_score',
         ],
         source_tables=['features_pitch.engineered_features'],
     ),
-
     FeatureGroup(
         name='final',
         description='Final: Markov chains, matchup history, sequence (50+)',
         columns=[
-            'strike_accumulation_rate', 'ball_accumulation_rate',
-            'expected_pitches_remaining', 'is_absorbing_state',
-            'count_pressure_index', 'is_favorable_hitter_count',
-            'matchup_prior_pa_count', 'matchup_prior_ba',
-            'matchup_first_time_facing', 'matchup_success_trend',
-            'is_postseason', 'month_of_season', 'is_season_opener',
-            'prev_2_pitch_types', 'is_repeated_pitch', 'is_alternating_pattern',
-            'pitch_sequence_category', 'is_platoon_advantage_batter',
-            'is_rookie_batter', 'batter_experience_level',
+            'strike_accumulation_rate',
+            'ball_accumulation_rate',
+            'expected_pitches_remaining',
+            'is_absorbing_state',
+            'count_pressure_index',
+            'is_favorable_hitter_count',
+            'matchup_prior_pa_count',
+            'matchup_prior_ba',
+            'matchup_first_time_facing',
+            'matchup_success_trend',
+            'is_postseason',
+            'month_of_season',
+            'is_season_opener',
+            'prev_2_pitch_types',
+            'is_repeated_pitch',
+            'is_alternating_pattern',
+            'pitch_sequence_category',
+            'is_platoon_advantage_batter',
+            'is_rookie_batter',
+            'batter_experience_level',
         ],
         source_tables=['features_pitch.engineered_features'],
     ),
@@ -168,16 +262,20 @@ def build_cumulative_groups() -> list[tuple[str, list[str]]]:
 
     for group in FEATURE_GROUPS:
         all_features.extend(group.columns)
-        cumulative.append((
-            f'baseline+{group.name}',
-            all_features.copy(),
-            group.description,
-        ))
+        cumulative.append(
+            (
+                f'baseline+{group.name}',
+                all_features.copy(),
+                group.description,
+            )
+        )
 
     return cumulative
 
 
-def load_data_for_features(conn, features: list[str], sample_size: int | None = None) -> pd.DataFrame:
+def load_data_for_features(
+    conn, features: list[str], sample_size: int | None = None
+) -> pd.DataFrame:
     """Load data with specified features."""
 
     # Build feature list (check which exist in database)
@@ -238,7 +336,11 @@ def train_and_evaluate(X: pd.DataFrame, y: pd.Series, group_name: str) -> dict:
     if len(X_test) == 0:
         # Fallback to random split
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y,
+            X,
+            y,
+            test_size=0.2,
+            random_state=42,
+            stratify=y,
         )
 
     # XGBoost params (consistent across all tests)
@@ -285,19 +387,19 @@ def run_ablation_study(conn, sample_size: int | None = None) -> list[dict]:
     cumulative_groups = build_cumulative_groups()
     all_results = []
 
-    print('='*70)
+    print('=' * 70)
     print('FEATURE ABLATION STUDY')
-    print('='*70)
-    print(f"Sample size: {sample_size or 'FULL DATASET'}")
+    print('=' * 70)
+    print(f'Sample size: {sample_size or "FULL DATASET"}')
     print(f'Testing {len(cumulative_groups)} feature configurations')
-    print('='*70)
+    print('=' * 70)
 
     for group_name, features, description in cumulative_groups:
-        print(f"\n{'='*70}")
+        print(f'\n{"=" * 70}')
         print(f'Testing: {group_name}')
         print(f'Description: {description}')
         print(f'Features: {len(features)}')
-        print('='*70)
+        print('=' * 70)
 
         try:
             # Load data
@@ -319,10 +421,10 @@ def run_ablation_study(conn, sample_size: int | None = None) -> list[dict]:
 
             # Print results
             print('\nResults:')
-            print(f"  Accuracy:  {results['accuracy']:.4f}")
-            print(f"  Log Loss:  {results['log_loss']:.4f}")
-            print(f"  AUC:       {results['auc_macro']:.4f}")
-            print(f"  Train Time: {results['train_time_seconds']:.1f}s")
+            print(f'  Accuracy:  {results["accuracy"]:.4f}')
+            print(f'  Log Loss:  {results["log_loss"]:.4f}')
+            print(f'  AUC:       {results["auc_macro"]:.4f}')
+            print(f'  Train Time: {results["train_time_seconds"]:.1f}s')
 
             # Save model
             model_file = f'{RESULTS_DIR}/{group_name}_model.pkl'
@@ -332,6 +434,7 @@ def run_ablation_study(conn, sample_size: int | None = None) -> list[dict]:
         except Exception as e:
             print(f'ERROR in {group_name}: {e!s}')
             import traceback
+
             traceback.print_exc()
             continue
 
@@ -341,9 +444,9 @@ def run_ablation_study(conn, sample_size: int | None = None) -> list[dict]:
 def analyze_results(results: list[dict]):
     """Analyze and visualize ablation results."""
 
-    print('\n' + '='*70)
+    print('\n' + '=' * 70)
     print('ABLATION STUDY SUMMARY')
-    print('='*70)
+    print('=' * 70)
 
     df = pd.DataFrame(results)
 
@@ -354,43 +457,48 @@ def analyze_results(results: list[dict]):
     df['time_per_feature'] = df['train_time_seconds'] / df['n_features']
 
     print('\nFeature Group Performance:')
-    print(df[['group', 'n_features', 'accuracy', 'log_loss', 'auc_macro',
-              'train_time_seconds']].to_string(index=False))
+    print(
+        df[
+            ['group', 'n_features', 'accuracy', 'log_loss', 'auc_macro', 'train_time_seconds']
+        ].to_string(index=False)
+    )
 
     print('\nMarginal Improvements (vs previous group):')
     print(df[['group', 'accuracy_gain', 'log_loss_reduction', 'auc_gain']].to_string(index=False))
 
     print('\nEfficiency (training time per feature):')
-    print(df[['group', 'n_features', 'train_time_seconds', 'time_per_feature']].to_string(index=False))
+    print(
+        df[['group', 'n_features', 'train_time_seconds', 'time_per_feature']].to_string(index=False)
+    )
 
     # Recommendations
-    print('\n' + '='*70)
+    print('\n' + '=' * 70)
     print('RECOMMENDATIONS')
-    print('='*70)
+    print('=' * 70)
 
     # Find best ROI (accuracy gain / features added)
     df['roi'] = df['accuracy_gain'] / df['n_features']
     best_roi = df.loc[df['roi'].idxmax()]
 
-    print(f"\nBest ROI: {best_roi['group']}")
-    print(f"  Accuracy gain: +{best_roi['accuracy_gain']:.4f}")
-    print(f"  Features added: {best_roi['n_features']}")
-    print(f"  ROI: {best_roi['roi']:.6f} accuracy per feature")
+    print(f'\nBest ROI: {best_roi["group"]}')
+    print(f'  Accuracy gain: +{best_roi["accuracy_gain"]:.4f}')
+    print(f'  Features added: {best_roi["n_features"]}')
+    print(f'  ROI: {best_roi["roi"]:.6f} accuracy per feature')
 
     # Find diminishing returns point
     print('\nDiminishing Returns Analysis:')
     for i, row in df.iterrows():
         if i == 0:
             continue
-        prev = df.iloc[i-1]
+        prev = df.iloc[i - 1]
         gain = row['accuracy'] - prev['accuracy']
         if gain < 0.001:  # Less than 0.1% improvement
-            print(f"  Diminishing returns start at: {row['group']}")
+            print(f'  Diminishing returns start at: {row["group"]}')
             print(f'    Gain from previous: +{gain:.4f} accuracy')
             break
 
     # Save results
-    results_file = f"{RESULTS_DIR}/ablation_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    results_file = f'{RESULTS_DIR}/ablation_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
     with open(results_file, 'w') as f:
         json.dump(results, f, indent=2)
     print(f'\nResults saved to: {results_file}')
@@ -398,10 +506,8 @@ def analyze_results(results: list[dict]):
 
 def main():
     parser = argparse.ArgumentParser(description='Feature Ablation Study')
-    parser.add_argument('--quick', action='store_true',
-                       help='Use 50k sample for quick test')
-    parser.add_argument('--full', action='store_true',
-                       help='Use full dataset (slow)')
+    parser.add_argument('--quick', action='store_true', help='Use 50k sample for quick test')
+    parser.add_argument('--full', action='store_true', help='Use full dataset (slow)')
     args = parser.parse_args()
 
     sample_size = 50000 if args.quick else None

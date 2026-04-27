@@ -19,6 +19,7 @@ from typing import Any
 try:
     import websockets
     from websockets.server import WebSocketServerProtocol
+
     WEBSOCKETS_AVAILABLE = True
 except ImportError:
     WEBSOCKETS_AVAILABLE = False
@@ -128,11 +129,14 @@ class PredictionWebSocketServer:
         }
 
         try:
-            await self._send_message(websocket, {
-                'type': 'connected',
-                'message': 'Welcome to MLB Live Predictions',
-                'commands': ['subscribe', 'unsubscribe', 'ping'],
-            })
+            await self._send_message(
+                websocket,
+                {
+                    'type': 'connected',
+                    'message': 'Welcome to MLB Live Predictions',
+                    'commands': ['subscribe', 'unsubscribe', 'ping'],
+                },
+            )
 
             # Handle messages from client
             async for message in websocket:
@@ -180,20 +184,23 @@ class PredictionWebSocketServer:
         elif command == 'games':
             # Return list of active games
             games = self._live_source.get_active_games() if self._live_source else []
-            await self._send_message(websocket, {
-                'type': 'games',
-                'games': [
-                    {
-                        'game_pk': g.game_pk,
-                        'status': g.status,
-                        'inning': g.inning,
-                        'is_top': g.is_top,
-                        'home_score': g.home_score,
-                        'away_score': g.away_score,
-                    }
-                    for g in games
-                ],
-            })
+            await self._send_message(
+                websocket,
+                {
+                    'type': 'games',
+                    'games': [
+                        {
+                            'game_pk': g.game_pk,
+                            'status': g.status,
+                            'inning': g.inning,
+                            'is_top': g.is_top,
+                            'home_score': g.home_score,
+                            'away_score': g.away_score,
+                        }
+                        for g in games
+                    ],
+                },
+            )
 
         else:
             await self._send_error(websocket, f'Unknown command: {command}')
@@ -213,10 +220,13 @@ class PredictionWebSocketServer:
         # Send initial state
         await self._poll_game(game_pk)
 
-        await self._send_message(websocket, {
-            'type': 'subscribed',
-            'game_pk': game_pk,
-        })
+        await self._send_message(
+            websocket,
+            {
+                'type': 'subscribed',
+                'game_pk': game_pk,
+            },
+        )
 
         logger.info(f'Client {id(websocket)} subscribed to game {game_pk}')
 
@@ -233,10 +243,13 @@ class PredictionWebSocketServer:
             del self._subscriptions[game_pk]
             self._last_states.pop(game_pk, None)
 
-        await self._send_message(websocket, {
-            'type': 'unsubscribed',
-            'game_pk': game_pk,
-        })
+        await self._send_message(
+            websocket,
+            {
+                'type': 'unsubscribed',
+                'game_pk': game_pk,
+            },
+        )
 
     async def _unregister_client(self, websocket: WebSocketServerProtocol) -> None:
         """Unregister a client and clean up subscriptions."""
@@ -292,7 +305,9 @@ class PredictionWebSocketServer:
         )
 
         # Check if state changed
-        state_hash = f'{state.inning}_{state.is_top}_{state.outs}_{state.home_score}_{state.away_score}'
+        state_hash = (
+            f'{state.inning}_{state.is_top}_{state.outs}_{state.home_score}_{state.away_score}'
+        )
         if game_pk in self._last_states and self._last_states[game_pk].get('hash') == state_hash:
             return  # No change
 
@@ -363,10 +378,13 @@ class PredictionWebSocketServer:
         error: str,
     ) -> None:
         """Send an error message to a client."""
-        await self._send_message(websocket, {
-            'type': 'error',
-            'message': error,
-        })
+        await self._send_message(
+            websocket,
+            {
+                'type': 'error',
+                'message': error,
+            },
+        )
 
     def get_stats(self) -> dict[str, Any]:
         """Get server statistics."""

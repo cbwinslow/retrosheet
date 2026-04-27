@@ -24,6 +24,7 @@ from dotenv import load_dotenv
 
 try:
     from pybaseball import batting_stats, pitching_stats, schedule_and_record
+
     PYBASEBALL_AVAILABLE = True
 except ImportError:
     PYBASEBALL_AVAILABLE = False
@@ -76,17 +77,26 @@ def store_br_game_logs(conn, season: int, team: str, games: list):
             payload_json = json.dumps(game, sort_keys=True)
             checksum = hashlib.md5(payload_json.encode()).hexdigest()
 
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO raw_baseball_reference.game_logs (
                     game_date, season, team, opponent, 
                     http_status, response_time_ms, payload, checksum
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s)
                 ON CONFLICT (checksum) DO NOTHING
                 RETURNING id;
-            """, (
-                game_date, season, team, opponent,
-                200, 0, payload_json, checksum,
-            ))
+            """,
+                (
+                    game_date,
+                    season,
+                    team,
+                    opponent,
+                    200,
+                    0,
+                    payload_json,
+                    checksum,
+                ),
+            )
 
             if cur.fetchone():
                 inserted += 1
@@ -152,10 +162,36 @@ def main():
 
         # Teams to fetch (MLB teams)
         teams = args.teams or [
-            'ARI', 'ATL', 'BAL', 'BOS', 'CHC', 'CHW', 'CIN', 'CLE',
-            'COL', 'DET', 'HOU', 'KCR', 'LAA', 'LAD', 'MIA', 'MIL',
-            'MIN', 'NYM', 'NYY', 'OAK', 'PHI', 'PIT', 'SDP', 'SEA',
-            'SFG', 'STL', 'TBR', 'TEX', 'TOR', 'WSN',
+            'ARI',
+            'ATL',
+            'BAL',
+            'BOS',
+            'CHC',
+            'CHW',
+            'CIN',
+            'CLE',
+            'COL',
+            'DET',
+            'HOU',
+            'KCR',
+            'LAA',
+            'LAD',
+            'MIA',
+            'MIL',
+            'MIN',
+            'NYM',
+            'NYY',
+            'OAK',
+            'PHI',
+            'PIT',
+            'SDP',
+            'SEA',
+            'SFG',
+            'STL',
+            'TBR',
+            'TEX',
+            'TOR',
+            'WSN',
         ]
 
         if not args.skip_schedule and not args.dry_run:
@@ -163,7 +199,7 @@ def main():
 
             total_games = 0
             for i, team in enumerate(teams):
-                print(f'  [{i+1}/{len(teams)}] {team}...', end=' ')
+                print(f'  [{i + 1}/{len(teams)}] {team}...', end=' ')
 
                 games = fetch_br_schedule(args.season, team)
                 if games:

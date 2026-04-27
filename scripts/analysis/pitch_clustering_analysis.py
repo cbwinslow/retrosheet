@@ -80,8 +80,13 @@ def prepare_features(df: pd.DataFrame, feature_set: str = 'physics') -> tuple:
 
     if feature_set == 'physics':
         # Core physics features
-        features = ['velocity', 'horizontal_movement', 'vertical_movement',
-                   'spin_rate', 'total_movement']
+        features = [
+            'velocity',
+            'horizontal_movement',
+            'vertical_movement',
+            'spin_rate',
+            'total_movement',
+        ]
     elif feature_set == 'location':
         # Location-based
         features = ['plate_x', 'plate_z', 'velocity', 'horizontal_movement']
@@ -138,9 +143,15 @@ def run_kmeans(X: np.ndarray, n_clusters: int, df: pd.DataFrame) -> dict:
             'cluster_id': int(cluster_id),
             'n_pitches': len(cluster_data),
             'pct_of_data': round(len(cluster_data) / len(df) * 100, 2),
-            'velocity_mean': round(cluster_data['velocity'].mean(), 2) if 'velocity' in cluster_data else None,
-            'velocity_std': round(cluster_data['velocity'].std(), 2) if 'velocity' in cluster_data else None,
-            'top_pitch_types': cluster_data['pitch_type'].value_counts().head(3).to_dict() if 'pitch_type' in cluster_data else {},
+            'velocity_mean': round(cluster_data['velocity'].mean(), 2)
+            if 'velocity' in cluster_data
+            else None,
+            'velocity_std': round(cluster_data['velocity'].std(), 2)
+            if 'velocity' in cluster_data
+            else None,
+            'top_pitch_types': cluster_data['pitch_type'].value_counts().head(3).to_dict()
+            if 'pitch_type' in cluster_data
+            else {},
             'inertia': float(kmeans.inertia_),
         }
         cluster_stats.append(stats)
@@ -190,8 +201,12 @@ def run_gmm(X: np.ndarray, n_clusters: int, df: pd.DataFrame) -> dict:
             'n_pitches': len(cluster_data),
             'pct_of_data': round(len(cluster_data) / len(df) * 100, 2),
             'mean_confidence': round(cluster_data['max_prob'].mean(), 3),
-            'velocity_mean': round(cluster_data['velocity'].mean(), 2) if 'velocity' in cluster_data else None,
-            'top_pitch_types': cluster_data['pitch_type'].value_counts().head(3).to_dict() if 'pitch_type' in cluster_data else {},
+            'velocity_mean': round(cluster_data['velocity'].mean(), 2)
+            if 'velocity' in cluster_data
+            else None,
+            'top_pitch_types': cluster_data['pitch_type'].value_counts().head(3).to_dict()
+            if 'pitch_type' in cluster_data
+            else {},
             'weight': float(gmm.weights_[cluster_id]),
         }
         cluster_stats.append(stats)
@@ -223,11 +238,13 @@ def find_optimal_clusters(X: np.ndarray, max_clusters: int = 15) -> dict:
 
         silhouette = silhouette_score(X, labels)
 
-        results.append({
-            'k': k,
-            'inertia': float(kmeans.inertia_),
-            'silhouette': float(silhouette),
-        })
+        results.append(
+            {
+                'k': k,
+                'inertia': float(kmeans.inertia_),
+                'silhouette': float(silhouette),
+            }
+        )
 
         print(f'  k={k:2d}: silhouette={silhouette:.3f}, inertia={kmeans.inertia_:.1f}')
 
@@ -255,46 +272,56 @@ def save_results(results: dict, output_dir: str = 'models/clustering'):
     print(f'\nResults saved to: {output_file}')
 
     # Print summary
-    print('\n' + '='*60)
+    print('\n' + '=' * 60)
     print('CLUSTERING SUMMARY')
-    print('='*60)
-    print(f"Method: {results['method']}")
-    print(f"Clusters: {results['n_clusters']}")
-    print(f"Silhouette: {results['silhouette_score']:.3f}")
+    print('=' * 60)
+    print(f'Method: {results["method"]}')
+    print(f'Clusters: {results["n_clusters"]}')
+    print(f'Silhouette: {results["silhouette_score"]:.3f}')
 
     print('\nCluster Sizes:')
     for stat in results['cluster_stats']:
-        print(f"  Cluster {stat['cluster_id']}: {stat['n_pitches']:,} pitches ({stat['pct_of_data']}%)")
+        print(
+            f'  Cluster {stat["cluster_id"]}: {stat["n_pitches"]:,} pitches ({stat["pct_of_data"]}%)'
+        )
         if stat.get('velocity_mean'):
-            print(f"    Avg velocity: {stat['velocity_mean']:.1f} mph")
+            print(f'    Avg velocity: {stat["velocity_mean"]:.1f} mph')
         if stat.get('top_pitch_types'):
             top3 = list(stat['top_pitch_types'].keys())[:3]
-            print(f"    Top types: {', '.join(top3)}")
+            print(f'    Top types: {", ".join(top3)}')
 
 
 def main():
     parser = argparse.ArgumentParser(description='Pitch Clustering Analysis')
-    parser.add_argument('--method', choices=['kmeans', 'gmm', 'hierarchical'], default='kmeans',
-                       help='Clustering method')
-    parser.add_argument('--n-clusters', type=int, default=8,
-                       help='Number of clusters')
-    parser.add_argument('--find-optimal', action='store_true',
-                       help='Find optimal cluster count')
-    parser.add_argument('--max-clusters', type=int, default=15,
-                       help='Max clusters for optimization')
-    parser.add_argument('--sample-size', type=int, default=100000,
-                       help='Number of pitches to analyze')
-    parser.add_argument('--feature-set', choices=['physics', 'location', 'full'], default='physics',
-                       help='Which features to use')
+    parser.add_argument(
+        '--method',
+        choices=['kmeans', 'gmm', 'hierarchical'],
+        default='kmeans',
+        help='Clustering method',
+    )
+    parser.add_argument('--n-clusters', type=int, default=8, help='Number of clusters')
+    parser.add_argument('--find-optimal', action='store_true', help='Find optimal cluster count')
+    parser.add_argument(
+        '--max-clusters', type=int, default=15, help='Max clusters for optimization'
+    )
+    parser.add_argument(
+        '--sample-size', type=int, default=100000, help='Number of pitches to analyze'
+    )
+    parser.add_argument(
+        '--feature-set',
+        choices=['physics', 'location', 'full'],
+        default='physics',
+        help='Which features to use',
+    )
     args = parser.parse_args()
 
-    print('='*70)
+    print('=' * 70)
     print('PITCH CLUSTERING ANALYSIS')
-    print('='*70)
+    print('=' * 70)
     print(f'Method: {args.method}')
     print(f'Feature set: {args.feature_set}')
     print(f'Sample size: {args.sample_size:,}')
-    print('='*70)
+    print('=' * 70)
 
     conn = psycopg2.connect(DB_URL)
 
@@ -308,7 +335,7 @@ def main():
         # Find optimal clusters if requested
         if args.find_optimal:
             optimal = find_optimal_clusters(X, args.max_clusters)
-            print(f"\nOptimal cluster count: {optimal['optimal_k']}")
+            print(f'\nOptimal cluster count: {optimal["optimal_k"]}')
             args.n_clusters = optimal['optimal_k']
 
         # Run clustering
@@ -329,9 +356,9 @@ def main():
         # Save
         save_results(results)
 
-        print('\n' + '='*70)
+        print('\n' + '=' * 70)
         print('ANALYSIS COMPLETE')
-        print('='*70)
+        print('=' * 70)
 
     finally:
         conn.close()

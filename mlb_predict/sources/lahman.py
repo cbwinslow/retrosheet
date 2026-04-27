@@ -52,7 +52,10 @@ class LahmanSource(BaseSource):
             )
 
         cmd = [
-            'uv', 'run', 'python', str(script),
+            'uv',
+            'run',
+            'python',
+            str(script),
         ]
 
         if output_dir:
@@ -171,7 +174,7 @@ class LahmanSource(BaseSource):
             with conn.cursor() as cur:
                 # Check for Lahman schema/tables
                 cur.execute(
-                    "SELECT COUNT(*) FROM information_schema.tables "
+                    'SELECT COUNT(*) FROM information_schema.tables '
                     "WHERE table_schema = 'raw_lahman'",
                 )
                 table_count = cur.fetchone()[0]
@@ -237,9 +240,18 @@ class LahmanSource(BaseSource):
         import psycopg2
 
         tables = [
-            'Master', 'Batting', 'Pitching', 'Fielding',
-            'Teams', 'Franchises', 'Salaries', 'HallOfFame',
-            'Managers', 'BattingPost', 'PitchingPost', 'FieldingPost',
+            'Master',
+            'Batting',
+            'Pitching',
+            'Fielding',
+            'Teams',
+            'Franchises',
+            'Salaries',
+            'HallOfFame',
+            'Managers',
+            'BattingPost',
+            'PitchingPost',
+            'FieldingPost',
         ]
 
         counts = {}

@@ -7,13 +7,10 @@ These tests verify that the new baseball/sources/ adapters properly
 WRAP the existing scripts and that they function correctly.
 """
 
-import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 
-from baseball.core.types import SourceRequest
 from baseball.sources import EspnSource, LahmanSource, MlbSource, RetrosheetSource, StatcastSource
 
 
@@ -141,7 +138,9 @@ class TestWrapperCalls:
             script_path = PROJECT_ROOT / script
             with open(script_path) as f:
                 first_line = f.readline()
-                assert 'python' in first_line.lower() or first_line.startswith('#!/usr/bin/env python')
+                assert 'python' in first_line.lower() or first_line.startswith(
+                    '#!/usr/bin/env python'
+                )
 
 
 if __name__ == '__main__':

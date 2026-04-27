@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class TeamXref:
     """Cross-reference record for a team across data sources.
-    
+
     Attributes:
         canonical_id: Unique canonical ID (typically MLB team ID)
         mlb_id: MLB Stats API team ID
@@ -40,6 +40,7 @@ class TeamXref:
         last_year: Last year of franchise (None if active)
         active: Whether team is currently active
     """
+
     canonical_id: int
     mlb_id: int | None = None
     mlb_code: str | None = None
@@ -66,10 +67,10 @@ class TeamXref:
 
     def get_id(self, source: str) -> Any | None:
         """Get ID for a specific source.
-        
+
         Args:
             source: Source name (mlb, retro, espn, lahman)
-            
+
         Returns:
             Team ID for the specified source or None
         """
@@ -83,10 +84,10 @@ class TeamXref:
 
     def get_code(self, source: str) -> str | None:
         """Get team code for a specific source.
-        
+
         Args:
             source: Source name (mlb, retro, lahman)
-            
+
         Returns:
             Team code for the specified source or None
         """
@@ -104,53 +105,267 @@ class TeamXref:
 
 class TeamXrefService:
     """Service for team ID cross-referencing.
-    
+
     Manages the mapping of team IDs across multiple data sources.
     Provides lookup by any ID type and returns canonical team info.
     """
 
     # MLB team mappings (canonical)
     MLB_TEAMS = {
-        108: {'code': 'ANA', 'name': 'Los Angeles Angels', 'city': 'Los Angeles', 'nickname': 'Angels', 'league': 'AL', 'division': 'West'},
-        109: {'code': 'ARI', 'name': 'Arizona Diamondbacks', 'city': 'Arizona', 'nickname': 'Diamondbacks', 'league': 'NL', 'division': 'West'},
-        110: {'code': 'BAL', 'name': 'Baltimore Orioles', 'city': 'Baltimore', 'nickname': 'Orioles', 'league': 'AL', 'division': 'East'},
-        111: {'code': 'BOS', 'name': 'Boston Red Sox', 'city': 'Boston', 'nickname': 'Red Sox', 'league': 'AL', 'division': 'East'},
-        112: {'code': 'CHC', 'name': 'Chicago Cubs', 'city': 'Chicago', 'nickname': 'Cubs', 'league': 'NL', 'division': 'Central'},
-        113: {'code': 'CIN', 'name': 'Cincinnati Reds', 'city': 'Cincinnati', 'nickname': 'Reds', 'league': 'NL', 'division': 'Central'},
-        114: {'code': 'CLE', 'name': 'Cleveland Guardians', 'city': 'Cleveland', 'nickname': 'Guardians', 'league': 'AL', 'division': 'Central'},
-        115: {'code': 'COL', 'name': 'Colorado Rockies', 'city': 'Colorado', 'nickname': 'Rockies', 'league': 'NL', 'division': 'West'},
-        116: {'code': 'DET', 'name': 'Detroit Tigers', 'city': 'Detroit', 'nickname': 'Tigers', 'league': 'AL', 'division': 'Central'},
-        117: {'code': 'HOU', 'name': 'Houston Astros', 'city': 'Houston', 'nickname': 'Astros', 'league': 'AL', 'division': 'West'},
-        118: {'code': 'KCR', 'name': 'Kansas City Royals', 'city': 'Kansas City', 'nickname': 'Royals', 'league': 'AL', 'division': 'Central'},
-        119: {'code': 'LAD', 'name': 'Los Angeles Dodgers', 'city': 'Los Angeles', 'nickname': 'Dodgers', 'league': 'NL', 'division': 'West'},
-        120: {'code': 'WSN', 'name': 'Washington Nationals', 'city': 'Washington', 'nickname': 'Nationals', 'league': 'NL', 'division': 'East'},
-        121: {'code': 'NYM', 'name': 'New York Mets', 'city': 'New York', 'nickname': 'Mets', 'league': 'NL', 'division': 'East'},
-        133: {'code': 'OAK', 'name': 'Oakland Athletics', 'city': 'Oakland', 'nickname': 'Athletics', 'league': 'AL', 'division': 'West'},
-        134: {'code': 'PIT', 'name': 'Pittsburgh Pirates', 'city': 'Pittsburgh', 'nickname': 'Pirates', 'league': 'NL', 'division': 'Central'},
-        135: {'code': 'SDP', 'name': 'San Diego Padres', 'city': 'San Diego', 'nickname': 'Padres', 'league': 'NL', 'division': 'West'},
-        136: {'code': 'SEA', 'name': 'Seattle Mariners', 'city': 'Seattle', 'nickname': 'Mariners', 'league': 'AL', 'division': 'West'},
-        137: {'code': 'SFG', 'name': 'San Francisco Giants', 'city': 'San Francisco', 'nickname': 'Giants', 'league': 'NL', 'division': 'West'},
-        138: {'code': 'STL', 'name': 'St. Louis Cardinals', 'city': 'St. Louis', 'nickname': 'Cardinals', 'league': 'NL', 'division': 'Central'},
-        139: {'code': 'TBR', 'name': 'Tampa Bay Rays', 'city': 'Tampa Bay', 'nickname': 'Rays', 'league': 'AL', 'division': 'East'},
-        140: {'code': 'TEX', 'name': 'Texas Rangers', 'city': 'Texas', 'nickname': 'Rangers', 'league': 'AL', 'division': 'West'},
-        141: {'code': 'TOR', 'name': 'Toronto Blue Jays', 'city': 'Toronto', 'nickname': 'Blue Jays', 'league': 'AL', 'division': 'East'},
-        142: {'code': 'MIN', 'name': 'Minnesota Twins', 'city': 'Minnesota', 'nickname': 'Twins', 'league': 'AL', 'division': 'Central'},
-        143: {'code': 'PHI', 'name': 'Philadelphia Phillies', 'city': 'Philadelphia', 'nickname': 'Phillies', 'league': 'NL', 'division': 'East'},
-        144: {'code': 'ATL', 'name': 'Atlanta Braves', 'city': 'Atlanta', 'nickname': 'Braves', 'league': 'NL', 'division': 'East'},
-        145: {'code': 'CHW', 'name': 'Chicago White Sox', 'city': 'Chicago', 'nickname': 'White Sox', 'league': 'AL', 'division': 'Central'},
-        146: {'code': 'MIA', 'name': 'Miami Marlins', 'city': 'Miami', 'nickname': 'Marlins', 'league': 'NL', 'division': 'East'},
-        147: {'code': 'NYY', 'name': 'New York Yankees', 'city': 'New York', 'nickname': 'Yankees', 'league': 'AL', 'division': 'East'},
-        158: {'code': 'MIL', 'name': 'Milwaukee Brewers', 'city': 'Milwaukee', 'nickname': 'Brewers', 'league': 'NL', 'division': 'Central'},
+        108: {
+            'code': 'ANA',
+            'name': 'Los Angeles Angels',
+            'city': 'Los Angeles',
+            'nickname': 'Angels',
+            'league': 'AL',
+            'division': 'West',
+        },
+        109: {
+            'code': 'ARI',
+            'name': 'Arizona Diamondbacks',
+            'city': 'Arizona',
+            'nickname': 'Diamondbacks',
+            'league': 'NL',
+            'division': 'West',
+        },
+        110: {
+            'code': 'BAL',
+            'name': 'Baltimore Orioles',
+            'city': 'Baltimore',
+            'nickname': 'Orioles',
+            'league': 'AL',
+            'division': 'East',
+        },
+        111: {
+            'code': 'BOS',
+            'name': 'Boston Red Sox',
+            'city': 'Boston',
+            'nickname': 'Red Sox',
+            'league': 'AL',
+            'division': 'East',
+        },
+        112: {
+            'code': 'CHC',
+            'name': 'Chicago Cubs',
+            'city': 'Chicago',
+            'nickname': 'Cubs',
+            'league': 'NL',
+            'division': 'Central',
+        },
+        113: {
+            'code': 'CIN',
+            'name': 'Cincinnati Reds',
+            'city': 'Cincinnati',
+            'nickname': 'Reds',
+            'league': 'NL',
+            'division': 'Central',
+        },
+        114: {
+            'code': 'CLE',
+            'name': 'Cleveland Guardians',
+            'city': 'Cleveland',
+            'nickname': 'Guardians',
+            'league': 'AL',
+            'division': 'Central',
+        },
+        115: {
+            'code': 'COL',
+            'name': 'Colorado Rockies',
+            'city': 'Colorado',
+            'nickname': 'Rockies',
+            'league': 'NL',
+            'division': 'West',
+        },
+        116: {
+            'code': 'DET',
+            'name': 'Detroit Tigers',
+            'city': 'Detroit',
+            'nickname': 'Tigers',
+            'league': 'AL',
+            'division': 'Central',
+        },
+        117: {
+            'code': 'HOU',
+            'name': 'Houston Astros',
+            'city': 'Houston',
+            'nickname': 'Astros',
+            'league': 'AL',
+            'division': 'West',
+        },
+        118: {
+            'code': 'KCR',
+            'name': 'Kansas City Royals',
+            'city': 'Kansas City',
+            'nickname': 'Royals',
+            'league': 'AL',
+            'division': 'Central',
+        },
+        119: {
+            'code': 'LAD',
+            'name': 'Los Angeles Dodgers',
+            'city': 'Los Angeles',
+            'nickname': 'Dodgers',
+            'league': 'NL',
+            'division': 'West',
+        },
+        120: {
+            'code': 'WSN',
+            'name': 'Washington Nationals',
+            'city': 'Washington',
+            'nickname': 'Nationals',
+            'league': 'NL',
+            'division': 'East',
+        },
+        121: {
+            'code': 'NYM',
+            'name': 'New York Mets',
+            'city': 'New York',
+            'nickname': 'Mets',
+            'league': 'NL',
+            'division': 'East',
+        },
+        133: {
+            'code': 'OAK',
+            'name': 'Oakland Athletics',
+            'city': 'Oakland',
+            'nickname': 'Athletics',
+            'league': 'AL',
+            'division': 'West',
+        },
+        134: {
+            'code': 'PIT',
+            'name': 'Pittsburgh Pirates',
+            'city': 'Pittsburgh',
+            'nickname': 'Pirates',
+            'league': 'NL',
+            'division': 'Central',
+        },
+        135: {
+            'code': 'SDP',
+            'name': 'San Diego Padres',
+            'city': 'San Diego',
+            'nickname': 'Padres',
+            'league': 'NL',
+            'division': 'West',
+        },
+        136: {
+            'code': 'SEA',
+            'name': 'Seattle Mariners',
+            'city': 'Seattle',
+            'nickname': 'Mariners',
+            'league': 'AL',
+            'division': 'West',
+        },
+        137: {
+            'code': 'SFG',
+            'name': 'San Francisco Giants',
+            'city': 'San Francisco',
+            'nickname': 'Giants',
+            'league': 'NL',
+            'division': 'West',
+        },
+        138: {
+            'code': 'STL',
+            'name': 'St. Louis Cardinals',
+            'city': 'St. Louis',
+            'nickname': 'Cardinals',
+            'league': 'NL',
+            'division': 'Central',
+        },
+        139: {
+            'code': 'TBR',
+            'name': 'Tampa Bay Rays',
+            'city': 'Tampa Bay',
+            'nickname': 'Rays',
+            'league': 'AL',
+            'division': 'East',
+        },
+        140: {
+            'code': 'TEX',
+            'name': 'Texas Rangers',
+            'city': 'Texas',
+            'nickname': 'Rangers',
+            'league': 'AL',
+            'division': 'West',
+        },
+        141: {
+            'code': 'TOR',
+            'name': 'Toronto Blue Jays',
+            'city': 'Toronto',
+            'nickname': 'Blue Jays',
+            'league': 'AL',
+            'division': 'East',
+        },
+        142: {
+            'code': 'MIN',
+            'name': 'Minnesota Twins',
+            'city': 'Minnesota',
+            'nickname': 'Twins',
+            'league': 'AL',
+            'division': 'Central',
+        },
+        143: {
+            'code': 'PHI',
+            'name': 'Philadelphia Phillies',
+            'city': 'Philadelphia',
+            'nickname': 'Phillies',
+            'league': 'NL',
+            'division': 'East',
+        },
+        144: {
+            'code': 'ATL',
+            'name': 'Atlanta Braves',
+            'city': 'Atlanta',
+            'nickname': 'Braves',
+            'league': 'NL',
+            'division': 'East',
+        },
+        145: {
+            'code': 'CHW',
+            'name': 'Chicago White Sox',
+            'city': 'Chicago',
+            'nickname': 'White Sox',
+            'league': 'AL',
+            'division': 'Central',
+        },
+        146: {
+            'code': 'MIA',
+            'name': 'Miami Marlins',
+            'city': 'Miami',
+            'nickname': 'Marlins',
+            'league': 'NL',
+            'division': 'East',
+        },
+        147: {
+            'code': 'NYY',
+            'name': 'New York Yankees',
+            'city': 'New York',
+            'nickname': 'Yankees',
+            'league': 'AL',
+            'division': 'East',
+        },
+        158: {
+            'code': 'MIL',
+            'name': 'Milwaukee Brewers',
+            'city': 'Milwaukee',
+            'nickname': 'Brewers',
+            'league': 'NL',
+            'division': 'Central',
+        },
     }
 
     # Historical teams (no longer active)
     HISTORICAL_TEAMS = {
-        100: {'code': 'MLA', 'name': 'Milwaukee Brewers (1901)', 'league': 'AL'},  # 1901 Milwaukee Brewers
+        100: {
+            'code': 'MLA',
+            'name': 'Milwaukee Brewers (1901)',
+            'league': 'AL',
+        },  # 1901 Milwaukee Brewers
     }
 
     def __init__(self, db_connection=None):
         """Initialize the team xref service.
-        
+
         Args:
             db_connection: Optional database connection for persistent storage
         """
@@ -221,11 +436,11 @@ class TeamXrefService:
 
     def lookup(self, source: str, team_id: Any) -> TeamXref | None:
         """Generic lookup by source and ID.
-        
+
         Args:
             source: Source name (mlb, code, retro, espn, lahman)
             team_id: Team ID from that source
-            
+
         Returns:
             TeamXref if found, None otherwise
         """
@@ -252,10 +467,10 @@ class TeamXrefService:
 
     def get_all_teams(self, active_only: bool = True) -> list[TeamXref]:
         """Get all teams.
-        
+
         Args:
             active_only: If True, return only active teams
-            
+
         Returns:
             List of TeamXref records
         """
@@ -266,38 +481,40 @@ class TeamXrefService:
 
     def get_teams_by_league(self, league: str) -> list[TeamXref]:
         """Get teams by league (AL or NL).
-        
+
         Args:
             league: League code ('AL' or 'NL')
-            
+
         Returns:
             List of TeamXref records
         """
         return [
-            t for t in self._cache.values()
+            t
+            for t in self._cache.values()
             if t.league and t.league.upper() == league.upper() and t.active
         ]
 
     def get_teams_by_division(self, division: str) -> list[TeamXref]:
         """Get teams by division.
-        
+
         Args:
             division: Division name (e.g., 'East', 'Central', 'West')
-            
+
         Returns:
             List of TeamXref records
         """
         return [
-            t for t in self._cache.values()
+            t
+            for t in self._cache.values()
             if t.division and division.lower() in t.division.lower() and t.active
         ]
 
     def register(self, xref: TeamXref) -> bool:
         """Register a new team xref.
-        
+
         Args:
             xref: TeamXref to register
-            
+
         Returns:
             True if registered successfully
         """
@@ -343,11 +560,21 @@ class TeamXrefService:
                         updated_at = NOW()
                     """,
                     (
-                        xref.canonical_id, xref.mlb_id, xref.mlb_code,
-                        xref.retro_id, xref.retro_code, xref.espn_id,
-                        xref.lahman_id, xref.lahman_code, xref.name,
-                        xref.city, xref.nickname, xref.league,
-                        xref.division, xref.first_year, xref.last_year,
+                        xref.canonical_id,
+                        xref.mlb_id,
+                        xref.mlb_code,
+                        xref.retro_id,
+                        xref.retro_code,
+                        xref.espn_id,
+                        xref.lahman_id,
+                        xref.lahman_code,
+                        xref.name,
+                        xref.city,
+                        xref.nickname,
+                        xref.league,
+                        xref.division,
+                        xref.first_year,
+                        xref.last_year,
                         xref.active,
                     ),
                 )

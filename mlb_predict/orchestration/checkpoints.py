@@ -13,6 +13,7 @@ from typing import Any
 @dataclass
 class Checkpoint:
     """Base checkpoint for any operation."""
+
     operation_id: str
     stage: str
     timestamp: datetime
@@ -23,6 +24,7 @@ class Checkpoint:
 @dataclass
 class FeaturePhaseCheckpoint(Checkpoint):
     """Checkpoint for feature population phases."""
+
     phase_number: int = 0
     phase_name: str = ''
     rows_processed: int = 0
@@ -32,6 +34,7 @@ class FeaturePhaseCheckpoint(Checkpoint):
 @dataclass
 class BridgeTableCheckpoint(Checkpoint):
     """Checkpoint for bridge table population."""
+
     table_name: str = ''
     records_processed: int = 0
     validation_passed: bool = False
@@ -40,6 +43,7 @@ class BridgeTableCheckpoint(Checkpoint):
 @dataclass
 class BatchProgressCheckpoint(Checkpoint):
     """Checkpoint for batch operations."""
+
     batch_number: int = 0
     total_batches: int = 0
     batch_size: int = 0

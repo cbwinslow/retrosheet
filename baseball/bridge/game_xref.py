@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class GameXref:
     """Cross-reference record for a game across data sources.
-    
+
     Attributes:
         canonical_id: Unique canonical ID (typically MLB game_pk)
         mlb_id: MLB Stats API game ID (game_pk)
@@ -38,6 +38,7 @@ class GameXref:
         season: Season year
         status: Game status (Final, Live, Scheduled, etc.)
     """
+
     canonical_id: int
     mlb_id: int | None = None
     retro_id: str | None = None
@@ -62,10 +63,10 @@ class GameXref:
 
     def get_id(self, source: str) -> Any | None:
         """Get ID for a specific source.
-        
+
         Args:
             source: Source name (mlb, retro, espn)
-            
+
         Returns:
             Game ID for the specified source or None
         """
@@ -83,15 +84,15 @@ class GameXref:
     @classmethod
     def parse_retro_id(cls, retro_id: str) -> dict[str, Any] | None:
         """Parse a Retrosheet game ID into components.
-        
+
         Retrosheet format: YYYYMMDDTTTHH
         - YYYYMMDD: Date
         - TTT: Home team code
         - HH: Doubleheader flag (01, 02)
-        
+
         Args:
             retro_id: Retrosheet game ID
-            
+
         Returns:
             Dictionary with parsed components or None if invalid
         """
@@ -114,15 +115,14 @@ class GameXref:
             return None
 
     @classmethod
-    def generate_retro_id(cls, game_date: date, home_team_code: str,
-                          doubleheader: int = 0) -> str:
+    def generate_retro_id(cls, game_date: date, home_team_code: str, doubleheader: int = 0) -> str:
         """Generate a Retrosheet-style game ID.
-        
+
         Args:
             game_date: Game date
             home_team_code: Home team code (3 letters)
             doubleheader: Doubleheader flag (0, 1, or 2)
-            
+
         Returns:
             Retrosheet game ID
         """
@@ -131,14 +131,14 @@ class GameXref:
 
 class GameXrefService:
     """Service for game ID cross-referencing.
-    
+
     Manages the mapping of game IDs across multiple data sources.
     Provides lookup by any ID type and returns canonical game info.
     """
 
     def __init__(self, db_connection=None):
         """Initialize the game xref service.
-        
+
         Args:
             db_connection: Optional database connection for persistent storage
         """
@@ -151,10 +151,10 @@ class GameXrefService:
 
     def load_from_db(self, year: int | None = None) -> int:
         """Load xref records from database.
-        
+
         Args:
             year: Optional year to filter by
-            
+
         Returns:
             Number of records loaded
         """
@@ -235,11 +235,11 @@ class GameXrefService:
 
     def lookup(self, source: str, game_id: Any) -> GameXref | None:
         """Generic lookup by source and ID.
-        
+
         Args:
             source: Source name (mlb, retro, espn)
             game_id: Game ID from that source
-            
+
         Returns:
             GameXref if found, None otherwise
         """
@@ -263,10 +263,10 @@ class GameXrefService:
 
     def find_by_date(self, game_date: date) -> list[GameXref]:
         """Find all games on a specific date.
-        
+
         Args:
             game_date: Date to search
-            
+
         Returns:
             List of GameXref records
         """
@@ -275,11 +275,11 @@ class GameXrefService:
 
     def find_by_date_range(self, start_date: date, end_date: date) -> list[GameXref]:
         """Find all games in a date range.
-        
+
         Args:
             start_date: Start date (inclusive)
             end_date: End date (inclusive)
-            
+
         Returns:
             List of GameXref records
         """
@@ -291,17 +291,21 @@ class GameXrefService:
             current = date.fromordinal(current.toordinal() + 1)
         return results
 
-    def find_by_teams(self, team_id: int, opponent_id: int | None = None,
-                      start_date: date | None = None,
-                      end_date: date | None = None) -> list[GameXref]:
+    def find_by_teams(
+        self,
+        team_id: int,
+        opponent_id: int | None = None,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> list[GameXref]:
         """Find games by team(s).
-        
+
         Args:
             team_id: Team canonical ID to search for
             opponent_id: Optional opponent team ID
             start_date: Optional start date filter
             end_date: Optional end date filter
-            
+
         Returns:
             List of GameXref records
         """
@@ -316,8 +320,7 @@ class GameXrefService:
             if game.home_team_id == team_id or game.away_team_id == team_id:
                 # Check opponent if specified
                 if opponent_id:
-                    if (game.home_team_id == opponent_id or
-                        game.away_team_id == opponent_id):
+                    if game.home_team_id == opponent_id or game.away_team_id == opponent_id:
                         results.append(game)
                 else:
                     results.append(game)
@@ -326,10 +329,10 @@ class GameXrefService:
 
     def register(self, xref: GameXref) -> bool:
         """Register a new game xref.
-        
+
         Args:
             xref: GameXref to register
-            
+
         Returns:
             True if registered successfully
         """
@@ -373,11 +376,20 @@ class GameXrefService:
                         updated_at = NOW()
                     """,
                     (
-                        xref.canonical_id, xref.mlb_id, xref.retro_id,
-                        xref.espn_id, xref.game_date, xref.game_type,
-                        xref.home_team_id, xref.away_team_id,
-                        xref.home_team_code, xref.away_team_code,
-                        xref.year, xref.doubleheader, xref.season, xref.status,
+                        xref.canonical_id,
+                        xref.mlb_id,
+                        xref.retro_id,
+                        xref.espn_id,
+                        xref.game_date,
+                        xref.game_type,
+                        xref.home_team_id,
+                        xref.away_team_id,
+                        xref.home_team_code,
+                        xref.away_team_code,
+                        xref.year,
+                        xref.doubleheader,
+                        xref.season,
+                        xref.status,
                     ),
                 )
             self._db.commit()

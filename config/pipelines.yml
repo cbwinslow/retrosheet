@@ -1,9 +1,54 @@
 # Pipeline configurations for the baseball platform
 # Author: Agent cbwinslow/retrosheet
-# Date: 2026-04-26
+# Date: 2026-04-27
+#
+# Usage: baseball pipeline run --pipeline <name>
+#        baseball pipeline list
+#        baseball pipeline status
 
 pipelines:
+  # Daily ingestion pipeline - runs all daily data updates
+  daily:
+    description: "Daily data ingestion and feature updates"
+    steps:
+      - mlb_live_download
+      - mlb_live_ingest
+      - statcast_download
+      - statcast_ingest
+      - validate
+      - refresh_features
+    checkpoint_table: "admin.pipeline_checkpoints"
+
+  # Historical data backfill pipeline
+  historical:
+    description: "Historical data ingestion for a specific season"
+    steps:
+      - retrosheet_download
+      - retrosheet_ingest
+      - statcast_download
+      - statcast_ingest
+      - validate
+      - build_features
+    checkpoint_table: "admin.pipeline_checkpoints"
+    parameters:
+      - year
+
+  # Live game tracking pipeline
+  live:
+    description: "Live game tracking and real-time predictions"
+    steps:
+      - connect_live_feed
+      - ingest_games
+      - compute_features
+      - generate_predictions
+    checkpoint_table: "admin.pipeline_checkpoints"
+    poll_interval_seconds: 30
+    parameters:
+      - date
+
+  # Individual source pipelines
   retrosheet_ingest:
+    description: "Retrosheet historical data ingestion"
     steps:
       - download
       - ingest
@@ -11,6 +56,7 @@ pipelines:
     checkpoint_table: "admin.pipeline_checkpoints"
 
   mlb_live_ingest:
+    description: "MLB live data ingestion"
     steps:
       - download
       - ingest
@@ -20,13 +66,16 @@ pipelines:
     poll_interval_seconds: 30
 
   statcast_ingest:
+    description: "Statcast pitch-level data ingestion"
     steps:
       - download
       - ingest
       - validate
     checkpoint_table: "admin.pipeline_checkpoints"
 
+  # Feature building pipeline
   feature_building:
+    description: "Build all ML features from ingested data"
     steps:
       - run_expectancy
       - win_expectancy

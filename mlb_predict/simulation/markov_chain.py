@@ -22,19 +22,21 @@ import numpy as np
 # BASE STATE ENUMERATION
 # ============================================================================
 
+
 class BaseState(IntEnum):
     """Enumeration of all 8 possible base states.
-    
+
     Encoding: (runner on 3rd, runner on 2nd, runner on 1st) as binary
     """
-    EMPTY = 0           # 000 - no runners
-    FIRST = 1           # 001 - runner on 1st
-    SECOND = 2          # 010 - runner on 2nd
-    THIRD = 4           # 100 - runner on 3rd
-    FIRST_SECOND = 3    # 011 - runners on 1st & 2nd
-    FIRST_THIRD = 5     # 101 - runners on 1st & 3rd
-    SECOND_THIRD = 6    # 110 - runners on 2nd & 3rd
-    LOADED = 7          # 111 - bases loaded
+
+    EMPTY = 0  # 000 - no runners
+    FIRST = 1  # 001 - runner on 1st
+    SECOND = 2  # 010 - runner on 2nd
+    THIRD = 4  # 100 - runner on 3rd
+    FIRST_SECOND = 3  # 011 - runners on 1st & 2nd
+    FIRST_THIRD = 5  # 101 - runners on 1st & 3rd
+    SECOND_THIRD = 6  # 110 - runners on 2nd & 3rd
+    LOADED = 7  # 111 - bases loaded
 
 
 # Base state transitions for each outcome
@@ -45,10 +47,26 @@ BASE_TRANSITIONS: dict[str, dict[BaseState, list[tuple[float, BaseState, int]]]]
         BaseState.FIRST: [(0.7, BaseState.FIRST, 1), (0.3, BaseState.FIRST_SECOND, 0)],
         BaseState.SECOND: [(0.6, BaseState.FIRST, 1), (0.4, BaseState.FIRST_SECOND, 0)],
         BaseState.THIRD: [(0.5, BaseState.FIRST, 1), (0.5, BaseState.FIRST, 0)],
-        BaseState.FIRST_SECOND: [(0.5, BaseState.FIRST, 2), (0.3, BaseState.FIRST_SECOND, 1), (0.2, BaseState.LOADED, 0)],
-        BaseState.FIRST_THIRD: [(0.4, BaseState.FIRST, 2), (0.4, BaseState.FIRST_SECOND, 1), (0.2, BaseState.FIRST, 1)],
-        BaseState.SECOND_THIRD: [(0.4, BaseState.FIRST, 2), (0.4, BaseState.FIRST_SECOND, 1), (0.2, BaseState.FIRST, 1)],
-        BaseState.LOADED: [(0.4, BaseState.FIRST, 2), (0.4, BaseState.FIRST_SECOND, 1), (0.2, BaseState.FIRST_THIRD, 1)],
+        BaseState.FIRST_SECOND: [
+            (0.5, BaseState.FIRST, 2),
+            (0.3, BaseState.FIRST_SECOND, 1),
+            (0.2, BaseState.LOADED, 0),
+        ],
+        BaseState.FIRST_THIRD: [
+            (0.4, BaseState.FIRST, 2),
+            (0.4, BaseState.FIRST_SECOND, 1),
+            (0.2, BaseState.FIRST, 1),
+        ],
+        BaseState.SECOND_THIRD: [
+            (0.4, BaseState.FIRST, 2),
+            (0.4, BaseState.FIRST_SECOND, 1),
+            (0.2, BaseState.FIRST, 1),
+        ],
+        BaseState.LOADED: [
+            (0.4, BaseState.FIRST, 2),
+            (0.4, BaseState.FIRST_SECOND, 1),
+            (0.2, BaseState.FIRST_THIRD, 1),
+        ],
     },
     # Double: batter to 2nd, runners advance 2 bases
     'double': {
@@ -95,23 +113,35 @@ BASE_TRANSITIONS: dict[str, dict[BaseState, list[tuple[float, BaseState, int]]]]
         BaseState.LOADED: [(1.0, BaseState.LOADED, 1)],
     },
     # Strikeout: no base change, out recorded
-    'strikeout': {
-        state: [(1.0, state, 0)] for state in BaseState
-    },
+    'strikeout': {state: [(1.0, state, 0)] for state in BaseState},
     # Ball in play out: bases depend on type (simplify to no advancement)
-    'ball_in_play_out': {
-        state: [(1.0, state, 0)] for state in BaseState
-    },
+    'ball_in_play_out': {state: [(1.0, state, 0)] for state in BaseState},
     # Error: treat as single with advancement
     'error': {
         BaseState.EMPTY: [(1.0, BaseState.FIRST, 0)],
         BaseState.FIRST: [(0.6, BaseState.FIRST, 1), (0.4, BaseState.FIRST_SECOND, 0)],
         BaseState.SECOND: [(0.6, BaseState.FIRST, 1), (0.4, BaseState.FIRST_SECOND, 0)],
         BaseState.THIRD: [(0.6, BaseState.FIRST, 1), (0.4, BaseState.FIRST, 0)],
-        BaseState.FIRST_SECOND: [(0.4, BaseState.FIRST, 2), (0.4, BaseState.FIRST_SECOND, 1), (0.2, BaseState.LOADED, 0)],
-        BaseState.FIRST_THIRD: [(0.4, BaseState.FIRST, 2), (0.4, BaseState.FIRST_SECOND, 1), (0.2, BaseState.FIRST_THIRD, 0)],
-        BaseState.SECOND_THIRD: [(0.4, BaseState.FIRST, 2), (0.4, BaseState.FIRST_SECOND, 1), (0.2, BaseState.FIRST, 1)],
-        BaseState.LOADED: [(0.4, BaseState.FIRST, 3), (0.4, BaseState.FIRST_SECOND, 2), (0.2, BaseState.FIRST_THIRD, 1)],
+        BaseState.FIRST_SECOND: [
+            (0.4, BaseState.FIRST, 2),
+            (0.4, BaseState.FIRST_SECOND, 1),
+            (0.2, BaseState.LOADED, 0),
+        ],
+        BaseState.FIRST_THIRD: [
+            (0.4, BaseState.FIRST, 2),
+            (0.4, BaseState.FIRST_SECOND, 1),
+            (0.2, BaseState.FIRST_THIRD, 0),
+        ],
+        BaseState.SECOND_THIRD: [
+            (0.4, BaseState.FIRST, 2),
+            (0.4, BaseState.FIRST_SECOND, 1),
+            (0.2, BaseState.FIRST, 1),
+        ],
+        BaseState.LOADED: [
+            (0.4, BaseState.FIRST, 3),
+            (0.4, BaseState.FIRST_SECOND, 2),
+            (0.2, BaseState.FIRST_THIRD, 1),
+        ],
     },
     # Sacrifice: runners advance, out recorded
     'sacrifice': {
@@ -134,16 +164,17 @@ BASE_TRANSITIONS['hit_by_pitch'] = BASE_TRANSITIONS['walk']
 # GAME STATE
 # ============================================================================
 
+
 @dataclass
 class GameState:
-    """Complete state of a baseball game.
-    """
-    inning: int = 1                    # Current inning (1-9+)
-    is_bottom: bool = False            # Bottom of inning?
-    outs: int = 0                      # Outs (0-2)
-    bases: BaseState = BaseState.EMPTY # Base runner state
-    home_score: int = 0                # Home team runs
-    away_score: int = 0                # Away team runs
+    """Complete state of a baseball game."""
+
+    inning: int = 1  # Current inning (1-9+)
+    is_bottom: bool = False  # Bottom of inning?
+    outs: int = 0  # Outs (0-2)
+    bases: BaseState = BaseState.EMPTY  # Base runner state
+    home_score: int = 0  # Home team runs
+    away_score: int = 0  # Away team runs
 
     def copy(self) -> GameState:
         """Create a copy of the state."""
@@ -194,16 +225,17 @@ class GameState:
     def __str__(self) -> str:
         team = 'Home' if self.is_bottom else 'Away'
         base_str = format(int(self.bases), '03b')
-        return f"{team} {self.inning}{'B' if self.is_bottom else 'T'} O:{self.outs} B:{base_str} Score:{self.away_score}-{self.home_score}"
+        return f'{team} {self.inning}{"B" if self.is_bottom else "T"} O:{self.outs} B:{base_str} Score:{self.away_score}-{self.home_score}'
 
 
 # ============================================================================
 # MARKOV CHAIN SIMULATOR
 # ============================================================================
 
+
 class MarkovChainSimulator:
     """Simulates baseball games using Markov chains.
-    
+
     Given P(outcome | state), simulates full innings and games.
     """
 
@@ -228,7 +260,7 @@ class MarkovChainSimulator:
         rng: np.random.Generator | None = None,
     ) -> tuple[str, int, BaseState]:
         """Simulate a single plate appearance.
-        
+
         Returns:
         --------
         (outcome, runs_scored, new_base_state)
@@ -261,7 +293,7 @@ class MarkovChainSimulator:
         rng: np.random.Generator | None = None,
     ) -> tuple[GameState, int, list[str]]:
         """Simulate a half-inning.
-        
+
         Returns:
         --------
         (final_state, runs_scored, outcomes_list)
@@ -298,7 +330,7 @@ class MarkovChainSimulator:
         rng: np.random.Generator | None = None,
     ) -> tuple[GameState, dict]:
         """Simulate a complete game.
-        
+
         Returns:
         --------
         (final_state, game_log)
@@ -348,7 +380,7 @@ class MarkovChainSimulator:
         seed: int = 42,
     ) -> dict:
         """Run Monte Carlo simulation of many games.
-        
+
         Returns:
         --------
         Dict with win probabilities and statistics
@@ -398,6 +430,7 @@ class MarkovChainSimulator:
 # WIN PROBABILITY CALCULATOR
 # ============================================================================
 
+
 def calculate_win_probability(
     state: GameState,
     outcome_probs_fn: Callable[[GameState], dict[str, float]],
@@ -406,7 +439,7 @@ def calculate_win_probability(
     team: str = 'batting',  # 'batting' or 'home'
 ) -> float:
     """Calculate win probability from current game state using Monte Carlo.
-    
+
     Parameters:
     -----------
     state : GameState
@@ -419,7 +452,7 @@ def calculate_win_probability(
         Random seed
     team : str
         Which team's win probability to calculate
-    
+
     Returns:
     --------
     float : win probability (0-1)
@@ -459,13 +492,14 @@ def calculate_win_probability(
 # EXPECTED RUNS MATRIX
 # ============================================================================
 
+
 def compute_expected_runs_matrix(
     outcome_probs_fn: Callable[[BaseState, int], dict[str, float]],
     n_sims: int = 10000,
     seed: int = 42,
 ) -> np.ndarray:
     """Compute expected runs matrix for all base/out states.
-    
+
     Returns 8x3 matrix: E[runs | bases, outs]
     """
     rng = np.random.default_rng(seed)

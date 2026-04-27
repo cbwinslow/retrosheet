@@ -182,6 +182,7 @@ class TestRichResults:
 
         # Test to_dataframe
         import pandas as pd
+
         df = pd.DataFrame([f.model_dump() for f in features])
         assert len(df) == 3
         assert df.iloc[0]['importance_score'] == 0.5
@@ -353,6 +354,7 @@ class TestPluginSystem:
 
         # Mock training
         import numpy as np
+
         X_train = np.random.rand(50, 10)
         y_train = np.random.randint(0, 2, 50)
 

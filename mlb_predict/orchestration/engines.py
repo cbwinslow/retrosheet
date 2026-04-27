@@ -42,6 +42,7 @@ class FeaturePopulationEngine(BaseOperationEngine):
 
     def validate_config(self, config: OperationConfig) -> bool:
         from mlb_predict.orchestration.config import FeaturePopulationConfig
+
         return isinstance(config, FeaturePopulationConfig)
 
 
@@ -61,6 +62,7 @@ class BridgePopulationEngine(BaseOperationEngine):
 
     def validate_config(self, config: OperationConfig) -> bool:
         from mlb_predict.orchestration.config import BridgePopulationConfig
+
         return isinstance(config, BridgePopulationConfig)
 
 
@@ -80,6 +82,7 @@ class IngestionEngine(BaseOperationEngine):
 
     def validate_config(self, config: OperationConfig) -> bool:
         from mlb_predict.orchestration.config import IngestOperationConfig
+
         return isinstance(config, IngestOperationConfig)
 
 
@@ -99,6 +102,7 @@ class ValidationEngine(BaseOperationEngine):
 
     def validate_config(self, config: OperationConfig) -> bool:
         from mlb_predict.orchestration.config import ValidationConfig
+
         return isinstance(config, ValidationConfig)
 
 
@@ -121,4 +125,5 @@ class ModelTrainingEngine(BaseOperationEngine):
 
     def validate_config(self, config: OperationConfig) -> bool:
         from mlb_predict.orchestration.config import ModelTrainingConfig
+
         return isinstance(config, ModelTrainingConfig)

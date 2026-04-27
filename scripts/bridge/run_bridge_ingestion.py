@@ -64,16 +64,16 @@ def print_summary(results: dict) -> None:
         print('✗ BRIDGE INGESTION FAILED')
     print('=' * 70)
 
-    print(f"\nOperation ID: {results.get('operation_id')}")
-    print(f"Start Time: {results.get('start_time')}")
+    print(f'\nOperation ID: {results.get("operation_id")}')
+    print(f'Start Time: {results.get("start_time")}')
     if results.get('end_time'):
-        print(f"End Time: {results.get('end_time')}")
+        print(f'End Time: {results.get("end_time")}')
 
     print('\n--- Stage Results ---')
     for stage in results.get('stages', []):
         status = '✓' if stage.get('success') else '✗'
         duration = stage.get('duration_seconds', 0)
-        print(f"  {status} {stage.get('stage')}: {duration:.1f}s")
+        print(f'  {status} {stage.get("stage")}: {duration:.1f}s')
 
         if stage.get('errors'):
             for error in stage.get('errors'):
@@ -82,12 +82,12 @@ def print_summary(results: dict) -> None:
     if results.get('validation'):
         v = results['validation']
         print('\n--- Validation ---')
-        print(f"  Passed: {v.get('passed')}")
-        print(f"  Errors: {v.get('error_count')}")
-        print(f"  Warnings: {v.get('warning_count')}")
+        print(f'  Passed: {v.get("passed")}')
+        print(f'  Errors: {v.get("error_count")}')
+        print(f'  Warnings: {v.get("warning_count")}')
 
     if results.get('error'):
-        print(f"\n*** ERROR: {results.get('error')} ***")
+        print(f'\n*** ERROR: {results.get("error")} ***')
 
     print('\n' + '=' * 70)
 
@@ -144,8 +144,13 @@ def main() -> int:
         print('=' * 70)
 
         db_url = orchestrator.db_url if 'orchestrator' in locals() else None
-        conn = psycopg2.connect(db_url) if db_url else psycopg2.connect(
-            host='localhost', database='retrosheet',
+        conn = (
+            psycopg2.connect(db_url)
+            if db_url
+            else psycopg2.connect(
+                host='localhost',
+                database='retrosheet',
+            )
         )
 
         try:
@@ -165,9 +170,9 @@ def main() -> int:
     print('BRIDGE TABLE POPULATION ORCHESTRATOR')
     print('=' * 70)
     print(f'Log file: {log_file}')
-    print(f"Checkpoints: {'disabled' if args.no_checkpoints else 'enabled'}")
-    print(f"Validation: {'disabled' if args.skip_validation else 'enabled'}")
-    print(f"Dry-run: {'enabled' if args.dry_run else 'disabled'}")
+    print(f'Checkpoints: {"disabled" if args.no_checkpoints else "enabled"}')
+    print(f'Validation: {"disabled" if args.skip_validation else "enabled"}')
+    print(f'Dry-run: {"enabled" if args.dry_run else "disabled"}')
     print('=' * 70)
 
     # Create orchestrator

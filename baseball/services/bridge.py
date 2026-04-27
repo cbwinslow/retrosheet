@@ -25,7 +25,6 @@ class BridgeService:
 
     def __init__(self) -> None:
         """Initialize bridge service."""
-        pass
 
     def populate_all(
         self,
@@ -64,7 +63,13 @@ class BridgeService:
 
             # Parse which tables were populated
             success = result.returncode == 0
-            output = result.stdout if verbose else result.stdout[-500:] if len(result.stdout) > 500 else result.stdout
+            output = (
+                result.stdout
+                if verbose
+                else result.stdout[-500:]
+                if len(result.stdout) > 500
+                else result.stdout
+            )
 
             return {
                 'players': success,
@@ -214,12 +219,15 @@ class BridgeService:
 
                 # Check if source column exists
                 source_col = f'{source}_id'
-                cur.execute(f"""
+                cur.execute(
+                    f"""
                     SELECT {id_col}, confidence
                     FROM {table}
                     WHERE {source_col} = %s
                     LIMIT 1
-                """, (source_id,))
+                """,
+                    (source_id,),
+                )
 
                 row = cur.fetchone()
                 if row:
@@ -251,23 +259,32 @@ class BridgeService:
             conn = psycopg2.connect(get_database_url())
             with conn.cursor() as cur:
                 if entity_type == 'player':
-                    cur.execute("""
+                    cur.execute(
+                        """
                         SELECT retrosheet_id, mlb_id, espn_id, statcast_id
                         FROM bridge.player_xref
                         WHERE player_id = %s
-                    """, (canonical_id,))
+                    """,
+                        (canonical_id,),
+                    )
                 elif entity_type == 'team':
-                    cur.execute("""
+                    cur.execute(
+                        """
                         SELECT retrosheet_id, mlb_id, espn_id
                         FROM bridge.team_xref
                         WHERE team_id = %s
-                    """, (canonical_id,))
+                    """,
+                        (canonical_id,),
+                    )
                 elif entity_type == 'game':
-                    cur.execute("""
+                    cur.execute(
+                        """
                         SELECT retrosheet_id, mlb_id
                         FROM bridge.game_xref
                         WHERE game_id = %s
-                    """, (canonical_id,))
+                    """,
+                        (canonical_id,),
+                    )
                 else:
                     return None
 

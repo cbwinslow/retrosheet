@@ -22,20 +22,20 @@ def load_config(
     config_type: str = 'model',
 ) -> ModelConfig | ExperimentConfig:
     """Load configuration from YAML or JSON file.
-    
+
     Automatically detects format from file extension.
-    
+
     Args:
         path: Path to config file
         config_type: Type of config ('model' or 'experiment')
-        
+
     Returns:
         Loaded configuration object
-        
+
     Raises:
         ValueError: If file format not recognized
         FileNotFoundError: If file doesn't exist
-        
+
     Example:
         config = load_config("configs/my_model.yaml", config_type="model")
         exp = load_config("experiments/compare.yaml", config_type="experiment")
@@ -98,7 +98,7 @@ def load_from_json(
 
 def substitute_env_vars(obj: Any) -> Any:
     """Recursively substitute environment variables in strings.
-    
+
     Format: ${VAR_NAME} or ${VAR_NAME:default_value}
     """
     if isinstance(obj, dict):
@@ -108,6 +108,7 @@ def substitute_env_vars(obj: Any) -> Any:
     if isinstance(obj, str):
         # Handle ${VAR} or ${VAR:default}
         import re
+
         pattern = r'\$\{([^}:]+)(?::([^}]*))?\}'
 
         def replace(match):
@@ -128,7 +129,7 @@ def save_config(
     format: str = 'yaml',
 ) -> None:
     """Save configuration to file.
-    
+
     Args:
         config: Configuration object to save
         path: Destination path
@@ -154,11 +155,11 @@ def find_configs(
     pattern: str = '*.yaml',
 ) -> list[Path]:
     """Find all config files in directory.
-    
+
     Args:
         directory: Directory to search
         pattern: Glob pattern (default: *.yaml)
-        
+
     Returns:
         List of config file paths
     """
@@ -171,11 +172,11 @@ def load_configs_batch(
     config_type: str = 'model',
 ) -> list[ModelConfig | ExperimentConfig]:
     """Load all configs from directory.
-    
+
     Args:
         directory: Directory containing config files
         config_type: Type of configs
-        
+
     Returns:
         List of loaded configurations
     """
@@ -191,7 +192,7 @@ def load_configs_batch(
 
 class ConfigManager:
     """Manages configuration storage and retrieval.
-    
+
     Provides a centralized place to store and retrieve configurations
     with versioning and metadata.
     """
@@ -288,6 +289,7 @@ class ConfigManager:
 
 
 # Convenience functions
+
 
 def load_model_config(path: str | Path) -> ModelConfig:
     """Load a model configuration from file."""

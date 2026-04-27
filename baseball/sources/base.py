@@ -23,7 +23,6 @@ class BaseSource(ABC):
         Returns:
             Source result with download status
         """
-        pass
 
     @abstractmethod
     def ingest(self, source_path: Path) -> SourceResult:
@@ -35,7 +34,6 @@ class BaseSource(ABC):
         Returns:
             Source result with ingest status
         """
-        pass
 
     @abstractmethod
     def validate(self, ingest_result: SourceResult) -> SourceResult:
@@ -47,4 +45,3 @@ class BaseSource(ABC):
         Returns:
             Source result with validation status
         """
-        pass

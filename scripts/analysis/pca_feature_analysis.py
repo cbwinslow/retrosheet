@@ -56,6 +56,7 @@ def load_features(conn, feature_sample: int | None = None) -> pd.DataFrame:
     if feature_sample and len(feature_cols) > feature_sample:
         # Sample features randomly for quick analysis
         import random
+
         random.seed(42)
         feature_cols = random.sample(feature_cols, feature_sample)
         print(f'Sampled {len(feature_cols)} features for quick analysis')
@@ -103,10 +104,12 @@ def run_pca_analysis(df: pd.DataFrame, feature_cols: list, n_components: int) ->
         X[mask, i] = col_means[i]
 
     # Fit PCA with standardization
-    pipeline = Pipeline([
-        ('scaler', StandardScaler()),
-        ('pca', PCA(n_components=min(n_components, len(valid_cols)), random_state=42)),
-    ])
+    pipeline = Pipeline(
+        [
+            ('scaler', StandardScaler()),
+            ('pca', PCA(n_components=min(n_components, len(valid_cols)), random_state=42)),
+        ]
+    )
 
     X_transformed = pipeline.fit_transform(X)
     pca = pipeline.named_steps['pca']
@@ -148,17 +151,19 @@ def run_pca_analysis(df: pd.DataFrame, feature_cols: list, n_components: int) ->
         elif i == 3:
             label = 'Pitch Movement/Spin'
         else:
-            label = f'Component {i+1}'
+            label = f'Component {i + 1}'
 
-        components_data.append({
-            'component': i + 1,
-            'variance_ratio': round(pca.explained_variance_ratio_[i], 6),
-            'cumulative_variance': round(cumvar[i], 6),
-            'top_positive': top_pos,
-            'top_negative': top_neg,
-            'label': label,
-            'n_top_features': len(top_pos) + len(top_neg),
-        })
+        components_data.append(
+            {
+                'component': i + 1,
+                'variance_ratio': round(pca.explained_variance_ratio_[i], 6),
+                'cumulative_variance': round(cumvar[i], 6),
+                'top_positive': top_pos,
+                'top_negative': top_neg,
+                'label': label,
+                'n_top_features': len(top_pos) + len(top_neg),
+            }
+        )
 
     return {
         'n_components': pca.n_components_,
@@ -177,6 +182,7 @@ def save_results(results: dict, output_dir: str = 'models/pca_analysis'):
     """Save PCA results to database and files."""
 
     import os
+
     os.makedirs(output_dir, exist_ok=True)
 
     # Save to JSON
@@ -189,44 +195,50 @@ def save_results(results: dict, output_dir: str = 'models/pca_analysis'):
     print(f'\nResults saved to: {output_file}')
 
     # Print summary
-    print('\n' + '='*60)
+    print('\n' + '=' * 60)
     print('PCA SUMMARY')
-    print('='*60)
-    print(f"Original features: {results['n_features_original']}")
-    print(f"Components analyzed: {results['n_components']}")
-    print(f"Total variance explained: {results['total_variance_explained']:.2%}")
+    print('=' * 60)
+    print(f'Original features: {results["n_features_original"]}')
+    print(f'Components analyzed: {results["n_components"]}')
+    print(f'Total variance explained: {results["total_variance_explained"]:.2%}')
     print('\nRecommended component counts:')
-    print(f"  80% variance: {results['components_for_80']} components")
-    print(f"  90% variance: {results['components_for_90']} components")
-    print(f"  95% variance: {results['components_for_95']} components")
+    print(f'  80% variance: {results["components_for_80"]} components')
+    print(f'  90% variance: {results["components_for_90"]} components')
+    print(f'  95% variance: {results["components_for_95"]} components')
     print('\nReduction ratios:')
-    print(f"  80%: {results['components_for_80']}/{results['n_features_original']} = {results['components_for_80']/results['n_features_original']:.1%}")
-    print(f"  90%: {results['components_for_90']}/{results['n_features_original']} = {results['components_for_90']/results['n_features_original']:.1%}")
-    print(f"  95%: {results['components_for_95']}/{results['n_features_original']} = {results['components_for_95']/results['n_features_original']:.1%}")
+    print(
+        f'  80%: {results["components_for_80"]}/{results["n_features_original"]} = {results["components_for_80"] / results["n_features_original"]:.1%}'
+    )
+    print(
+        f'  90%: {results["components_for_90"]}/{results["n_features_original"]} = {results["components_for_90"] / results["n_features_original"]:.1%}'
+    )
+    print(
+        f'  95%: {results["components_for_95"]}/{results["n_features_original"]} = {results["components_for_95"] / results["n_features_original"]:.1%}'
+    )
 
     print('\nTop Components by Variance:')
     for comp in results['components'][:5]:
-        print(f"\n  PC{comp['component']}: {comp['variance_ratio']:.2%} variance ({comp['label']})")
+        print(f'\n  PC{comp["component"]}: {comp["variance_ratio"]:.2%} variance ({comp["label"]})')
         if comp['top_positive']:
-            print(f"    + {list(comp['top_positive'].keys())[:3]}")
+            print(f'    + {list(comp["top_positive"].keys())[:3]}')
         if comp['top_negative']:
-            print(f"    - {list(comp['top_negative'].keys())[:3]}")
+            print(f'    - {list(comp["top_negative"].keys())[:3]}')
 
 
 def main():
     parser = argparse.ArgumentParser(description='PCA Feature Analysis')
-    parser.add_argument('--n-components', type=int, default=50,
-                       help='Max number of PCA components')
-    parser.add_argument('--feature-sample', type=int, default=None,
-                       help='Sample N features for quick analysis')
+    parser.add_argument('--n-components', type=int, default=50, help='Max number of PCA components')
+    parser.add_argument(
+        '--feature-sample', type=int, default=None, help='Sample N features for quick analysis'
+    )
     args = parser.parse_args()
 
-    print('='*70)
+    print('=' * 70)
     print('PCA FEATURE ANALYSIS')
-    print('='*70)
+    print('=' * 70)
     print(f'Timestamp: {datetime.now().isoformat()}')
     print(f'Max components: {args.n_components}')
-    print('='*70)
+    print('=' * 70)
 
     conn = psycopg2.connect(DB_URL)
 

@@ -76,8 +76,10 @@ cd /home/cbwinslow/workspace/retrosheet
 python3 -m venv .venv
 source .venv/bin/activate
 
-# Install Python dependencies
+# Install Python dependencies (including the baseball CLI)
 pip install -r requirements.txt
+# Or with uv (recommended):
+# uv pip install -r requirements.txt
 
 # Install Node dependencies for the UI
 cd baseball-chatbot-ui
@@ -93,39 +95,54 @@ cd ..
    createdb retrosheet
    ```
 
-2. **Run the initial schema migrations** – the `scripts/warehouse.py init-db` command will apply all SQL files in `sql/` in the correct order.
+2. **Run the initial schema migrations** – the `baseball admin init` command will apply all SQL files in `sql/` in the correct order.
 
    ```bash
-   python3 scripts/warehouse.py init-db
+   baseball admin init
    ```
 
 3. Verify the connection:
 
    ```bash
-   python3 scripts/check_db_connection.py
+   baseball doctor
    ```
 
    The script should exit with code `0` and print a success message.
 
 ### Running the Warehouse Build
 
-The canonical rebuild order is encapsulated in `scripts/rebuild_warehouse.sh`.  For a full historical + live setup:
+The canonical rebuild order is encapsulated in the `baseball` CLI.  For a full historical + live setup:
 
 ```bash
-./scripts/rebuild_warehouse.sh
+# Run the complete historical pipeline
+baseball pipeline run --pipeline historical --year 2024
+
+# Or run individual source adapters
+baseball retrosheet download --years 2000-2024
+baseball retrosheet ingest --years 2000-2024
+
+# For live data ingestion
+baseball live watch
 ```
 
-The script performs the following steps (see `docs/agents/PROJECT_OBJECTIVES.md` for rationale):
+**Pipeline commands available:**
 
-1. **Dependency check** – `scripts/warehouse.py check-deps`
-2. **Retrosheet fetch & extract** – `scripts/warehouse.py fetch-retrosheet` → `scripts/warehouse.py extract-chadwick`
-3. **Load Chadwick data** – `scripts/warehouse.py load-chadwick`
-4. **Populate bridge tables** – `scripts/populate_bridge_tables.py`
-5. **Create analysis views** – `psql -f sql/130_analysis_views.sql`
-6. **Load reference & auxiliary metadata** – `scripts/load_reference_metadata.py` & `scripts/load_auxiliary_retrosheet.py`
-7. **Build feature marts** – `psql -f sql/050_feature_marts.sql`
-8. **(Optional) Advanced feature marts** – `psql -f sql/060_advanced_feature_marts.sql`
-9. **Train models** – `scripts/train_models.py --feature-set enriched`
+| Pipeline | Description | Command |
+|----------|-------------|---------|
+| `daily` | Daily data ingestion and feature updates | `baseball pipeline run --pipeline daily` |
+| `historical` | Historical data for a specific season | `baseball pipeline run --pipeline historical --year 2024` |
+| `live` | Live game tracking and predictions | `baseball pipeline run --pipeline live --date 2026-04-27` |
+| `feature_building` | Build all ML features | `baseball pipeline run --pipeline feature_building` |
+
+**Individual source adapters:**
+
+| Source | Commands |
+|--------|----------|
+| Retrosheet | `baseball retrosheet download/ingest/validate` |
+| MLB Stats API | `baseball mlb download/ingest/validate/today` |
+| Statcast | `baseball statcast download/ingest/validate` |
+| ESPN | `baseball espn download/ingest/validate` |
+| Lahman | `baseball lahman download/ingest/validate` |
 
 ---
 
@@ -133,18 +150,18 @@ The script performs the following steps (see `docs/agents/PROJECT_OBJECTIVES.md`
 
 ### Historical Retrosheet Data
 
-* **Fetching** – `scripts/warehouse.py fetch-retrosheet` downloads the yearly `.EVN` and `.ROS` archives from the Retrosheet website.
-* **Extraction** – `scripts/warehouse.py extract-chadwick --years 2000-2025 --outputs all` runs the Chadwick CLI with `-n` to generate column‑named CSVs stored under `raw_retrosheet/`.
-* **Loading** – `scripts/warehouse.py load-chadwick` bulk‑loads the CSVs into the `core` schema using `COPY` for speed.
+* **Fetching** – `baseball retrosheet download --years 2000-2024` downloads the yearly `.EVN` and `.ROS` archives from the Retrosheet website.
+* **Extraction** – Automatically handled by the `RetrosheetSource` adapter.
+* **Loading** – `baseball retrosheet ingest --years 2000-2024` bulk‑loads the data into the `core` schema using `COPY` for speed.
 
 ### Live MLB Data
 
-Live ingestion is split into discovery, download, and transformation:
+Live ingestion is handled by the `LiveMlbSource` adapter:
 
-1. **Schedule discovery** – `python3 scripts/fetch_mlb_schedule.py --yesterday` identifies games that have started/completed.
-2. **Game ingestion** – `python3 scripts/warehouse.py fetch-live-game --game-pk <GAME_PK>` stores the raw JSON payload in `raw_mlb.live_feed_snapshots`.
-3. **Transformation** – `python3 scripts/transform_live_game.py --game-pk <GAME_PK>` maps the live payload to the canonical `core.live_*` tables, applying bridge‑table ID translation.
-4. **Batch processing** – `python3 scripts/ingest_live_games.py --schedule` orchestrates steps 1‑3 for all discovered games, handling duplicates and errors.
+1. **Schedule discovery** – `baseball mlb today` identifies games happening today.
+2. **Game ingestion** – `baseball live watch` polls live games and stores raw JSON in `raw_mlb.live_feed_snapshots`.
+3. **Transformation** – Automatically maps live payloads to `core.live_*` tables.
+4. **Batch processing** – `baseball live poll` orchestrates discovery and ingestion for all active games.
 
 All live‑data tables are **additive** – historical rows are never modified.
 
@@ -152,12 +169,21 @@ All live‑data tables are **additive** – historical rows are never modified.
 
 ## Bridge Tables & ID Mapping
 
-The bridge layer enables seamless joins between Retrosheet IDs, MLB IDs, and other public identifiers (e.g., Baseball‑Reference).  It is populated by `scripts/populate_bridge_tables.py`, which downloads the **Chadwick Bureau Register** and inserts rows into:
+The bridge layer enables seamless joins between Retrosheet IDs, MLB IDs, and other public identifiers (e.g., Baseball‑Reference).  It is populated by the `baseball bridge` commands, which download the **Chadwick Bureau Register** and insert rows into:
 
 * `bridge.player_xref`
 * `bridge.team_xref`
+* `bridge.game_xref`
 
-These tables are referenced by the core transformation scripts and by analysis views.
+**Bridge CLI commands:**
+
+```bash
+# Resolve an entity ID across sources
+baseball bridge resolve --entity-type player --canonical-id 12345
+
+# Populate bridge tables from Chadwick register
+baseball bridge populate --source chadwick
+```
 
 ---
 
@@ -200,51 +226,155 @@ Unified views live under the `analysis` schema and are intended for ad‑hoc que
 
 ## Modeling & Prediction Engine
 
-The modeling pipeline lives under `scripts/` and is driven by the **feature marts**:
+The modeling pipeline is driven by the **feature marts** and managed via the `baseball` CLI:
 
-1. **Feature extraction** – `scripts/train_models.py --feature-set enriched` reads from `features.*` and writes model artifacts to `data/models/`.
-2. **Model registry** – `models.model_registry` tracks versions, hyper‑parameters, and an `is_active` flag.
-3. **Promotion** – `scripts/promote_best_models.py` flips the `is_active` flag after validation.
-4. **Live inference** – the Next.js API routes in `baseball-chatbot-ui/app/api/` query `core.live_*` and the active model to return win probabilities.
+1. **Feature extraction** – `baseball features compute --season 2024` builds features from `features.*` tables.
+2. **Model training** – `baseball models train --model-type win_probability` trains models and writes artifacts to `data/models/`.
+3. **Model registry** – `models.model_registry` tracks versions, hyper‑parameters, and an `is_active` flag.
+4. **Live predictions** – `baseball live predict --game-pk 12345` queries `core.live_*` and the active model to return win probabilities.
+5. **Chatbot UI** – The Next.js app in `baseball-chatbot-ui/` provides a chat interface and real‑time visualisation.
 
-All model training is reproducible via the `scripts/cross_validate_models.py` and `scripts/sweep_hyperparameters.py` utilities.
+**Model CLI commands:**
+
+```bash
+# List available models
+baseball models list
+
+# Train a model (dry-run to preview)
+baseball models train --model-type win_probability --dry-run
+
+# Predict a single game
+baseball predict game --game-pk 12345
+
+# Predict today's games
+baseball predict today
+```
 
 ---
 
-## Scripts Reference
+## CLI Reference
 
-| Script | Purpose |
-|--------|---------|
-| `warehouse.py` | High‑level orchestration (check‑deps, fetch‑retrosheet, extract‑chadwick, load‑chadwick, fetch‑live‑game). |
-| `populate_bridge_tables.py` | Populate `bridge.*` mappings. |
-| `load_reference_metadata.py` | Back‑fill player handedness, update reference tables. |
-| `load_auxiliary_retrosheet.py` | Load rosters, All‑Star games, umpires, coaches, ejections, relatives. |
-| `transform_live_game.py` | Convert raw MLB JSON to canonical live schema. |
-| `ingest_live_games.py` | Batch discovery + ingestion of live games. |
-| `train_models.py` | Train ML models on feature marts. |
-| `auto_promote_models.py` | Auto‑promote best performing model. |
-| `benchmark_queries.py` | Run performance benchmarks on analysis views. |
-| `analyze_pa_models.py` | Evaluate plate‑appearance outcome models. |
-| `complete_mlb_ingestion.sh` | End‑to‑end script for a single day of live ingestion. |
+The unified `baseball` CLI replaces the individual scripts.  All commands support `--help`.
 
-Each script prints usage information when invoked with `-h`.
+### Top-level Commands
+
+| Command | Purpose |
+|---------|---------|
+| `baseball doctor` | Check system health and dependencies |
+| `baseball status` | Show recent activity and pipeline runs |
+
+### Source Adapters
+
+| Command | Purpose |
+|---------|---------|
+| `baseball retrosheet download --years 2000-2024` | Download Retrosheet event files |
+| `baseball retrosheet ingest --years 2000-2024` | Ingest into core schema |
+| `baseball mlb today` | List today's MLB games |
+| `baseball mlb download --date 2026-04-27` | Download MLB data |
+| `baseball statcast download --start 2026-04-01 --end 2026-04-27` | Download Statcast data |
+| `baseball espn download --seasons 2024` | Download ESPN data |
+| `baseball lahman download` | Download Lahman database |
+
+### Pipeline Commands
+
+| Command | Purpose |
+|---------|---------|
+| `baseball pipeline list` | Show available pipelines |
+| `baseball pipeline run --pipeline daily` | Run a pipeline |
+| `baseball pipeline run --pipeline historical --year 2024` | Run historical backfill |
+| `baseball pipeline status` | Show recent pipeline runs |
+
+### Bridge Commands
+
+| Command | Purpose |
+|---------|---------|
+| `baseball bridge resolve --entity-type player --canonical-id 12345` | Resolve ID across sources |
+| `baseball bridge populate --source chadwick` | Populate bridge tables |
+
+### Feature Commands
+
+| Command | Purpose |
+|---------|---------|
+| `baseball features list` | List feature calculators |
+| `baseball features compute --season 2024` | Compute features for season |
+| `baseball features show --game-pk 12345` | Display features for game |
+
+### Model Commands
+
+| Command | Purpose |
+|---------|---------|
+| `baseball models list` | List available models |
+| `baseball models train --model-type win_probability` | Train a model |
+
+### Live Commands
+
+| Command | Purpose |
+|---------|---------|
+| `baseball live games` | Show live games |
+| `baseball live watch` | Watch live games in real-time |
+| `baseball live poll` | Poll for game updates |
+| `baseball live predict --game-pk 12345` | Generate prediction for game |
+| `baseball live server` | Start WebSocket prediction server |
+
+### Legacy Scripts
+
+Original scripts have been moved to `scripts_legacy/` and are preserved for reference.  They are **not** actively maintained.  Use the CLI commands above for all new work.
 
 ---
 
 ## Testing
 
-Unit and integration tests live under `tests/`.  Run them with:
+The project has a comprehensive test suite with 160+ tests covering unit, integration, E2E, compatibility, and functionality testing.
+
+### Running Tests
 
 ```bash
-pytest
+# Run all tests
+uv run python -m pytest tests/ -v
+
+# Run specific test categories
+uv run python -m pytest tests/unit/ -v
+uv run python -m pytest tests/integration/ -v
+uv run python -m pytest tests/e2e/ -v
+
+# Run with markers
+uv run python -m pytest -m unit -v
+uv run python -m pytest -m integration -v
+uv run python -m pytest -m e2e -v
+
+# Run the comprehensive test runner
+uv run python tests/run_tests.py --all --verbose
 ```
 
-The test suite covers:
+### Test Categories
 
-* Data loading correctness (`tests/test_loaders.py`).
-* Bridge‑table integrity (`tests/test_bridge.py`).
-* Feature‑mart calculations (`tests/test_features.py`).
-* Model training pipelines (`tests/test_training.py`).
+| Category | Location | Count | Coverage |
+|----------|----------|-------|----------|
+| **Unit Tests** | `tests/unit/` | 100+ | Core classes, feature calculators, pipeline service |
+| **Integration Tests** | `tests/integration/` | 20+ | Component integration, data flow |
+| **E2E Tests** | `tests/e2e/` | 15+ | Full pipelines with database |
+| **Compatibility** | `tests/unit/test_compatibility.py` | 15 | Python/OS/DB compatibility |
+| **Scripts** | `tests/unit/test_scripts.py` | 20 | Script validation |
+| **Functionality** | `tests/integration/test_functionality.py` | 25 | Comprehensive workflows |
+
+### Key Test Files
+
+- `tests/unit/test_features_base.py` – FeatureConfig, GameState, FeatureResult
+- `tests/unit/test_win_expectancy.py` – WinExpectancyCalculator
+- `tests/unit/test_leverage_index.py` – LeverageIndexCalculator
+- `tests/unit/test_pipeline.py` – Pipeline service
+- `tests/e2e/test_features_e2e.py` – End-to-end feature pipeline
+
+### Benchmarking
+
+Performance tests with timing and memory profiling:
+
+```bash
+# Run benchmarks
+uv run python -m pytest tests/unit/test_compatibility.py::TestPerformanceBenchmarks -v
+```
+
+Benchmark results are logged to `logs/benchmarks/` in JSONL format.
 
 ---
 

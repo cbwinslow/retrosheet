@@ -5,7 +5,7 @@ Encapsulates all repeatable database processes with type-safe operations.
 
 Usage:
     from mlb_predict.orchestration import DatabaseOrchestrator, FeaturePopulationConfig
-    
+
     orch = DatabaseOrchestrator(db_url="postgresql://localhost:5432/retrosheet")
     config = FeaturePopulationConfig(phases=[1, 2, 3], batch_size=100000)
     result = orch.run_operation(config)

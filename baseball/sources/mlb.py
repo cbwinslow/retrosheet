@@ -36,11 +36,16 @@ class MlbSource(BaseSource):
         cmd = [
             sys.executable,
             'scripts/data_ingestion/download_mlb_bulk.py',
-            '--start-season', str(start_season),
-            '--end-season', str(end_season),
-            '--mode', mode,
-            '--workers', str(workers),
-            '--delay', str(delay),
+            '--start-season',
+            str(start_season),
+            '--end-season',
+            str(end_season),
+            '--mode',
+            mode,
+            '--workers',
+            str(workers),
+            '--delay',
+            str(delay),
         ]
 
         try:
@@ -59,13 +64,16 @@ class MlbSource(BaseSource):
                     success=True,
                     rows_downloaded=rows,
                     rows_inserted=0,
-                    metadata={'stdout': result.stdout[-1000:] if len(result.stdout) > 1000 else result.stdout},
+                    metadata={
+                        'stdout': result.stdout[-1000:]
+                        if len(result.stdout) > 1000
+                        else result.stdout
+                    },
                 )
-            else:
-                return SourceResult(
-                    success=False,
-                    error_message=f'Download failed: {result.stderr[:500]}',
-                )
+            return SourceResult(
+                success=False,
+                error_message=f'Download failed: {result.stderr[:500]}',
+            )
         except subprocess.TimeoutExpired:
             return SourceResult(
                 success=False,
@@ -74,7 +82,7 @@ class MlbSource(BaseSource):
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'Download error: {str(e)}',
+                error_message=f'Download error: {e!s}',
             )
 
     def ingest(self, source_path: Path) -> SourceResult:
@@ -104,17 +112,20 @@ class MlbSource(BaseSource):
                 return SourceResult(
                     success=True,
                     rows_inserted=0,  # Would need to parse from output
-                    metadata={'stdout': result.stdout[-1000:] if len(result.stdout) > 1000 else result.stdout},
+                    metadata={
+                        'stdout': result.stdout[-1000:]
+                        if len(result.stdout) > 1000
+                        else result.stdout
+                    },
                 )
-            else:
-                return SourceResult(
-                    success=False,
-                    error_message=f'Ingest failed: {result.stderr[:500]}',
-                )
+            return SourceResult(
+                success=False,
+                error_message=f'Ingest failed: {result.stderr[:500]}',
+            )
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'Ingest error: {str(e)}',
+                error_message=f'Ingest error: {e!s}',
             )
 
     def validate(self, ingest_result: SourceResult) -> SourceResult:
@@ -139,22 +150,26 @@ class MlbSource(BaseSource):
                     success=True,
                     metadata={'validation_output': result.stdout},
                 )
-            else:
-                return SourceResult(
-                    success=False,
-                    error_message=f'Validation failed: {result.stderr[:500]}',
-                )
+            return SourceResult(
+                success=False,
+                error_message=f'Validation failed: {result.stderr[:500]}',
+            )
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'Validation error: {str(e)}',
+                error_message=f'Validation error: {e!s}',
             )
 
     def _parse_download_output(self, output: str) -> int:
         """Parse download script output to extract row count."""
         # Look for patterns like "Downloaded X items" or "X schedules downloaded"
         import re
-        matches = re.findall(r'(\d+)\s+(?:items|schedules|games|feeds)\s+(?:downloaded|processed)', output, re.IGNORECASE)
+
+        matches = re.findall(
+            r'(\d+)\s+(?:items|schedules|games|feeds)\s+(?:downloaded|processed)',
+            output,
+            re.IGNORECASE,
+        )
         if matches:
             return sum(int(m) for m in matches)
         return 0

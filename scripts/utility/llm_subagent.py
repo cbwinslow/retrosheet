@@ -17,7 +17,10 @@ LLAMA_SIMPLE = LLAMA_CPP_DIR / 'build/bin/llama-simple'
 # CUDA Environment
 CUDA_ENV = {
     'PATH': '/usr/local/cuda-11.8/bin:' + os.environ.get('PATH', ''),
-    'LD_LIBRARY_PATH': '/usr/local/cuda-11.8/lib64:' + str(LLAMA_CPP_DIR / 'build/bin') + ':' + os.environ.get('LD_LIBRARY_PATH', ''),
+    'LD_LIBRARY_PATH': '/usr/local/cuda-11.8/lib64:'
+    + str(LLAMA_CPP_DIR / 'build/bin')
+    + ':'
+    + os.environ.get('LD_LIBRARY_PATH', ''),
     'CUDA_VISIBLE_DEVICES': '0,1,2',
 }
 
@@ -41,12 +44,18 @@ class LLMSubAgent:
         """Call the LLM with a prompt."""
         cmd = [
             str(LLAMA_SIMPLE),
-            '-m', str(MODEL_PATH),
-            '-ts', '0.35,0.35,0.30',  # Optimized for K80/K80/K40
-            '-ngl', '48',
-            '--temp', '0.1',
-            '-n', str(max_tokens),
-            '-p', prompt,
+            '-m',
+            str(MODEL_PATH),
+            '-ts',
+            '0.35,0.35,0.30',  # Optimized for K80/K80/K40
+            '-ngl',
+            '48',
+            '--temp',
+            '0.1',
+            '-n',
+            str(max_tokens),
+            '-p',
+            prompt,
         ]
 
         result = subprocess.run(
@@ -98,13 +107,15 @@ Provide ONLY the corrected line(s). No explanation, no markdown, just the fixed 
 
                 if dry_run:
                     print(f'   Would fix: {fixed_code[:80]}...')
-                    results['details'].append({
-                        'file': filepath,
-                        'line': line_no,
-                        'rule': rule,
-                        'suggestion': fixed_code,
-                        'applied': False,
-                    })
+                    results['details'].append(
+                        {
+                            'file': filepath,
+                            'line': line_no,
+                            'rule': rule,
+                            'suggestion': fixed_code,
+                            'applied': False,
+                        }
+                    )
                 else:
                     if self._apply_fix(filepath, line_no, fixed_code):
                         print('   ✓ Applied')
@@ -206,7 +217,9 @@ def main():
         errors = get_ruff_errors(rule)
         print(f'Found {len(errors)} errors with rule {rule}')
         results = agent.batch_fix(errors, dry_run=True)
-        print(f'\nSummary: {results["fixed"]} would be fixed, {results["failed"]} failed, {results["skipped"]} skipped')
+        print(
+            f'\nSummary: {results["fixed"]} would be fixed, {results["failed"]} failed, {results["skipped"]} skipped'
+        )
 
     elif command == 'fix-apply' and len(sys.argv) >= 3:
         rule = sys.argv[2]
@@ -214,7 +227,9 @@ def main():
         errors = get_ruff_errors(rule)
         print(f'Found {len(errors)} errors with rule {rule}')
         results = agent.batch_fix(errors, dry_run=False)
-        print(f'\nSummary: {results["fixed"]} fixed, {results["failed"]} failed, {results["skipped"]} skipped')
+        print(
+            f'\nSummary: {results["fixed"]} fixed, {results["failed"]} failed, {results["skipped"]} skipped'
+        )
 
     else:
         print(f'Unknown command: {command}')

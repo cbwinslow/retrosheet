@@ -109,15 +109,17 @@ def populate_live_plate_appearances(conn, season: int, limit: int = None):
     cur = conn.cursor()
 
     print('Fetching live feed snapshots...')
-    cur.execute("""
+    cur.execute(
+        """
         SELECT mlb_game_pk, game_date, payload
         FROM raw_mlb.live_feed_snapshots
         WHERE http_status = 200
         AND game_date BETWEEN %s AND %s
         ORDER BY game_date
         %s;
-    """, (f'{season}-01-01', f'{season}-12-31',
-          f'LIMIT {limit}' if limit else ''))
+    """,
+        (f'{season}-01-01', f'{season}-12-31', f'LIMIT {limit}' if limit else ''),
+    )
 
     rows = cur.fetchall()
     print(f'  Found {len(rows):,} games to process')
@@ -127,7 +129,7 @@ def populate_live_plate_appearances(conn, season: int, limit: int = None):
 
     for i, (game_pk, game_date, payload) in enumerate(rows):
         if i % 100 == 0:
-            print(f'  Processing game {i+1}/{len(rows)}...', end='\r')
+            print(f'  Processing game {i + 1}/{len(rows)}...', end='\r')
 
         if not payload:
             continue
@@ -140,17 +142,21 @@ def populate_live_plate_appearances(conn, season: int, limit: int = None):
 
                 for pa in pas:
                     # Check if PA already exists
-                    cur.execute("""
+                    cur.execute(
+                        """
                         SELECT 1 FROM core.live_plate_appearances
                         WHERE mlb_game_pk = %s AND at_bat_index = %s
                         LIMIT 1;
-                    """, (pa['mlb_game_pk'], pa['at_bat_index']))
+                    """,
+                        (pa['mlb_game_pk'], pa['at_bat_index']),
+                    )
 
                     if cur.fetchone():
                         continue
 
                     # Insert PA
-                    cur.execute("""
+                    cur.execute(
+                        """
                         INSERT INTO core.live_plate_appearances (
                             mlb_game_pk, game_date, home_team_id, away_team_id,
                             at_bat_index, half_inning, inning, is_top_inning, outs,
@@ -170,19 +176,46 @@ def populate_live_plate_appearances(conn, season: int, limit: int = None):
                             %s, %s, %s, %s,
                             %s, %s::jsonb, %s::jsonb, %s::jsonb
                         ) ON CONFLICT DO NOTHING;
-                    """, (
-                        pa['mlb_game_pk'], pa['game_date'], pa['home_team_id'],
-                        pa['away_team_id'], pa['at_bat_index'], pa['half_inning'],
-                        pa['inning'], pa['is_top_inning'], pa['outs'],
-                        pa['pitcher_id'], pa['pitcher_name'], pa['pitcher_hand'],
-                        pa['batter_id'], pa['batter_name'], pa['batter_hand'],
-                        pa['event'], pa['event_type'], pa['description'], pa['rbi'],
-                        pa['away_score'], pa['home_score'], pa['is_out'], pa['is_scoring_play'],
-                        pa['has_review'], pa['has_out'], pa['count_strikes'],
-                        pa['count_balls'], pa['count_outs'],
-                        pa['start_time'], pa['end_time'], pa['is_complete'], pa['is_pa_complete'],
-                        pa['play_id'], pa['runners'], pa['play_events'], pa['api_payload'],
-                    ))
+                    """,
+                        (
+                            pa['mlb_game_pk'],
+                            pa['game_date'],
+                            pa['home_team_id'],
+                            pa['away_team_id'],
+                            pa['at_bat_index'],
+                            pa['half_inning'],
+                            pa['inning'],
+                            pa['is_top_inning'],
+                            pa['outs'],
+                            pa['pitcher_id'],
+                            pa['pitcher_name'],
+                            pa['pitcher_hand'],
+                            pa['batter_id'],
+                            pa['batter_name'],
+                            pa['batter_hand'],
+                            pa['event'],
+                            pa['event_type'],
+                            pa['description'],
+                            pa['rbi'],
+                            pa['away_score'],
+                            pa['home_score'],
+                            pa['is_out'],
+                            pa['is_scoring_play'],
+                            pa['has_review'],
+                            pa['has_out'],
+                            pa['count_strikes'],
+                            pa['count_balls'],
+                            pa['count_outs'],
+                            pa['start_time'],
+                            pa['end_time'],
+                            pa['is_complete'],
+                            pa['is_pa_complete'],
+                            pa['play_id'],
+                            pa['runners'],
+                            pa['play_events'],
+                            pa['api_payload'],
+                        ),
+                    )
 
                     total_pas += 1
 

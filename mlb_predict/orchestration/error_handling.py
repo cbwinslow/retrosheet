@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 class RetryStrategy(Enum):
     """Retry strategies for failed operations."""
+
     FIXED = 'fixed'
     EXPONENTIAL = 'exponential'
     LINEAR = 'linear'
@@ -30,14 +31,16 @@ class RetryStrategy(Enum):
 
 class CircuitState(Enum):
     """Circuit breaker states."""
-    CLOSED = 'closed'      # Normal operation
-    OPEN = 'open'          # Failing, reject calls
+
+    CLOSED = 'closed'  # Normal operation
+    OPEN = 'open'  # Failing, reject calls
     HALF_OPEN = 'half_open'  # Testing if recovered
 
 
 @dataclass
 class RetryConfig:
     """Configuration for retry behavior."""
+
     max_retries: int = 3
     base_delay: float = 1.0
     max_delay: float = 60.0
@@ -53,6 +56,7 @@ class RetryConfig:
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for circuit breaker."""
+
     failure_threshold: int = 5
     recovery_timeout: float = 30.0
     half_open_max_calls: int = 3
@@ -61,6 +65,7 @@ class CircuitBreakerConfig:
 @dataclass
 class OperationResult:
     """Result of an operation with metadata."""
+
     success: bool
     value: Any = None
     error: Exception | None = None
@@ -160,7 +165,7 @@ def with_retry(config: RetryConfig | None = None):
                     if cfg.strategy == RetryStrategy.FIXED:
                         delay = cfg.base_delay
                     elif cfg.strategy == RetryStrategy.EXPONENTIAL:
-                        delay = min(cfg.base_delay * (2 ** attempt), cfg.max_delay)
+                        delay = min(cfg.base_delay * (2**attempt), cfg.max_delay)
                     else:  # LINEAR
                         delay = cfg.base_delay * (attempt + 1)
 
@@ -183,11 +188,13 @@ def with_retry(config: RetryConfig | None = None):
             )
 
         return wrapper
+
     return decorator
 
 
 def with_circuit_breaker(breaker: CircuitBreaker):
     """Decorator to add circuit breaker to a function."""
+
     def decorator(func: Callable[..., T]) -> Callable[..., OperationResult]:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> OperationResult:
@@ -216,6 +223,7 @@ def with_circuit_breaker(breaker: CircuitBreaker):
                 )
 
         return wrapper
+
     return decorator
 
 
@@ -274,15 +282,14 @@ class DatabaseOperation:
                 # Calculate delay
                 if self.retry_config.strategy == RetryStrategy.EXPONENTIAL:
                     delay = min(
-                        self.retry_config.base_delay * (2 ** attempt),
+                        self.retry_config.base_delay * (2**attempt),
                         self.retry_config.max_delay,
                     )
                 else:
                     delay = self.retry_config.base_delay
 
                 logger.warning(
-                    f'{self.name} failed (attempt {attempt + 1}), '
-                    f'retrying in {delay:.1f}s: {e}',
+                    f'{self.name} failed (attempt {attempt + 1}), retrying in {delay:.1f}s: {e}',
                 )
 
                 if self.retry_config.on_retry:

@@ -32,7 +32,8 @@ class EspnSource(BaseSource):
         cmd = [
             sys.executable,
             'scripts/data_ingestion/fetch_espn_mlb.py',
-            '--season', str(season),
+            '--season',
+            str(season),
         ]
 
         if force:
@@ -51,17 +52,20 @@ class EspnSource(BaseSource):
                 return SourceResult(
                     success=True,
                     rows_downloaded=0,  # ESPN stores JSON payloads
-                    metadata={'stdout': result.stdout[-1000:] if len(result.stdout) > 1000 else result.stdout},
+                    metadata={
+                        'stdout': result.stdout[-1000:]
+                        if len(result.stdout) > 1000
+                        else result.stdout
+                    },
                 )
-            else:
-                return SourceResult(
-                    success=False,
-                    error_message=f'ESPN download failed: {result.stderr[:500]}',
-                )
+            return SourceResult(
+                success=False,
+                error_message=f'ESPN download failed: {result.stderr[:500]}',
+            )
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'ESPN download error: {str(e)}',
+                error_message=f'ESPN download error: {e!s}',
             )
 
     def ingest(self, source_path: Path) -> SourceResult:
@@ -80,8 +84,9 @@ class EspnSource(BaseSource):
     def validate(self, ingest_result: SourceResult) -> SourceResult:
         """Validate ESPN data quality."""
         # Basic validation - check if ESPN tables exist
-        import psycopg2
         import os
+
+        import psycopg2
 
         try:
             conn = psycopg2.connect(
@@ -93,10 +98,10 @@ class EspnSource(BaseSource):
             )
 
             with conn.cursor() as cur:
-                cur.execute("SELECT COUNT(*) FROM raw_espn.game_snapshots")
+                cur.execute('SELECT COUNT(*) FROM raw_espn.game_snapshots')
                 game_count = cur.fetchone()[0]
 
-                cur.execute("SELECT COUNT(*) FROM raw_espn.schedule_snapshots")
+                cur.execute('SELECT COUNT(*) FROM raw_espn.schedule_snapshots')
                 schedule_count = cur.fetchone()[0]
 
             conn.close()
@@ -111,7 +116,7 @@ class EspnSource(BaseSource):
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'ESPN validation error: {str(e)}',
+                error_message=f'ESPN validation error: {e!s}',
             )
 
     def get_available_seasons(self) -> list[int]:

@@ -67,7 +67,7 @@ def get_db_conn():
 def fetch_json(url: str, params: dict | None = None, timeout: int = 30) -> tuple[dict, int, int]:
     """
     Fetch JSON from MLB API.
-    
+
     Returns: (data, http_status, response_time_ms)
     """
     start = time.time()
@@ -85,7 +85,7 @@ def fetch_json(url: str, params: dict | None = None, timeout: int = 30) -> tuple
 def fetch_xml(url: str, timeout: int = 30) -> tuple[str, int, int]:
     """
     Fetch XML from MLB Gameday.
-    
+
     Returns: (xml_text, http_status, response_time_ms)
     """
     start = time.time()
@@ -101,8 +101,13 @@ def fetch_xml(url: str, timeout: int = 30) -> tuple[str, int, int]:
 
 
 def store_json_snapshot(
-    conn, table: str, game_pk: int, game_date: str,
-    http_status: int, response_time: int, payload: dict,
+    conn,
+    table: str,
+    game_pk: int,
+    game_date: str,
+    http_status: int,
+    response_time: int,
+    payload: dict,
 ):
     """Store JSON snapshot in database with deduplication."""
     if not payload:
@@ -114,13 +119,16 @@ def store_json_snapshot(
     cur = conn.cursor()
     try:
         # Try insert with conflict resolution (deduplication)
-        cur.execute(f"""
+        cur.execute(
+            f"""
             INSERT INTO raw_mlb.{table} 
                 (mlb_game_pk, game_date, http_status, response_time_ms, payload, checksum)
             VALUES (%s, %s, %s, %s, %s::jsonb, %s)
             ON CONFLICT (mlb_game_pk, checksum) DO NOTHING
             RETURNING id;
-        """, (game_pk, game_date, http_status, response_time, payload_json, checksum))
+        """,
+            (game_pk, game_date, http_status, response_time, payload_json, checksum),
+        )
 
         result = cur.fetchone()
         conn.commit()
@@ -138,8 +146,9 @@ def fetch_boxscore(game_pk: int, game_date: str, conn) -> bool:
     url = f'{MLB_API_BASE}/game/{game_pk}/boxscore'
     data, status, time_ms = fetch_json(url)
     if status == 200:
-        return store_json_snapshot(conn, 'boxscore_snapshots', game_pk, game_date,
-                                   status, time_ms, data)
+        return store_json_snapshot(
+            conn, 'boxscore_snapshots', game_pk, game_date, status, time_ms, data
+        )
     return False
 
 
@@ -148,8 +157,9 @@ def fetch_play_by_play(game_pk: int, game_date: str, conn) -> bool:
     url = f'{MLB_API_BASE}/game/{game_pk}/playByPlay'
     data, status, time_ms = fetch_json(url)
     if status == 200:
-        return store_json_snapshot(conn, 'play_by_play_snapshots', game_pk, game_date,
-                                   status, time_ms, data)
+        return store_json_snapshot(
+            conn, 'play_by_play_snapshots', game_pk, game_date, status, time_ms, data
+        )
     return False
 
 
@@ -158,8 +168,9 @@ def fetch_pitch_metrics(game_pk: int, game_date: str, conn) -> bool:
     url = f'{MLB_API_BASE}/game/{game_pk}/pitchMetrics'
     data, status, time_ms = fetch_json(url)
     if status == 200:
-        return store_json_snapshot(conn, 'pitch_metrics_snapshots', game_pk, game_date,
-                                   status, time_ms, data)
+        return store_json_snapshot(
+            conn, 'pitch_metrics_snapshots', game_pk, game_date, status, time_ms, data
+        )
     return False
 
 
@@ -168,8 +179,9 @@ def fetch_win_probability(game_pk: int, game_date: str, conn) -> bool:
     url = f'{MLB_API_BASE}/game/{game_pk}/winProbability'
     data, status, time_ms = fetch_json(url)
     if status == 200:
-        return store_json_snapshot(conn, 'win_probability_snapshots', game_pk, game_date,
-                                   status, time_ms, data)
+        return store_json_snapshot(
+            conn, 'win_probability_snapshots', game_pk, game_date, status, time_ms, data
+        )
     return False
 
 
@@ -189,14 +201,17 @@ def fetch_gameday_xml(game_pk: int, game_date: str, xml_type: str, conn) -> bool
 
         cur = conn.cursor()
         try:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO raw_mlb.gameday_xml_snapshots
                     (mlb_game_pk, game_date, xml_type, http_status, response_time_ms, 
                      payload, checksum)
                 VALUES (%s, %s, %s, %s, %s, %s::xml, %s)
                 ON CONFLICT (mlb_game_pk, xml_type, checksum) DO NOTHING
                 RETURNING id;
-            """, (game_pk, game_date, xml_type, status, time_ms, xml_data, checksum))
+            """,
+                (game_pk, game_date, xml_type, status, time_ms, xml_data, checksum),
+            )
 
             result = cur.fetchone()
             conn.commit()
@@ -215,14 +230,17 @@ def get_games_to_fetch(season: int, conn, limit: int | None = None) -> list[tupl
     cur = conn.cursor()
     try:
         # Get games from existing live_feed data or schedule
-        cur.execute("""
+        cur.execute(
+            """
             SELECT DISTINCT mlb_game_pk, game_date::text
             FROM raw_mlb.live_feed_snapshots
             WHERE http_status = 200
             AND game_date BETWEEN %s AND %s
             ORDER BY game_date
             LIMIT %s;
-        """, (f'{season}-01-01', f'{season}-12-31', limit or 1000000))
+        """,
+            (f'{season}-01-01', f'{season}-12-31', limit or 1000000),
+        )
 
         return cur.fetchall()
     except Exception as e:
@@ -232,10 +250,12 @@ def get_games_to_fetch(season: int, conn, limit: int | None = None) -> list[tupl
         cur.close()
 
 
-def fetch_all_game_data(game_pk: int, game_date: str, conn, skip_existing: bool = True) -> dict[str, bool]:
+def fetch_all_game_data(
+    game_pk: int, game_date: str, conn, skip_existing: bool = True
+) -> dict[str, bool]:
     """
     Fetch ALL MLB Stats API data for a single game.
-    
+
     Returns dict of {endpoint: success}
     """
     results = {}
@@ -244,13 +264,20 @@ def fetch_all_game_data(game_pk: int, game_date: str, conn, skip_existing: bool 
     cur = conn.cursor()
     existing = {}
     if skip_existing:
-        for table in ['boxscore_snapshots', 'play_by_play_snapshots',
-                      'pitch_metrics_snapshots', 'win_probability_snapshots']:
-            cur.execute(f"""
+        for table in [
+            'boxscore_snapshots',
+            'play_by_play_snapshots',
+            'pitch_metrics_snapshots',
+            'win_probability_snapshots',
+        ]:
+            cur.execute(
+                f"""
                 SELECT 1 FROM raw_mlb.{table} 
                 WHERE mlb_game_pk = %s AND http_status = 200
                 LIMIT 1;
-            """, (game_pk,))
+            """,
+                (game_pk,),
+            )
             existing[table] = cur.fetchone() is not None
     cur.close()
 
@@ -318,15 +345,26 @@ def fetch_team_rosters(season: int, conn) -> int:
 
             cur = conn.cursor()
             try:
-                cur.execute("""
+                cur.execute(
+                    """
                     INSERT INTO raw_mlb.roster_snapshots
                         (team_id, season, roster_type, http_status, response_time_ms,
                          request_params, payload, checksum)
                     VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s)
                     ON CONFLICT (team_id, season, roster_type, checksum) DO NOTHING
                     RETURNING id;
-                """, (team_id, season, 'full', roster_status, roster_time,
-                      json.dumps(roster_params), payload_json, checksum))
+                """,
+                    (
+                        team_id,
+                        season,
+                        'full',
+                        roster_status,
+                        roster_time,
+                        json.dumps(roster_params),
+                        payload_json,
+                        checksum,
+                    ),
+                )
 
                 if cur.fetchone():
                     count += 1
@@ -363,14 +401,17 @@ def fetch_standings(season: int, conn) -> int:
 
             cur = conn.cursor()
             try:
-                cur.execute("""
+                cur.execute(
+                    """
                     INSERT INTO raw_mlb.standings_snapshots
                         (season, date, league_id, division_id, http_status,
                          response_time_ms, payload, checksum)
                     VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s)
                     ON CONFLICT (season, date, league_id, division_id, checksum) DO NOTHING
                     RETURNING id;
-                """, (season, date, '103,104', 'all', status, time_ms, payload_json, checksum))
+                """,
+                    (season, date, '103,104', 'all', status, time_ms, payload_json, checksum),
+                )
 
                 if cur.fetchone():
                     count += 1
@@ -390,14 +431,28 @@ def main():
     )
     parser.add_argument('--season', type=int, required=True, help='Season to fetch')
     parser.add_argument('--limit', type=int, help='Limit number of games (for testing)')
-    parser.add_argument('--endpoints', nargs='+',
-                        choices=['boxscore', 'play_by_play', 'pitch_metrics',
-                                'win_probability', 'gameday', 'rosters', 'standings', 'all'],
-                        default=['all'], help='Which endpoints to fetch')
-    parser.add_argument('--skip-existing', action='store_true', default=True,
-                        help='Skip games already in database')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Print what would be fetched without fetching')
+    parser.add_argument(
+        '--endpoints',
+        nargs='+',
+        choices=[
+            'boxscore',
+            'play_by_play',
+            'pitch_metrics',
+            'win_probability',
+            'gameday',
+            'rosters',
+            'standings',
+            'all',
+        ],
+        default=['all'],
+        help='Which endpoints to fetch',
+    )
+    parser.add_argument(
+        '--skip-existing', action='store_true', default=True, help='Skip games already in database'
+    )
+    parser.add_argument(
+        '--dry-run', action='store_true', help='Print what would be fetched without fetching'
+    )
     args = parser.parse_args()
 
     print('=' * 70)
@@ -438,7 +493,7 @@ def main():
         # Process each game
         for i, (game_pk, game_date) in enumerate(games, 1):
             if i % 100 == 0:
-                print(f'Processing game {i:,} / {len(games):,} ({100*i/len(games):.1f}%)')
+                print(f'Processing game {i:,} / {len(games):,} ({100 * i / len(games):.1f}%)')
 
             results = fetch_all_game_data(game_pk, game_date, conn, args.skip_existing)
 
@@ -473,8 +528,14 @@ def main():
         print('\nEndpoint results:')
         for endpoint, counts in stats.items():
             if endpoint != 'games_processed':
-                success_rate = (counts['success'] / counts['attempted'] * 100) if counts['attempted'] > 0 else 0
-                print(f'  {endpoint:20s}: {counts["success"]:6,} / {counts["attempted"]:6,} ({success_rate:5.1f}%)')
+                success_rate = (
+                    (counts['success'] / counts['attempted'] * 100)
+                    if counts['attempted'] > 0
+                    else 0
+                )
+                print(
+                    f'  {endpoint:20s}: {counts["success"]:6,} / {counts["attempted"]:6,} ({success_rate:5.1f}%)'
+                )
 
         print('=' * 70)
 

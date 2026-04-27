@@ -26,9 +26,9 @@ from datetime import datetime
 
 def print_header(title: str) -> None:
     """Print a formatted section header."""
-    print(f"\n{'=' * 60}")
+    print(f'\n{"=" * 60}')
     print(f'  {title}')
-    print(f"{'=' * 60}")
+    print(f'{"=" * 60}')
 
 
 def print_result(test: str, passed: bool, details: str = '') -> None:
@@ -53,8 +53,11 @@ def test_live_source() -> bool:
 
         # Test 1b: Check dependencies
         scripts_exist = source._scripts_dir.exists()
-        print_result('Scripts directory', scripts_exist,
-                    f'Found at {source._scripts_dir}' if scripts_exist else 'Not found')
+        print_result(
+            'Scripts directory',
+            scripts_exist,
+            f'Found at {source._scripts_dir}' if scripts_exist else 'Not found',
+        )
 
         # Test 1c: Mock game state creation
         mock_state = GameState(
@@ -111,26 +114,26 @@ def test_feature_store() -> bool:
         result1 = store.compute_features(context)
         elapsed1 = (time.perf_counter() - start) * 1000
 
-        print_result('First computation', True,
-                    f'{elapsed1:.2f}ms, cache_hit={result1.cache_hit}')
+        print_result('First computation', True, f'{elapsed1:.2f}ms, cache_hit={result1.cache_hit}')
 
         # Test 2b: Cached computation (should be faster)
         start = time.perf_counter()
         result2 = store.compute_features(context)
         elapsed2 = (time.perf_counter() - start) * 1000
 
-        print_result('Cached computation', result2.cache_hit,
-                    f'{elapsed2:.2f}ms (speedup: {elapsed1/elapsed2:.1f}x)')
+        print_result(
+            'Cached computation',
+            result2.cache_hit,
+            f'{elapsed2:.2f}ms (speedup: {elapsed1 / elapsed2:.1f}x)',
+        )
 
         # Test 2c: Feature vector
         vector = result1.features.to_vector()
-        print_result('Feature vector', len(vector) > 0,
-                    f'{len(vector)} features generated')
+        print_result('Feature vector', len(vector) > 0, f'{len(vector)} features generated')
 
         # Test 2d: Stats
         stats = store.get_stats()
-        print_result('Stats reporting', True,
-                    f"hit_rate={stats['hit_rate']:.2f}")
+        print_result('Stats reporting', True, f'hit_rate={stats["hit_rate"]:.2f}')
 
         return True
 
@@ -164,13 +167,19 @@ def test_model_manager() -> bool:
 
         pred, conf, meta = manager.predict('win_probability', features)
 
-        print_result('Fallback prediction', 0 <= pred <= 1,
-                    f'prob={pred:.3f}, conf={conf:.3f}, model={meta.model_id}')
+        print_result(
+            'Fallback prediction',
+            0 <= pred <= 1,
+            f'prob={pred:.3f}, conf={conf:.3f}, model={meta.model_id}',
+        )
 
         # Test 3c: Stats
         stats = manager.get_stats()
-        print_result('Stats reporting', True,
-                    f"predictions={stats['predictions']}, fallbacks={stats['fallbacks']}")
+        print_result(
+            'Stats reporting',
+            True,
+            f'predictions={stats["predictions"]}, fallbacks={stats["fallbacks"]}',
+        )
 
         return True
 
@@ -193,8 +202,7 @@ def test_prediction_pipeline() -> bool:
 
         # Test 4b: Load model (may use fallback)
         loaded = pipeline.load_model('win_probability')
-        print_result('Model loading', True,
-                    'Model loaded or fallback available')
+        print_result('Model loading', True, 'Model loaded or fallback available')
 
         # Test 4c: Prediction
         context = LiveGameContext(
@@ -213,20 +221,24 @@ def test_prediction_pipeline() -> bool:
 
         result = pipeline.predict(context, use_cache=True)
 
-        print_result('Prediction', 0 <= result.home_win_probability <= 1,
-                    f'home_prob={result.home_win_probability:.3f}, '
-                    f'latency={result.latency_ms:.2f}ms')
+        print_result(
+            'Prediction',
+            0 <= result.home_win_probability <= 1,
+            f'home_prob={result.home_win_probability:.3f}, latency={result.latency_ms:.2f}ms',
+        )
 
         # Test 4d: Caching
         result2 = pipeline.predict(context, use_cache=True)
-        print_result('Prediction caching', True,
-                    f'cache_hits={pipeline._cache_hits}')
+        print_result('Prediction caching', True, f'cache_hits={pipeline._cache_hits}')
 
         # Test 4e: Metrics
         metrics = pipeline.get_metrics()
-        print_result('Metrics', True,
-                    f"predictions={metrics['predictions_made']}, "
-                    f"avg_latency={metrics['avg_latency_ms']:.2f}ms")
+        print_result(
+            'Metrics',
+            True,
+            f'predictions={metrics["predictions_made"]}, '
+            f'avg_latency={metrics["avg_latency_ms"]:.2f}ms',
+        )
 
         return True
 
@@ -248,13 +260,11 @@ def test_websocket_server() -> bool:
             port=18765,  # Different port to avoid conflicts
             poll_interval=30.0,
         )
-        print_result('Instantiation', True,
-                    f'Server created on {server.host}:{server.port}')
+        print_result('Instantiation', True, f'Server created on {server.host}:{server.port}')
 
         # Test 5b: Stats (before start)
         stats = server.get_stats()
-        print_result('Pre-start stats', True,
-                    f"clients={stats['connected_clients']}")
+        print_result('Pre-start stats', True, f'clients={stats["connected_clients"]}')
 
         return True
 
@@ -307,7 +317,7 @@ def run_all_tests(quick: bool = False) -> dict[str, bool]:
     """Run all tests and return results."""
     print_header('Phase 3 Live Pipeline - End-to-End Tests')
     print(f'Started: {datetime.now().isoformat()}')
-    print(f"Mode: {'Quick' if quick else 'Full'}")
+    print(f'Mode: {"Quick" if quick else "Full"}')
 
     results = {}
 
@@ -331,7 +341,7 @@ def run_all_tests(quick: bool = False) -> dict[str, bool]:
         status = '✅' if result else '❌'
         print(f'  {status} {test}')
 
-    print(f'\n  Total: {passed}/{total} passed ({100*passed//total}%)')
+    print(f'\n  Total: {passed}/{total} passed ({100 * passed // total}%)')
 
     if passed == total:
         print('\n  🎉 All tests passed! Phase 3 implementation validated.')

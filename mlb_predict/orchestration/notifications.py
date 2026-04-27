@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class NotificationEvent:
     """Event data for notifications."""
+
     event_type: str  # validation_failed, operation_completed, error_occurred
     operation_id: str
     operation_type: str
@@ -50,9 +51,9 @@ class ConsoleNotifier(NotificationChannel):
         }
         icon = severity_icons.get(event.severity, 'ℹ️')
 
-        print(f"\n{'=' * 70}")
+        print(f'\n{"=" * 70}')
         print(f'{icon} NOTIFICATION: {event.event_type.upper()}')
-        print(f"{'=' * 70}")
+        print(f'{"=" * 70}')
         print(f'Operation: {event.operation_type} ({event.operation_id})')
         print(f'Time: {event.timestamp.isoformat()}')
         print(f'Severity: {event.severity.upper()}')
@@ -63,7 +64,7 @@ class ConsoleNotifier(NotificationChannel):
             for key, value in event.details.items():
                 print(f'  {key}: {value}')
 
-        print(f"{'=' * 70}\n")
+        print(f'{"=" * 70}\n')
         return True
 
 
@@ -197,7 +198,7 @@ class NotificationManager:
             operation_id=operation_id,
             operation_type=operation_type,
             timestamp=datetime.now(),
-            message=f"Operation {'succeeded' if success else 'failed'} in {duration_seconds:.1f}s",
+            message=f'Operation {"succeeded" if success else "failed"} in {duration_seconds:.1f}s',
             details={
                 'success': success,
                 'duration_seconds': duration_seconds,
@@ -241,7 +242,7 @@ class NotificationManager:
             operation_id=operation_id,
             operation_type=operation_type,
             timestamp=datetime.now(),
-            message=f"Error in {stage or 'unknown stage'}: {error!s}",
+            message=f'Error in {stage or "unknown stage"}: {error!s}',
             details={
                 'error': str(error),
                 'error_type': type(error).__name__,

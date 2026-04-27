@@ -101,7 +101,9 @@ class LiveMlbSource(BaseSource):
         return self._download_specific_games(game_pks, force)
 
     def _download_specific_games(
-        self, game_pks: list[int], force: bool,
+        self,
+        game_pks: list[int],
+        force: bool,
     ) -> DownloadResult:
         """Download specific games by game_pk."""
         script = self._scripts_dir / 'ingest_live_games.py'
@@ -115,8 +117,12 @@ class LiveMlbSource(BaseSource):
         success_count = 0
         for game_pk in game_pks:
             cmd = [
-                'uv', 'run', 'python', str(script),
-                '--game-pk', str(game_pk),
+                'uv',
+                'run',
+                'python',
+                str(script),
+                '--game-pk',
+                str(game_pk),
             ]
             if force:
                 cmd.append('--force')
@@ -376,10 +382,17 @@ class LiveMlbSource(BaseSource):
         # Transform the data
         transform_script = self._transform_dir / 'transform_live_game.py'
         if transform_script.exists():
-            subprocess.run([
-                'uv', 'run', 'python', str(transform_script),
-                '--game-pk', str(game_pk),
-            ], capture_output=True)
+            subprocess.run(
+                [
+                    'uv',
+                    'run',
+                    'python',
+                    str(transform_script),
+                    '--game-pk',
+                    str(game_pk),
+                ],
+                capture_output=True,
+            )
 
         # Get updated state
         new_state = self.get_game_state(game_pk)

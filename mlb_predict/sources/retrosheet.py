@@ -41,7 +41,10 @@ class RetrosheetSource(BaseSource):
         return self._download_all(force)
 
     def _download_season_range(
-        self, start_year: int, end_year: int, force: bool,
+        self,
+        start_year: int,
+        end_year: int,
+        force: bool,
     ) -> DownloadResult:
         """Download event files for season range."""
         script = self._scripts_dir / 'record_retrosheet_downloads.py'
@@ -57,8 +60,12 @@ class RetrosheetSource(BaseSource):
 
         for year in range(start_year, end_year + 1):
             cmd = [
-                'uv', 'run', 'python', str(script),
-                '--year', str(year),
+                'uv',
+                'run',
+                'python',
+                str(script),
+                '--year',
+                str(year),
             ]
             if force:
                 cmd.append('--force')

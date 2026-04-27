@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class PlayerXref:
     """Cross-reference record for a player across data sources.
-    
+
     Attributes:
         canonical_id: Unique canonical ID for this player
         mlb_id: MLB Stats API player ID
@@ -43,6 +43,7 @@ class PlayerXref:
         active: Whether player is currently active
         source_priority: Ordered list of sources for conflict resolution
     """
+
     canonical_id: str
     mlb_id: int | None = None
     retro_id: str | None = None
@@ -69,10 +70,10 @@ class PlayerXref:
 
     def get_id(self, source: str) -> Any | None:
         """Get ID for a specific source.
-        
+
         Args:
             source: Source name (mlb, retro, espn, lahman, bbref, fg)
-            
+
         Returns:
             Player ID for the specified source or None
         """
@@ -92,9 +93,10 @@ class PlayerXref:
 
     def merge(self, other: 'PlayerXref') -> 'PlayerXref':
         """Merge another PlayerXref into this one, preferring non-None values.
-        
+
         Uses source_priority to resolve conflicts when both have values.
         """
+
         def resolve(field: str, self_val: Any, other_val: Any) -> Any:
             if self_val is None:
                 return other_val
@@ -126,14 +128,14 @@ class PlayerXref:
 
 class PlayerXrefService:
     """Service for player ID cross-referencing.
-    
+
     Manages the mapping of player IDs across multiple data sources.
     Provides lookup by any ID type and returns canonical player info.
     """
 
     def __init__(self, db_connection=None):
         """Initialize the player xref service.
-        
+
         Args:
             db_connection: Optional database connection for persistent storage
         """
@@ -148,7 +150,7 @@ class PlayerXrefService:
 
     def load_from_db(self) -> int:
         """Load xref records from database.
-        
+
         Returns:
             Number of records loaded
         """
@@ -242,11 +244,11 @@ class PlayerXrefService:
 
     def lookup(self, source: str, player_id: Any) -> PlayerXref | None:
         """Generic lookup by source and ID.
-        
+
         Args:
             source: Source name (mlb, retro, espn, lahman, bbref, fg)
             player_id: Player ID from that source
-            
+
         Returns:
             PlayerXref if found, None otherwise
         """
@@ -266,12 +268,12 @@ class PlayerXrefService:
 
     def register(self, xref: PlayerXref) -> bool:
         """Register a new player xref.
-        
+
         If player already exists (by canonical_id), merges the records.
-        
+
         Args:
             xref: PlayerXref to register
-            
+
         Returns:
             True if registered/updated successfully
         """
@@ -323,11 +325,21 @@ class PlayerXrefService:
                         updated_at = NOW()
                     """,
                     (
-                        xref.canonical_id, xref.mlb_id, xref.retro_id,
-                        xref.espn_id, xref.lahman_id, xref.bbref_id,
-                        xref.fg_id, xref.first_name, xref.last_name,
-                        xref.birth_date, xref.bats, xref.throws,
-                        xref.debut_date, xref.last_game_date, xref.active,
+                        xref.canonical_id,
+                        xref.mlb_id,
+                        xref.retro_id,
+                        xref.espn_id,
+                        xref.lahman_id,
+                        xref.bbref_id,
+                        xref.fg_id,
+                        xref.first_name,
+                        xref.last_name,
+                        xref.birth_date,
+                        xref.bats,
+                        xref.throws,
+                        xref.debut_date,
+                        xref.last_game_date,
+                        xref.active,
                     ),
                 )
             self._db.commit()
@@ -335,15 +347,16 @@ class PlayerXrefService:
             logger.error(f'Failed to save player xref to DB: {e}')
             raise
 
-    def find_candidates(self, first_name: str, last_name: str,
-                        birth_date: date | None = None) -> list[PlayerXref]:
+    def find_candidates(
+        self, first_name: str, last_name: str, birth_date: date | None = None
+    ) -> list[PlayerXref]:
         """Find potential matches by name and optional birth date.
-        
+
         Args:
             first_name: Player first name
             last_name: Player last name
             birth_date: Optional birth date for exact matching
-            
+
         Returns:
             List of matching PlayerXref records
         """
@@ -351,8 +364,10 @@ class PlayerXrefService:
 
         for xref in self._cache.values():
             name_match = (
-                xref.first_name and xref.first_name.lower() == first_name.lower() and
-                xref.last_name and xref.last_name.lower() == last_name.lower()
+                xref.first_name
+                and xref.first_name.lower() == first_name.lower()
+                and xref.last_name
+                and xref.last_name.lower() == last_name.lower()
             )
 
             if name_match:
@@ -363,7 +378,7 @@ class PlayerXrefService:
 
     def get_stats(self) -> dict[str, int]:
         """Return statistics about the xref database.
-        
+
         Returns:
             Dictionary with counts by source
         """

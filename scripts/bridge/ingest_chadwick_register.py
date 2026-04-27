@@ -52,15 +52,16 @@ def get_db_connection() -> psycopg2.extensions.connection:
 
 
 def download_chadwick_files(
-    suffixes: list[str] | None = None, temp_dir: Path | None = None,
+    suffixes: list[str] | None = None,
+    temp_dir: Path | None = None,
 ) -> list[Path]:
     """
     Download Chadwick Bureau Register CSV files.
-    
+
     Args:
         suffixes: List of file suffixes to download (0-9, a-f). If None, downloads all.
         temp_dir: Directory to save files. If None, creates temp directory.
-        
+
     Returns:
         List of paths to downloaded files
     """
@@ -70,8 +71,7 @@ def download_chadwick_files(
         temp_dir = Path(tempfile.mkdtemp(prefix='chadwick_'))
 
     if suffixes is None:
-        suffixes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                    'a', 'b', 'c', 'd', 'e', 'f']
+        suffixes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
 
     downloaded: list[Path] = []
 
@@ -98,13 +98,14 @@ def download_chadwick_files(
 def parse_chadwick_record(row: dict[str, str]) -> dict[str, Any]:
     """
     Parse a Chadwick CSV row into a typed record dictionary.
-    
+
     Args:
         row: CSV row from DictReader
-        
+
     Returns:
         Dictionary with properly typed values
     """
+
     def parse_int(value: str | None) -> int | None:
         if not value:
             return None
@@ -186,12 +187,12 @@ def load_to_staging(
 ) -> int:
     """
     Load Chadwick CSV files into staging table.
-    
+
     Args:
         conn: Database connection
         file_paths: List of CSV file paths
         dry_run: If True, don't actually insert into database
-        
+
     Returns:
         Number of records processed
     """
@@ -216,65 +217,67 @@ def load_to_staging(
 
                 # Create tuple for insertion
                 # Order must match the table columns
-                records.append((
-                    record['key_uuid'],
-                    record['key_mlbam'],
-                    record['key_retro'],
-                    record['key_bbref'],
-                    record['key_fangraphs'],
-                    record['key_baseball_prospectus'],
-                    record['key_cbs'],
-                    record['key_espn'],
-                    record['key_fanduel'],
-                    record['key_draftkings'],
-                    record['key_yahoo'],
-                    record['key_nfbc'],
-                    record['key_rotowire'],
-                    record['key_rotoworld'],
-                    record['key_kffl'],
-                    record['name_first'],
-                    record['name_last'],
-                    record['name_full'],
-                    record['name_given'],
-                    record['name_matrilineal'],
-                    record['bats'],
-                    record['throws'],
-                    record['birth_year'],
-                    record['birth_month'],
-                    record['birth_day'],
-                    record['death_year'],
-                    record['death_month'],
-                    record['death_day'],
-                    record['birth_city'],
-                    record['birth_state'],
-                    record['birth_country'],
-                    record['death_city'],
-                    record['death_state'],
-                    record['death_country'],
-                    record['weight'],
-                    record['height'],
-                    record['debut'],
-                    record['final_game'],
-                    record['mlb_played_first'],
-                    record['mlb_played_last'],
-                    record['retro_played_first'],
-                    record['retro_played_last'],
-                    record['college'],
-                    record['college_id'],
-                    record['high_school'],
-                    record['high_school_id'],
-                    record['bats_throws_source'],
-                    record['birth_source'],
-                    record['death_source'],
-                    record['weight_height_source'],
-                    record['debut_source'],
-                    record['mlb_organization'],
-                    record['mlb_position'],
-                    record['twitter_id'],
-                    record['wikipedia_id'],
-                    record['gelb_id'],
-                    record['lahman_id'],
-                ))
+                records.append(
+                    (
+                        record['key_uuid'],
+                        record['key_mlbam'],
+                        record['key_retro'],
+                        record['key_bbref'],
+                        record['key_fangraphs'],
+                        record['key_baseball_prospectus'],
+                        record['key_cbs'],
+                        record['key_espn'],
+                        record['key_fanduel'],
+                        record['key_draftkings'],
+                        record['key_yahoo'],
+                        record['key_nfbc'],
+                        record['key_rotowire'],
+                        record['key_rotoworld'],
+                        record['key_kffl'],
+                        record['name_first'],
+                        record['name_last'],
+                        record['name_full'],
+                        record['name_given'],
+                        record['name_matrilineal'],
+                        record['bats'],
+                        record['throws'],
+                        record['birth_year'],
+                        record['birth_month'],
+                        record['birth_day'],
+                        record['death_year'],
+                        record['death_month'],
+                        record['death_day'],
+                        record['birth_city'],
+                        record['birth_state'],
+                        record['birth_country'],
+                        record['death_city'],
+                        record['death_state'],
+                        record['death_country'],
+                        record['weight'],
+                        record['height'],
+                        record['debut'],
+                        record['final_game'],
+                        record['mlb_played_first'],
+                        record['mlb_played_last'],
+                        record['retro_played_first'],
+                        record['retro_played_last'],
+                        record['college'],
+                        record['college_id'],
+                        record['high_school'],
+                        record['high_school_id'],
+                        record['bats_throws_source'],
+                        record['birth_source'],
+                        record['death_source'],
+                        record['weight_height_source'],
+                        record['debut_source'],
+                        record['mlb_organization'],
+                        record['mlb_position'],
+                        record['twitter_id'],
+                        record['wikipedia_id'],
+                        record['gelb_id'],
+                        record['lahman_id'],
+                    )
+                )
 
         file_count = len(records)
         total_records += file_count
@@ -315,15 +318,16 @@ def load_to_staging(
 
 
 def run_upsert_to_player_xref(
-    conn: psycopg2.extensions.connection, dry_run: bool = False,
+    conn: psycopg2.extensions.connection,
+    dry_run: bool = False,
 ) -> dict[str, int]:
     """
     Run the upsert procedure to merge staging data into player_xref.
-    
+
     Args:
         conn: Database connection
         dry_run: If True, don't actually execute
-        
+
     Returns:
         Dictionary with statistics
     """
@@ -351,10 +355,10 @@ def run_upsert_to_player_xref(
 def run_validation_tests(conn: psycopg2.extensions.connection) -> dict[str, Any]:
     """
     Run all bridge validation tests.
-    
+
     Args:
         conn: Database connection
-        
+
     Returns:
         Dictionary with test results
     """
@@ -375,13 +379,15 @@ def run_validation_tests(conn: psycopg2.extensions.connection) -> dict[str, Any]
 
         for row in rows:
             test_name, passed, actual, expected, details = row
-            results['tests'].append({
-                'name': test_name,
-                'passed': passed,
-                'actual': actual,
-                'expected': expected,
-                'details': details,
-            })
+            results['tests'].append(
+                {
+                    'name': test_name,
+                    'passed': passed,
+                    'actual': actual,
+                    'expected': expected,
+                    'details': details,
+                }
+            )
             results['total'] += 1
             if passed:
                 results['passed'] += 1
@@ -408,8 +414,10 @@ def run_validation_tests(conn: psycopg2.extensions.connection) -> dict[str, Any]
             }
 
     print('\n' + '=' * 70)
-    print(f"TEST SUMMARY: {results['passed']}/{results['total']} passed ({results['summary']['pass_rate']:.1f}%)")
-    print(f"STATUS: {results['summary']['status']}")
+    print(
+        f'TEST SUMMARY: {results["passed"]}/{results["total"]} passed ({results["summary"]["pass_rate"]:.1f}%)'
+    )
+    print(f'STATUS: {results["summary"]["status"]}')
     print('=' * 70)
 
     return results
@@ -459,7 +467,7 @@ def main():
 
     # Get database connection
     conn = get_db_connection()
-    print(f"\nConnected to database: {conn.get_dsn_parameters()['dbname']}")
+    print(f'\nConnected to database: {conn.get_dsn_parameters()["dbname"]}')
 
     try:
         # Validation only mode
@@ -470,7 +478,8 @@ def main():
         # Step 1: Download files
         if not args.skip_download:
             downloaded_files = download_chadwick_files(
-                suffixes=args.suffixes, temp_dir=args.temp_dir,
+                suffixes=args.suffixes,
+                temp_dir=args.temp_dir,
             )
         else:
             temp_dir = args.temp_dir or Path(tempfile.gettempdir())
@@ -501,7 +510,7 @@ def main():
             if results['failed'] == 0:
                 print('✓ ALL VALIDATION TESTS PASSED')
                 return 0
-            print(f"✗ {results['failed']} VALIDATION TESTS FAILED")
+            print(f'✗ {results["failed"]} VALIDATION TESTS FAILED')
             return 1
         print('\n[DRY RUN COMPLETE - No database changes made]')
         return 0
@@ -509,6 +518,7 @@ def main():
     except Exception as e:
         print(f'\nERROR: {e}')
         import traceback
+
         traceback.print_exc()
         return 1
     finally:

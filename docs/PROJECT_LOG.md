@@ -95,6 +95,90 @@ psql -c "SELECT * FROM serving.verify_query_performance();"
 
 ---
 
+## 2026-04-27 (Milestone 8: Pipeline Orchestration - IN PROGRESS)
+
+### Summary
+
+Implemented working `baseball pipeline` commands with configuration loading, step execution, and checkpoint/resume support. Pipeline service manages execution state in admin tables.
+
+### Completed Work
+
+| Task | Details |
+|------|---------|
+| **Pipeline Service** | Created `baseball/services/pipeline.py` with full execution logic |
+| **Pipeline List** | `baseball pipeline list` - Shows pipelines from config/pipelines.yml |
+| **Pipeline Run** | `baseball pipeline run --pipeline <name>` - Executes with checkpointing |
+| **Pipeline Status** | `baseball pipeline status` - Shows recent runs from admin.pipeline_runs |
+| **Checkpoint Support** | Resume from last checkpoint with `--resume` flag |
+| **Pipeline Configs** | Added daily, historical, live, and source-specific pipelines |
+| **Tests** | 20 unit tests for PipelineService and execution logic |
+
+### Pipeline Commands Implemented
+
+| Command | Status | Description |
+|---------|--------|-------------|
+| `baseball pipeline list` | ✅ Working | Show 7 configured pipelines |
+| `baseball pipeline run --pipeline <name>` | ✅ Working | Execute pipeline with steps |
+| `baseball pipeline status` | ✅ Working | Show recent run history |
+| `baseball pipeline run --resume` | ✅ Working | Resume from checkpoint |
+
+### Pipelines Configured
+
+| Pipeline | Steps | Purpose |
+|----------|-------|---------|
+| `daily` | 6 steps | Daily data ingestion and feature updates |
+| `historical` | 6 steps | Historical data ingestion for a season |
+| `live` | 4 steps | Live game tracking and predictions |
+| `retrosheet_ingest` | 3 steps | Retrosheet historical data |
+| `mlb_live_ingest` | 4 steps | MLB live data with predictions |
+| `statcast_ingest` | 3 steps | Statcast pitch-level data |
+| `feature_building` | 5 steps | Build all ML features |
+
+### Files Created
+
+| Path | Purpose |
+|------|---------|
+| `baseball/services/pipeline.py` | Pipeline execution service (507 lines) |
+| `tests/unit/test_pipeline.py` | Pipeline service unit tests (20 tests) |
+| `config/pipelines.yml` | Updated with 7 pipeline definitions |
+
+### Example Usage
+
+```bash
+# List available pipelines
+baseball pipeline list
+
+# Run a specific pipeline
+baseball pipeline run --pipeline daily
+
+# Run historical pipeline for a specific year
+baseball pipeline run --pipeline historical --year 2024
+
+# Resume from last checkpoint
+baseball pipeline run --pipeline daily --resume
+
+# Check recent run status
+baseball pipeline status
+baseball pipeline status --pipeline daily --limit 5
+```
+
+### Database Integration
+
+- **admin.pipeline_runs**: Records pipeline executions
+- **admin.pipeline_checkpoints**: Saves step completion status
+- Resume capability: Restarts from last successful step
+
+### Exit Criteria In Progress
+
+- ✅ Pipeline service with configuration loading
+- ✅ CLI commands (list, run, status)
+- ✅ Checkpoint and resume support
+- ✅ 7 pipeline configurations
+- ✅ 20 unit tests
+- 🔄 Integration with actual source adapters (future work)
+
+---
+
 ## 2026-04-27 (Testing Infrastructure Expansion - COMPLETE)
 
 ### Summary

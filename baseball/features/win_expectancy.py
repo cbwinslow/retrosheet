@@ -17,18 +17,22 @@ logger = logging.getLogger(__name__)
 
 class WinExpectancyCalculator(FeatureStore):
     """Calculator for Win Expectancy (WE) features.
-    
+
     WE is the probability of the home team winning given the current
     game state (inning, outs, runners, score).
-    
+
     Example:
         >>> calc = WinExpectancyCalculator(db_connection=conn)
         >>> calc.load_from_db()
-        >>> 
         >>> state = GameState(
-        ...     inning=9, is_top=False, outs=2,
-        ...     runner_1b=True, runner_2b=False, runner_3b=False,
-        ...     score_home=4, score_away=3
+        ...     inning=9,
+        ...     is_top=False,
+        ...     outs=2,
+        ...     runner_1b=True,
+        ...     runner_2b=False,
+        ...     runner_3b=False,
+        ...     score_home=4,
+        ...     score_away=3,
         ... )
         >>> we = calc.compute(state)
         >>> print(f'Home team win probability: {we:.1%}')
@@ -36,7 +40,7 @@ class WinExpectancyCalculator(FeatureStore):
 
     def __init__(self, db_connection=None, config: FeatureConfig | None = None):
         """Initialize WE calculator.
-        
+
         Args:
             db_connection: Database connection for WE matrix
             config: Feature configuration
@@ -54,10 +58,10 @@ class WinExpectancyCalculator(FeatureStore):
 
     def load_from_db(self, season: int | None = None) -> int:
         """Load WE matrix from database.
-        
+
         Args:
             season: Optional season to load specific matrix
-            
+
         Returns:
             Number of states loaded
         """
@@ -100,14 +104,14 @@ class WinExpectancyCalculator(FeatureStore):
         # Late & close situations are most important
         defaults = [
             # inning, is_top, outs, base_state, score_diff, win_prob
-            (9, True, 2, '000', 0, 0.50),   # Top 9, tie, bases empty, 2 outs
+            (9, True, 2, '000', 0, 0.50),  # Top 9, tie, bases empty, 2 outs
             (9, False, 2, '000', 0, 0.52),  # Bot 9, tie, bases empty, 2 outs
             (9, True, 1, '000', -1, 0.18),  # Top 9, down 1, 1 out
             (9, False, 2, '000', 1, 0.92),  # Bot 9, up 1, 2 outs
-            (7, True, 0, '000', 0, 0.54),   # Top 7, tie
+            (7, True, 0, '000', 0, 0.54),  # Top 7, tie
             (7, False, 0, '000', 0, 0.52),  # Bot 7, tie
-            (1, True, 0, '000', 0, 0.54),   # Top 1
-            (1, False, 0, '000', 0, 0.52), # Bot 1
+            (1, True, 0, '000', 0, 0.54),  # Top 1
+            (1, False, 0, '000', 0, 0.52),  # Bot 1
         ]
 
         for state in defaults:
@@ -118,10 +122,10 @@ class WinExpectancyCalculator(FeatureStore):
 
     def compute(self, game_state: GameState) -> float | None:
         """Compute win expectancy for a game state.
-        
+
         Args:
             game_state: Current game state
-            
+
         Returns:
             Win probability (0-1) or None if unknown state
         """
@@ -145,8 +149,13 @@ class WinExpectancyCalculator(FeatureStore):
         if we is None:
             # Try without score differential (less specific)
             for diff in range(-5, 6):
-                alt_key = (lookup_inning, game_state.is_top, game_state.outs,
-                          game_state.base_state, diff)
+                alt_key = (
+                    lookup_inning,
+                    game_state.is_top,
+                    game_state.outs,
+                    game_state.base_state,
+                    diff,
+                )
                 if alt_key in self._we_matrix:
                     # Linear interpolation based on score diff
                     we = self._we_matrix[alt_key]
@@ -159,18 +168,17 @@ class WinExpectancyCalculator(FeatureStore):
 
         return we
 
-    def compute_wpa(self, state_before: GameState,
-                    state_after: GameState) -> float:
+    def compute_wpa(self, state_before: GameState, state_after: GameState) -> float:
         """Compute Win Probability Added (WPA) for a play.
-        
+
         WPA = WE_after - WE_before
-        
+
         Positive WPA means the play helped the home team.
-        
+
         Args:
             state_before: Game state before the play
             state_after: Game state after the play
-            
+
         Returns:
             Win Probability Added
         """
@@ -181,10 +189,10 @@ class WinExpectancyCalculator(FeatureStore):
 
     def compute_game_we_series(self, plays: list[dict[str, Any]]) -> list[dict]:
         """Compute WE for each play in a game.
-        
+
         Args:
             plays: List of play dictionaries with game state info
-            
+
         Returns:
             List of plays with added WE and WPA fields
         """
@@ -223,10 +231,9 @@ class WinExpectancyCalculator(FeatureStore):
 
         return results
 
-    def _build_historical(self, config: FeatureConfig,
-                          result: FeatureResult) -> None:
+    def _build_historical(self, config: FeatureConfig, result: FeatureResult) -> None:
         """Build historical WE features.
-        
+
         Args:
             config: Feature configuration
             result: Result object to update
@@ -284,10 +291,9 @@ class WinExpectancyCalculator(FeatureStore):
             result.add_error(f'Historical build failed: {e}')
             logger.exception('Historical WE build failed')
 
-    def _build_live(self, config: FeatureConfig,
-                    result: FeatureResult) -> None:
+    def _build_live(self, config: FeatureConfig, result: FeatureResult) -> None:
         """Build live WE features.
-        
+
         Args:
             config: Feature configuration
             result: Result object to update
@@ -298,7 +304,7 @@ class WinExpectancyCalculator(FeatureStore):
 
     def get_matrix_stats(self) -> dict[str, Any]:
         """Get statistics about the loaded WE matrix.
-        
+
         Returns:
             Dictionary with matrix statistics
         """

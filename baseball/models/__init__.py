@@ -12,12 +12,13 @@ from .base import (
     BaseModel,
     ModelConfig,
     ModelResult,
+    ModelType,
     ModelVersion,
     TrainingConfig,
-    ModelType,
 )
 from .next_run_model import NextRunProbabilityModel
 from .pa_outcome_model import PAOutcomeModel
+
 
 __all__ = [
     # Base classes

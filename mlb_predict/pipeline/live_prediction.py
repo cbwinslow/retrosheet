@@ -184,8 +184,12 @@ class LivePredictionPipeline:
             away_win_probability=1.0 - home_win_prob,
             confidence=confidence,
             features_used=[
-                'inning', 'is_top', 'outs', 'base_state',
-                'score_differential', 'leverage_index',
+                'inning',
+                'is_top',
+                'outs',
+                'base_state',
+                'score_differential',
+                'leverage_index',
             ],
             model_version=model_meta.model_version,
             latency_ms=(time.time() - start_time) * 1000,
@@ -262,9 +266,7 @@ class LivePredictionPipeline:
         """Get pipeline performance metrics."""
         total = self._cache_hits + self._cache_misses
         avg_latency = (
-            self._total_latency_ms / self._predictions_made
-            if self._predictions_made > 0
-            else 0.0
+            self._total_latency_ms / self._predictions_made if self._predictions_made > 0 else 0.0
         )
 
         return {
@@ -316,7 +318,9 @@ class LivePredictionPipeline:
                 break
 
             # Check if state changed
-            state_hash = f'{state.inning}_{state.is_top}_{state.outs}_{state.home_score}_{state.away_score}'
+            state_hash = (
+                f'{state.inning}_{state.is_top}_{state.outs}_{state.home_score}_{state.away_score}'
+            )
             if state_hash != last_state_hash:
                 # Build context from state
                 context = LiveGameContext(

@@ -34,22 +34,34 @@ class Registry:
         metadata['module'] = cls.__module__
         metadata['file'] = inspect.getfile(cls)
 
-        execute_sql("""
+        execute_sql(
+            """
             INSERT INTO framework.plugins (plugin_name, plugin_type, plugin_class, description)
             VALUES (%s, %s, %s, %s)
             ON CONFLICT (plugin_name) DO UPDATE SET
                 plugin_class = EXCLUDED.plugin_class,
                 updated_at = NOW()
-        """, (name, self.component_type, f'{cls.__module__}.{cls.__name__}', metadata.get('description', '')))
+        """,
+            (
+                name,
+                self.component_type,
+                f'{cls.__module__}.{cls.__name__}',
+                metadata.get('description', ''),
+            ),
+        )
 
     def get(self, name: str) -> type:
         """Get a registered component class."""
         if name not in self._registry:
             # Try to load from database
-            result = execute_sql("""
+            result = execute_sql(
+                """
                 SELECT plugin_class FROM framework.plugins
                 WHERE plugin_name = %s AND plugin_type = %s AND is_active = true
-            """, (name, self.component_type), fetch=True)
+            """,
+                (name, self.component_type),
+                fetch=True,
+            )
 
             if result:
                 # Dynamic import
@@ -65,11 +77,15 @@ class Registry:
     def list(self) -> list[str]:
         """List all registered component names."""
         # Get from database for up-to-date list
-        result = execute_sql("""
+        result = execute_sql(
+            """
             SELECT plugin_name FROM framework.plugins
             WHERE plugin_type = %s AND is_active = true
             ORDER BY plugin_name
-        """, (self.component_type,), fetch=True)
+        """,
+            (self.component_type,),
+            fetch=True,
+        )
         return [r[0] for r in result]
 
     def create(self, name: str, config: dict | None = None):
@@ -117,10 +133,12 @@ class FeatureRegistry(Registry):
     def create_feature(self, name: str, config: dict | None = None) -> BaseFeature:
         return self.create(name, config)
 
-    def register_sql_feature(self, name: str, sql_expression: str,
-                            dependencies: list[str], description: str = ''):
+    def register_sql_feature(
+        self, name: str, sql_expression: str, dependencies: list[str], description: str = ''
+    ):
         """Register a SQL-computed feature directly."""
-        execute_sql("""
+        execute_sql(
+            """
             INSERT INTO framework.feature_registry 
                 (feature_name, feature_type, computation_method, dependencies, description)
             VALUES (%s, 'sql', %s, %s, %s)
@@ -128,7 +146,9 @@ class FeatureRegistry(Registry):
                 computation_method = EXCLUDED.computation_method,
                 dependencies = EXCLUDED.dependencies,
                 updated_at = NOW()
-        """, (name, sql_expression, dependencies, description))
+        """,
+            (name, sql_expression, dependencies, description),
+        )
 
 
 class PluginRegistry:
@@ -174,6 +194,7 @@ class PluginRegistry:
 
 # Global registry instance
 _registry = PluginRegistry()
+
 
 def get_registry() -> PluginRegistry:
     """Get the global plugin registry."""

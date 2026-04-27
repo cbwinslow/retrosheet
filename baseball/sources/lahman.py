@@ -49,17 +49,20 @@ class LahmanSource(BaseSource):
                 return SourceResult(
                     success=True,
                     rows_downloaded=0,
-                    metadata={'stdout': result.stdout[-1000:] if len(result.stdout) > 1000 else result.stdout},
+                    metadata={
+                        'stdout': result.stdout[-1000:]
+                        if len(result.stdout) > 1000
+                        else result.stdout
+                    },
                 )
-            else:
-                return SourceResult(
-                    success=False,
-                    error_message=f'Lahman download failed: {result.stderr[:500]}',
-                )
+            return SourceResult(
+                success=False,
+                error_message=f'Lahman download failed: {result.stderr[:500]}',
+            )
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'Lahman download error: {str(e)}',
+                error_message=f'Lahman download error: {e!s}',
             )
 
     def ingest(self, source_path: Path) -> SourceResult:
@@ -85,23 +88,27 @@ class LahmanSource(BaseSource):
                 return SourceResult(
                     success=True,
                     rows_inserted=0,
-                    metadata={'stdout': result.stdout[-1000:] if len(result.stdout) > 1000 else result.stdout},
+                    metadata={
+                        'stdout': result.stdout[-1000:]
+                        if len(result.stdout) > 1000
+                        else result.stdout
+                    },
                 )
-            else:
-                return SourceResult(
-                    success=False,
-                    error_message=f'Lahman ingest failed: {result.stderr[:500]}',
-                )
+            return SourceResult(
+                success=False,
+                error_message=f'Lahman ingest failed: {result.stderr[:500]}',
+            )
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'Lahman ingest error: {str(e)}',
+                error_message=f'Lahman ingest error: {e!s}',
             )
 
     def validate(self, ingest_result: SourceResult) -> SourceResult:
         """Validate Lahman data quality."""
-        import psycopg2
         import os
+
+        import psycopg2
 
         try:
             conn = psycopg2.connect(
@@ -131,7 +138,7 @@ class LahmanSource(BaseSource):
         except Exception as e:
             return SourceResult(
                 success=False,
-                error_message=f'Lahman validation error: {str(e)}',
+                error_message=f'Lahman validation error: {e!s}',
             )
 
     def get_table_counts(self) -> dict[str, int]:

@@ -375,9 +375,37 @@ Consolidation effort following major_update.md principles: preserve working logi
 
 ---
 
+## ✅ Milestone 9: Cleanup - Scripts Legacy Archive (COMPLETED 2026-04-27)
+
+### Scripts Moved to `scripts_legacy/`
+
+| Script | New Location | Reason |
+|--------|--------------|--------|
+| `complete_mlb_ingestion.sh` | `scripts_legacy/` | Replaced by `baseball mlb download/ingest` |
+| `ingest_all_mlb_parallel.sh` | `scripts_legacy/` | Replaced by `baseball mlb ingest` |
+| `ingest_all_external.sh` | `scripts_legacy/` | Replaced by `baseball lahman/espn/statcast` |
+| `monitor_mlb_ingestion.sh` | `scripts_legacy/` | Replaced by `baseball status` |
+| `demo_advanced_modeling.py` | `scripts_legacy/` | Replaced by `baseball models train` |
+| `demo_chatbot_integration.py` | `scripts_legacy/` | Replaced by `baseball chatbot` |
+| `fix_repo_issues.sh` | `scripts_legacy/` | One-time utility |
+| `ingest_all_mlb_data.py` | `scripts_legacy/data_ingestion/` | Replaced by `MlbSource` adapter |
+| `download_missing_2023.py` | `scripts_legacy/data_ingestion/` | One-time fix |
+
+### Migration Guide
+
+| Old Command | New Command |
+|-------------|-------------|
+| `./scripts/complete_mlb_ingestion.sh` | `baseball mlb download --seasons 2000-2024 && baseball mlb ingest --seasons 2000-2024` |
+| `./scripts/ingest_all_mlb_parallel.sh` | `baseball mlb ingest --parallel` |
+| `./scripts/monitor_mlb_ingestion.sh` | `baseball status` |
+| `python scripts/demo_advanced_modeling.py` | `baseball models train --dry-run` |
+
+---
+
 ## Document Control
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-04-26 | Migration Agent | Initial file inventory and mapping |
 | 1.1 | 2026-04-26 | Migration Agent | Added Script Consolidation section |
+| 1.2 | 2026-04-27 | Migration Agent | Added Milestone 9 Scripts Legacy Archive section |

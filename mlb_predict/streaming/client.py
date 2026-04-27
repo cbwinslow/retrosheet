@@ -16,6 +16,7 @@ from typing import Any
 try:
     import websockets
     from websockets.client import WebSocketClientProtocol
+
     WEBSOCKETS_AVAILABLE = True
 except ImportError:
     WEBSOCKETS_AVAILABLE = False
@@ -104,10 +105,12 @@ class PredictionStreamClient:
         if not self._connected:
             raise RuntimeError('Not connected')
 
-        await self._send({
-            'command': 'subscribe',
-            'game_pk': game_pk,
-        })
+        await self._send(
+            {
+                'command': 'subscribe',
+                'game_pk': game_pk,
+            }
+        )
         self._subscribed_games.add(game_pk)
 
     async def unsubscribe(self, game_pk: int | None = None) -> None:
@@ -115,10 +118,12 @@ class PredictionStreamClient:
         if not self._connected:
             return
 
-        await self._send({
-            'command': 'unsubscribe',
-            'game_pk': game_pk,
-        })
+        await self._send(
+            {
+                'command': 'unsubscribe',
+                'game_pk': game_pk,
+            }
+        )
 
         if game_pk:
             self._subscribed_games.discard(game_pk)
@@ -169,15 +174,15 @@ class PredictionStreamClient:
                 self._on_prediction(data)
 
         elif msg_type == 'error':
-            logger.error(f"Server error: {data.get('message')}")
+            logger.error(f'Server error: {data.get("message")}')
             if self._on_error:
                 self._on_error(data.get('message', 'Unknown error'))
 
         elif msg_type == 'connected':
-            logger.info(f"Server: {data.get('message')}")
+            logger.info(f'Server: {data.get("message")}')
 
         elif msg_type == 'subscribed':
-            logger.info(f"Subscribed to game {data.get('game_pk')}")
+            logger.info(f'Subscribed to game {data.get("game_pk")}')
 
         elif msg_type == 'pong':
             pass  # Heartbeat response
