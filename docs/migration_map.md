@@ -134,6 +134,57 @@
 
 ---
 
+## ✅ Milestone 7: SQL Layer Reorganization (COMPLETED 2026-04-27)
+
+### Completed Actions
+
+| Layer | Old Location | New Location | Files | Status |
+|-------|--------------|--------------|-------|--------|
+| 00_admin | `sql/maintenance/` + `sql/00_admin/` | `sql/00_admin/` | 1 | ✅ Consolidated |
+| 10_raw | `sql/live/` + `sql/external/` | `sql/10_raw/` | 19 | ✅ Merged & renamed |
+| 20_staging | *new* | `sql/20_staging/` | 0 | ✅ Created (ready) |
+| 30_core | `sql/core/` | `sql/30_core/` | 23 | ✅ Renamed to 30XX pattern |
+| 40_bridge | `sql/bridge/` | `sql/40_bridge/` | 15 | ✅ Renamed to 40XX pattern |
+| 50_features | `sql/features/` | `sql/50_features/` | 36 | ✅ Renamed to 50XX pattern |
+| 60_models | `sql/models/` + root `sql/600_*.sql` | `sql/60_models/` | 4 | ✅ Consolidated & renamed |
+| 70_serving | *new* | `sql/70_serving/` | 0 | ✅ Created (ready) |
+| 80_quality | *new* | `sql/80_quality/` | 0 | ✅ Created (ready) |
+
+### Naming Convention Applied
+
+All files now follow: `{layer}{sequence}_{layer_name}_{description}.sql`
+
+Examples:
+- `1001_raw_mlb_api_complete.sql` (layer 10, sequence 01)
+- `3001_core_init.sql` (layer 30, sequence 01)
+- `4001_bridge_schema.sql` (layer 40, sequence 01)
+- `5001_features_pitch_data_quality.sql` (layer 50, sequence 01)
+- `6001_models_registry.sql` (layer 60, sequence 01)
+
+### Deleted Directories
+
+- `sql/live/` → merged into `sql/10_raw/`
+- `sql/external/` → merged into `sql/10_raw/`
+- `sql/core/` → moved to `sql/30_core/`
+- `sql/bridge/` → moved to `sql/40_bridge/`
+- `sql/features/` → moved to `sql/50_features/`
+- `sql/models/` → moved to `sql/60_models/`
+
+### Remaining (Non-Layered)
+
+- `sql/analysis/` → analysis queries (future: review for 80_quality/)
+- `sql/eda/` → exploratory analysis (future: move to docs/)
+- `sql/framework/` → framework utilities
+- `sql/maintenance/` → maintenance utilities
+- `sql/metadata/` → metadata queries
+- `sql/mlb/` → MLB-specific queries (future: review)
+- `sql/optimization/` → optimization scripts
+- `sql/test/` → test fixtures
+- `sql/utility/` → utility functions
+- `sql/warehouse/` → warehouse views (future: move to 70_serving/)
+
+---
+
 ## Configuration: New `config/` Directory
 
 | New Location | Purpose | Source |
@@ -270,8 +321,63 @@ After each phase, verify:
 
 ---
 
+## Script Consolidation (April 26, 2026)
+
+Consolidation effort following major_update.md principles: preserve working logic, wrap existing scripts, archive true orphans only.
+
+### Archived Scripts (True Orphans)
+
+| File | Destination | Reason |
+|------|-------------|--------|
+| `scripts/bridge/investigate_coach_names.py` | `scripts/archive/bridge_investigations/` | One-time investigation |
+| `scripts/bridge/investigate_umpire_ids.py` | `scripts/archive/bridge_investigations/` | One-time investigation |
+| `scripts/bridge/replay_live_bridge_backfill.py` | `scripts/archive/one_time_backfills/` | One-time backfill |
+| `scripts/add_table_comments.py` | `scripts/archive/deprecated_sql_tools/` | Superseded by sql_maintenance.py |
+| `scripts/apply_accurate_headers.py` | `scripts/archive/deprecated_sql_tools/` | Superseded by sql_maintenance.py |
+| `scripts/fix_sql_headers.py` | `scripts/archive/deprecated_sql_tools/` | Superseded by sql_maintenance.py |
+| `scripts/convert_block_headers.py` | `scripts/archive/deprecated_sql_tools/` | Superseded by sql_maintenance.py |
+
+### Unified Scripts (Merged Functionality)
+
+| Previous Files | New File | Purpose |
+|----------------|----------|---------|
+| `add_sql_headers.py`, `add_table_comments.py`, `apply_accurate_headers.py`, `fix_sql_headers.py` | `scripts/utility/sql_maintenance.py` | Unified SQL header/comment management tool |
+
+### Shell Wrappers Updated
+
+| File | Change | New Behavior |
+|------|--------|--------------|
+| `scripts/complete_mlb_ingestion.sh` | Updated | Calls `baseball mlb download/ingest` |
+| `scripts/ingest_all_mlb_parallel.sh` | Updated | Calls `baseball mlb download/ingest` |
+
+### Source Adapters Created (WRAP Pattern)
+
+| Adapter | Wraps | Location |
+|-----------|-------|----------|
+| `MlbSource` | `download_mlb_bulk.py`, `ingest_all_mlb_data.py` | `baseball/sources/mlb.py` |
+| `EspnSource` | `fetch_espn_mlb.py` | `baseball/sources/espn.py` |
+| `StatcastSource` | `download_statcast.py`, `load_statcast.py` | `baseball/sources/statcast.py` |
+| `LahmanSource` | `download_lahman_data.py`, `load_lahman.py` | `baseball/sources/lahman.py` |
+| `RetrosheetSource` | `retrosheet/archive.py`, `retrosheet/parser.py` | `baseball/sources/retrosheet.py` |
+
+### Bridge Service Created
+
+| Service | Wraps | Location |
+|---------|-------|----------|
+| `BridgeService` | `populate_bridge_tables.py`, `ingest_chadwick_register.py`, `populate_game_xref.py`, `populate_season_aware_team_xref.py` | `baseball/services/bridge.py` |
+
+### E2E Test Framework Created
+
+| Test File | Coverage | Status |
+|-----------|----------|--------|
+| `tests/e2e/test_source_adapters.py` | All 5 source adapters | 12 passed |
+| `tests/e2e/test_bridge_service.py` | Bridge service | 4 passed, 1 skipped |
+
+---
+
 ## Document Control
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-04-26 | Migration Agent | Initial file inventory and mapping |
+| 1.1 | 2026-04-26 | Migration Agent | Added Script Consolidation section |

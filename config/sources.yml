@@ -1,0 +1,27 @@
+# Data source configurations for the baseball platform
+# Author: Agent cbwinslow/retrosheet
+# Date: 2026-04-26
+
+retrosheet:
+  base_url: "https://www.retrosheet.org"
+  data_dir: "data/retrosheet"
+  seasons: [1900, 2025]
+
+mlb:
+  base_url: "https://statsapi.mlb.com"
+  api_key_env: "MLB_API_KEY"
+  data_dir: "data/mlb"
+  live_poll_interval_seconds: 30
+
+espn:
+  base_url: "http://site.api.espn.com/apis/site/v2/sports/baseball/mlb"
+  data_dir: "data/espn"
+
+statcast:
+  base_url: "https://baseballsavant.mlb.com"
+  data_dir: "data/statcast"
+  seasons: [2015, 2025]
+
+lahman:
+  base_url: "https://github.com/chadwickbureau/baseballdatabank/raw/master"
+  data_dir: "data/lahman"

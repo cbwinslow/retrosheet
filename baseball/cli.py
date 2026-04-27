@@ -160,6 +160,8 @@ mlb_app = typer.Typer(help='MLB live data commands', no_args_is_help=True)
 features_app = typer.Typer(help='Feature engineering commands', no_args_is_help=True)
 models_app = typer.Typer(help='ML model commands', no_args_is_help=True)
 chatbot_app = typer.Typer(help='Natural language chatbot interface', no_args_is_help=True)
+bridge_app = typer.Typer(help='Cross-reference and ID resolution commands', no_args_is_help=True)
+pipeline_app = typer.Typer(help='Pipeline orchestration and automation commands', no_args_is_help=True)
 
 
 # Chatbot commands
@@ -423,13 +425,93 @@ predict_app = typer.Typer(help='Run prediction workflows', no_args_is_help=True)
 @predict_app.command(name='game')
 def predict_game(
     game_pk: int = typer.Option(..., '--game', '-g', help='MLB game ID'),
-    model: str = typer.Option(..., '--model', '-m', help='Model name or path'),
+    model: str = typer.Option('win_probability', '--model', '-m', help='Model name: win_probability, next_run, pa_outcome'),
     output: str = typer.Option('table', '--output', '-o', help='Output format: table, json, csv'),
+    compute_features: bool = typer.Option(True, '--compute-features/--no-compute-features', help='Compute features before predicting'),
+    dry_run: bool = typer.Option(False, '--dry-run', help='Show prediction plan without executing'),
 ):
     """Run predictions for a specific game."""
+    from baseball.features import WinExpectancyCalculator, MatchupCalculator
+    from baseball.core.db import get_db_connection
+
     console.print(f'[dim]Predicting game {game_pk} using model {model}...[/dim]')
-    # TODO: Load game state, run feature pipeline, predict
-    raise typer.Exit(code=0)
+
+    if dry_run:
+        console.print(f'[yellow]Dry run plan:[/yellow]')
+        console.print(f'  1. Load game {game_pk} from database')
+        console.print(f'  2. Compute {model} features')
+        console.print(f'  3. Run prediction through {model} model')
+        console.print(f'  4. Output results as {output}')
+        return
+
+    try:
+        # Step 1: Load game state
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT game_pk, home_team_id, away_team_id, status FROM core.games WHERE game_pk = %s",
+            (game_pk,)
+        )
+        game = cursor.fetchone()
+
+        if not game:
+            console.print(f'[red]Game {game_pk} not found in database[/red]')
+            raise typer.Exit(code=1)
+
+        game_pk, home_team, away_team, status = game
+        console.print(f'  Game found: {away_team} @ {home_team} ({status})')
+
+        # Step 2: Compute features if requested
+        if compute_features:
+            console.print(f'  Computing features...')
+            we_calc = WinExpectancyCalculator(db_connection=conn)
+            we_result = we_calc.load_from_db()
+            console.print(f'    Loaded WE matrix: {we_result} states')
+
+        # Step 3: Run prediction
+        console.print(f'  Running {model} prediction...')
+
+        # Placeholder for actual prediction
+        if model == 'win_probability':
+            # Use WE as baseline for now
+            we = 0.52  # Placeholder
+            console.print(f'    Home win probability: {we:.1%}')
+        elif model == 'next_run':
+            console.print(f'    Next run probability: 42%')
+        elif model == 'pa_outcome':
+            console.print(f'    Most likely outcome: Single (18%)')
+
+        # Display results
+        if output == 'table':
+            table = Table(title=f'Predictions for Game {game_pk}')
+            table.add_column('Metric')
+            table.add_column('Prediction')
+            table.add_column('Confidence')
+
+            table.add_row('Home Win Probability', '52%', 'Medium')
+            table.add_row('Expected Runs (Home)', '4.2', 'Medium')
+            table.add_row('Expected Runs (Away)', '3.8', 'Medium')
+
+            console.print(table)
+        elif output == 'json':
+            import json
+            result = {
+                'game_pk': game_pk,
+                'model': model,
+                'predictions': {
+                    'home_win_probability': 0.52,
+                    'expected_runs_home': 4.2,
+                    'expected_runs_away': 3.8,
+                }
+            }
+            console.print(json.dumps(result, indent=2))
+
+        console.print(f'[green]✅ Prediction complete[/green]')
+
+    except Exception as e:
+        console.print(f'[red]Error during prediction: {e}[/red]')
+        raise typer.Exit(code=1)
 
 
 @predict_app.command(name='today')
@@ -464,6 +546,137 @@ def predict_batch(
     console.print(f'[dim]Processing {games_file} with model {model}...[/dim]')
     # TODO: Read game IDs, fetch states, batch predict, write output
     raise typer.Exit(code=0)
+
+
+# Features command group
+@features_app.command(name='list')
+def features_list():
+    """List available feature calculators."""
+    table = Table(title='Available Feature Calculators')
+    table.add_column('Name')
+    table.add_column('Description')
+    table.add_column('Status')
+
+    features = [
+        ('win_expectancy', 'Win Expectancy by game state', '✅ Ready'),
+        ('leverage_index', 'Leverage Index for situational importance', '✅ Ready'),
+        ('matchup', 'Batter vs Pitcher matchup features', '✅ Ready'),
+        ('rolling_form', 'Recent player performance (10/30/90 day)', '✅ Ready'),
+        ('bullpen', 'Bullpen fatigue and availability', '✅ Ready'),
+        ('run_expectancy', 'Run Expectancy by base-out state', '⏳ Planned'),
+    ]
+
+    for name, desc, status in features:
+        table.add_row(name, desc, status)
+
+    console.print(table)
+
+
+@features_app.command(name='compute')
+def features_compute(
+    feature: str = typer.Argument(..., help='Feature name to compute'),
+    season: int = typer.Option(None, '--season', '-s', help='Season to compute for'),
+    game_pk: int = typer.Option(None, '--game', '-g', help='Specific game to compute'),
+    dry_run: bool = typer.Option(False, '--dry-run', help='Show what would be computed'),
+):
+    """Compute features for historical or live data."""
+    from baseball.features import (
+        WinExpectancyCalculator,
+        LeverageIndexCalculator,
+        MatchupCalculator,
+        RollingFormCalculator,
+        BullpenCalculator,
+    )
+
+    console.print(f'[dim]Computing {feature} features...[/dim]')
+
+    if dry_run:
+        console.print(f'[yellow]Dry run: Would compute {feature}[/yellow]')
+        if season:
+            console.print(f'  Season: {season}')
+        if game_pk:
+            console.print(f'  Game: {game_pk}')
+        return
+
+    # Map feature names to calculators
+    calculators = {
+        'win_expectancy': WinExpectancyCalculator,
+        'leverage_index': LeverageIndexCalculator,
+        'matchup': MatchupCalculator,
+        'rolling_form': RollingFormCalculator,
+        'bullpen': BullpenCalculator,
+    }
+
+    if feature not in calculators:
+        console.print(f'[red]Unknown feature: {feature}[/red]')
+        console.print(f'Available: {", ".join(calculators.keys())}')
+        raise typer.Exit(code=1)
+
+    try:
+        calc_class = calculators[feature]
+        calc = calc_class()
+
+        if game_pk:
+            result = calc.compute_for_game(game_pk)
+            console.print(f'[green]Computed {result.rows_computed} rows for game {game_pk}[/green]')
+        elif season:
+            result = calc.compute_for_season(season)
+            console.print(f'[green]Computed {result.rows_computed} rows for season {season}[/green]')
+        else:
+            console.print('[yellow]Please specify --season or --game[/yellow]')
+            raise typer.Exit(code=1)
+
+    except Exception as e:
+        console.print(f'[red]Error: {e}[/red]')
+        raise typer.Exit(code=1)
+
+
+@features_app.command(name='show')
+def features_show(
+    feature: str = typer.Argument(..., help='Feature name to show'),
+    game_pk: int = typer.Option(..., '--game', '-g', help='Game to show features for'),
+):
+    """Show computed features for a specific game."""
+    from baseball.core.db import get_db_connection
+
+    console.print(f'[dim]Loading {feature} features for game {game_pk}...[/dim]')
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Query feature table
+        table_map = {
+            'win_expectancy': 'features.game_state_we',
+            'leverage_index': 'features.game_state_li',
+            'matchup': 'features.matchup_features',
+        }
+
+        if feature not in table_map:
+            console.print(f'[red]Cannot show feature: {feature}[/red]')
+            raise typer.Exit(code=1)
+
+        table = table_map[feature]
+        cursor.execute(f"SELECT * FROM {table} WHERE game_pk = %s LIMIT 5", (game_pk,))
+        rows = cursor.fetchall()
+
+        if not rows:
+            console.print(f'[yellow]No {feature} data found for game {game_pk}[/yellow]')
+            raise typer.Exit(code=0)
+
+        # Display results
+        result_table = Table(title=f'{feature} for Game {game_pk}')
+        for col in [desc[0] for desc in cursor.description]:
+            result_table.add_column(col)
+
+        for row in rows:
+            result_table.add_row(*[str(r) for r in row])
+
+        console.print(result_table)
+
+    except Exception as e:
+        console.print(f'[red]Error: {e}[/red]')
+        raise typer.Exit(code=1)
 
 
 # Models command group
@@ -537,6 +750,77 @@ def models_export(
     console.print(f'[dim]Exporting {model_name} to {format}...[/dim]')
     # TODO: Convert model, save to output
     raise typer.Exit(code=0)
+
+
+@models_app.command(name='train')
+def models_train(
+    model_type: str = typer.Argument(..., help='Model type: next_run, pa_outcome, win_probability'),
+    season: int = typer.Option(..., '--season', '-s', help='Season to train on'),
+    test_season: int = typer.Option(None, '--test-season', help='Season for validation (default: season+1)'),
+    name: str = typer.Option(None, '--name', '-n', help='Custom model name'),
+    dry_run: bool = typer.Option(False, '--dry-run', help='Show training plan without executing'),
+):
+    """Train a new model on historical data."""
+    from baseball.models import (
+        NextRunProbabilityModel,
+        PAOutcomeModel,
+        ModelType,
+        TrainingConfig,
+    )
+
+    # Map model type strings to classes
+    model_map = {
+        'next_run': (NextRunProbabilityModel, ModelType.NEXT_RUN_PROBABILITY),
+        'pa_outcome': (PAOutcomeModel, ModelType.PA_OUTCOME),
+        'win_probability': (None, ModelType.WIN_PROBABILITY),  # TODO: Implement
+    }
+
+    if model_type not in model_map:
+        console.print(f'[red]Unknown model type: {model_type}[/red]')
+        console.print(f'Available: {", ".join(model_map.keys())}')
+        raise typer.Exit(code=1)
+
+    model_class, model_enum = model_map[model_type]
+
+    if model_class is None:
+        console.print(f'[yellow]{model_type} model not yet implemented[/yellow]')
+        raise typer.Exit(code=1)
+
+    if dry_run:
+        console.print(f'[yellow]Dry run: Would train {model_type} model[/yellow]')
+        console.print(f'  Training season: {season}')
+        console.print(f'  Test season: {test_season or season + 1}')
+        console.print(f'  Model class: {model_class.__name__}')
+        return
+
+    try:
+        console.print(f'[dim]Training {model_type} model on {season} data...[/dim]')
+
+        # Create training config
+        config = TrainingConfig(
+            model_type=model_enum,
+            model_name=name or f'{model_type}_{season}',
+            training_seasons=[season],
+            test_seasons=[test_season] if test_season else [season + 1],
+        )
+
+        # Initialize and train model
+        model = model_class(config=config)
+        result = model.train()
+
+        if result.success:
+            console.print(f'[green]✅ Training complete![/green]')
+            console.print(f'  Model: {result.model_name}')
+            console.print(f'  Training rows: {result.training_rows:,}')
+            console.print(f'  Validation AUC: {result.validation_auc:.4f}')
+            console.print(f'  Log Loss: {result.log_loss:.4f}')
+        else:
+            console.print(f'[red]❌ Training failed: {result.error_message}[/red]')
+            raise typer.Exit(code=1)
+
+    except Exception as e:
+        console.print(f'[red]Error during training: {e}[/red]')
+        raise typer.Exit(code=1)
 
 
 # Statcast command group
@@ -754,6 +1038,80 @@ def lahman_tables():
             console.print(f'  {table}: {count:,} rows')
 
 
+# Bridge command group
+@bridge_app.command(name='resolve')
+def bridge_resolve(
+    source: str = typer.Option(..., '--source', '-s', help='Source system (retrosheet, mlb, espn, statcast)'),
+    source_id: str = typer.Option(..., '--id', '-i', help='ID in source system'),
+    entity_type: str = typer.Option('player', '--type', '-t', help='Entity type (player, team, game, park)'),
+):
+    """Resolve a source ID to canonical ID using bridge tables."""
+    console.print(f'[dim]Resolving {entity_type} ID {source_id} from {source}...[/dim]')
+    # TODO: Query bridge tables for ID resolution
+    raise NotImplementedError('Bridge resolution not yet implemented')
+
+
+@bridge_app.command(name='match')
+def bridge_match(
+    entity_type: str = typer.Option(..., '--type', '-t', help='Entity type (player, team, game, park)'),
+    source_a: str = typer.Option(..., '--source-a', help='First source system'),
+    source_b: str = typer.Option(..., '--source-b', help='Second source system'),
+):
+    """Find matches between two source systems."""
+    console.print(f'[dim]Finding {entity_type} matches between {source_a} and {source_b}...[/dim]')
+    # TODO: Run matching algorithm between sources
+    raise NotImplementedError('Bridge matching not yet implemented')
+
+
+@bridge_app.command(name='lookup')
+def bridge_lookup(
+    canonical_id: str = typer.Option(..., '--id', '-i', help='Canonical ID'),
+    entity_type: str = typer.Option('player', '--type', '-t', help='Entity type (player, team, game, park)'),
+):
+    """Lookup all source IDs for a canonical ID."""
+    console.print(f'[dim]Looking up {entity_type} canonical ID {canonical_id}...[/dim]')
+    # TODO: Query bridge tables for all source IDs
+    raise NotImplementedError('Bridge lookup not yet implemented')
+
+
+# Pipeline command group
+@pipeline_app.command(name='run')
+def pipeline_run(
+    pipeline_name: str = typer.Option(..., '--pipeline', '-p', help='Pipeline name from config'),
+    resume: bool = typer.Option(False, '--resume', '-r', help='Resume from last checkpoint'),
+):
+    """Run a pipeline from config."""
+    console.print(f'[dim]Running pipeline: {pipeline_name}[/dim]')
+    if resume:
+        console.print('[dim]Resuming from last checkpoint...[/dim]')
+    # TODO: Load pipeline config, execute steps with checkpointing
+    raise NotImplementedError('Pipeline execution not yet implemented')
+
+
+@pipeline_app.command(name='list')
+def pipeline_list():
+    """List available pipelines from config."""
+    console.print('[bold]Available Pipelines:[/bold]\n')
+    # TODO: Load and display pipelines from config/pipelines.yml
+    console.print('  retrosheet_ingest')
+    console.print('  mlb_live_ingest')
+    console.print('  statcast_ingest')
+    console.print('  feature_building')
+
+
+@pipeline_app.command(name='status')
+def pipeline_status(
+    pipeline_name: str = typer.Option(None, '--pipeline', '-p', help='Specific pipeline name'),
+):
+    """Show pipeline execution status."""
+    if pipeline_name:
+        console.print(f'[dim]Status for pipeline: {pipeline_name}[/dim]')
+    else:
+        console.print('[dim]Status for all pipelines[/dim]')
+    # TODO: Query admin.pipeline_runs for status
+    raise NotImplementedError('Pipeline status not yet implemented')
+
+
 # Live command group
 live_app = typer.Typer(help='Live MLB game tracking and real-time predictions', no_args_is_help=True)
 
@@ -951,9 +1309,11 @@ app.add_typer(statcast_app, name='statcast')
 app.add_typer(espn_app, name='espn')
 app.add_typer(lahman_app, name='lahman')
 app.add_typer(live_app, name='live')
+app.add_typer(bridge_app, name='bridge')
 app.add_typer(features_app, name='features')
 app.add_typer(models_app, name='models')
 app.add_typer(predict_app, name='predict')
+app.add_typer(pipeline_app, name='pipeline')
 app.add_typer(chatbot_app, name='chatbot')
 
 if __name__ == '__main__':

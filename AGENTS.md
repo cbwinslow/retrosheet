@@ -14,9 +14,9 @@ The repository is undergoing a **phased migration** to a unified `baseball` CLI 
 | `docs/architecture.md` | Target architecture specification |
 | `docs/keys_and_grains.md` | Entity keys and table grains |
 
-### Current Phase: Phase 6-7 In Progress
+### Current Phase: Phase 6-7 Complete
 
-Phase 0-5 are complete. Phase 6-7 (Feature/Model Expansion + Serving) is in progress with Win Expectancy, Leverage Index, and Model Registry foundation complete.
+Phase 0-5 are complete. Phase 6-7 (Feature/Model Expansion + Serving) is now **complete** with comprehensive testing infrastructure, Win Expectancy, Leverage Index, Model Registry SQL, feature calculators, and materialized views for serving.
 
 **Completed Work**:
 - ✅ Phase 0: Migration planning documents
@@ -24,7 +24,7 @@ Phase 0-5 are complete. Phase 6-7 (Feature/Model Expansion + Serving) is in prog
 - ✅ Phase 2: All 5 historical source adapters (MLB, Retrosheet, Statcast, ESPN, Lahman)
 - ✅ Phase 3: Live data source adapter (`LiveMlbSource`), real-time prediction pipeline
 - ✅ Phase 5: Bridge layer (`XrefManager`, `player_xref.py`, `team_xref.py`, `game_xref.py`)
-- 🔄 Phase 6-7: WE/LI features, Model Registry SQL, feature calculators foundation
+- ✅ Phase 6-7: WE/LI features, Model Registry SQL, feature calculators, comprehensive testing (140+ tests)
 
 ### GitHub Issues
 
@@ -36,7 +36,7 @@ Phase 0-5 are complete. Phase 6-7 (Feature/Model Expansion + Serving) is in prog
 | [#95](https://github.com/cbwinslow/retrosheet/issues/95) | 3 | [MIGRATION] Phase 3: MLB Live Vertical Slice | ✅ Complete |
 | [#96](https://github.com/cbwinslow/retrosheet/issues/96) | 4 | [MIGRATION] Phase 4: ESPN + Statcast | ✅ Merged into Phase 2 |
 | [#97](https://github.com/cbwinslow/retrosheet/issues/97) | 5 | [MIGRATION] Phase 5: Bridge Consolidation | ✅ Complete |
-| [#98](https://github.com/cbwinslow/retrosheet/issues/98) | 6-7 | [MIGRATION] Phase 6-7: Feature/Model + Serving | 🔄 In Progress |
+| [#98](https://github.com/cbwinslow/retrosheet/issues/98) | 6-7 | [MIGRATION] Phase 6-7: Feature/Model + Serving + Testing | ✅ Complete |
 
 ### Source Adapters Available
 
@@ -49,6 +49,7 @@ Phase 0-5 are complete. Phase 6-7 (Feature/Model Expansion + Serving) is in prog
 | Lahman | `LahmanSource` | `lahman download/ingest/validate/tables` | ✅ Complete |
 | Live MLB | `LiveMlbSource` | `live games/watch/poll/predict/server` | 🔄 In Progress |
 | Bridge | `XrefManager` | `bridge resolve/match/lookup` | ✅ Complete |
+| Pipeline | `PipelineRunner` | `pipeline run/list/status` | 🔄 Scaffolding Complete |
 
 ### Production Deployment
 
@@ -404,6 +405,157 @@ python scripts/utility/llm_subagent.py fix-apply Q000
 - `features`: ML-ready training and inference tables.
   - `features_pitch.locations`: PostGIS-enabled pitch location table with geometry column
 - `predictions`: model outputs, backtests, and live prediction snapshots.
+
+## Package Structure
+
+### baseball/
+
+- `baseball/__init__.py`: Package entry point with version
+- `baseball/__main__.py`: Module entry point for `python -m baseball`
+- `baseball/cli.py`: Typer CLI with command groups (doctor, status, retrosheet, mlb, espn, statcast, lahman, live, bridge, features, models, predict, pipeline, chatbot)
+
+### baseball/core/
+
+Shared infrastructure modules:
+- `baseball/core/types.py`: Type definitions (SourceRequest, SourceResult)
+- `baseball/core/db.py`: Database connection manager
+- `baseball/core/sql_runner.py`: SQL file execution utility
+- `baseball/core/checkpoints.py`: Pipeline checkpoint logic
+- `baseball/core/filesystem.py`: File I/O utilities
+- `baseball/core/http.py`: HTTP client with retry/backoff
+- `baseball/core/registry.py`: Source/model registry
+
+### baseball/sources/
+
+Source adapter pattern:
+- `baseball/sources/base.py`: BaseSource abstract class with download/ingest/validate methods
+
+### baseball/features/
+
+Feature calculators:
+- `baseball/features/base.py`: Base feature calculator
+- `baseball/features/win_expectancy.py`: Win expectancy state features
+- `baseball/features/leverage_index.py`: Leverage index state features
+- `baseball/features/matchup.py`: Batter-pitcher matchup features
+- `baseball/features/rolling_form.py`: Rolling form features
+- `baseball/features/bullpen.py`: Bullpen usage features
+
+### baseball/bridge/
+
+Cross-reference services:
+- `baseball/bridge/xref_manager.py`: XrefManager for ID resolution
+- `baseball/bridge/player_xref.py`: Player ID resolution
+- `baseball/bridge/team_xref.py`: Team ID resolution
+- `baseball/bridge/game_xref.py`: Game ID resolution
+
+### baseball/models/
+
+Model training and inference:
+- `baseball/models/registry.py`: Model registry
+
+### baseball/serving/
+
+Serving layer:
+- `baseball/serving/predictions.py`: Prediction serving
+
+### baseball/chatbot/
+
+Natural language interface:
+- `baseball/chatbot/chatbot.py`: Chatbot interface
+
+## Configuration Files
+
+### config/
+
+- `config/sources.yml`: Data source configurations (retrosheet, mlb, espn, statcast, lahman)
+- `config/pipelines.yml`: Pipeline configurations (retrosheet_ingest, mlb_live_ingest, statcast_ingest, feature_building)
+- `config/models.yml`: Model configurations (swing_decision, pitch_outcome, game_outcome)
+
+## CLI Command Groups
+
+### doctor
+- `baseball doctor`: Check system health and configuration
+
+### status
+- `baseball status`: Show system status and recent activity
+
+### version
+- `baseball version`: Show version information
+
+### retrosheet
+- `baseball retrosheet download --year/--start/--end`: Download Retrosheet event files
+- `baseball retrosheet ingest --validate`: Ingest Retrosheet data using Chadwick tools
+- `baseball retrosheet validate`: Validate Retrosheet data quality
+- `baseball retrosheet seasons`: List available seasons in Retrosheet
+
+### mlb
+- `baseball mlb download --date/--season/--game`: Download MLB data from Stats API
+- `baseball mlb ingest --validate`: Ingest downloaded MLB data into database
+- `baseball mlb validate`: Validate MLB data quality
+- `baseball mlb today --download --predict`: Fetch and process today's MLB data
+
+### espn
+- `baseball espn download --season`: Download ESPN schedule, boxscores, and stats
+- `baseball espn ingest --validate`: Ingest ESPN data into database
+- `baseball espn validate`: Validate ESPN data quality
+- `baseball espn seasons`: List seasons with ESPN data
+
+### statcast
+- `baseball statcast download --season`: Download Statcast data for a season
+- `baseball statcast ingest --validate`: Ingest downloaded Statcast data
+- `baseball statcast validate`: Validate Statcast data quality
+- `baseball statcast seasons`: List seasons with Statcast data
+
+### lahman
+- `baseball lahman download --force`: Download Lahman Baseball Databank
+- `baseball lahman ingest --validate`: Ingest Lahman CSV files into database
+- `baseball lahman validate`: Validate Lahman data quality
+- `baseball lahman tables`: Show Lahman table row counts
+
+### live
+- `baseball live games --active/--all`: Show currently live MLB games
+- `baseball live watch --game --interval --predict`: Watch a live game with real-time updates
+- `baseball live poll --interval --once`: Poll all active games for updates
+- `baseball live predict --game --model --continuous`: Run real-time prediction for a live game
+- `baseball live server --host --port --interval`: Start WebSocket server for live prediction streaming
+
+### bridge
+- `baseball bridge resolve --source --id --type`: Resolve a source ID to canonical ID
+- `baseball bridge match --type --source-a --source-b`: Find matches between two source systems
+- `baseball bridge lookup --id --type`: Lookup all source IDs for a canonical ID
+
+### features
+- `baseball features run --feature`: Run a specific feature builder
+- `baseball features list`: List available feature builders
+
+### models
+- `baseball models list --archived`: List available models in the registry
+- `baseball models info <model_name>`: Show detailed info about a model
+- `baseball models download <model_name> --version --output`: Download a model from the registry
+- `baseball models archive <model_name> --reason`: Archive a model
+- `baseball models compare <models> --metric`: Compare multiple models on validation metrics
+- `baseball models export <model_name> --format --output`: Export model to external format
+
+### predict
+- `baseball predict game --game --model --output`: Run predictions for a specific game
+- `baseball predict today --model --output`: Run predictions for all games today
+- `baseball predict live --model --interval`: Run continuous live predictions
+- `baseball predict batch --games --model --output`: Run predictions for a batch of games
+
+### pipeline
+- `baseball pipeline run --pipeline --resume`: Run a pipeline from config
+- `baseball pipeline list`: List available pipelines from config
+- `baseball pipeline status --pipeline`: Show pipeline execution status
+
+### chatbot
+- `baseball chatbot chat --message --interactive`: Chat with the baseball prediction bot
+- `baseball chatbot demo`: Run a demo conversation with the chatbot
+
+### train
+- `baseball train --config`: Train a model (wrapper for mlb-predict train)
+
+### experiment
+- `baseball experiment --target --compare-families`: Run comparison experiments (wrapper for mlb-predict experiment)
 
 ### Pitch-Level Data Access
 

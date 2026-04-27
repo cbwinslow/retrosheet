@@ -1,52 +1,58 @@
 #!/bin/bash
-# MLB Data Ingestion Scheduler
+# MLB Data Ingestion Scheduler - Wrapper for baseball CLI
 # Downloads and transforms MLB data for multiple seasons in parallel
+#
+# This script is a wrapper around: baseball pipeline run mlb_parallel
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/.."
 
-# Seasons to process (2020-2022, 2024-2025 for initial batch)
+# Seasons to process
 SEASONS=(2020 2021 2022 2024 2025)
 
 # Maximum parallel processes
 MAX_PARALLEL=3
 
-echo "🚀 Starting MLB Data Ingestion for ${#SEASONS[@]} seasons"
+echo "🚀 MLB Data Ingestion (Parallel) - baseball CLI Wrapper"
 echo "📅 Seasons: ${SEASONS[*]}"
 echo "⚡ Max parallel processes: $MAX_PARALLEL"
 echo "=========================================="
+echo "Note: This wrapper calls baseball mlb download/ingest commands"
+echo ""
 
-# Function to process a single season
+# Check if baseball CLI is available
+if ! command -v baseball &> /dev/null; then
+    echo "❌ baseball CLI not found. Installing..."
+    if [ -f "pyproject.toml" ]; then
+        pip install -e .
+    else
+        echo "❌ Cannot install baseball CLI. Please run: pip install -e ."
+        exit 1
+    fi
+fi
+
+# Function to process a single season via baseball CLI
 process_season() {
     local season=$1
     echo "🏏 Starting season $season at $(date)"
 
-    # Download schedules
-    echo "📅 Downloading schedules for $season..."
-    if python3 scripts/download_mlb_bulk.py --start-season $season --end-season $season --mode schedules --workers 8 --delay 0.5; then
-        echo "✅ Schedules downloaded for $season"
+    # Download data via baseball CLI
+    echo "📅 Downloading data for $season..."
+    if baseball mlb download --season $season; then
+        echo "✅ Data downloaded for $season"
     else
-        echo "❌ Failed to download schedules for $season"
+        echo "❌ Failed to download data for $season"
         return 1
     fi
 
-    # Download game feeds
-    echo "🎮 Downloading game feeds for $season..."
-    if python3 scripts/download_mlb_bulk.py --start-season $season --end-season $season --mode games --workers 8 --delay 0.5; then
-        echo "✅ Game feeds downloaded for $season"
+    # Ingest data via baseball CLI
+    echo "🔄 Ingesting data for $season..."
+    if baseball mlb ingest --season $season; then
+        echo "✅ Data ingested for $season"
     else
-        echo "❌ Failed to download game feeds for $season"
-        return 1
-    fi
-
-    # Transform data
-    echo "🔄 Transforming data for $season..."
-    if python3 scripts/ingest_all_mlb_data.py --seasons $season --transform-only; then
-        echo "✅ Data transformed for $season"
-    else
-        echo "❌ Failed to transform data for $season"
+        echo "❌ Failed to ingest data for $season"
         return 1
     fi
 

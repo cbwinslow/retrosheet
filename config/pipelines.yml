@@ -1,0 +1,36 @@
+# Pipeline configurations for the baseball platform
+# Author: Agent cbwinslow/retrosheet
+# Date: 2026-04-26
+
+pipelines:
+  retrosheet_ingest:
+    steps:
+      - download
+      - ingest
+      - validate
+    checkpoint_table: "admin.pipeline_checkpoints"
+
+  mlb_live_ingest:
+    steps:
+      - download
+      - ingest
+      - validate
+      - predict
+    checkpoint_table: "admin.pipeline_checkpoints"
+    poll_interval_seconds: 30
+
+  statcast_ingest:
+    steps:
+      - download
+      - ingest
+      - validate
+    checkpoint_table: "admin.pipeline_checkpoints"
+
+  feature_building:
+    steps:
+      - run_expectancy
+      - win_expectancy
+      - leverage_index
+      - matchup_features
+      - rolling_form
+    checkpoint_table: "admin.pipeline_checkpoints"

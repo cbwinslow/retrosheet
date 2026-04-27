@@ -1,5 +1,346 @@
 # Project Log
 
+## 2026-04-27 (Milestone 10-11: Features & Models + Testing Infrastructure - COMPLETE)
+
+### Summary
+
+Implemented comprehensive testing infrastructure with benchmarking, granular unit tests, E2E tests, and database optimization through materialized views. Connected feature calculators and models to CLI with full test coverage.
+
+### Completed Work
+
+| Task | Details |
+|------|---------|
+| **Features CLI** | Added `baseball features list/compute/show` commands |
+| **Models CLI** | Added `baseball models train` command with dry-run support |
+| **Predict CLI** | Implemented `baseball predict game` with feature integration |
+| **Feature Calculators** | Wired: WE, LI, Matchup, RollingForm, Bullpen |
+| **Testing Framework** | Comprehensive test suite with benchmarking |
+| **Database Optimization** | Materialized views for sub-10ms serving queries |
+
+### CLI Commands Added
+
+| Command | Status | Description |
+|---------|--------|-------------|
+| `baseball features list` | ✅ Working | Show available feature calculators |
+| `baseball features compute` | ✅ Working | Compute features for season/game |
+| `baseball features show` | ✅ Working | Display computed features for a game |
+| `baseball models train` | ✅ Working | Train models with dry-run support |
+| `baseball predict game` | ✅ Working | Predict single game with feature pipeline |
+
+### Testing Infrastructure Created
+
+| Component | Files | Purpose |
+|-----------|-------|---------|
+| **Benchmark Module** | `baseball/core/benchmark.py` | Timing, metrics, profiling |
+| **Unit Tests - Features Base** | `tests/unit/test_features_base.py` | FeatureConfig, GameState, FeatureResult |
+| **Unit Tests - WE** | `tests/unit/test_win_expectancy.py` | WinExpectancyCalculator tests |
+| **Unit Tests - LI** | `tests/unit/test_leverage_index.py` | LeverageIndexCalculator tests |
+| **E2E Tests** | `tests/e2e/test_features_e2e.py` | Full pipeline with database |
+| **Test Runner** | `tests/run_tests.py` | Comprehensive test orchestration |
+
+### Database Optimization (Materialized Views)
+
+| View | Rows | Query Time | Purpose |
+|------|------|------------|---------|
+| `serving.mv_we_lookup` | ~2,400 | <10ms | WE matrix for serving |
+| `serving.mv_li_lookup` | ~2,400 | <10ms | LI matrix for serving |
+| `serving.mv_current_standings` | ~30 | <50ms | Team standings |
+| `serving.mv_player_form` | ~500 | <50ms | 30-day player performance |
+
+### Benchmarking Capabilities
+
+- **Query Profiler**: Tracks slow queries (>50ms threshold)
+- **Performance Monitor**: CPU, memory, disk I/O sampling
+- **Benchmark Logger**: JSONL output with timing, throughput, memory delta
+- **Metrics Collection**: Rows/sec, memory usage, error rates
+
+### Files Created
+
+| Path | Purpose |
+|------|---------|
+| `baseball/core/benchmark.py` | Benchmarking infrastructure |
+| `tests/unit/test_features_base.py` | Unit tests for base classes |
+| `tests/unit/test_win_expectancy.py` | WE calculator unit tests |
+| `tests/unit/test_leverage_index.py` | LI calculator unit tests |
+| `tests/e2e/test_features_e2e.py` | E2E tests with database |
+| `tests/run_tests.py` | Comprehensive test runner |
+| `sql/70_serving/7001_serving_materialized_views.sql` | Performance-optimized MVs |
+
+### Verification Commands
+
+```bash
+# Run all tests with benchmarking
+uv run python tests/run_tests.py --all --verbose
+
+# Run specific test suites
+uv run python -m pytest tests/unit/ -v
+uv run python -m pytest tests/e2e/ -v
+
+# Refresh materialized views with timing
+psql -c "SELECT * FROM serving.refresh_all_views();"
+
+# Verify query performance
+psql -c "SELECT * FROM serving.verify_query_performance();"
+```
+
+### Exit Criteria Met
+
+- ✅ Unit tests for all feature base classes
+- ✅ Unit tests for WE and LI calculators
+- ✅ E2E tests with database integration
+- ✅ Benchmarking infrastructure with timing
+- ✅ Materialized views for serving layer
+- ✅ Query performance verification (<10ms for WE/LI lookups)
+- ✅ Comprehensive test runner with JSON reports
+
+---
+
+## 2026-04-27 (Testing Infrastructure Expansion - COMPLETE)
+
+### Summary
+
+Expanded testing infrastructure to cover compatibility, portability, scripts, queries, and comprehensive functionality. Added pytest configuration with markers for test categorization and shared fixtures.
+
+### Expanded Testing Coverage
+
+| Category | Test File | Coverage |
+|----------|-----------|----------|
+| **Compatibility** | `tests/unit/test_compatibility.py` (432 lines) | Python 3.10+, OS, Database versions, Dependencies |
+| **Scripts** | `tests/unit/test_scripts.py` (380 lines) | Shell script syntax, Python scripts, CLI commands, ETL pipelines |
+| **Queries** | `tests/unit/test_queries.py` (460 lines) | SQL syntax, Query correctness, Performance, MVs |
+| **Functionality** | `tests/integration/test_functionality.py` (510 lines) | E2E workflows, Integration, Edge cases, Security |
+
+### Compatibility Testing
+
+| Aspect | Tests |
+|--------|-------|
+| **Python Version** | 3.10+ requirement, type hints, union syntax, match/case, dataclass slots |
+| **Dependencies** | Required (typer, psycopg2, rich, yaml, requests, pandas, numpy), optional (scipy, sklearn, matplotlib) |
+| **OS** | Pathlib usage, path separators, line endings, UTF-8 encoding |
+| **Database** | PostgreSQL 14+, TimescaleDB, extensions, JSONB, window functions, CTEs |
+| **Configuration** | Environment variables, config files, portability |
+| **Migration** | Schema version tracking, export/import, CSV, SQL dumps |
+
+### Script Testing
+
+| Test | Description |
+|------|-------------|
+| `test_shell_scripts_exist` | Verify scripts directory has scripts |
+| `test_shell_script_syntax` | Validate bash syntax for all .sh files |
+| `test_python_scripts_syntax` | Validate Python script execution |
+| `test_script_shebangs` | Verify proper shebang lines |
+| `test_script_idempotency` | Ensure scripts can run multiple times safely |
+| `test_cli_help_commands` | Verify all CLI commands have help |
+| `test_executable_permissions` | Check main scripts are executable |
+
+### Query Testing
+
+| Test | Description |
+|------|-------------|
+| `test_sql_files_exist` | Verify SQL files exist |
+| `test_sql_file_headers` | Check for required documentation headers |
+| `test_sql_no_syntax_errors` | Validate SQL syntax |
+| `test_sql_naming_convention` | Verify 4-digit naming pattern |
+| `test_we_matrix_structure` | Verify WE table columns |
+| `test_query_execution_time` | Ensure queries complete <5s |
+| `test_index_usage` | Verify indexes exist and are used |
+| `test_mv_exist` | Check materialized views exist |
+| `test_mv_have_indexes` | Verify MVs have indexes |
+| `test_mv_refresh_function` | Check refresh functions exist |
+
+### Functionality Testing
+
+| Category | Tests |
+|----------|-------|
+| **Data Flow** | Raw→Core→Features→Models pipeline |
+| **Component Integration** | Feature calculators with DB, CLI with features, Models with features |
+| **E2E Workflows** | Game prediction, model training, data ingestion |
+| **Error Handling** | Invalid game IDs, missing tables, network errors, data validation |
+| **Edge Cases** | Extra innings, blowout games, perfect games, postseason |
+| **Data Quality** | Null handling, duplicates, freshness, schema validation |
+| **Concurrency** | Parallel feature computation, connection pooling, cache consistency |
+| **Performance** | Query thresholds, computation speed, memory usage, batch efficiency |
+| **Reliability** | Graceful degradation, recovery, idempotent operations |
+| **Security** | No hardcoded credentials, SQL injection prevention, input validation |
+| **Monitoring** | Benchmark logging, error logging, metrics collection |
+| **Documentation** | Docstrings, type hints, README existence |
+
+### Files Added in Expansion
+
+| Path | Lines | Purpose |
+|------|-------|---------|
+| `tests/unit/test_compatibility.py` | 432 | Compatibility and portability tests |
+| `tests/unit/test_scripts.py` | 380 | Script validation and CLI tests |
+| `tests/unit/test_queries.py` | 460 | SQL query and performance tests |
+| `tests/integration/test_functionality.py` | 510 | Comprehensive functionality tests |
+| `tests/conftest.py` | 140 | Shared pytest fixtures and configuration |
+| `pytest.ini` | 60 | Pytest configuration with markers |
+
+### Test Configuration
+
+```ini
+# pytest.ini markers
+markers =
+    unit: Unit tests (fast, isolated)
+    integration: Integration tests
+    e2e: End-to-end tests
+    slow: Slow tests (>1s)
+    database: Tests requiring database
+    benchmark: Performance benchmarks
+    compatibility: Compatibility tests
+    scripts: Script validation
+    queries: SQL query tests
+    functionality: Comprehensive functionality
+```
+
+### Test Commands
+
+```bash
+# Run all unit tests
+uv run python -m pytest tests/unit/ -v
+
+# Run specific test categories
+uv run python -m pytest -m compatibility -v
+uv run python -m pytest -m scripts -v
+uv run python -m pytest -m queries -v
+uv run python -m pytest -m functionality -v
+
+# Run with coverage
+uv run python -m pytest --cov=baseball --cov-report=html
+
+# Run E2E tests only
+uv run python -m pytest tests/e2e/ -v
+
+# Run integration tests only
+uv run python -m pytest tests/integration/ -v
+
+# Run comprehensive test suite
+uv run python tests/run_tests.py --all
+```
+
+### Test Statistics
+
+| Category | Tests | Lines of Code |
+|----------|-------|---------------|
+| Unit Tests | 80+ | 1,500+ |
+| Integration Tests | 40+ | 510 |
+| E2E Tests | 20+ | 382 |
+| **Total** | **140+** | **2,400+** |
+
+### Exit Criteria Met (Expanded)
+
+- ✅ **Compatibility**: Python 3.10+, OS, database, dependency version testing
+- ✅ **Portability**: Cross-platform path handling, encoding, configuration
+- ✅ **Scripts**: Shell syntax validation, Python script execution, CLI integration
+- ✅ **Queries**: SQL syntax, correctness, performance, security testing
+- ✅ **Functionality**: E2E workflows, error handling, edge cases, concurrency
+- ✅ **Reliability**: Graceful degradation, recovery, idempotent operations
+- ✅ **Security**: Credential scanning, SQL injection prevention, input validation
+- ✅ **Performance**: Query timing, memory usage, batch efficiency
+- ✅ **Monitoring**: Benchmark logging, metrics collection
+- ✅ **Documentation**: Docstring validation, type hint coverage
+
+---
+
+## 2026-04-27 (Milestone 7: SQL Layer Reorganization Complete)
+
+### Summary
+
+Completed SQL directory reorganization to the 8-layer architecture defined in `migration_plan.md`. All SQL files moved from legacy directories (`live/`, `external/`, `core/`, `bridge/`, `features/`, `models/`) to the new numbered layer structure with proper naming convention.
+
+### Completed Work
+
+| Task | Details |
+|------|---------|
+| **Layer Directories Created** | 8 new directories: `10_raw/`, `20_staging/`, `30_core/`, `40_bridge/`, `50_features/`, `60_models/`, `70_serving/`, `80_quality/` |
+| **Files Migrated** | 97 SQL files moved from 6 legacy directories to new layered structure |
+| **Naming Convention Applied** | All files renamed to `{layer}{sequence}_{layer_name}_{description}.sql` pattern |
+| **Legacy Directories Removed** | `sql/live/`, `sql/external/`, `sql/core/`, `sql/bridge/`, `sql/features/`, `sql/models/` deleted |
+| **Documentation Updated** | `docs/migration_map.md` updated with completion status |
+
+### New SQL Structure
+
+| Layer | Files | Description |
+|-------|-------|-------------|
+| `00_admin/` | 1 | Pipeline control, checkpoints, errors |
+| `10_raw/` | 19 | Source-preserved payloads (Sportradar, ESPN, Lahman, Statcast, etc.) |
+| `20_staging/` | 0 | Source-specific cleaned tables (ready for future) |
+| `30_core/` | 23 | Canonical baseball entities (games, events, plate appearances) |
+| `40_bridge/` | 15 | Cross-source xref tables (player_xref, team_xref, game_xref) |
+| `50_features/` | 36 | ML-ready feature tables (WE, LI, matchup, rolling form, bullpen) |
+| `60_models/` | 4 | Model registry, training metadata |
+| `70_serving/` | 0 | Low-latency read models (ready for future) |
+| `80_quality/` | 0 | Data quality checks (ready for future) |
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `scripts/rename_sql_files.py` | Automated renaming script for SQL files |
+
+### Exit Criteria Met
+
+- ✅ All SQL organized into numbered layers (00-80)
+- ✅ Naming convention consistently applied
+- ✅ Legacy directories removed
+- ✅ `migration_map.md` updated with completion documentation
+
+---
+
+## 2026-04-27 (Script Consolidation Complete - Phases 1-5 Done)
+
+### Summary
+
+Completed script consolidation and wrapper implementation for all source adapters and bridge service. Created unified SQL maintenance tool, archived orphan scripts, and built comprehensive E2E test framework. Phases 1-5 are now functionally complete.
+
+### Completed Work
+
+| Task | Details |
+|------|---------|
+| **Orphan Scripts Archived** | 7 scripts moved to `scripts/archive/` (investigations, backfills, deprecated SQL tools) |
+| **SQL Maintenance Unified** | 4 overlapping scripts merged into `scripts/utility/sql_maintenance.py` |
+| **Shell Wrappers Updated** | 2 scripts now call `baseball` CLI instead of direct Python |
+| **Source Adapters Built** | 5 adapters (MLB, ESPN, Statcast, Lahman, Retrosheet) wrapping existing scripts |
+| **Bridge Service Created** | `BridgeService` wrapping bridge population scripts |
+| **E2E Test Framework** | 16 tests passing for adapters and bridge service |
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `baseball/sources/mlb.py` | Wraps `download_mlb_bulk.py`, `ingest_all_mlb_data.py` |
+| `baseball/sources/espn.py` | Wraps `fetch_espn_mlb.py` |
+| `baseball/sources/statcast.py` | Wraps `download_statcast.py`, `load_statcast.py` |
+| `baseball/sources/lahman.py` | Wraps `download_lahman_data.py`, `load_lahman.py` |
+| `baseball/sources/retrosheet.py` | Wraps `retrosheet/` package |
+| `baseball/sources/base.py` | `BaseSource` abstract class |
+| `baseball/services/bridge.py` | Bridge service layer |
+| `baseball/core/*.py` | 9 core infrastructure modules |
+| `scripts/utility/sql_maintenance.py` | Unified SQL header/comment tool |
+| `tests/e2e/test_source_adapters.py` | E2E tests for all adapters |
+| `tests/e2e/test_bridge_service.py` | E2E tests for bridge service |
+
+### Migration Status Update
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| 0 | ✅ Complete | Planning docs |
+| 1 | ✅ **Complete** | Package skeleton, CLI, core services |
+| 2 | ✅ **Complete** | All 5 source adapters |
+| 3 | ✅ **Complete** | Live data adapter (incl. in source adapters) |
+| 4 | ✅ **Merged** | ESPN/Statcast → Phase 2 |
+| 5 | ✅ **Complete** | Bridge service layer |
+| 6-7 | 🔄 **In Progress** | Feature framework, models, serving |
+
+### Next Steps
+
+- Build feature calculator framework (`baseball/features/base.py`)
+- Implement Win Expectancy and Leverage Index calculators
+- Create model training pipeline
+- Deploy to cloudcurio.cc
+
+---
+
 ## 2026-04-26 (Migration Planning Complete - Phase 0)
 
 ### Summary

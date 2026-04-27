@@ -1,11 +1,29 @@
 #!/bin/bash
-# Complete MLB Data Ingestion - Simple Version
+# Complete MLB Data Ingestion - Wrapper for baseball CLI
 # Download all missing MLB seasons sequentially
+#
+# This script is a wrapper around: baseball pipeline run mlb_ingest
 
-echo "🎯 EdgeForge: Complete MLB Historical Data Ingestion"
-echo "======================================================"
+set -e
+
+echo "🎯 Complete MLB Historical Data Ingestion"
+echo "=========================================="
 echo "📊 Target: MLB seasons 2000-2019"
-echo "🎲 Method: Sequential processing (safer for API limits)"
+echo "🎲 Method: Sequential processing via baseball CLI"
+echo ""
+echo "Note: This wrapper calls: baseball pipeline run mlb_historical"
+echo ""
+
+# Check if baseball CLI is available
+if ! command -v baseball &> /dev/null; then
+    echo "❌ baseball CLI not found. Installing..."
+    if [ -f "pyproject.toml" ]; then
+        pip install -e .
+    else
+        echo "❌ Cannot install baseball CLI. Please run: pip install -e ."
+        exit 1
+    fi
+fi
 
 # Get missing seasons
 echo -e "\n📋 Checking missing seasons..."
@@ -30,7 +48,7 @@ fi
 echo "🎯 Missing seasons: $MISSING_SEASONS"
 echo "📊 Total seasons to download: $(echo $MISSING_SEASONS | wc -w)"
 
-# Process each season
+# Process each season via baseball CLI
 COMPLETED=0
 FAILED=0
 
@@ -38,33 +56,23 @@ for season in $MISSING_SEASONS; do
     echo -e "\n🏏 Processing MLB $season Season ($((COMPLETED + FAILED + 1))/$(echo $MISSING_SEASONS | wc -w))"
     echo "========================================"
 
-    # Download schedules
-    echo "📅 Downloading $season schedules..."
-    if python3 scripts/download_mlb_bulk.py --start-season $season --end-season $season --mode schedules --workers 8 --delay 0.5; then
-        echo "✅ Schedules downloaded for $season"
+    # Use baseball CLI mlb download command
+    echo "📅 Downloading $season data..."
+    if baseball mlb download --season $season; then
+        echo "✅ Data downloaded for $season"
     else
-        echo "❌ Failed to download schedules for $season"
-        ((FAILED++))
-        continue
-    fi
-
-    # Download game feeds
-    echo "🎮 Downloading $season game feeds..."
-    if python3 scripts/download_mlb_bulk.py --start-season $season --end-season $season --mode games --workers 8 --delay 0.5; then
-        echo "✅ Game feeds downloaded for $season"
-    else
-        echo "❌ Failed to download game feeds for $season"
+        echo "❌ Failed to download data for $season"
         ((FAILED++))
         continue
     fi
 
     # Transform data
     echo "🔄 Transforming $season data..."
-    if python3 scripts/ingest_all_mlb_data.py --seasons $season --transform-only; then
-        echo "✅ Data transformed for $season"
+    if baseball mlb ingest --season $season; then
+        echo "✅ Data ingested for $season"
         ((COMPLETED++))
     else
-        echo "❌ Failed to transform data for $season"
+        echo "❌ Failed to ingest data for $season"
         ((FAILED++))
         continue
     fi
@@ -80,14 +88,9 @@ echo "======================"
 echo "✅ Completed: $COMPLETED seasons"
 echo "❌ Failed: $FAILED seasons"
 
-if [ $COMPLETED -gt 0 ]; then
-    echo -e "\n🔄 Updating EdgeForge model with new data..."
-    python3 scripts/train_edgeforge_model.py
-fi
-
 echo -e "\n📈 FINAL STATUS:"
 echo "----------------"
-psql -d retrosheet -c "
+baseball status || psql -d retrosheet -c "
 SELECT
     (SELECT COUNT(*) FROM raw_mlb.live_feed_snapshots) as game_feeds,
     (SELECT COUNT(*) FROM core.live_games) as processed_games,
