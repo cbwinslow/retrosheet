@@ -307,6 +307,80 @@
 
 ---
 
+## Feature Layer Tables
+
+### Run Expectancy
+
+**Table**: `features.run_expectancy_matrix`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `matrix_id` (bigint) | Auto-increment |
+| **Composite UK** | `season` + `scope` + `bases_occupied` + `outs` | One RE value per state |
+| **Grain** | One row per season/scope/base-out state | 24 states per season |
+
+**Table**: `features.re24_values`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `re24_id` (bigint) | Auto-increment |
+| **Composite Key** | `game_pk` + `event_id` | Per-play tracking |
+| **Grain** | One row per play with RE24 | Links to source events |
+
+### Live Game State
+
+**Table**: `features.live_game_state_features`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `feature_id` (bigint) | Auto-increment |
+| **Natural Key** | `snapshot_id` | Links to raw_mlb snapshot |
+| **Grain** | One row per snapshot | Pre-calculated features |
+
+**Table**: `features.win_probability_inputs`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `input_id` (bigint) | Auto-increment |
+| **Composite Key** | `game_pk` + `event_id` (if applicable) | For training data |
+| **Grain** | One row per game state | Normalized model inputs |
+
+---
+
+## Model Registry
+
+**Table**: `models.registry`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `model_id` (bigint) | Auto-increment |
+| **Composite UK** | `model_name` + `model_version` | Semantic versioning |
+| **Natural Key** | `artifact_hash` | Content-addressable |
+| **Grain** | One row per model version | Versioned artifacts |
+
+**Table**: `models.training_runs`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `run_id` (bigint) | Auto-increment |
+| **Composite Key** | `model_name` + `model_version` + `started_at` | Unique run |
+| **Grain** | One row per training execution | Lineage tracking |
+
+---
+
+## Predictions/Serving
+
+**Table**: `predictions.inference_results`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `prediction_id` (bigint) | Auto-increment |
+| **Composite Key** | `game_pk` + `prediction_type` + `prediction_timestamp` | Latest per game |
+| **Natural Key** | `feature_hash` | Deduplication |
+| **Grain** | One row per inference call | With confidence intervals |
+
+---
+
 ## Join Patterns
 
 ### Historical Game + Events
