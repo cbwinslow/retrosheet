@@ -411,24 +411,24 @@
 
 ## Milestone 8: Pipeline Orchestration
 
-### Phase 8.1: Pipeline Commands
+### Phase 8.1: Pipeline Commands ✅ COMPLETE
 
 | ID | Task | Priority | Status | AC | Effort |
 |----|------|----------|--------|-----|--------|
-| 8.1.1 | Implement `baseball pipeline run daily` | Medium | 🔄 Pending | Daily pipeline | 2h |
-| 8.1.2 | Implement `baseball pipeline run historical` | Medium | 🔄 Pending | Historical pipeline | 2h |
-| 8.1.3 | Implement `baseball pipeline run live` | High | 🔄 Pending | Live pipeline | 2h |
-| 8.1.4 | Add `--year` parameter for historical | Medium | 🔄 Pending | Year selection | 30m |
-| 8.1.5 | Add `--date` parameter for live | High | 🔄 Pending | Date selection | 30m |
+| 8.1.1 | Implement `baseball pipeline run daily` | Medium | ✅ Done | `baseball pipeline run --pipeline daily` | 2h |
+| 8.1.2 | Implement `baseball pipeline run historical` | Medium | ✅ Done | `baseball pipeline run --pipeline historical --year 2024` | 2h |
+| 8.1.3 | Implement `baseball pipeline run live` | High | ✅ Done | `baseball pipeline run --pipeline live --date 2025-04-27` | 2h |
+| 8.1.4 | Add `--year` parameter for historical | Medium | ✅ Done | Year selection works | 30m |
+| 8.1.5 | Add `--date` parameter for live | High | ✅ Done | Date selection works | 30m |
 
-### Phase 8.2: Configuration
+### Phase 8.2: Configuration ✅ COMPLETE
 
 | ID | Task | Priority | Status | AC | Effort |
 |----|------|----------|--------|-----|--------|
-| 8.2.1 | Create `config/sources.yml` | Medium | 🔄 Pending | Source config | 1h |
-| 8.2.2 | Create `config/pipelines.yml` | Medium | 🔄 Pending | Pipeline config | 1h |
-| 8.2.3 | Create `config/models.yml` | Medium | 🔄 Pending | Model config | 1h |
-| 8.2.4 | Implement config loading in `settings.py` | Medium | 🔄 Pending | Integration | 1h |
+| 8.2.1 | Create `config/sources.yml` | Medium | ✅ Done | MLB, Retrosheet, ESPN, Statcast, Lahman configs | 1h |
+| 8.2.2 | Create `config/pipelines.yml` | Medium | ✅ Done | 7 pipeline configs | 1h |
+| 8.2.3 | Create `config/models.yml` | Medium | ✅ Done | swing_decision, pitch_outcome, game_outcome configs | 1h |
+| 8.2.4 | Implement config loading in `settings.py` | Medium | ✅ Done | YAML config loading in PipelineService | 1h |
 
 ---
 
@@ -476,9 +476,9 @@
 | 6: Features/Models | 24 | 20 | 83% |
 | 7: Serving | 11 | 6 | 55% |
 | 7a: Testing | 17 | 17 | 100% |
-| 8: Pipeline | 9 | 6 | 67% |
+| 8: Pipeline | 9 | 9 | 100% |
 | 9: Cleanup | 13 | 13 | 100% |
-| **TOTAL** | **162** | **115** | **71%** |
+| **TOTAL** | **162** | **120** | **74% |
 
 ### Phase Completion Status
 

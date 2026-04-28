@@ -1,0 +1,88 @@
+--
+— File: docker-compose.sourcegraph.yml
+— Purpose: Docker Compose configuration for self-hosted Sourcegraph instance
+— Author: Agent KiloSwift
+— Date: 2026-04-27
+— Usage: docker-compose -f docker-compose.sourcegraph.yml up -d
+— Notes: Local development instance of Sourcegraph for code search and intelligence
+—
+
+version: '3.7'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: sg
+      POSTGRES_PASSWORD: sgpass
+      POSTGRES_DB: sg
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./sourcegraph/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sg"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sourcegraph
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sourcegraph
+
+  sourcegraph:
+    image: sourcegraph/server:5.4-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database configuration
+      PGDATABASE: sg
+      PGUSER: sg
+      PGPASSWORD: sgpass
+      PGHOST: postgres
+      PGPORT: 5432
+      # Redis configuration
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # Site URL (adjust as needed)
+      SITE_URL: "http://localhost:7080"
+      # License key (for enterprise features)
+      # LICENSE_KEY: ""
+      # Dev mode for local usage
+      DEV: "true"
+      # GES experimental indexing
+      # GES_ENABLED: "true"
+    volumes:
+      - sourcegraph-data:/var/lib/sourcegraph
+    ports:
+      - "127.0.0.1:7080:7080"   # Web UI
+      - "127.0.0.1:127.0.0.1:3434"  # gRPC API
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --spider http://localhost:7080/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - sourcegraph
+
+volumes:
+  postgres-data:
+  redis-data:
+  sourcegraph-data:
+
+networks:
+  sourcegraph:
+    driver: bridge

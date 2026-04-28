@@ -1,0 +1,73 @@
+--
+— File: .github/workflows/sourcegraph-code-intel.yml
+— Purpose: GitHub Actions workflow for Sourcegraph code intelligence
+— Author: Agent KiloSwift
+— Date: 2026-04-27
+— Usage: Runs automatically on pushes to upload code intelligence data
+— Notes: Enables precise code navigation, references, and definitions in Sourcegraph
+—
+
+name: "Sourcegraph Code Intelligence"
+
+on:
+  push:
+    branches: [main, master, setup-complete]
+  pull_request:
+    branches: [main, master, setup-complete]
+
+jobs:
+  upload-code-intel:
+    name: Upload code intelligence to Sourcegraph
+    runs-on: ubuntu-latest
+    if: github.repository == 'cbwinslow/retrosheet'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for cross-repo analysis
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install sourcegraph/LSG
+      run: |
+        npm install -g @sourcegraph/lsg
+        echo "LSG version:"
+        lsg --version
+
+    - name: Initialize LSG
+      run: |
+        lsg init
+
+    - name: Generate code intelligence data
+      run: |
+        # Generate LSG data for Sourcegraph
+        lsg gather --primary
+
+    - name: Upload code intelligence
+      env:
+        SRCSEC_TOKEN: ${{ secrets.SOURCGRAPH_TOKEN }}
+      run: |
+        if [ -n "$SRCSEC_TOKEN" ]; then
+            lsg upload \
+                --repository-url "github.com/cbwinslow/retrosheet" \
+                --commit "${{ github.sha }}" \
+                --token "$SRCSEC_TOKEN"
+            echo "✅ Code intelligence uploaded to Sourcegraph"
+        else
+            echo "⚠️  SOURCGRAPH_TOKEN not set — skipping upload"
+            echo "To enable Sourcegraph code intelligence:"
+            echo "  1. Set repository secret SOURCGRAPH_TOKEN"
+            echo "  2. Get token from https://sourcegraph.com/user/tokens"
+            echo "  3. Add token to repository Settings → Secrets"
+        fi
+
+    - name: Upload artifact (backup)
+      uses: actions/upload-artifact@v4
+      with:
+        name: sourcegraph-lsg-data
+        path: .lsg/
+        retention-days: 30

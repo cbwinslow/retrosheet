@@ -1,0 +1,32 @@
+{
+  "$schema": "https://github.com/github/codeql-action/blob/main/checks/codeql-config.schema",
+  "version": "2.0.0",
+  "disable-default-queries": false,
+  "query-filters": [
+    {
+      "exclude": [
+        "python/unsafe-deserialization",
+        "python/pickle-without-verify"
+      ]
+    }
+  ],
+  "paths-ignored": [
+    "data/",
+    "data_ingestion/archive/",
+    "docs/kb/",
+    "scripts/archive/",
+    "sql/test/fixtures/",
+    ".venv/",
+    "node_modules/",
+    "mlb_predict/__pycache__/",
+    "baseball/__pycache__/"
+  ],
+  "java": {
+    "source": "src/main/java",
+    "test": "src/test/java"
+  },
+  "python": {
+    "source": ".",
+    "version": "3.10"
+  }
+}

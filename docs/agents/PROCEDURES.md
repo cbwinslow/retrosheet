@@ -1086,3 +1086,417 @@ Each issue should include:
 - Parent roadmap issue if applicable.
 
 Comment on existing parent issues when work advances a goal.
+
+## Run pgTAP Database Unit Tests
+
+Purpose: Validate database schema, functions, procedures, and constraints using TAP-compliant pgTAP framework.
+
+Prerequisites:
+- pgTAP extension installed: `psql -f sql/test/003_install_pgtap.sql`
+- Test SQL files present in `sql/test/`
+
+Commands:
+
+```bash
+# Run all pgTAP tests discovered across schemas
+./scripts/test/run_pgtap.sh --verbose
+
+# Run tests for specific schema only
+./scripts/test/run_pgtap.sh --schema core
+
+# Run directly via psql
+psql -d retrosheet -f sql/test/010_pgtap_core_tables.sql
+psql -d retrosheet -f sql/test/020_pgtap_functions.sql
+
+# Via pytest integration (runs automatically in CI)
+pytest tests/unit/test_pgtap_integration.py -v
+```
+
+Expected output:
+- TAP format lines: `ok 1 - core.games table exists`, `not ok 5 - column type mismatch`
+- Summary: `1..25` (total tests), pass/fail counts
+- Exit code 0 if all pass, 1 if any fail
+
+Adding tests:
+1. Create new SQL file in `sql/test/XXX_<name>.sql` with 3-digit prefix
+2. Write TAP tests: `SELECT plan(N);`, use `has_table()`, `col_is_present()`, `col_type_is()`, etc.
+3. End with `SELECT * FROM finish();`
+4. Document file in `FILE_INVENTORY.md` and add run to `run_pgtap.sh` if needed
+5. Run: `./scripts/test/run_pgtap.sh` to verify
+
+Example test file:
+
+```sql
+--
+— File: sql/test/030_pgtap_my_feature.sql
+— Purpose: Test my feature tables
+—
+SET search_path TO my_schema, public;
+SELECT plan(5);
+
+SELECT has_table('my_schema', 'my_table', 'Table exists');
+SELECT col_is_present('my_schema', 'my_table', 'my_column', 'Column exists');
+SELECT col_type_is('my_schema', 'my_table', 'my_column', 'INTEGER', 'Type is INTEGER');
+SELECT col_is_not_null('my_schema', 'my_table', 'my_column', 'Column NOT NULL');
+SELECT fk_is_not_null('my_schema', 'my_table', 'other_table', 'FK valid');
+
+SELECT * FROM finish();
+```
+
+See also:
+- pgTAP manual: http://pgtap.org/
+- `docs/dev/TOOL_SETUP_GUIDE.md#ptap-database-unit-testing`
+- `sql/test/003_install_pgtap.sql` (helper functions)
+
+## Build Player Embeddings with FAISS
+
+Purpose: Create vector embeddings of players based on performance features for similarity search.
+
+Use case:
+- Find similar players for scouting
+- Precompute embeddings for real-time prediction
+- Cluster players by performance profile
+
+Command:
+
+```bash
+# Install faiss-cpu
+uv add faiss-cpu
+
+# Build embeddings and save to FAISS index
+uv run scripts/vector/build_player_embeddings.py \
+    --season 2024 \
+    --feature-set full \
+    --output faiss \
+    --dim 128 \
+    --min-pa 50
+
+# Output files:
+# - player_embeddings_2024.index (FAISS binary index)
+# - player_embeddings_2024_metadata.csv (player_id, name, type)
+```
+
+Alternative outputs:
+- `--output postgres` → saves to `embeddings.player_embeddings` (requires pgvector)
+- `--output numpy` → `.npy` file + metadata CSV
+
+To query similarity from CLI:
+
+```bash
+uv run scripts/vector/similarity_search.py \
+    --player-id 123456 \
+    --type batter \
+    --season 2024 \
+    --top-k 10 \
+    --backend pgvector
+```
+
+To load embeddings into PostgreSQL:
+
+```bash
+# Schema must exist first
+psql -f sql/vector/001_faiss_schema.sql
+
+# Python script auto-inserts when using --output postgres
+```
+
+Batch load from staging (for large-scale population):
+
+```sql
+-- Load CSV to staging table first (COPY)
+COPY embeddings.player_embeddings_staging FROM '/path/data.csv' CSV;
+
+-- Then run bulk upsert
+SELECT embeddings.bulk_upsert_from_staging();
+```
+
+Verify:
+
+```sql
+SELECT player_type, COUNT(*) FROM embeddings.player_embeddings GROUP BY player_type;
+SELECT * FROM embeddings.find_similar_players('123456', 'batter', 2024, 10);
+```
+
+Troubleshooting:
+- `ModuleNotFoundError: No module named faiss` → `uv add faiss-cpu`
+- `Extension "vector" does not exist` → `psql -f sql/maintenance/005_install_pgvector.sql`
+- `HNSW index requires pgvector >= 0.5` → use `ivfflat` or upgrade pgvector
+
+See also:
+- `docs/vector/FAISS_INTEGRATION.md`
+- `sql/vector/001_faiss_schema.sql`
+- `scripts/vector/build_player_embeddings.py`
+
+## Visualize Database Schema with Graphviz
+
+Purpose: Generate Entity-Relationship Diagrams (ERD) automatically from PostgreSQL metadata.
+
+Generate PNG/SVG/PDF for documentation:
+
+```bash
+# Generate core schema diagram
+uv run scripts/analysis/generate_schema_diagram.py \
+    --schema core \
+    --output docs/diagrams/core_schema.png \
+    --format png \
+    --show-sizes
+
+# Generate bridge schema (PDF)
+uv run scripts/analysis/generate_schema_diagram.py \
+    --schema bridge \
+    --output docs/diagrams/bridge_schema.pdf \
+    --format pdf
+
+# Simpler view (no columns)
+uv run scripts/analysis/generate_schema_diagram.py \
+    --schema features \
+    --output docs/diagrams/features_simple.png \
+    --no-columns
+```
+
+Output includes:
+- Tables as labeled nodes (color-coded: TABLE vs VIEW)
+- Columns with data types and nullability
+- Foreign key arrows (→) with column names
+- Table sizes (if `--show-sizes`)
+
+Requirements:
+```bash
+# Install graphviz CLI
+brew install graphviz      # macOS
+sudo apt-get install graphviz   # Ubuntu
+
+# Install Python package
+uv add graphviz
+```
+
+Create all documentation diagrams in bulk:
+
+```bash
+for schema in core bridge features raw_retrosheet raw_mlb; do
+    uv run scripts/analysis/generate_schema_diagram.py \
+        --schema "$schema" \
+        --output "docs/diagrams/${schema}_schema.png"
+done
+```
+
+See also:
+- `docs/dev/GRAPHVIZ_AST_VISUALIZATION.md`
+- `scripts/analysis/generate_schema_diagram.py`
+
+## Generate Code Dependency Graphs
+
+Purpose: Visualize Python import dependencies and SQL script execution order.
+
+```bash
+# Python module dependency graph
+uv run scripts/analysis/visualize_dependencies.py \
+    --type python \
+    --output docs/diagrams/python_deps.svg
+
+# SQL file order (by numeric prefix)
+uv run scripts/analysis/visualize_dependencies.py \
+    --type sql \
+    --output docs/diagrams/sql_order.pdf
+
+# Combined (cross-language)
+uv run scripts/analysis/visualize_dependencies.py \
+    --type combined \
+    --output docs/diagrams/full_deps.png
+```
+
+Interpretation:
+- Nodes are modules (`baseball.cli`, `scripts.warehouse`, `sql.010_core`)
+- Directed edges indicate import relationship
+- Clusters group by language (Python vs SQL)
+- Dotted lines show Python → SQL script references (e.g., `os.system("psql -f sql/...")`)
+
+Use to:
+- Identify circular dependencies
+- Plan refactoring of large modules
+- Understand SQL load order
+- Onboard new contributors
+
+## Analyze Query Plans Graphically
+
+Purpose: Turn PostgreSQL EXPLAIN JSON into readable tree diagrams to debug performance.
+
+```bash
+# Simple explain
+uv run scripts/analysis/analyze_query_plan.py \
+    --sql "SELECT * FROM core.games WHERE season = 2024" \
+    --output query_simple.png
+
+# Full analyze with stats
+uv run scripts/analysis/analyze_query_plan.py \
+    --sql "SELECT g.*, COUNT(*) FROM core.games g JOIN core.events e ON g.game_id = e.game_id GROUP BY g.game_id" \
+    --explain --analyze --buffers \
+    --output docs/query_plans/complex_join.png
+```
+
+Node colors:
+- 🔴 Red - Seq Scan (may indicate missing index)
+- 🟢 Green - Index Scan (good)
+- 🔵 Blue - Hash/Merge Join
+- 🟣 Purple - Nested Loop (watch for N+1)
+- 🟡 Yellow - Bitmap Scan
+
+Each node shows:
+- Node type (operation)
+- Estimated vs Actual rows (key for cardinality estimation errors)
+- Total cost
+- Relation/index names
+- Filter conditions
+
+When estimated ≠ actual rows significantly:
+```sql
+-- Update statistics
+ANALYZE core.games;
+
+-- Create extended statistics if correlated columns
+CREATE STATISTICS s1 (dependencies) ON season, game_date FROM core.games;
+```
+
+## Check PostgreSQL Extension Status
+
+Purpose: Verify which PostgreSQL extensions are installed and guide installation.
+
+```bash
+uv run scripts/check_extensions.py
+```
+
+Output:
+```
+PostgreSQL Extension Status Check
+================================================
+Required extensions:
+  plpgsql            INSTALLED  (version info)
+  pg_cron            MISSING
+Optional extensions (Recommended):
+  pg_stat_statements NOT INSTALLED
+  ...
+❌ Missing required: pg_cron, pg_stat_statements, ...
+```
+
+Install missing ones:
+
+```bash
+# Via master script
+psql -f sql/maintenance/999_master_installation.sql
+
+# Or individually
+psql -f sql/maintenance/002_install_pg_cron.sql
+psql -f sql/maintenance/003_install_pg_stat_statements.sql
+```
+
+## Run Python Security Scans
+
+### Bandit (Security Linting)
+
+```bash
+# Run locally
+uv run scripts/test/run_bandit_security_scan.py --output bandit.html --format html
+
+# CI (integrated via .github/workflows/codeql-analysis.yml)
+# Runs on every push and weekly
+```
+
+### pip-audit (Dependency Vulnerabilities)
+
+```bash
+# Check installed packages
+uv run scripts/test/run_vulnerability_scan.py --output vulns.json
+
+# Check against requirements file only
+uv run scripts/test/run_vulnerability_scan.py --requirement requirements.txt --dry-run
+
+# Auto-fix low-risk issues (experimental)
+uv run scripts/test/run_vulnerability_scan.py --fix
+```
+
+Output:
+- JSON report for tooling
+- Summary of vulnerabilities with fix versions
+- Integration with CI → GitHub Security alerts
+
+## Analyze Code Complexity
+
+Purpose: Identify complex functions that need refactoring.
+
+```bash
+# Analyze project
+uv run scripts/analysis/code_complexity_analyzer.py --path scripts/
+
+# JSON output for CI
+uv run scripts/analysis/code_complexity_analyzer.py --json > complexity.json
+```
+
+Output:
+```
+Code Complexity Analysis Report
+================================================
+Files analyzed:  145
+Functions:       890
+Classes:         45
+
+Top 20 most complex functions:
+Rank  Complexity  Lines  File                              Function
+1     42          180    scripts/prediction_framework/...  predict_batch
+2     38          215    scripts/warehouse.py               run_pipeline
+...
+⚠️  HIGH RISK: 12 functions have complexity > 15
+```
+
+Refactor targets:
+- Complexity > 20 → immediate attention
+- Complexity 10-20 → consider breaking into smaller functions
+- Lines > 100 → split into helper functions
+
+## Set Up Sourcegraph (Optional)
+
+Purpose: Self-hosted code search and code intelligence (go to definition, find references).
+
+```bash
+# Start local instance
+docker-compose -f docker-compose.sourcegraph.yml up -d
+
+# Access at http://localhost:7080
+# Default login: admin / admin (change immediately)
+
+# Add repository via UI:
+# Site admin → Add code host → GitHub
+# Repo: github.com/cbwinslow/retrosheet
+# Sync now
+```
+
+Code intelligence upload (for Sourcegraph Cloud or self-hosted):
+
+```bash
+# Install LSG (Local Sourcegraph)
+npm install -g @sourcegraph/lsg
+
+# Upload current commit
+lsg init
+lsg gather --primary
+lsg upload --repository-url github.com/cbwinslow/retrosheet --commit HEAD
+```
+
+Or use GitHub Action (`.github/workflows/sourcegraph-code-intel.yml`):
+- Requires `SOURCGRAPH_TOKEN` secret
+- Automatically uploads on push to main
+- Works for both Sourcegraph Cloud and self-hosted
+
+Common queries:
+```
+# Find all callers of a function
+symbol:get_win_expectancy repo:github.com/cbwinslow/retrosheet
+
+# Search for specific pattern in Python
+file:\.py$ pattern:SELECT.*FROM core\.games lang:py
+
+# Find test files for a module
+file:test_.*\.py pattern:test_pitch_sequence_model
+```
+
+See `docs/dev/SOURCEGRAPH_SETUP.md` for full documentation.
+

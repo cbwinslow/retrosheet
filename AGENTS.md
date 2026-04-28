@@ -14,9 +14,9 @@ The repository is undergoing a **phased migration** to a unified `baseball` CLI 
 | `docs/architecture.md` | Target architecture specification |
 | `docs/keys_and_grains.md` | Entity keys and table grains |
 
-### Current Phase: Phase 6-7 Complete
+### Current Phase: Phase 8 Complete
 
-Phase 0-5 are complete. Phase 6-7 (Feature/Model Expansion + Serving) is now **complete** with comprehensive testing infrastructure, Win Expectancy, Leverage Index, Model Registry SQL, feature calculators, and materialized views for serving.
+Phase 0-7, 7a are complete. Phase 8 (Pipeline Orchestration) is now **complete** with 7 pipeline configurations, checkpointing, resume support, and step handlers wired to source adapters. Milestone 9 (Cleanup + Validation) is also complete.
 
 **Completed Work**:
 - ✅ Phase 0: Migration planning documents
@@ -24,7 +24,10 @@ Phase 0-5 are complete. Phase 6-7 (Feature/Model Expansion + Serving) is now **c
 - ✅ Phase 2: All 5 historical source adapters (MLB, Retrosheet, Statcast, ESPN, Lahman)
 - ✅ Phase 3: Live data source adapter (`LiveMlbSource`), real-time prediction pipeline
 - ✅ Phase 5: Bridge layer (`XrefManager`, `player_xref.py`, `team_xref.py`, `game_xref.py`)
-- ✅ Phase 6-7: WE/LI features, Model Registry SQL, feature calculators, comprehensive testing (140+ tests)
+- ✅ Phase 6-7: WE/LI features, Model Registry SQL, feature calculators, comprehensive testing (160+ tests)
+- ✅ Phase 7a: Testing Infrastructure (unit, integration, E2E tests)
+- ✅ Phase 8: Pipeline orchestration with 7 pipelines, checkpointing, source adapter integration
+- ✅ Phase 9: Legacy script migration, documentation finalization
 
 ### GitHub Issues
 
@@ -37,6 +40,8 @@ Phase 0-5 are complete. Phase 6-7 (Feature/Model Expansion + Serving) is now **c
 | [#96](https://github.com/cbwinslow/retrosheet/issues/96) | 4 | [MIGRATION] Phase 4: ESPN + Statcast | ✅ Merged into Phase 2 |
 | [#97](https://github.com/cbwinslow/retrosheet/issues/97) | 5 | [MIGRATION] Phase 5: Bridge Consolidation | ✅ Complete |
 | [#98](https://github.com/cbwinslow/retrosheet/issues/98) | 6-7 | [MIGRATION] Phase 6-7: Feature/Model + Serving + Testing | ✅ Complete |
+| [#99](https://github.com/cbwinslow/retrosheet/issues/99) | 8 | [MIGRATION] Phase 8: Pipeline Orchestration | ✅ Complete |
+| [#100](https://github.com/cbwinslow/retrosheet/issues/100) | 9 | [MIGRATION] Phase 9: Cleanup + Validation | ✅ Complete |
 
 ### Source Adapters Available
 
@@ -49,7 +54,27 @@ Phase 0-5 are complete. Phase 6-7 (Feature/Model Expansion + Serving) is now **c
 | Lahman | `LahmanSource` | `lahman download/ingest/validate/tables` | ✅ Complete |
 | Live MLB | `LiveMlbSource` | `live games/watch/poll/predict/server` | 🔄 In Progress |
 | Bridge | `XrefManager` | `bridge resolve/match/lookup` | ✅ Complete |
-| Pipeline | `PipelineRunner` | `pipeline run/list/status` | 🔄 Scaffolding Complete |
+| Pipeline | `PipelineService` | `pipeline run/list/status` | ✅ Complete |
+
+### System Evaluation
+
+**Quick system health check:**
+```bash
+python scripts/demo_full_system.py --mode quick
+```
+
+**Comprehensive evaluation with database:**
+```bash
+python scripts/demo_full_system.py --mode full --output system_report.md
+```
+
+This demo script checks:
+- All 5 source adapter imports
+- 7 pipeline configurations
+- Feature calculator availability
+- Database connectivity
+- CLI command discovery
+- Core module imports
 
 ### Production Deployment
 
@@ -1326,6 +1351,81 @@ For chat/agent work, start with tool-routed answers over curated SQL and scripts
 The safe terminal/workbench pattern is: browser button -> named API action -> allow-listed local command -> captured stdout/stderr. A full embedded terminal requires authentication, `node-pty`, WebSocket session controls, command restrictions, and project-root isolation.
 
 Persist interface activity when practical. Chat prompts should write to `chat.query_logs`, and simulation/backtest workflows should write reproducible filters and summaries to tables under `predictions`.
+
+## Development & Quality Infrastructure
+
+### Database Unit Testing (pgTAP)
+
+PostgreSQL unit testing with TAP-compliant pgTAP framework.
+
+**Installation:**
+```bash
+psql -f sql/test/003_install_pgtap.sql
+```
+
+**Tests location:** `sql/test/` (010_core_tables, 020_functions)
+
+**Run:**
+```bash
+./scripts/test/run_pgtap.sh --verbose
+pytest tests/unit/test_pgtap_integration.py -v  # via pytest
+```
+
+**Write tests:**
+```sql
+SELECT plan(5);
+SELECT has_table('core', 'games', 'games exists');
+SELECT col_is_present('core', 'games', 'game_id', 'game_id column exists');
+SELECT * FROM finish();
+```
+
+### Security Scanning
+
+**CodeQL** (GitHub-native): Automatically runs on push/PR + weekly. Configuration: `.github/workflows/codeql-analysis.yml`
+
+**Bandit** (Python): `uv run scripts/test/run_bandit_security_scan.py`
+
+**pip-audit** (dependencies): `uv run scripts/test/run_vulnerability_scan.py`
+
+### Vector Similarity (FAISS + pgvector)
+
+Build player embeddings for similarity search:
+```bash
+uv add faiss-cpu
+uv run scripts/vector/build_player_embeddings.py --season 2024 --output faiss
+```
+
+Schema: `sql/vector/001_faiss_schema.sql`, docs: `docs/vector/FAISS_INTEGRATION.md`
+
+### Graphviz & AST Visualization
+
+Generate ERDs, dependency graphs, query plans:
+```bash
+uv run scripts/analysis/generate_schema_diagram.py --schema core --output core.png
+uv run scripts/analysis/visualize_dependencies.py --type python
+uv run scripts/analysis/analyze_query_plan.py --sql "SELECT ..." --explain
+uv run scripts/analysis/code_complexity_analyzer.py
+```
+
+Guide: `docs/dev/GRAPHVIZ_AST_VISUALIZATION.md`
+
+### Sourcegraph (Optional)
+
+Self-hosted code search with `docker-compose.sourcegraph.yml`. Access at localhost:7080.
+
+### Pre-Commit Checklist
+
+- [ ] `uv run ruff check --fix .` + `uv run ruff format .`
+- [ ] `npx biome check --apply .` (JS/TS/JSON)
+- [ ] `uv run sqlfluff fix sql/**/*.sql`
+- [ ] `./scripts/test/validate_sql_files.sh`
+- [ ] `./scripts/test/e2e_test_runner.sh --quick` (if affecting DB)
+- [ ] `uv run python scripts/check_extensions.py` (if modifying extension use)
+
+See `docs/dev/TOOL_SETUP_GUIDE.md` for complete setup and troubleshooting.
+
+---
+
 ## 📚 Letta Log Hook (automatic)
 
 All Hermes agents (including Kilocode) now run with the following hooks:

@@ -66,6 +66,10 @@ This inventory tells agents what each important file does and which workflows ow
 | `docs/IMPLEMENTATION_ROADMAP.md` | 22-hour implementation plan with phases and deliverables. | Implementation tracking |
 | `docs/DEPLOYMENT_PLAN.md` | Complete deployment guide for agents, handoff checklist, rollback plan. | Agent handoff |
 | `docs/GITHUB_PROJECT_GUIDE.md` | GitHub Project board setup, workflow, tracking for issues #80-#90. | GitHub project management |
+| `docs/dev/TOOL_SETUP_GUIDE.md` | **NEW** - Comprehensive guide for all development tools: pgTAP, pytest, CodeQL, FAISS, Sourcegraph, Graphviz. Installation and usage. | Dev environment setup |
+| `docs/dev/SOURCEGRAPH_SETUP.md` | **NEW** - Sourcegraph self-hosted setup, configuration, and usage patterns. | Code search tooling |
+| `docs/vector/FAISS_INTEGRATION.md` | **NEW** - FAISS vector similarity search integration: building player embeddings, pgvector storage, CLI usage. | ML feature embeddings |
+| `docs/dev/GRAPHVIZ_AST_VISUALIZATION.md` | **NEW** - Graphviz and AST analysis guide: schema diagrams, dependency graphs, query plan visualization. | Codebase visualization |
 
 ## Configuration
 
@@ -74,6 +78,21 @@ This inventory tells agents what each important file does and which workflows ow
 | `config/chadwick_event_columns.txt` | Chadwick event-column reference used to avoid hand-invented mappings. | Check before changing raw event parsing. |
 | `config/ai_providers.example.json` | Example provider configuration for OpenRouter, Groq, and Codex/OpenAI-compatible inference. | Never commit real keys. |
 | `.env.example` | Safe local environment variable template. | Keep secrets out of git. |
+
+## CI/CD & Tooling Configuration
+
+| File | Purpose | Notes |
+|---|---|---|
+| `.github/workflows/ci.yml` | Main CI pipeline: ruff+biome+sqlfluff linting, SQL header validation, pytest unit/integration/e2e tests, feature mart row count verification. Triggers: push/PR to main branches. | Core automation |
+| `.github/workflows/codeql-analysis.yml` | **NEW** - Security scanning: CodeQL (Python/JS), Bandit (Python security), pip-audit (dependency vulnerabilities). Weekly scheduled run + on push/PR. | Security |
+| `.github/workflows/sourcegraph-code-intel.yml` | **NEW** - Uploads LSIF code intelligence to Sourcegraph for precise code navigation and reference finding. | Code search |
+| `.github/codeql/codeql-config.yml` | **NEW** - CodeQL configuration: disabled queries, excluded paths (data/, .venv/, docs/, node_modules/). | Security config |
+| `docker-compose.sourcegraph.yml` | **NEW** - Self-hosted Sourcegraph instance (PostgreSQL, Redis, Sourcegraph server). Local dev setup via Docker Compose. | Optional tool |
+| `pyproject.toml` | Python project configuration: dependencies, dev tools (ruff, pytest, uv), scripts entry points. | Build config |
+| `pytest.ini` | pytest configuration: test discovery patterns, markers (unit, integration, e2e, slow), timeout, warning filters. | Test config |
+| `biome.json` | Biome configuration for JavaScript/TypeScript/JSON/YAML linting and formatting. | Frontend linting |
+| `.sqlfluff` | SQLFluff configuration: dialect (postgres), rule exclusions, formatting rules. | SQL linting |
+| `.github/CODEOWNERS` | Code ownership for automatic review assignment (if present). | Review routing |
 
 ## Retrosheet Data Files
 
@@ -159,6 +178,7 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `sql/maintenance/020_game_hours_scheduler.sql` | Game-hours-aware polling scheduler functions (is_mlb_season, is_game_hours, should_poll_games). | Smart live data polling. |
 | `sql/maintenance/021_update_cron_game_hours.sql` | Updates cron jobs to use conditional polling wrappers. | Cron job optimization. |
 | `sql/maintenance/030_kb_vector_schema.sql` | KB vector schema: `kb.document_chunks` with pgvector embeddings, indexes, semantic search functions, ingestion tracking. | RAG infrastructure. Run after pgvector is installed. |
+| `sql/vector/001_faiss_schema.sql` | **NEW** - Schema for storing vector embeddings compatible with faiss-cpu: player_embeddings, pitch_embeddings, team_embeddings tables with pgvector columns, indexes, and helper functions (upsert, similarity search). | FAISS/pgvector integration. |
 | `sql/maintenance/999_master_installation.sql` | Master orchestrator for installing all PostgreSQL extensions and advanced features. | Complete extension installation. |
 
 ## Warehouse Orchestration SQL
@@ -179,6 +199,9 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 |---|---|---|
 | `sql/test/001_create_test_schema.sql` | Creates isolated `test` schema with test tracking tables. | E2E test setup. Run first before tests. |
 | `sql/test/002_test_fixtures.sql` | Creates small test datasets (100 games) from real data for fast testing. | E2E test data setup. Run after test schema. |
+| `sql/test/003_install_pgtap.sql` | **NEW** - Install pgTAP extension (PostgreSQL unit testing framework) and helper functions. | pgTAP setup. |
+| `sql/test/010_pgtap_core_tables.sql` | **NEW** - pgTAP tests for core.games table: column presence, types, NOT NULL, PK, indexes, view existence. | Core schema validation. |
+| `sql/test/020_pgtap_functions.sql` | **NEW** - pgTAP tests for database functions and procedures: bridge validation, population procedures, feature functions. | Procedure validation. |
 
 ## Metadata SQL (Database Documentation)
 
@@ -329,6 +352,7 @@ These files may be present as active development work. Treat them as live-bridge
 |---|---|---|
 | `scripts/warehouse.py` | Main CLI for dependency checks, Retrosheet fetch, Chadwick extract/load, and live feed fetch with raw snapshot provenance. | Ingestion and raw landing. |
 | `scripts/rebuild_warehouse.sh` | Canonical full rebuild order. | Reproducibility. Update when adding required SQL. |
+| `scripts/check_extensions.py` | **NEW** - Python helper to verify PostgreSQL extension installation status. Reports required/optional extensions with versions. | Setup validation, CI checks. |
 | `scripts/install_chadwick.sh` | Chadwick installation helper. | Environment setup. |
 | `scripts/load_reference_metadata.py` | Loads Retrosheet bio/team/park metadata. | After `020`. |
 | `scripts/load_auxiliary_retrosheet.py` | Loads broader Retrosheet auxiliary files. | After reference metadata. |
@@ -339,6 +363,7 @@ These files may be present as active development work. Treat them as live-bridge
 | `scripts/populate_bridge_tables.py` | Downloads Chadwick Register and populates player mappings plus canonical team/park bridge mappings from the typed MLB reference views. Tolerates current bridge-schema variations in the active database. | Live bridge setup and reconciliation refresh. |
 | `scripts/ingest_live_games.py` | Orchestrates batch live game ingestion using environment-driven Postgres settings. | Live bridge work. |
 | `scripts/transform_live_game.py` | Transforms stored MLB live snapshots into canonical `core.live_games` / `core.live_events` with upserts and raw JSON preservation. | Live bridge work. |
+| `scripts/demo_full_system.py` | **Interactive system evaluation tool**. Demonstrates all components: source adapters, pipelines, feature calculators, CLI, database. | System discovery, onboarding, health checks. |
 
 ## Legacy Scripts Archive (`scripts_legacy/`)
 
@@ -416,6 +441,10 @@ baseball pipeline run --pipeline historical --year 2024
 | `scripts/download_statcast_pitch_level.py` | Downloads Statcast pitch-level data using pybaseball.statcast() for date ranges or seasons. | Statcast pitch-level data download. |
 | `scripts/ingest_espn_plays.py` | Ingests ESPN play-by-play data into `raw_espn.plays` table. | ESPN external data ingestion |
 | `scripts/kb/chunk_sources.py` | Chunks sabermetrics source documents into JSONL files with metadata for RAG ingestion. Organizes by source and by topic. | KB chunking pipeline. |
+| `scripts/check_extensions.py` | **NEW** - Verify PostgreSQL extension status; prints installed/missing extensions with install commands. | Setup validation, CI checks. |
+| `scripts/test/run_pgtap.sh` | **NEW** - PostgreSQL unit test runner for pgTAP. Discovers test_* functions across schemas, executes with TAP output, aggregates results. | Database regression testing. |
+| `scripts/test/run_bandit_security_scan.py` | **NEW** - Run Bandit security scanner on Python code, generate HTML/JSON reports with severity filtering. | Security scanning, CI integration. |
+| `scripts/test/run_vulnerability_scan.py` | **NEW** - Dependency vulnerability scanner using pip-audit. Checks pyproject.toml/requirements.txt for CVEs. | Dependency security, CI. |
 
 ## Pitch Data Scripts (Statcast Complete Loader)
 
@@ -462,6 +491,11 @@ baseball pipeline run --pipeline historical --year 2024
 | `scripts/analysis/feature_discovery_master.py` | **FEATURE DISCOVERY ORCHESTRATOR** - Coordinates PCA, correlations, stepwise selection. | 🔄 Ready |
 | `scripts/analysis/pitch_clustering_analysis.py` | **PITCH CLUSTERING** - K-Means/GMM unsupervised learning to discover natural pitch groupings. | 🔄 Ready |
 | `scripts/analysis/feature_interaction_explorer.py` | **FEATURE INTERACTIONS** - Discover non-linear feature pairs that predict outcomes better together. | 🔄 Ready |
+| `scripts/analysis/generate_schema_diagram.py` | **NEW** - Generate ERD diagrams of database schemas (Graphviz). Automated schema visualization for documentation. | Tooling |
+| `scripts/analysis/visualize_dependencies.py` | **NEW** - Generate code dependency graphs (Python imports, SQL execution order) using AST parsing. | Tooling |
+| `scripts/analysis/analyze_query_plan.py` | **NEW** - Visualize PostgreSQL query execution plans as Graphviz trees with cost/row estimates. | Tooling |
+| `scripts/analysis/code_complexity_analyzer.py` | **NEW** - AST-based complexity analyzer: cyclomatic complexity, function length, class metrics. | Quality metrics |
+| `scripts/test/run_pgtap.sh` | **NEW** - PostgreSQL unit test runner for pgTAP (already added earlier). | Testing |
 | `docs/PITCH_FEATURE_MART_SCHEMA.md` | Comprehensive schema documentation. Table reference, usage patterns, design principles, data lineage, performance considerations. | Complete |
 | `docs/diagrams/PITCH_FEATURE_MART_ERD.puml` | Entity relationship diagram showing all 7 tables and relationships. | Complete |
 | `docs/diagrams/PITCH_DATA_FLOW.puml` | Data flow architecture diagram from sources through processing to models with CRISP-DM labels. | Complete |

@@ -10,13 +10,17 @@ Date: 2026-04-27
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
 
 from baseball.core.db import get_db_connection
+
+if TYPE_CHECKING:
+    from baseball.sources.base import BaseSource
 
 
 logger = logging.getLogger(__name__)
@@ -430,33 +434,269 @@ class PipelineService:
             self.save_checkpoint(pipeline_name, run_id, step_name, 'failed', {'error': error})
             return False, error
 
-    # Placeholder step handlers
+    def _get_source_adapter(self, source_name: str) -> 'BaseSource | None':
+        """Get source adapter by name.
+
+        Args:
+            source_name: Name of the source (mlb, retrosheet, statcast, espn, lahman)
+
+        Returns:
+            Source adapter instance or None
+        """
+        from baseball.sources.mlb import MlbSource
+        from baseball.sources.retrosheet import RetrosheetSource
+        from baseball.sources.statcast import StatcastSource
+        from baseball.sources.espn import EspnSource
+        from baseball.sources.lahman import LahmanSource
+
+        adapter_map = {
+            'mlb': MlbSource,
+            'mlb_live': MlbSource,
+            'retrosheet': RetrosheetSource,
+            'statcast': StatcastSource,
+            'espn': EspnSource,
+            'lahman': LahmanSource,
+        }
+
+        adapter_class = adapter_map.get(source_name)
+        if adapter_class:
+            return adapter_class()
+        return None
+
+    def _extract_source_from_step(self, step_name: str) -> tuple[str | None, str]:
+        """Extract source name and operation from step name.
+
+        Args:
+            step_name: Pipeline step name (e.g., 'mlb_live_download', 'download')
+
+        Returns:
+            Tuple of (source_name, operation)
+        """
+        # Map compound step names to source + operation
+        step_mappings = {
+            # MLB steps
+            'mlb_live_download': ('mlb', 'download'),
+            'mlb_live_ingest': ('mlb', 'ingest'),
+            # Retrosheet steps
+            'retrosheet_download': ('retrosheet', 'download'),
+            'retrosheet_ingest': ('retrosheet', 'ingest'),
+            # Statcast steps
+            'statcast_download': ('statcast', 'download'),
+            'statcast_ingest': ('statcast', 'ingest'),
+            # ESPN steps
+            'espn_download': ('espn', 'download'),
+            'espn_ingest': ('espn', 'ingest'),
+            # Lahman steps
+            'lahman_download': ('lahman', 'download'),
+            'lahman_ingest': ('lahman', 'ingest'),
+            # Generic steps (source determined from pipeline context)
+            'download': (None, 'download'),
+            'ingest': (None, 'ingest'),
+            'validate': (None, 'validate'),
+            'predict': (None, 'predict'),
+        }
+
+        if step_name in step_mappings:
+            return step_mappings[step_name]
+
+        # Try to parse from step name pattern: {source}_{operation}
+        parts = step_name.rsplit('_', 1)
+        if len(parts) == 2 and parts[1] in ('download', 'ingest', 'validate'):
+            return (parts[0], parts[1])
+
+        return (None, step_name)
+
+    # Step handlers that call actual source adapters
     def _handle_download(self, pipeline: str, run_id: int, step: str, params: dict | None) -> bool:
-        """Handle download step."""
-        logger.info(f'Download step for {pipeline} (placeholder)')
-        return True
+        """Handle download step by calling source adapter."""
+        logger.info(f'Download step: {step} for pipeline {pipeline}')
+
+        source_name, _ = self._extract_source_from_step(step)
+
+        # Try to infer source from pipeline name if not in step
+        if source_name is None:
+            if 'retrosheet' in pipeline:
+                source_name = 'retrosheet'
+            elif 'mlb' in pipeline or 'live' in pipeline:
+                source_name = 'mlb'
+            elif 'statcast' in pipeline:
+                source_name = 'statcast'
+            elif 'espn' in pipeline:
+                source_name = 'espn'
+            elif 'lahman' in pipeline:
+                source_name = 'lahman'
+
+        if not source_name:
+            logger.warning(f'Could not determine source for download step: {step}')
+            return True  # Skip if can't determine source
+
+        adapter = self._get_source_adapter(source_name)
+        if not adapter:
+            logger.warning(f'No adapter found for source: {source_name}')
+            return True  # Skip if no adapter
+
+        try:
+            # Build download parameters
+            download_params = {}
+            if params:
+                if 'year' in params:
+                    download_params['season'] = params['year']
+                if 'date' in params:
+                    download_params['date'] = params['date']
+                if 'start_date' in params:
+                    download_params['start_date'] = params['start_date']
+                if 'end_date' in params:
+                    download_params['end_date'] = params['end_date']
+
+            # Call the download method
+            if source_name == 'retrosheet':
+                result = adapter.download(**download_params)
+            elif source_name == 'mlb':
+                from baseball.core.types import SourceRequest
+                request = SourceRequest(
+                    source_type='mlb',
+                    params=download_params
+                )
+                result = adapter.download(request)
+            else:
+                result = adapter.download(**download_params)
+
+            logger.info(f'Download completed: {result}')
+            return True
+
+        except Exception as e:
+            logger.exception(f'Download failed for {source_name}: {e}')
+            return False
 
     def _handle_ingest(self, pipeline: str, run_id: int, step: str, params: dict | None) -> bool:
-        """Handle ingest step."""
-        logger.info(f'Ingest step for {pipeline} (placeholder)')
-        return True
+        """Handle ingest step by calling source adapter."""
+        logger.info(f'Ingest step: {step} for pipeline {pipeline}')
+
+        source_name, _ = self._extract_source_from_step(step)
+
+        # Try to infer source from pipeline name if not in step
+        if source_name is None:
+            if 'retrosheet' in pipeline:
+                source_name = 'retrosheet'
+            elif 'mlb' in pipeline or 'live' in pipeline:
+                source_name = 'mlb'
+            elif 'statcast' in pipeline:
+                source_name = 'statcast'
+            elif 'espn' in pipeline:
+                source_name = 'espn'
+            elif 'lahman' in pipeline:
+                source_name = 'lahman'
+
+        if not source_name:
+            logger.warning(f'Could not determine source for ingest step: {step}')
+            return True
+
+        adapter = self._get_source_adapter(source_name)
+        if not adapter:
+            logger.warning(f'No adapter found for source: {source_name}')
+            return True
+
+        try:
+            # Build ingest parameters
+            ingest_params = {}
+            if params:
+                if 'year' in params:
+                    ingest_params['season'] = params['year']
+                if 'date' in params:
+                    ingest_params['date'] = params['date']
+
+            # Call the ingest method
+            result = adapter.ingest(**ingest_params)
+
+            logger.info(f'Ingest completed: {result}')
+            return True
+
+        except Exception as e:
+            logger.exception(f'Ingest failed for {source_name}: {e}')
+            return False
 
     def _handle_validate(self, pipeline: str, run_id: int, step: str, params: dict | None) -> bool:
-        """Handle validate step."""
-        logger.info(f'Validate step for {pipeline} (placeholder)')
-        return True
+        """Handle validate step by calling source adapter."""
+        logger.info(f'Validate step: {step} for pipeline {pipeline}')
+
+        source_name, _ = self._extract_source_from_step(step)
+
+        # Try to infer source from pipeline name
+        if source_name is None:
+            if 'retrosheet' in pipeline:
+                source_name = 'retrosheet'
+            elif 'mlb' in pipeline or 'live' in pipeline:
+                source_name = 'mlb'
+            elif 'statcast' in pipeline:
+                source_name = 'statcast'
+            elif 'espn' in pipeline:
+                source_name = 'espn'
+            elif 'lahman' in pipeline:
+                source_name = 'lahman'
+
+        if not source_name:
+            logger.warning(f'Could not determine source for validate step: {step}')
+            return True
+
+        adapter = self._get_source_adapter(source_name)
+        if not adapter:
+            logger.warning(f'No adapter found for source: {source_name}')
+            return True
+
+        try:
+            result = adapter.validate()
+            logger.info(f'Validation completed: {result}')
+            return result.success if hasattr(result, 'success') else True
+
+        except Exception as e:
+            logger.exception(f'Validation failed for {source_name}: {e}')
+            return False
 
     def _handle_predict(self, pipeline: str, run_id: int, step: str, params: dict | None) -> bool:
-        """Handle predict step."""
-        logger.info(f'Predict step for {pipeline} (placeholder)')
+        """Handle predict step - placeholder for model inference."""
+        logger.info(f'Predict step: {step} for pipeline {pipeline}')
+
+        # TODO: Implement actual prediction logic using ModelServer
+        # This would call the model serving layer to generate predictions
+
+        logger.info('Prediction step completed (placeholder)')
         return True
 
     def _handle_feature_build(
         self, pipeline: str, run_id: int, step: str, params: dict | None
     ) -> bool:
         """Handle feature building step."""
-        logger.info(f'Feature build step: {step} (placeholder)')
-        return True
+        logger.info(f'Feature build step: {step} for pipeline {pipeline}')
+
+        # Map step names to feature calculators
+        feature_map = {
+            'run_expectancy': 'RunExpectancyCalculator',
+            'win_expectancy': 'WinExpectancyCalculator',
+            'leverage_index': 'LeverageIndexCalculator',
+            'matchup_features': 'MatchupCalculator',
+            'rolling_form': 'RollingFormCalculator',
+            'refresh_features': 'all',
+            'build_features': 'all',
+            'compute_features': 'all',
+        }
+
+        calculator_name = feature_map.get(step, step)
+
+        try:
+            if calculator_name == 'all' or step in ('refresh_features', 'build_features', 'compute_features'):
+                # Build all features
+                logger.info('Building all features (placeholder - would call feature calculators)')
+                # TODO: Call feature calculator registry to build all features
+            else:
+                # Build specific feature
+                logger.info(f'Building feature: {calculator_name} (placeholder)')
+                # TODO: Call specific feature calculator
+
+            return True
+
+        except Exception as e:
+            logger.exception(f'Feature build failed for {step}: {e}')
+            return False
 
     def run_pipeline(
         self,

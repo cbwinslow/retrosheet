@@ -1,162 +1,191 @@
-"""Pytest configuration and shared fixtures.
+#!/usr/bin/env python3
+"""pytest conftest.py - shared fixtures for the retrosheet test suite."""
 
-Shared fixtures for all test modules.
-
-Author: Agent cbwinslow/retrosheet
-Date: 2026-04-27
-"""
-
+import os
+import subprocess
+import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
-@pytest.fixture
-def temp_dir():
-    """Create temporary directory for tests."""
-    with tempfile.TemporaryDirectory() as tmp:
-        yield Path(tmp)
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+TEST_DB_NAME = os.environ.get("PGDATABASE", "retrosheet_test")
+DEFAULT_DB_URL = "postgresql://postgres:postgres@localhost:5432/retrosheet_test"
+
+
+# ---------------------------------------------------------------------------
+# Database fixtures
+# ---------------------------------------------------------------------------
+@pytest.fixture(scope="session")
+def db_available():
+    """Check if PostgreSQL is running and accessible."""
+    try:
+        import psycopg
+        conn = psycopg.connect(DEFAULT_DB_URL, connect_timeout=3)
+        conn.close()
+        return True
+    except Exception:
+        pytest.skip("PostgreSQL not available on localhost:5432")
+        return False
+
+
+@pytest.fixture(scope="session")
+def test_db_connection(db_available):
+    """Create a temporary test database and return connection URL."""
+    import psycopg
+
+    # Create test database if not exists
+    admin_conn = psycopg.connect(
+        "postgresql://postgres:postgres@localhost:5432/postgres"
+    )
+    admin_conn.autocommit = True
+    with admin_conn.cursor() as cur:
+        cur.execute(f"DROP DATABASE IF EXISTS {TEST_DB_NAME}")
+        cur.execute(f"CREATE DATABASE {TEST_DB_NAME}")
+    admin_conn.close()
+
+    yield DEFAULT_DB_URL
+
+    # Teardown: drop test database
+    admin_conn = psycopg.connect(
+        "postgresql://postgres:postgres@localhost:5432/postgres"
+    )
+    admin_conn.autocommit = True
+    with admin_conn.cursor() as cur:
+        cur.execute(f"DROP DATABASE IF EXISTS {TEST_DB_NAME}")
+    admin_conn.close()
 
 
 @pytest.fixture
 def mock_db_connection():
-    """Create mock database connection."""
-    mock_conn = Mock()
-    mock_cursor = Mock()
-    mock_conn.cursor.return_value = mock_cursor
-    mock_conn.__enter__ = Mock(return_value=mock_conn)
-    mock_conn.__exit__ = Mock(return_value=False)
-    return mock_conn, mock_cursor
+    """Return a mock DB connection for unit tests (no real DB)."""
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+    mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=None)
+    return mock_conn
+
+
+# ---------------------------------------------------------------------------
+# File system fixtures
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def temp_dir():
+    """Create a temporary directory for test artifacts."""
+    with tempfile.TemporaryDirectory() as td:
+        yield Path(td)
 
 
 @pytest.fixture
-def sample_game_state_data():
-    """Provide sample game state data."""
+def sample_data_dir(temp_dir):
+    """Create sample data files for testing."""
+    data_dir = temp_dir / "data"
+    data_dir.mkdir()
+    # Create minimal test files
+    (data_dir / "test.csv").write_text("a,b,c\n1,2,3\n4,5,6")
+    return data_dir
+
+
+# ---------------------------------------------------------------------------
+# Project structure fixtures
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def project_root():
+    """Return the project root directory."""
+    return PROJECT_ROOT
+
+
+@pytest.fixture
+def sql_files(project_root):
+    """List all SQL files in the sql/ directory."""
+    return sorted(Path(project_root / "sql").rglob("*.sql"))
+
+
+@pytest.fixture
+def script_files(project_root):
+    """List all executable Python scripts in scripts/."""
+    return sorted(
+        f
+        for f in Path(project_root / "scripts").rglob("*.py")
+        if f.is_file() and f.name != "__init__.py"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Baseball-specific fixtures
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def sample_game_state():
+    """Return a sample game state dict for feature testing."""
     return {
-        'inning': 5,
-        'is_top': True,
-        'outs': 1,
-        'runner_1b': True,
-        'runner_2b': False,
-        'runner_3b': True,
-        'score_home': 3,
-        'score_away': 2,
+        "inning": 7,
+        "inning_top": False,  # home team batting
+        "outs": 1,
+        "balls": 2,
+        "strikes": 1,
+        "home_score": 5,
+        "away_score": 4,
+        "on_1b": 1001,  # hypothetical player IDs
+        "on_2b": 1002,
+        "on_3b": 1003,
+        "season": 2024,
     }
 
 
 @pytest.fixture
 def sample_we_matrix():
-    """Provide sample Win Expectancy matrix data."""
-    return {
-        (1, True, 0, '000', 0): 0.50,
-        (1, True, 1, '000', 0): 0.48,
-        (9, False, 2, '000', 0): 0.70,
-        (9, False, 2, '111', 0): 0.85,
-    }
+    """Return a small win expectancy matrix for testing."""
+    import numpy as np
+
+    # 3x3x3x2x2x8 (inning 1-9, top/bot, outs 0-2, balls 0-2, strikes 0-2)
+    matrix = np.random.rand(9, 2, 3, 3, 3)
+    return matrix
 
 
+# ---------------------------------------------------------------------------
+# Command execution fixtures
+# ---------------------------------------------------------------------------
 @pytest.fixture
-def sample_li_matrix():
-    """Provide sample Leverage Index matrix data."""
-    return {
-        (1, True, 0, '000', 0): 0.9,
-        (5, False, 2, '111', 0): 4.2,
-        (9, False, 2, '111', 0): 5.8,
-    }
+def run_command():
+    """Fixture for running shell commands with error handling."""
+
+    def _run(cmd: str, cwd: Path = PROJECT_ROOT, check: bool = True):
+        result = subprocess.run(
+            cmd, shell=True, cwd=cwd, capture_output=True, text=True
+        )
+        if check and result.returncode != 0:
+            pytest.fail(f"Command failed: {cmd}\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}")
+        return result
+
+    return _run
 
 
-@pytest.fixture(scope='session')
-def db_available():
-    """Check if database is available."""
-    try:
-        from baseball.core.db import get_db_connection
-
-        conn = get_db_connection()
-        conn.close()
-        return True
-    except Exception:
-        return False
-
-
+# ---------------------------------------------------------------------------
+# Performance benchmark fixtures
+# ---------------------------------------------------------------------------
 @pytest.fixture
-def skip_if_no_db(db_available):
-    """Skip test if database not available."""
-    if not db_available:
-        pytest.skip('Database not available')
+def benchmark_logger():
+    """Simple benchmark logger to replace pytest-benchmark."""
+    import time
 
+    class BenchmarkLogger:
+        def __init__(self):
+            self.timings = {}
 
-@pytest.fixture
-def benchmark_logger(temp_dir):
-    """Create benchmark logger for tests."""
-    from baseball.core.benchmark import BenchmarkLogger
+        def start(self, name: str):
+            self.timings[name] = {"start": time.perf_counter()}
 
-    log_file = temp_dir / 'test_benchmark.jsonl'
-    logger = BenchmarkLogger(log_file=str(log_file))
-    return logger
+        def end(self, name: str):
+            self.timings[name]["end"] = time.perf_counter()
+            elapsed = self.timings[name]["end"] - self.timings[name]["start"]
+            print(f"[BENCH] {name}: {elapsed:.4f}s")
+            return elapsed
 
-
-@pytest.fixture
-def project_root():
-    """Return project root directory."""
-    return Path(__file__).parent.parent
-
-
-@pytest.fixture
-def sql_files(project_root):
-    """Find all SQL files in project."""
-    sql_dir = project_root / 'sql'
-    if sql_dir.exists():
-        return list(sql_dir.rglob('*.sql'))
-    return []
-
-
-@pytest.fixture
-def script_files(project_root):
-    """Find all script files in project."""
-    scripts_dir = project_root / 'scripts'
-    if scripts_dir.exists():
-        return list(scripts_dir.rglob('*.sh'))
-    return []
-
-
-def pytest_configure(config):
-    """Configure pytest."""
-    # Add custom markers
-    config.addinivalue_line('markers', 'unit: Unit tests (fast, isolated)')
-    config.addinivalue_line('markers', 'integration: Integration tests')
-    config.addinivalue_line('markers', 'e2e: End-to-end tests')
-    config.addinivalue_line('markers', 'slow: Slow tests (>1s)')
-    config.addinivalue_line('markers', 'database: Tests requiring database')
-    config.addinivalue_line('markers', 'benchmark: Performance benchmarks')
-
-
-def pytest_collection_modifyitems(config, items):
-    """Modify test collection."""
-    # Add markers based on test location
-    for item in items:
-        # Mark tests in unit/ directory as unit tests
-        if 'unit' in str(item.fspath):
-            item.add_marker(pytest.mark.unit)
-
-        # Mark tests in integration/ directory as integration tests
-        if 'integration' in str(item.fspath):
-            item.add_marker(pytest.mark.integration)
-
-        # Mark tests in e2e/ directory as e2e tests
-        if 'e2e' in str(item.fspath):
-            item.add_marker(pytest.mark.e2e)
-
-
-def pytest_runtest_setup(item):
-    """Setup before each test."""
-    # Skip database tests if no database
-    if item.get_closest_marker('database'):
-        try:
-            from baseball.core.db import get_db_connection
-
-            conn = get_db_connection()
-            conn.close()
-        except Exception:
-            pytest.skip('Database not available')
+    return BenchmarkLogger()

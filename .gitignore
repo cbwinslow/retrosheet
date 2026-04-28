@@ -120,6 +120,40 @@ models/*.pth
 # Next.js build artifacts
 baseball-chatbot-ui/.next/
 baseball-chatbot-ui/node_modules/
+baseball-chatbot-ui/.env.local
+baseball-chatbot-ui/.env.development.local
+baseball-chatbot-ui/.env.test.local
+baseball-chatbot-ui/.env.production.local
+
+# GitHub Actions temporary files
+.github/workflows/*.tmp
+.github/actions/*/node_modules/
+
+# Sourcegraph
+.sourcegraph/
+sourcegraph-data/
+
+# Experiment artifacts
+experiments/**/*.pkl
+experiments/**/*.json
+experiments/**/*.png
+experiments/**/*.csv
+
+# Logs directory
+logs/**/*
+!logs/.gitkeep
+
+# Results directory
+results/**/*
+!results/.gitkeep
+
+# Model checkpoints
+checkpoints/
+*.checkpoint
+
+# LLM cache
+llm_cache/
+.cache/
 
 # Python cache directories
 .pytest_cache/
