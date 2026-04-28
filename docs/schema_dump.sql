@@ -1,0 +1,23096 @@
+--
+-- PostgreSQL database dump
+--
+
+\restrict eZEBcIFKwrh9eyHCQdYFjDymxgCk51z3jeJAzXzZzfkAEsx4PlvUSB8t07fn0k6
+
+-- Dumped from database version 16.13 (Ubuntu 16.13-0ubuntu0.24.04.1)
+-- Dumped by pg_dump version 16.13 (Ubuntu 16.13-0ubuntu0.24.04.1)
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: analysis; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA analysis;
+
+
+--
+-- Name: baseball_savant; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA baseball_savant;
+
+
+--
+-- Name: bridge; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA bridge;
+
+
+--
+-- Name: SCHEMA bridge; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA bridge IS 'Cross-reference tables connecting Retrosheet and MLB identifiers';
+
+
+--
+-- Name: chat; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA chat;
+
+
+--
+-- Name: core; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA core;
+
+
+--
+-- Name: pg_cron; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION pg_cron; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pg_cron IS 'Job scheduler for PostgreSQL';
+
+
+--
+-- Name: eda; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA eda;
+
+
+--
+-- Name: features; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA features;
+
+
+--
+-- Name: features_pitch; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA features_pitch;
+
+
+--
+-- Name: SCHEMA features_pitch; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA features_pitch IS 'Pitch-level feature engineering schema with player-attributed rolling statistics';
+
+
+--
+-- Name: inference; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA inference;
+
+
+--
+-- Name: lahman; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA lahman;
+
+
+--
+-- Name: market_edges; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA market_edges;
+
+
+--
+-- Name: metadata; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA metadata;
+
+
+--
+-- Name: mlb; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA mlb;
+
+
+--
+-- Name: SCHEMA mlb; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA mlb IS 'MLB historical data from 2000-present, complementing Retrosheet data';
+
+
+--
+-- Name: mlb_enhanced; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA mlb_enhanced;
+
+
+--
+-- Name: mlb_features; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA mlb_features;
+
+
+--
+-- Name: mlb_models; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA mlb_models;
+
+
+--
+-- Name: models; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA models;
+
+
+--
+-- Name: predictions; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA predictions;
+
+
+--
+-- Name: raw_baseball_reference; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_baseball_reference;
+
+
+--
+-- Name: raw_bref; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_bref;
+
+
+--
+-- Name: raw_espn; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_espn;
+
+
+--
+-- Name: SCHEMA raw_espn; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA raw_espn IS 'Source-preserved ESPN API data for MLB games, schedules, and statistics';
+
+
+--
+-- Name: raw_external; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_external;
+
+
+--
+-- Name: raw_fangraphs; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_fangraphs;
+
+
+--
+-- Name: raw_lahman; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_lahman;
+
+
+--
+-- Name: raw_markets; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_markets;
+
+
+--
+-- Name: raw_mlb; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_mlb;
+
+
+--
+-- Name: raw_mlb_rosters; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_mlb_rosters;
+
+
+--
+-- Name: raw_park_factors; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_park_factors;
+
+
+--
+-- Name: raw_retrosheet; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_retrosheet;
+
+
+--
+-- Name: raw_sportradar; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_sportradar;
+
+
+--
+-- Name: raw_statcast; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA raw_statcast;
+
+
+--
+-- Name: test; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA test;
+
+
+--
+-- Name: validation; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA validation;
+
+
+--
+-- Name: warehouse; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA warehouse;
+
+
+--
+-- Name: SCHEMA warehouse; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA warehouse IS 'Warehouse rebuild orchestration and logging';
+
+
+--
+-- Name: plpython3u; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS plpython3u WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpython3u; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION plpython3u IS 'PL/Python3U untrusted procedural language';
+
+
+--
+-- Name: btree_gist; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION btree_gist; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION btree_gist IS 'support for indexing common datatypes in GiST';
+
+
+--
+-- Name: hstore; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS hstore WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION hstore; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION hstore IS 'data type for storing sets of (key, value) pairs';
+
+
+--
+-- Name: hypopg; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS hypopg WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION hypopg; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION hypopg IS 'Hypothetical indexes for PostgreSQL';
+
+
+--
+-- Name: intarray; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS intarray WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION intarray; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION intarray IS 'functions, operators, and index support for 1-D arrays of integers';
+
+
+--
+-- Name: ltree; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS ltree WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION ltree; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION ltree IS 'data type for hierarchical tree-like structures';
+
+
+--
+-- Name: pg_buffercache; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pg_buffercache WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pg_buffercache; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pg_buffercache IS 'examine the shared buffer cache';
+
+
+--
+-- Name: pg_freespacemap; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pg_freespacemap WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pg_freespacemap; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pg_freespacemap IS 'examine the free space map (FSM)';
+
+
+--
+-- Name: pg_prewarm; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pg_prewarm WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pg_prewarm; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pg_prewarm IS 'prewarm relation data';
+
+
+--
+-- Name: pg_stat_statements; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pg_stat_statements; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pg_stat_statements IS 'track planning and execution statistics of all SQL statements executed';
+
+
+--
+-- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+
+
+--
+-- Name: pgstattuple; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pgstattuple WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pgstattuple; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pgstattuple IS 'show tuple-level statistics';
+
+
+--
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION postgis IS 'PostGIS geometry and geography spatial types and functions';
+
+
+--
+-- Name: tablefunc; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS tablefunc WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION tablefunc; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION tablefunc IS 'functions that manipulate whole tables, including crosstab';
+
+
+--
+-- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
+--
+-- Name: xml2; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS xml2 WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION xml2; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION xml2 IS 'XPath querying and XSLT';
+
+
+--
+-- Name: game_state; Type: TYPE; Schema: inference; Owner: -
+--
+
+CREATE TYPE inference.game_state AS (
+	inning integer,
+	is_bottom_inning boolean,
+	outs_before integer,
+	start_bases integer,
+	balls integer,
+	strikes integer,
+	home_score_diff integer,
+	batter_hand text,
+	pitcher_hand text,
+	batter_prior_pa integer,
+	batter_prior_hit_rate numeric,
+	batter_prior_walk_rate numeric,
+	batter_prior_strikeout_rate numeric,
+	pitcher_prior_batters_faced integer,
+	pitcher_prior_hit_allowed_rate numeric,
+	pitcher_prior_walk_allowed_rate numeric,
+	pitcher_prior_strikeout_rate numeric,
+	batting_team_prior_win_rate numeric,
+	fielding_team_prior_win_rate numeric
+);
+
+
+--
+-- Name: calculate_mlb_data_quality(text); Type: FUNCTION; Schema: analysis; Owner: -
+--
+
+CREATE FUNCTION analysis.calculate_mlb_data_quality(game_id_param text) RETURNS numeric
+    LANGUAGE plpgsql
+    AS $$
+                DECLARE
+                    total_events int;
+                    events_with_players int;
+                    events_with_results int;
+                    score numeric(3,2) := 0.0;
+                BEGIN
+                    -- Get total events
+                    SELECT COUNT(*) INTO total_events
+                    FROM core.live_events
+                    WHERE game_id = game_id_param;
+
+                    IF total_events = 0 THEN
+                        RETURN 0.0;
+                    END IF;
+
+                    -- Check events with player data
+                    SELECT COUNT(*) INTO events_with_players
+                    FROM core.live_events
+                    WHERE game_id = game_id_param
+                      AND batter_id IS NOT NULL;
+
+                    -- Check events with result data
+                    SELECT COUNT(*) INTO events_with_results
+                    FROM core.live_events
+                    WHERE game_id = game_id_param
+                      AND event_result IS NOT NULL;
+
+                    -- Calculate score based on completeness
+                    score := score + (events_with_players::numeric / total_events) * 0.5;
+                    score := score + (events_with_results::numeric / total_events) * 0.5;
+
+                    RETURN ROUND(score, 2);
+                END;
+                $$;
+
+
+--
+-- Name: detect_duplicate_games(); Type: PROCEDURE; Schema: analysis; Owner: -
+--
+
+CREATE PROCEDURE analysis.detect_duplicate_games()
+    LANGUAGE plpgsql
+    AS $$
+                DECLARE
+                    dup_record record;
+                BEGIN
+                    RAISE NOTICE 'Checking for duplicate games...';
+
+                    FOR dup_record IN
+                        SELECT
+                            game_date,
+                            home_team_id,
+                            away_team_id,
+                            COUNT(*) as game_count,
+                            array_agg(game_id) as game_ids
+                        FROM core.live_games
+                        GROUP BY game_date, home_team_id, away_team_id
+                        HAVING COUNT(*) > 1
+                    LOOP
+                        RAISE WARNING 'Duplicate games found on % between teams % and %: % games (%)',
+                            dup_record.game_date,
+                            dup_record.home_team_id,
+                            dup_record.away_team_id,
+                            dup_record.game_count,
+                            dup_record.game_ids;
+                    END LOOP;
+
+                    RAISE NOTICE 'Duplicate detection complete';
+                END;
+                $$;
+
+
+--
+-- Name: get_data_completeness_report(); Type: FUNCTION; Schema: analysis; Owner: -
+--
+
+CREATE FUNCTION analysis.get_data_completeness_report() RETURNS TABLE(data_type text, total_records bigint, complete_records bigint, completeness_pct numeric)
+    LANGUAGE plpgsql
+    AS $$
+                BEGIN
+                    -- Games completeness
+                    RETURN QUERY
+                    SELECT
+                        'Games'::text as data_type,
+                        COUNT(*)::bigint as total_records,
+                        COUNT(CASE WHEN home_score IS NOT NULL AND away_score IS NOT NULL THEN 1 END)::bigint as complete_records,
+                        ROUND(
+                            COUNT(CASE WHEN home_score IS NOT NULL AND away_score IS NOT NULL THEN 1 END)::numeric
+                            / NULLIF(COUNT(*), 0) * 100,
+                            1
+                        ) as completeness_pct
+                    FROM core.live_games;
+
+                    -- Events completeness
+                    RETURN QUERY
+                    SELECT
+                        'Events'::text as data_type,
+                        COUNT(*)::bigint as total_records,
+                        COUNT(CASE WHEN batter_id IS NOT NULL AND event_result IS NOT NULL THEN 1 END)::bigint as complete_records,
+                        ROUND(
+                            COUNT(CASE WHEN batter_id IS NOT NULL AND event_result IS NOT NULL THEN 1 END)::numeric
+                            / NULLIF(COUNT(*), 0) * 100,
+                            1
+                        ) as completeness_pct
+                    FROM core.live_events;
+
+                    -- Players completeness
+                    RETURN QUERY
+                    SELECT
+                        'Players'::text as data_type,
+                        COUNT(*)::bigint as total_records,
+                        COUNT(CASE WHEN full_name IS NOT NULL AND primary_position IS NOT NULL THEN 1 END)::bigint as complete_records,
+                        ROUND(
+                            COUNT(CASE WHEN full_name IS NOT NULL AND primary_position IS NOT NULL THEN 1 END)::numeric
+                            / NULLIF(COUNT(*), 0) * 100,
+                            1
+                        ) as completeness_pct
+                    FROM mlb.players;
+                END;
+                $$;
+
+
+--
+-- Name: get_data_source_stats(); Type: FUNCTION; Schema: analysis; Owner: -
+--
+
+CREATE FUNCTION analysis.get_data_source_stats() RETURNS TABLE(data_source text, games_count bigint, events_count bigint, plate_appearances_count bigint, latest_game_date text)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * FROM (
+        SELECT
+            'historical'::text as data_source,
+            COUNT(*)::bigint as games_count,
+            (SELECT COUNT(*) FROM core.events)::bigint as events_count,
+            (SELECT COUNT(*) FROM core.plate_appearances)::bigint as plate_appearances_count,
+            MAX(game_date)::text as latest_game_date
+        FROM core.games
+
+        UNION ALL
+
+        SELECT
+            'live'::text as data_source,
+            COUNT(*)::bigint as games_count,
+            (SELECT COUNT(*) FROM core.live_events)::bigint as events_count,
+            (SELECT COUNT(*) FROM core.live_events WHERE is_plate_appearance = true)::bigint as plate_appearances_count,
+            MAX(game_date)::text as latest_game_date
+        FROM core.live_games
+
+        UNION ALL
+
+        SELECT
+            'combined'::text as data_source,
+            COUNT(*)::bigint as games_count,
+            (SELECT COUNT(*) FROM analysis.combined_events)::bigint as events_count,
+            (SELECT COUNT(*) FROM analysis.combined_plate_appearances)::bigint as plate_appearances_count,
+            MAX(game_date)::text as latest_game_date
+        FROM analysis.combined_games
+    ) stats
+    ORDER BY data_source;
+END;
+$$;
+
+
+--
+-- Name: get_player_season_stats(bigint, integer); Type: FUNCTION; Schema: analysis; Owner: -
+--
+
+CREATE FUNCTION analysis.get_player_season_stats(player_mlb_id bigint, season_year integer) RETURNS TABLE(games_played integer, plate_appearances integer, at_bats integer, hits integer, doubles integer, triples integer, homers integer, rbi integer, runs integer, batting_avg numeric, slugging_pct numeric, on_base_pct numeric)
+    LANGUAGE plpgsql
+    AS $$
+                BEGIN
+                    RETURN QUERY
+                    SELECT
+                        COUNT(DISTINCT g.game_id)::int as games_played,
+                        COUNT(CASE WHEN e.is_plate_appearance THEN 1 END)::int as plate_appearances,
+                        COUNT(CASE WHEN e.is_at_bat THEN 1 END)::int as at_bats,
+                        COUNT(CASE WHEN e.event_result = 'single' THEN 1 END)::int as hits,
+                        COUNT(CASE WHEN e.event_result = 'double' THEN 1 END)::int as doubles,
+                        COUNT(CASE WHEN e.event_result = 'triple' THEN 1 END)::int as triples,
+                        COUNT(CASE WHEN e.event_result = 'home_run' THEN 1 END)::int as homers,
+                        COALESCE(SUM(e.runs_batted_in), 0)::int as rbi,
+                        COUNT(CASE WHEN e.event_result IN ('single', 'double', 'triple', 'home_run') AND e.is_scoring_play THEN 1 END)::int as runs,
+                        ROUND(
+                            COUNT(CASE WHEN e.event_result IN ('single', 'double', 'triple', 'home_run') THEN 1 END)::numeric
+                            / NULLIF(COUNT(CASE WHEN e.is_at_bat THEN 1 END), 0),
+                            3
+                        ) as batting_avg,
+                        ROUND(
+                            (COUNT(CASE WHEN e.event_result IN ('single', 'double', 'triple', 'home_run') THEN 1 END)
+                           + COUNT(CASE WHEN e.event_result = 'double' THEN 1 END)
+                           + 2 * COUNT(CASE WHEN e.event_result = 'triple' THEN 1 END)
+                           + 3 * COUNT(CASE WHEN e.event_result = 'home_run' THEN 1 END))::numeric
+                            / NULLIF(COUNT(CASE WHEN e.is_at_bat THEN 1 END), 0),
+                            3
+                        ) as slugging_pct,
+                        ROUND(
+                            (COUNT(CASE WHEN e.event_result IN ('single', 'double', 'triple', 'home_run') THEN 1 END))::numeric
+                            / NULLIF(COUNT(CASE WHEN e.is_plate_appearance THEN 1 END), 0),
+                            3
+                        ) as on_base_pct
+                    FROM core.live_games g
+                    JOIN core.live_events e ON g.game_id = e.game_id
+                    WHERE e.batter_id = player_mlb_id
+                      AND EXTRACT(YEAR FROM g.game_date::date) = season_year
+                      AND e.is_plate_appearance = true;
+                END;
+                $$;
+
+
+--
+-- Name: get_recent_games(integer); Type: FUNCTION; Schema: analysis; Owner: -
+--
+
+CREATE FUNCTION analysis.get_recent_games(days_back integer DEFAULT 7) RETURNS TABLE(game_id text, game_date date, season integer, source_type text, home_team_id text, away_team_id text, home_score integer, away_score integer, home_win boolean)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        cg.game_id,
+        cg.game_date,
+        cg.season,
+        cg.source_type,
+        cg.home_team_id,
+        cg.away_team_id,
+        cg.home_score,
+        cg.away_score,
+        cg.home_win
+    FROM analysis.combined_games cg
+    WHERE cg.game_date >= CURRENT_DATE - INTERVAL '1 day' * days_back
+    ORDER BY cg.game_date DESC, cg.game_id;
+END;
+$$;
+
+
+--
+-- Name: get_team_season_stats(bigint, integer); Type: FUNCTION; Schema: analysis; Owner: -
+--
+
+CREATE FUNCTION analysis.get_team_season_stats(team_mlb_id bigint, season_year integer) RETURNS TABLE(games_played integer, wins integer, losses integer, win_pct numeric, runs_scored integer, runs_allowed integer, run_differential integer)
+    LANGUAGE plpgsql
+    AS $$
+                BEGIN
+                    RETURN QUERY
+                    SELECT
+                        COUNT(*)::int as games_played,
+                        COUNT(CASE WHEN
+                            ((g.home_team_id = team_mlb_id AND g.home_score > g.away_score) OR
+                             (g.away_team_id = team_mlb_id AND g.away_score > g.home_score))
+                            THEN 1 END)::int as wins,
+                        COUNT(CASE WHEN
+                            ((g.home_team_id = team_mlb_id AND g.home_score < g.away_score) OR
+                             (g.away_team_id = team_mlb_id AND g.away_score < g.home_score))
+                            THEN 1 END)::int as losses,
+                        ROUND(
+                            COUNT(CASE WHEN
+                                ((g.home_team_id = team_mlb_id AND g.home_score > g.away_score) OR
+                                 (g.away_team_id = team_mlb_id AND g.away_score > g.home_score))
+                                THEN 1 END)::numeric / COUNT(*),
+                            3
+                        ) as win_pct,
+                        SUM(CASE WHEN g.home_team_id = team_mlb_id THEN g.home_score ELSE g.away_score END)::int as runs_scored,
+                        SUM(CASE WHEN g.home_team_id = team_mlb_id THEN g.away_score ELSE g.home_score END)::int as runs_allowed,
+                        (SUM(CASE WHEN g.home_team_id = team_mlb_id THEN g.home_score ELSE g.away_score END) -
+                         SUM(CASE WHEN g.home_team_id = team_mlb_id THEN g.away_score ELSE g.home_score END))::int as run_differential
+                    FROM core.live_games g
+                    WHERE (g.home_team_id = team_mlb_id OR g.away_team_id = team_mlb_id)
+                      AND EXTRACT(YEAR FROM g.game_date::date) = season_year;
+                END;
+                $$;
+
+
+--
+-- Name: refresh_combined_data(); Type: FUNCTION; Schema: analysis; Owner: -
+--
+
+CREATE FUNCTION analysis.refresh_combined_data() RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Refresh materialized views
+    REFRESH MATERIALIZED VIEW analysis.combined_plate_appearances;
+
+    -- Log the refresh
+    INSERT INTO ingest_runs (script_name, status, message, completed_at)
+    VALUES ('analysis.refresh_combined_data', 'success',
+            'Refreshed combined analysis views', now());
+END;
+$$;
+
+
+--
+-- Name: refresh_mlb_analytics(); Type: PROCEDURE; Schema: analysis; Owner: -
+--
+
+CREATE PROCEDURE analysis.refresh_mlb_analytics()
+    LANGUAGE plpgsql
+    AS $$
+                BEGIN
+                    REFRESH MATERIALIZED VIEW analysis.mlb_season_batting_leaders;
+                    REFRESH MATERIALIZED VIEW analysis.mlb_season_pitching_leaders;
+                    REFRESH MATERIALIZED VIEW analysis.mlb_team_season_stats;
+
+                    RAISE NOTICE 'MLB analytical materialized views refreshed';
+                END;
+                $$;
+
+
+--
+-- Name: validate_mlb_data(); Type: PROCEDURE; Schema: analysis; Owner: -
+--
+
+CREATE PROCEDURE analysis.validate_mlb_data()
+    LANGUAGE plpgsql
+    AS $$
+                DECLARE
+                    invalid_games int;
+                    missing_players int;
+                    orphan_events int;
+                BEGIN
+                    -- Check for games with invalid scores
+                    SELECT COUNT(*) INTO invalid_games
+                    FROM core.live_games
+                    WHERE home_score < 0 OR away_score < 0;
+
+                    IF invalid_games > 0 THEN
+                        RAISE WARNING '% games have invalid scores', invalid_games;
+                    END IF;
+
+                    -- Check for events without corresponding games
+                    SELECT COUNT(*) INTO orphan_events
+                    FROM core.live_events e
+                    LEFT JOIN core.live_games g ON e.game_id = g.game_id
+                    WHERE g.game_id IS NULL;
+
+                    IF orphan_events > 0 THEN
+                        RAISE WARNING '% events have no corresponding game', orphan_events;
+                    END IF;
+
+                    -- Check for players referenced but not in player table
+                    SELECT COUNT(DISTINCT e.batter_id) INTO missing_players
+                    FROM core.live_events e
+                    LEFT JOIN mlb.players p ON e.batter_id = p.mlb_id
+                    WHERE p.mlb_id IS NULL AND e.batter_id IS NOT NULL;
+
+                    IF missing_players > 0 THEN
+                        RAISE WARNING '% players referenced in events but missing from player table', missing_players;
+                    END IF;
+
+                    RAISE NOTICE 'MLB data validation complete. Games: %, Orphan events: %, Missing players: %',
+                        invalid_games, orphan_events, missing_players;
+                END;
+                $$;
+
+
+--
+-- Name: gap_fill_player_xref_from_lahman(); Type: PROCEDURE; Schema: bridge; Owner: -
+--
+
+CREATE PROCEDURE bridge.gap_fill_player_xref_from_lahman()
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_new_from_lahman INTEGER := 0;
+    v_retro_added INTEGER := 0;
+    v_bbref_added INTEGER := 0;
+    v_name_updated INTEGER := 0;
+BEGIN
+    RAISE NOTICE 'Starting gap-fill from Lahman People table...';
+    
+    -- Step 1: Insert players from Lahman who have Retrosheet IDs but aren't in player_xref
+    INSERT INTO bridge.player_xref (
+        retrosheet_id,
+        baseball_reference_id,
+        name_first,
+        name_last,
+        source_notes,
+        updated_at,
+        confidence_score,
+        confidence_source
+    )
+    SELECT 
+        l.retrosheet_id,
+        l.baseball_reference_id,
+        l.name_first,
+        l.name_last,
+        jsonb_build_object(
+            'lahman_id', l.lahman_id,
+            'birth_date', l.birth_date,
+            'birth_country', l.birthcountry,
+            'birth_state', l.birthstate,
+            'birth_city', l.birthcity,
+            'death_date', l.death_date,
+            'weight', l.weight,
+            'height', l.height,
+            'bats', l.bats,
+            'throws', l.throws,
+            'debut', l.debut,
+            'final_game', l.final_game,
+            'gap_fill_source', 'Lahman People table',
+            'gap_fill_date', NOW()
+        ),
+        NOW(),
+        0.85,  -- Good confidence for Lahman
+        'Sean Lahman Baseball Database'
+    FROM bridge._staging_lahman_people l
+    WHERE l.retrosheet_id IS NOT NULL
+      AND l.retrosheet_id NOT IN (
+          SELECT retrosheet_id 
+          FROM bridge.player_xref 
+          WHERE retrosheet_id IS NOT NULL
+      );
+    
+    GET DIAGNOSTICS v_new_from_lahman = ROW_COUNT;
+    RAISE NOTICE 'Inserted % new players from Lahman with Retrosheet IDs', v_new_from_lahman;
+    
+    -- Step 2: Add missing Retrosheet IDs to existing MLB players (name match)
+    WITH name_matches AS (
+        SELECT 
+            px.player_xref_id,
+            l.retrosheet_id as lahman_retro_id,
+            l.name_first,
+            l.name_last
+        FROM bridge.player_xref px
+        JOIN bridge._staging_lahman_people l
+            ON px.name_first ILIKE l.name_first
+            AND px.name_last ILIKE l.name_last
+        WHERE px.retrosheet_id IS NULL
+          AND l.retrosheet_id IS NOT NULL
+          AND px.mlb_id IS NOT NULL  -- Only match if we have MLB ID
+    )
+    UPDATE bridge.player_xref px
+    SET 
+        retrosheet_id = nm.lahman_retro_id,
+        source_notes = source_notes || jsonb_build_object(
+            'lahman_id', (SELECT lahman_id FROM bridge._staging_lahman_people WHERE retrosheet_id = nm.lahman_retro_id),
+            'retrosheet_id_added_via', 'Lahman name match',
+            'retrosheet_id_added_date', NOW()
+        ),
+        updated_at = NOW(),
+        confidence_score = 0.75,  -- Slightly lower due to name-based matching
+        confidence_source = 'Lahman Database (name match)'
+    FROM name_matches nm
+    WHERE px.player_xref_id = nm.player_xref_id;
+    
+    GET DIAGNOSTICS v_retro_added = ROW_COUNT;
+    RAISE NOTICE 'Added Retrosheet IDs to % players via name matching', v_retro_added;
+    
+    -- Step 3: Add missing Baseball-Reference IDs
+    UPDATE bridge.player_xref px
+    SET 
+        baseball_reference_id = l.baseball_reference_id,
+        source_notes = source_notes || jsonb_build_object(
+            'bbref_id_added_via', 'Lahman match',
+            'bbref_id_added_date', NOW()
+        ),
+        updated_at = NOW()
+    FROM bridge._staging_lahman_people l
+    WHERE px.retrosheet_id = l.retrosheet_id
+      AND px.baseball_reference_id IS NULL
+      AND l.baseball_reference_id IS NOT NULL;
+    
+    GET DIAGNOSTICS v_bbref_added = ROW_COUNT;
+    RAISE NOTICE 'Added BBRef IDs to % players', v_bbref_added;
+    
+    -- Step 4: Update names for players with missing/blank names
+    UPDATE bridge.player_xref px
+    SET 
+        name_first = COALESCE(NULLIF(px.name_first, ''), l.name_first),
+        name_last = COALESCE(NULLIF(px.name_last, ''), l.name_last),
+        updated_at = NOW()
+    FROM bridge._staging_lahman_people l
+    WHERE px.retrosheet_id = l.retrosheet_id
+      AND (NULLIF(px.name_first, '') IS NULL OR NULLIF(px.name_last, '') IS NULL)
+      AND (l.name_first IS NOT NULL OR l.name_last IS NOT NULL);
+    
+    GET DIAGNOSTICS v_name_updated = ROW_COUNT;
+    RAISE NOTICE 'Updated names for % players', v_name_updated;
+    
+    -- Summary
+    RAISE NOTICE 'Lahman gap-fill complete: % new players, % retro added, % bbref added, % names updated',
+        v_new_from_lahman, v_retro_added, v_bbref_added, v_name_updated;
+END;
+$$;
+
+
+--
+-- Name: PROCEDURE gap_fill_player_xref_from_lahman(); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON PROCEDURE bridge.gap_fill_player_xref_from_lahman() IS 'Fills gaps in bridge.player_xref using Lahman People data: new players, missing Retrosheet IDs, missing BBRef IDs, and missing names.';
+
+
+--
+-- Name: get_bridge_test_summary(); Type: FUNCTION; Schema: bridge; Owner: -
+--
+
+CREATE FUNCTION bridge.get_bridge_test_summary() RETURNS TABLE(total_tests integer, passed_tests integer, failed_tests integer, pass_rate numeric, status text)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_total INTEGER;
+    v_passed INTEGER;
+    v_rate NUMERIC;
+BEGIN
+    SELECT 
+        COUNT(*),
+        COUNT(*) FILTER (WHERE t.passed = true)
+    INTO v_total, v_passed
+    FROM bridge.run_all_bridge_tests(false) t;
+    
+    v_rate := ROUND(v_passed::numeric / NULLIF(v_total, 0) * 100, 2);
+    
+    total_tests := v_total;
+    passed_tests := v_passed;
+    failed_tests := v_total - v_passed;
+    pass_rate := v_rate;
+    status := CASE 
+        WHEN v_rate = 100 THEN 'ALL TESTS PASSED'
+        WHEN v_rate >= 80 THEN 'ACCEPTABLE'
+        ELSE 'NEEDS ATTENTION'
+    END;
+    
+    RETURN NEXT;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION get_bridge_test_summary(); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON FUNCTION bridge.get_bridge_test_summary() IS 'Returns a summary of all bridge validation tests with pass/fail counts.';
+
+
+--
+-- Name: load_chadwick_from_csv(text, text); Type: FUNCTION; Schema: bridge; Owner: -
+--
+
+CREATE FUNCTION bridge.load_chadwick_from_csv(p_file_path text, p_suffix text) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_count INTEGER := 0;
+    v_sql TEXT;
+BEGIN
+    -- Use dynamic SQL with COPY command
+    -- Note: This requires file access on the PostgreSQL server
+    v_sql := format('COPY bridge._staging_chadwick_register (
+        key_uuid, key_mlbam, key_retro, key_bbref, key_fangraphs,
+        key_baseball_prospectus, key_cbs, key_espn, key_fanduel,
+        key_draftkings, key_yahoo, key_nfbc, key_rotowire, key_rotoworld,
+        key_kffl, name_first, name_last, name_full, name_given, name_matrilineal,
+        bats, throws, birth_year, birth_month, birth_day, death_year, death_month,
+        death_day, birth_city, birth_state, birth_country, death_city, death_state,
+        death_country, weight, height, debut, final_game, mlb_played_first,
+        mlb_played_last, retro_played_first, retro_played_last, college, college_id,
+        high_school, high_school_id, bats_throws_source, birth_source, death_source,
+        weight_height_source, debut_source, mlb_organization, mlb_position,
+        twitter_id, wikipedia_id, gelb_id, lahman_id
+    ) FROM %L WITH (FORMAT CSV, HEADER true)', p_file_path);
+    
+    EXECUTE v_sql;
+    
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    
+    -- Update source tracking
+    UPDATE bridge._staging_chadwick_register
+    SET source_timestamp = NOW()
+    WHERE key_uuid IN (
+        SELECT key_uuid FROM bridge._staging_chadwick_register
+        ORDER BY loaded_at DESC LIMIT v_count
+    );
+    
+    RETURN v_count;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Error loading %: %', p_file_path, SQLERRM;
+    RETURN 0;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION load_chadwick_from_csv(p_file_path text, p_suffix text); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON FUNCTION bridge.load_chadwick_from_csv(p_file_path text, p_suffix text) IS 'Loads a Chadwick Register CSV file into the staging table. Returns number of rows loaded.';
+
+
+--
+-- Name: load_lahman_to_staging(); Type: PROCEDURE; Schema: bridge; Owner: -
+--
+
+CREATE PROCEDURE bridge.load_lahman_to_staging()
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_count INTEGER := 0;
+BEGIN
+    -- Clear staging table
+    TRUNCATE bridge._staging_lahman_people;
+    
+    -- Load from raw_lahman.people
+    INSERT INTO bridge._staging_lahman_people (
+        lahman_id, retrosheet_id, baseball_reference_id,
+        name_first, name_last, name_given, birth_date,
+        birthcountry, birthstate, birthcity, death_date,
+        weight, height, bats, throws, debut, final_game, loaded_at
+    )
+    SELECT 
+        playerid,
+        retroid,
+        bbrefid,
+        namefirst,
+        namelast,
+        namegiven,
+        CASE 
+            WHEN birthyear IS NOT NULL 
+            THEN MAKE_DATE(birthyear, COALESCE(birthmonth, 1), COALESCE(birthday, 1))
+            ELSE NULL 
+        END,
+        birthcountry,
+        birthstate,
+        birthcity,
+        CASE 
+            WHEN deathyear IS NOT NULL 
+            THEN MAKE_DATE(deathyear, COALESCE(deathmonth, 1), COALESCE(deathday, 1))
+            ELSE NULL 
+        END,
+        weight,
+        height,
+        bats,
+        throws,
+        debut,
+        finalgame,
+        NOW()
+    FROM raw_lahman.people;
+    
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    
+    RAISE NOTICE 'Loaded % records from raw_lahman.people to staging', v_count;
+END;
+$$;
+
+
+--
+-- Name: PROCEDURE load_lahman_to_staging(); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON PROCEDURE bridge.load_lahman_to_staging() IS 'Loads raw_lahman.people data into bridge._staging_lahman_people for gap-filling operations.';
+
+
+--
+-- Name: populate_all_bridge_tables(boolean); Type: PROCEDURE; Schema: bridge; Owner: -
+--
+
+CREATE PROCEDURE bridge.populate_all_bridge_tables(IN include_player_xref boolean DEFAULT false)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    game_xref_count INTEGER;
+    team_xref_count INTEGER;
+    coach_xref_count INTEGER;
+    umpire_xref_count INTEGER;
+    park_xref_count INTEGER;
+    player_xref_count INTEGER := 0;
+    start_time TIMESTAMP;
+    end_time TIMESTAMP;
+BEGIN
+    start_time := NOW();
+    
+    RAISE NOTICE '========================================';
+    RAISE NOTICE 'Starting Bridge Table Population';
+    RAISE NOTICE '========================================';
+    
+    -- Step 1: Populate season-aware team_xref
+    RAISE NOTICE '';
+    RAISE NOTICE '[1/6] Populating season-aware team_xref...';
+    CALL bridge.populate_season_aware_team_xref(team_xref_count);
+    RAISE NOTICE '  Teams updated: %', team_xref_count;
+    
+    -- Step 2: Populate park_xref
+    RAISE NOTICE '';
+    RAISE NOTICE '[2/6] Populating park_xref...';
+    CALL bridge.populate_park_xref(park_xref_count);
+    RAISE NOTICE '  Parks updated: %', park_xref_count;
+    
+    -- Step 3: Populate game_xref (depends on team_xref)
+    RAISE NOTICE '';
+    RAISE NOTICE '[3/6] Populating game_xref...';
+    CALL bridge.populate_game_xref(game_xref_count);
+    RAISE NOTICE '  Games matched: %', game_xref_count;
+    
+    -- Step 4: Populate coach_xref
+    RAISE NOTICE '';
+    RAISE NOTICE '[4/6] Populating coach_xref...';
+    CALL bridge.populate_coach_xref(coach_xref_count);
+    RAISE NOTICE '  Coaches populated: %', coach_xref_count;
+    
+    -- Step 5: Populate umpire_xref
+    RAISE NOTICE '';
+    RAISE NOTICE '[5/6] Populating umpire_xref...';
+    CALL bridge.populate_umpire_xref(umpire_xref_count);
+    RAISE NOTICE '  Umpires populated: %', umpire_xref_count;
+    
+    -- Step 6: Populate player_xref (optional, requires temp table)
+    IF include_player_xref THEN
+        RAISE NOTICE '';
+        RAISE NOTICE '[6/6] Populating player_xref...';
+        CALL bridge.populate_player_xref(player_xref_count);
+        RAISE NOTICE '  Players inserted: %', player_xref_count;
+    ELSE
+        RAISE NOTICE '';
+        RAISE NOTICE '[6/6] Skipping player_xref (requires temp table with Chadwick data)';
+        RAISE NOTICE '      Use scripts/bridge/populate_bridge_tables.py for player_xref';
+    END IF;
+    
+    end_time := NOW();
+    
+    -- Print summary
+    RAISE NOTICE '';
+    RAISE NOTICE '========================================';
+    RAISE NOTICE 'Bridge Table Population Summary';
+    RAISE NOTICE '========================================';
+    RAISE NOTICE 'Season-aware team_xref: %', team_xref_count;
+    RAISE NOTICE 'Park_xref: %', park_xref_count;
+    RAISE NOTICE 'Game_xref: %', game_xref_count;
+    RAISE NOTICE 'Coach_xref: %', coach_xref_count;
+    RAISE NOTICE 'Umpire_xref: %', umpire_xref_count;
+    IF include_player_xref THEN
+        RAISE NOTICE 'Player_xref: %', player_xref_count;
+    END IF;
+    RAISE NOTICE 'Total time: %', end_time - start_time;
+    RAISE NOTICE '========================================';
+END;
+$$;
+
+
+--
+-- Name: PROCEDURE populate_all_bridge_tables(IN include_player_xref boolean); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON PROCEDURE bridge.populate_all_bridge_tables(IN include_player_xref boolean) IS 'Master orchestrator that calls all bridge table population procedures in the correct dependency order.';
+
+
+--
+-- Name: populate_coach_xref(); Type: PROCEDURE; Schema: bridge; Owner: -
+--
+
+CREATE PROCEDURE bridge.populate_coach_xref(OUT coach_count integer)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Extract unique coaches from raw_retrosheet.coaches
+    -- Join with biofile_legacy to get coach names (coach_id matches player_id)
+    INSERT INTO bridge.coach_xref (retrosheet_coach_id, source_system, coach_name, confidence_score, confidence_source)
+    SELECT DISTINCT 
+        c.coach_id,
+        'retrosheet' as source_system,
+        COALESCE(b.use_name, b.full_name, b.last_name, c.coach_id) as coach_name,
+        0.9 as confidence_score,
+        'biofile_legacy_name_match' as confidence_source
+    FROM raw_retrosheet.coaches c
+    LEFT JOIN raw_retrosheet.biofile_legacy b ON c.coach_id = b.player_id
+    WHERE c.coach_id IS NOT NULL
+    ON CONFLICT (retrosheet_coach_id) DO UPDATE SET
+        coach_name = EXCLUDED.coach_name,
+        confidence_score = EXCLUDED.confidence_score,
+        confidence_source = EXCLUDED.confidence_source,
+        updated_at = NOW();
+
+    GET DIAGNOSTICS coach_count = ROW_COUNT;
+    RAISE NOTICE 'Populated % coaches in bridge.coach_xref with names from biofile_legacy', coach_count;
+END;
+$$;
+
+
+--
+-- Name: PROCEDURE populate_coach_xref(OUT coach_count integer); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON PROCEDURE bridge.populate_coach_xref(OUT coach_count integer) IS 'Populate bridge.coach_xref from raw_retrosheet.coaches with names from biofile_legacy.';
+
+
+--
+-- Name: populate_game_xref(); Type: PROCEDURE; Schema: bridge; Owner: -
+--
+
+CREATE PROCEDURE bridge.populate_game_xref(OUT matched_count integer)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Match games using date, team IDs, and game number to handle doubleheaders
+    -- Extract MLB team IDs, date, and game number from raw_payload JSON
+    -- Use DISTINCT ON to pick one match per mlb_game_pk to avoid duplicates
+    WITH mlb_games AS (
+        SELECT 
+            lg.mlb_game_pk,
+            (lg.raw_payload->'gameData'->'datetime'->>'originalDate')::date AS game_date,
+            (lg.raw_payload->'gameData'->'game'->>'gameNumber')::int AS game_number,
+            (lg.raw_payload->'gameData'->'teams'->'home'->>'id')::int AS mlb_home_id,
+            (lg.raw_payload->'gameData'->'teams'->'away'->>'id')::int AS mlb_away_id
+        FROM core.live_games lg
+        WHERE lg.mlb_game_pk IS NOT NULL
+        AND lg.raw_payload IS NOT NULL
+        AND (lg.raw_payload->'gameData'->'datetime'->>'originalDate') IS NOT NULL
+    ),
+    matched_games AS (
+        SELECT DISTINCT ON (mg.mlb_game_pk)
+            rg.game_id AS retrosheet_game_id,
+            mg.mlb_game_pk,
+            rg.game_date,
+            rg.home_team_id AS retrosheet_home_team_id,
+            rg.away_team_id AS retrosheet_away_team_id,
+            mg.mlb_home_id AS mlb_home_team_id,
+            mg.mlb_away_id AS mlb_away_team_id
+        FROM core.games rg
+        JOIN mlb_games mg ON rg.game_date = mg.game_date
+        JOIN bridge.team_xref txh ON mg.mlb_home_id = txh.mlb_team_id AND rg.home_team_id = txh.retrosheet_team_id
+        JOIN bridge.team_xref txa ON mg.mlb_away_id = txa.mlb_team_id AND rg.away_team_id = txa.retrosheet_team_id
+        ORDER BY mg.mlb_game_pk, COALESCE(rg.game_number, 0) = COALESCE(mg.game_number, 0) DESC
+    )
+    INSERT INTO bridge.game_xref (
+        retrosheet_game_id,
+        mlb_game_pk,
+        game_date,
+        retrosheet_home_team_id,
+        retrosheet_away_team_id,
+        mlb_home_team_id,
+        mlb_away_team_id
+    )
+    SELECT 
+        retrosheet_game_id,
+        mlb_game_pk,
+        game_date,
+        retrosheet_home_team_id,
+        retrosheet_away_team_id,
+        mlb_home_team_id,
+        mlb_away_team_id
+    FROM matched_games
+    ON CONFLICT (retrosheet_game_id) DO UPDATE SET
+        mlb_game_pk = EXCLUDED.mlb_game_pk,
+        game_date = EXCLUDED.game_date,
+        retrosheet_home_team_id = EXCLUDED.retrosheet_home_team_id,
+        retrosheet_away_team_id = EXCLUDED.retrosheet_away_team_id,
+        mlb_home_team_id = EXCLUDED.mlb_home_team_id,
+        mlb_away_team_id = EXCLUDED.mlb_away_team_id;
+
+    GET DIAGNOSTICS matched_count = ROW_COUNT;
+    
+    RAISE NOTICE 'Matched and inserted % games in bridge.game_xref', matched_count;
+END;
+$$;
+
+
+--
+-- Name: PROCEDURE populate_game_xref(OUT matched_count integer); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON PROCEDURE bridge.populate_game_xref(OUT matched_count integer) IS 'Populate bridge.game_xref by matching games between Retrosheet and MLB using date, team IDs, and game number.';
+
+
+--
+-- Name: populate_park_xref(); Type: PROCEDURE; Schema: bridge; Owner: -
+--
+
+CREATE PROCEDURE bridge.populate_park_xref(OUT updated_count integer)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    venue_record RECORD;
+    mapped_park_id TEXT;
+    skipped_count INTEGER := 0;
+    updated_count INTEGER := 0;
+BEGIN
+    -- Create temporary table with static MLB venue ID to Retrosheet park ID mappings
+    -- These mappings prioritize stable venue ids over name-alias drift
+    CREATE TEMP TABLE venue_mapping (
+        mlb_venue_id INTEGER PRIMARY KEY,
+        retrosheet_park_id TEXT
+    ) ON COMMIT DROP;
+    
+    INSERT INTO venue_mapping (mlb_venue_id, retrosheet_park_id) VALUES
+        (1, 'ANA01'),
+        (2, 'BAL12'),
+        (3, 'BOS07'),
+        (4, 'CHI12'),
+        (5, 'CLE08'),
+        (7, 'KAN06'),
+        (8, 'MIN03'),
+        (9, 'NYC16'),
+        (10, 'OAK01'),
+        (12, 'STP01'),
+        (13, 'ARL02'),
+        (14, 'TOR02'),
+        (15, 'PHO01'),
+        (16, 'ATL02'),
+        (17, 'CHI11'),
+        (18, 'CIN08'),
+        (19, 'DEN02'),
+        (20, 'MIA01'),
+        (22, 'LOS03'),
+        (23, 'MIL05'),
+        (24, 'MON02'),
+        (25, 'NYC17'),
+        (26, 'PHI12'),
+        (27, 'PIT07'),
+        (28, 'SAN01'),
+        (30, 'STL09'),
+        (31, 'PIT08'),
+        (32, 'MIL06'),
+        (680, 'SEA03'),
+        (2392, 'HOU03'),
+        (2394, 'DET05'),
+        (2395, 'SFO03'),
+        (2523, 'TAM02'),
+        (2602, 'CIN09'),
+        (2680, 'SAN02'),
+        (2681, 'PHI13'),
+        (2721, 'WAS10'),
+        (2889, 'STL10'),
+        (3289, 'NYC20'),
+        (3309, 'WAS11'),
+        (3312, 'MIN04'),
+        (3313, 'NYC21'),
+        (4169, 'MIA02'),
+        (4705, 'ATL03'),
+        (5325, 'ARL03');
+
+    -- Get distinct venues from MLB API teams data
+    FOR venue_record IN
+        SELECT DISTINCT ON (venue_id)
+            venue_id,
+            venue_name,
+            season
+        FROM core.mlb_api_teams
+        WHERE venue_id IS NOT NULL
+        ORDER BY venue_id, season DESC
+    LOOP
+        -- Look up Retrosheet park ID from mapping table
+        SELECT venue_mapping.retrosheet_park_id INTO mapped_park_id
+        FROM venue_mapping
+        WHERE mlb_venue_id = venue_record.venue_id;
+        
+        IF mapped_park_id IS NOT NULL THEN
+            -- Update existing bridge.park_xref row
+            UPDATE bridge.park_xref
+            SET mlb_venue_id = venue_record.venue_id,
+                updated_at = NOW()
+            WHERE bridge.park_xref.retrosheet_park_id = mapped_park_id;
+            
+            IF FOUND THEN
+                updated_count := updated_count + 1;
+            ELSE
+                skipped_count := skipped_count + 1;
+                RAISE NOTICE 'Skipped venue_id % (%): missing bridge.park_xref row for %',
+                    venue_record.venue_id, venue_record.venue_name, mapped_park_id;
+            END IF;
+        ELSE
+            skipped_count := skipped_count + 1;
+            RAISE NOTICE 'Skipped venue_id % (%): no canonical venue mapping',
+                venue_record.venue_id, venue_record.venue_name;
+        END IF;
+    END LOOP;
+    
+    RAISE NOTICE 'Total park mappings updated: %', updated_count;
+    RAISE NOTICE 'Total park mappings skipped: %', skipped_count;
+END;
+$$;
+
+
+--
+-- Name: PROCEDURE populate_park_xref(OUT updated_count integer); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON PROCEDURE bridge.populate_park_xref(OUT updated_count integer) IS 'Populate bridge.park_xref with MLB venue id mappings using static mapping table for 2000-2025 venues.';
+
+
+--
+-- Name: populate_player_xref(); Type: PROCEDURE; Schema: bridge; Owner: -
+--
+
+CREATE PROCEDURE bridge.populate_player_xref(OUT inserted_count integer)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    has_canonical_schema BOOLEAN;
+BEGIN
+    -- Check if canonical schema exists (retrosheet_player_id vs retrosheet_id)
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'bridge' AND table_name = 'player_xref'
+        AND column_name = 'retrosheet_player_id'
+    ) INTO has_canonical_schema;
+    
+    IF has_canonical_schema THEN
+        -- Canonical schema: use retrosheet_player_id, mlb_player_id, chadwick_register_id
+        INSERT INTO bridge.player_xref (
+            retrosheet_player_id, mlb_player_id, chadwick_register_id,
+            first_name, last_name, bats, throws
+        )
+        SELECT 
+            retrosheet_player_id,
+            mlb_player_id,
+            chadwick_register_id,
+            first_name,
+            last_name,
+            bats,
+            throws
+        FROM temp_table.chadwick_player_data
+        WHERE retrosheet_player_id IS NOT NULL
+        ON CONFLICT (retrosheet_player_id) DO UPDATE
+            SET mlb_player_id = EXCLUDED.mlb_player_id,
+                chadwick_register_id = EXCLUDED.chadwick_register_id,
+                first_name = EXCLUDED.first_name,
+                last_name = EXCLUDED.last_name,
+                bats = EXCLUDED.bats,
+                throws = EXCLUDED.throws,
+                updated_at = NOW();
+    ELSE
+        -- Legacy schema: use retrosheet_id, mlb_id, baseball_reference_id
+        INSERT INTO bridge.player_xref (
+            retrosheet_id, mlb_id, baseball_reference_id,
+            name_first, name_last, source_notes, updated_at
+        )
+        SELECT 
+            retrosheet_player_id as retrosheet_id,
+            mlb_player_id as mlb_id,
+            baseball_reference_id,
+            first_name as name_first,
+            last_name as name_last,
+            jsonb_build_object(
+                'chadwick_register_id', chadwick_register_id,
+                'bats', bats,
+                'throws', throws
+            ) as source_notes,
+            NOW()
+        FROM temp_table.chadwick_player_data
+        WHERE retrosheet_player_id IS NOT NULL
+        ON CONFLICT (retrosheet_id) DO UPDATE
+            SET mlb_id = EXCLUDED.mlb_id,
+                baseball_reference_id = EXCLUDED.baseball_reference_id,
+                name_first = EXCLUDED.name_first,
+                name_last = EXCLUDED.name_last,
+                source_notes = EXCLUDED.source_notes,
+                updated_at = NOW();
+    END IF;
+    
+    GET DIAGNOSTICS inserted_count = ROW_COUNT;
+    RAISE NOTICE 'Total player mappings inserted: %', inserted_count;
+END;
+$$;
+
+
+--
+-- Name: PROCEDURE populate_player_xref(OUT inserted_count integer); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON PROCEDURE bridge.populate_player_xref(OUT inserted_count integer) IS 'Populate bridge.player_xref from temp_table.chadwick_player_data containing parsed Chadwick Bureau Register data.';
+
+
+--
+-- Name: populate_season_aware_team_xref(); Type: PROCEDURE; Schema: bridge; Owner: -
+--
+
+CREATE PROCEDURE bridge.populate_season_aware_team_xref(OUT updated_count integer)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- First, populate basic season ranges for all teams from core.games
+    UPDATE bridge.team_xref tx
+    SET 
+        valid_from_season = g.first_season,
+        valid_to_season = CASE WHEN g.last_season >= 2025 THEN NULL ELSE g.last_season END
+    FROM (
+        SELECT 
+            team_id,
+            MIN(season) as first_season,
+            MAX(season) as last_season
+        FROM (
+            SELECT home_team_id as team_id, season FROM core.games
+            UNION ALL
+            SELECT away_team_id as team_id, season FROM core.games
+        ) all_games
+        GROUP BY team_id
+    ) g
+    WHERE tx.retrosheet_team_id = g.team_id;
+
+    GET DIAGNOSTICS updated_count = ROW_COUNT;
+    RAISE NOTICE 'Updated % teams with basic season ranges', updated_count;
+
+    -- Handle franchise moves by inserting new entries for historical teams
+    -- Montreal Expos -> Washington Nationals
+    INSERT INTO bridge.team_xref (retrosheet_team_id, mlb_team_id, abbreviation, name, valid_from_season, valid_to_season)
+    VALUES ('MON', 120, 'MON', 'Montreal Expos', 1969, 2004)
+    ON CONFLICT (retrosheet_team_id) DO UPDATE SET
+        valid_from_season = EXCLUDED.valid_from_season,
+        valid_to_season = EXCLUDED.valid_to_season;
+
+    -- Florida Marlins -> Miami Marlins
+    INSERT INTO bridge.team_xref (retrosheet_team_id, mlb_team_id, abbreviation, name, valid_from_season, valid_to_season)
+    VALUES ('FLO', 146, 'FLO', 'Florida Marlins', 1993, 2011)
+    ON CONFLICT (retrosheet_team_id) DO UPDATE SET
+        valid_from_season = EXCLUDED.valid_from_season,
+        valid_to_season = EXCLUDED.valid_to_season;
+
+    -- Update Washington Nationals to show it started in 2005
+    UPDATE bridge.team_xref
+    SET valid_from_season = 2005
+    WHERE retrosheet_team_id = 'WAS';
+
+    -- Update Miami Marlins to show it started in 2012
+    UPDATE bridge.team_xref
+    SET valid_from_season = 2012
+    WHERE retrosheet_team_id = 'MIA';
+
+    RAISE NOTICE 'Added franchise move entries for MON->WAS and FLO->MIA';
+END;
+$$;
+
+
+--
+-- Name: PROCEDURE populate_season_aware_team_xref(OUT updated_count integer); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON PROCEDURE bridge.populate_season_aware_team_xref(OUT updated_count integer) IS 'Populate bridge.team_xref with valid_from_season and valid_to_season based on core.games data, including franchise move handling.';
+
+
+--
+-- Name: populate_umpire_xref(); Type: PROCEDURE; Schema: bridge; Owner: -
+--
+
+CREATE PROCEDURE bridge.populate_umpire_xref(OUT umpire_count integer)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Extract unique umpires from raw_retrosheet.season_umpires
+    -- Cross-reference with biofile_legacy for players who became umpires
+    -- Use DISTINCT ON to handle duplicates properly
+    INSERT INTO bridge.umpire_xref (retrosheet_umpire_id, source_system, umpire_name, confidence_score, confidence_source)
+    SELECT DISTINCT ON (u.umpire_id)
+        u.umpire_id,
+        'retrosheet' as source_system,
+        COALESCE(
+            CASE WHEN b.player_id IS NOT NULL THEN b.use_name || ' (former player)' END,
+            u.first_name || ' ' || u.last_name
+        ) as umpire_name,
+        CASE WHEN b.player_id IS NOT NULL THEN 0.9 ELSE 0.7 END as confidence_score,
+        CASE WHEN b.player_id IS NOT NULL THEN 'biofile_legacy_player_match' ELSE 'retrosheet_name_only' END as confidence_source
+    FROM raw_retrosheet.season_umpires u
+    LEFT JOIN raw_retrosheet.biofile_legacy b ON 
+        (u.last_name = b.last_name OR u.last_name = b.use_name)
+        AND b.umpire_debut IS NOT NULL
+    WHERE u.umpire_id IS NOT NULL
+    ORDER BY u.umpire_id, u.season
+    ON CONFLICT (retrosheet_umpire_id) DO UPDATE SET
+        umpire_name = EXCLUDED.umpire_name,
+        confidence_score = EXCLUDED.confidence_score,
+        confidence_source = EXCLUDED.confidence_source,
+        updated_at = NOW();
+
+    GET DIAGNOSTICS umpire_count = ROW_COUNT;
+    RAISE NOTICE 'Populated % umpires in bridge.umpire_xref with biofile_legacy cross-reference', umpire_count;
+END;
+$$;
+
+
+--
+-- Name: PROCEDURE populate_umpire_xref(OUT umpire_count integer); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON PROCEDURE bridge.populate_umpire_xref(OUT umpire_count integer) IS 'Populate bridge.umpire_xref from raw_retrosheet.season_umpires with biofile_legacy cross-reference.';
+
+
+--
+-- Name: run_all_bridge_tests(boolean); Type: FUNCTION; Schema: bridge; Owner: -
+--
+
+CREATE FUNCTION bridge.run_all_bridge_tests(p_verbose boolean DEFAULT true) RETURNS TABLE(test_name text, passed boolean, actual_value text, expected_value text, details text)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Run all individual tests
+    RETURN QUERY SELECT * FROM bridge.test_player_xref_mlb_coverage(95.0);
+    RETURN QUERY SELECT * FROM bridge.test_player_xref_retrosheet_coverage(20.0);
+    RETURN QUERY SELECT * FROM bridge.test_player_xref_mlb_id_unique();
+    RETURN QUERY SELECT * FROM bridge.test_player_xref_retrosheet_id_unique();
+    RETURN QUERY SELECT * FROM bridge.test_game_xref_complete_coverage();
+    RETURN QUERY SELECT * FROM bridge.test_pitch_data_player_coverage(100.0);
+    RETURN QUERY SELECT * FROM bridge.test_team_xref_retrosheet_coverage(100.0);
+    RETURN QUERY SELECT * FROM bridge.test_park_xref_retrosheet_coverage(100.0);
+END;
+$$;
+
+
+--
+-- Name: FUNCTION run_all_bridge_tests(p_verbose boolean); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON FUNCTION bridge.run_all_bridge_tests(p_verbose boolean) IS 'Runs all bridge table validation tests and returns consolidated results.';
+
+
+--
+-- Name: test_game_xref_complete_coverage(); Type: FUNCTION; Schema: bridge; Owner: -
+--
+
+CREATE FUNCTION bridge.test_game_xref_complete_coverage() RETURNS TABLE(test_name text, passed boolean, actual_value text, expected_value text, details text)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_total INTEGER;
+    v_with_mlb INTEGER;
+    v_with_retro INTEGER;
+    v_pct_mlb NUMERIC;
+    v_pct_retro NUMERIC;
+BEGIN
+    test_name := 'game_xref_complete_coverage';
+    expected_value := '100% for both IDs';
+    
+    SELECT 
+        COUNT(*),
+        COUNT(mlb_game_pk),
+        COUNT(retrosheet_game_id)
+    INTO v_total, v_with_mlb, v_with_retro
+    FROM bridge.game_xref;
+    
+    v_pct_mlb := ROUND(v_with_mlb::numeric / NULLIF(v_total, 0) * 100, 2);
+    v_pct_retro := ROUND(v_with_retro::numeric / NULLIF(v_total, 0) * 100, 2);
+    
+    passed := v_pct_mlb = 100 AND v_pct_retro = 100;
+    actual_value := format('MLB: %s%%, Retro: %s%%', v_pct_mlb, v_pct_retro);
+    details := format('Total games: %s, MLB coverage: %s%%, Retrosheet coverage: %s%%', 
+                      v_total, v_pct_mlb, v_pct_retro);
+    
+    RETURN NEXT;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION test_game_xref_complete_coverage(); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON FUNCTION bridge.test_game_xref_complete_coverage() IS 'Validates that all game_xref records have both MLB and Retrosheet IDs.';
+
+
+--
+-- Name: test_park_xref_retrosheet_coverage(numeric); Type: FUNCTION; Schema: bridge; Owner: -
+--
+
+CREATE FUNCTION bridge.test_park_xref_retrosheet_coverage(p_min_pct numeric DEFAULT 100.0) RETURNS TABLE(test_name text, passed boolean, actual_value text, expected_value text, details text)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_total INTEGER;
+    v_with_retro INTEGER;
+    v_pct NUMERIC;
+BEGIN
+    test_name := 'park_xref_retrosheet_coverage';
+    expected_value := format('>=%s%%', p_min_pct);
+    
+    SELECT COUNT(*), COUNT(retrosheet_park_id)
+    INTO v_total, v_with_retro
+    FROM bridge.park_xref;
+    
+    v_pct := ROUND(v_with_retro::numeric / NULLIF(v_total, 0) * 100, 2);
+    
+    passed := v_pct >= p_min_pct;
+    actual_value := format('%s%% (%s/%s)', v_pct, v_with_retro, v_total);
+    details := format('Park xref: %s total, %s with Retrosheet ID (%s%%)', 
+                      v_total, v_with_retro, v_pct);
+    
+    RETURN NEXT;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION test_park_xref_retrosheet_coverage(p_min_pct numeric); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON FUNCTION bridge.test_park_xref_retrosheet_coverage(p_min_pct numeric) IS 'Validates park_xref Retrosheet ID coverage.';
+
+
+--
+-- Name: test_pitch_data_player_coverage(numeric); Type: FUNCTION; Schema: bridge; Owner: -
+--
+
+CREATE FUNCTION bridge.test_pitch_data_player_coverage(p_min_pct numeric DEFAULT 100.0) RETURNS TABLE(test_name text, passed boolean, actual_value text, expected_value text, details text)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_total_players INTEGER;
+    v_linked_players INTEGER;
+    v_pct NUMERIC;
+BEGIN
+    test_name := 'pitch_data_player_coverage';
+    expected_value := format('>=%s%%', p_min_pct);
+    
+    WITH all_pitch_players AS (
+        SELECT DISTINCT pitcher_id as player_id FROM features_pitch.base_features
+        UNION
+        SELECT DISTINCT batter_id as player_id FROM features_pitch.base_features
+    )
+    SELECT 
+        COUNT(*),
+        COUNT(*) FILTER (WHERE px.player_xref_id IS NOT NULL)
+    INTO v_total_players, v_linked_players
+    FROM all_pitch_players app
+    LEFT JOIN bridge.player_xref px 
+        ON app.player_id::text = px.mlb_id::text;
+    
+    v_pct := ROUND(v_linked_players::numeric / NULLIF(v_total_players, 0) * 100, 2);
+    
+    passed := v_pct >= p_min_pct;
+    actual_value := format('%s%% (%s/%s)', v_pct, v_linked_players, v_total_players);
+    details := CASE 
+        WHEN passed THEN format('All %s pitch data players linked to bridge', v_total_players)
+        ELSE format('Only %s%% of %s pitch data players linked', v_pct, v_total_players)
+    END;
+    
+    RETURN NEXT;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION test_pitch_data_player_coverage(p_min_pct numeric); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON FUNCTION bridge.test_pitch_data_player_coverage(p_min_pct numeric) IS 'Validates that pitch data players (batters and pitchers) are linked to bridge.player_xref.';
+
+
+--
+-- Name: test_player_xref_mlb_coverage(numeric); Type: FUNCTION; Schema: bridge; Owner: -
+--
+
+CREATE FUNCTION bridge.test_player_xref_mlb_coverage(p_min_pct numeric DEFAULT 95.0) RETURNS TABLE(test_name text, passed boolean, actual_value text, expected_value text, details text)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_total INTEGER;
+    v_with_mlb INTEGER;
+    v_pct NUMERIC;
+BEGIN
+    test_name := 'player_xref_mlb_coverage';
+    expected_value := format('>=%s%%', p_min_pct);
+    
+    SELECT COUNT(*), COUNT(mlb_id)
+    INTO v_total, v_with_mlb
+    FROM bridge.player_xref;
+    
+    v_pct := ROUND(v_with_mlb::numeric / NULLIF(v_total, 0) * 100, 2);
+    
+    passed := v_pct >= p_min_pct;
+    actual_value := format('%s%% (%s/%s)', v_pct, v_with_mlb, v_total);
+    details := CASE 
+        WHEN passed THEN format('MLB ID coverage meets minimum %s%%', p_min_pct)
+        ELSE format('MLB ID coverage %s%% below minimum %s%%', v_pct, p_min_pct)
+    END;
+    
+    RETURN NEXT;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION test_player_xref_mlb_coverage(p_min_pct numeric); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON FUNCTION bridge.test_player_xref_mlb_coverage(p_min_pct numeric) IS 'Validates that at least p_min_pct of player_xref records have MLB IDs.';
+
+
+--
+-- Name: test_player_xref_mlb_id_unique(); Type: FUNCTION; Schema: bridge; Owner: -
+--
+
+CREATE FUNCTION bridge.test_player_xref_mlb_id_unique() RETURNS TABLE(test_name text, passed boolean, actual_value text, expected_value text, details text)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_total_with_mlb INTEGER;
+    v_unique_mlb INTEGER;
+    v_duplicates INTEGER;
+BEGIN
+    test_name := 'player_xref_mlb_id_unique';
+    expected_value := '0 duplicates';
+    
+    SELECT 
+        COUNT(mlb_id),
+        COUNT(DISTINCT mlb_id)
+    INTO v_total_with_mlb, v_unique_mlb
+    FROM bridge.player_xref
+    WHERE mlb_id IS NOT NULL;
+    
+    v_duplicates := v_total_with_mlb - v_unique_mlb;
+    
+    passed := v_duplicates = 0;
+    actual_value := format('%s duplicates', v_duplicates);
+    details := CASE 
+        WHEN passed THEN 'All MLB IDs are unique'
+        ELSE format('Found %s duplicate MLB IDs', v_duplicates)
+    END;
+    
+    RETURN NEXT;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION test_player_xref_mlb_id_unique(); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON FUNCTION bridge.test_player_xref_mlb_id_unique() IS 'Validates that MLB IDs in player_xref are unique (no duplicates).';
+
+
+--
+-- Name: test_player_xref_retrosheet_coverage(numeric); Type: FUNCTION; Schema: bridge; Owner: -
+--
+
+CREATE FUNCTION bridge.test_player_xref_retrosheet_coverage(p_min_pct numeric DEFAULT 20.0) RETURNS TABLE(test_name text, passed boolean, actual_value text, expected_value text, details text)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_total INTEGER;
+    v_with_retro INTEGER;
+    v_pct NUMERIC;
+BEGIN
+    test_name := 'player_xref_retrosheet_coverage';
+    expected_value := format('>=%s%%', p_min_pct);
+    
+    SELECT COUNT(*), COUNT(retrosheet_id)
+    INTO v_total, v_with_retro
+    FROM bridge.player_xref;
+    
+    v_pct := ROUND(v_with_retro::numeric / NULLIF(v_total, 0) * 100, 2);
+    
+    passed := v_pct >= p_min_pct;
+    actual_value := format('%s%% (%s/%s)', v_pct, v_with_retro, v_total);
+    details := CASE 
+        WHEN passed THEN format('Retrosheet ID coverage meets minimum %s%%', p_min_pct)
+        ELSE format('Retrosheet ID coverage %s%% below minimum %s%%', v_pct, p_min_pct)
+    END;
+    
+    RETURN NEXT;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION test_player_xref_retrosheet_coverage(p_min_pct numeric); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON FUNCTION bridge.test_player_xref_retrosheet_coverage(p_min_pct numeric) IS 'Validates that at least p_min_pct of player_xref records have Retrosheet IDs.';
+
+
+--
+-- Name: test_player_xref_retrosheet_id_unique(); Type: FUNCTION; Schema: bridge; Owner: -
+--
+
+CREATE FUNCTION bridge.test_player_xref_retrosheet_id_unique() RETURNS TABLE(test_name text, passed boolean, actual_value text, expected_value text, details text)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_total_with_retro INTEGER;
+    v_unique_retro INTEGER;
+    v_duplicates INTEGER;
+BEGIN
+    test_name := 'player_xref_retrosheet_id_unique';
+    expected_value := '0 duplicates';
+    
+    SELECT 
+        COUNT(retrosheet_id),
+        COUNT(DISTINCT retrosheet_id)
+    INTO v_total_with_retro, v_unique_retro
+    FROM bridge.player_xref
+    WHERE retrosheet_id IS NOT NULL;
+    
+    v_duplicates := v_total_with_retro - v_unique_retro;
+    
+    passed := v_duplicates = 0;
+    actual_value := format('%s duplicates', v_duplicates);
+    details := CASE 
+        WHEN passed THEN 'All Retrosheet IDs are unique'
+        ELSE format('Found %s duplicate Retrosheet IDs', v_duplicates)
+    END;
+    
+    RETURN NEXT;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION test_player_xref_retrosheet_id_unique(); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON FUNCTION bridge.test_player_xref_retrosheet_id_unique() IS 'Validates that Retrosheet IDs in player_xref are unique (no duplicates).';
+
+
+--
+-- Name: test_team_xref_retrosheet_coverage(numeric); Type: FUNCTION; Schema: bridge; Owner: -
+--
+
+CREATE FUNCTION bridge.test_team_xref_retrosheet_coverage(p_min_pct numeric DEFAULT 100.0) RETURNS TABLE(test_name text, passed boolean, actual_value text, expected_value text, details text)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_total INTEGER;
+    v_with_retro INTEGER;
+    v_pct NUMERIC;
+BEGIN
+    test_name := 'team_xref_retrosheet_coverage';
+    expected_value := format('>=%s%%', p_min_pct);
+    
+    SELECT COUNT(*), COUNT(retrosheet_team_id)
+    INTO v_total, v_with_retro
+    FROM bridge.team_xref;
+    
+    v_pct := ROUND(v_with_retro::numeric / NULLIF(v_total, 0) * 100, 2);
+    
+    passed := v_pct >= p_min_pct;
+    actual_value := format('%s%% (%s/%s)', v_pct, v_with_retro, v_total);
+    details := format('Team xref: %s total, %s with Retrosheet ID (%s%%)', 
+                      v_total, v_with_retro, v_pct);
+    
+    RETURN NEXT;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION test_team_xref_retrosheet_coverage(p_min_pct numeric); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON FUNCTION bridge.test_team_xref_retrosheet_coverage(p_min_pct numeric) IS 'Validates team_xref Retrosheet ID coverage.';
+
+
+--
+-- Name: update_updated_at_column(); Type: FUNCTION; Schema: bridge; Owner: -
+--
+
+CREATE FUNCTION bridge.update_updated_at_column() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: upsert_chadwick_to_player_xref(); Type: PROCEDURE; Schema: bridge; Owner: -
+--
+
+CREATE PROCEDURE bridge.upsert_chadwick_to_player_xref()
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_inserted INTEGER := 0;
+    v_updated INTEGER := 0;
+    v_total INTEGER := 0;
+BEGIN
+    -- Count total records to process
+    SELECT COUNT(*) INTO v_total FROM bridge._staging_chadwick_register;
+    
+    RAISE NOTICE 'Processing % Chadwick Register records...', v_total;
+    
+    -- Insert new records (where Retrosheet ID doesn't exist)
+    INSERT INTO bridge.player_xref (
+        retrosheet_id,
+        mlb_id,
+        baseball_reference_id,
+        name_first,
+        name_last,
+        source_notes,
+        updated_at,
+        confidence_score,
+        confidence_source
+    )
+    SELECT 
+        key_retro,
+        NULLIF(key_mlbam, '')::BIGINT,
+        key_bbref,
+        name_first,
+        name_last,
+        jsonb_build_object(
+            'chadwick_key_uuid', key_uuid,
+            'chadwick_key_fangraphs', key_fangraphs,
+            'lahman_id', lahman_id,
+            'bats', bats,
+            'throws', throws,
+            'birth_date', CASE 
+                WHEN birth_year IS NOT NULL 
+                THEN MAKE_DATE(birth_year, COALESCE(birth_month, 1), COALESCE(birth_day, 1))
+                ELSE NULL 
+            END,
+            'death_date', CASE 
+                WHEN death_year IS NOT NULL 
+                THEN MAKE_DATE(death_year, COALESCE(death_month, 1), COALESCE(death_day, 1))
+                ELSE NULL 
+            END,
+            'debut', debut,
+            'final_game', final_game,
+            'mlb_years', CASE 
+                WHEN mlb_played_first IS NOT NULL AND mlb_played_last IS NOT NULL
+                THEN ARRAY[mlb_played_first, mlb_played_last]
+                ELSE NULL
+            END
+        ),
+        NOW(),
+        0.95,  -- High confidence for Chadwick Bureau
+        'Chadwick Bureau Register'
+    FROM bridge._staging_chadwick_register cr
+    WHERE NULLIF(cr.key_retro, '') IS NOT NULL
+      AND NULLIF(cr.key_retro, '') NOT IN (SELECT retrosheet_id FROM bridge.player_xref WHERE retrosheet_id IS NOT NULL)
+      AND (NULLIF(cr.key_mlbam, '') IS NULL OR NULLIF(cr.key_mlbam, '')::BIGINT NOT IN (SELECT mlb_id FROM bridge.player_xref WHERE mlb_id IS NOT NULL));
+    
+    GET DIAGNOSTICS v_inserted = ROW_COUNT;
+    RAISE NOTICE 'Inserted % new player records', v_inserted;
+    
+    -- Update existing records (merge additional IDs)
+    UPDATE bridge.player_xref px
+    SET 
+        mlb_id = COALESCE(px.mlb_id, NULLIF(cr.key_mlbam, '')::BIGINT),
+        baseball_reference_id = COALESCE(px.baseball_reference_id, cr.key_bbref),
+        source_notes = px.source_notes || jsonb_build_object(
+            'chadwick_key_uuid', cr.key_uuid,
+            'chadwick_key_fangraphs', cr.key_fangraphs,
+            'lahman_id', cr.lahman_id,
+            'merged_at', NOW()
+        ),
+        updated_at = NOW(),
+        confidence_score = GREATEST(px.confidence_score, 0.95),
+        confidence_source = CASE 
+            WHEN px.confidence_score < 0.95 THEN 'Chadwick Bureau Register (merged)'
+            ELSE px.confidence_source
+        END
+    FROM bridge._staging_chadwick_register cr
+    WHERE px.retrosheet_id = NULLIF(cr.key_retro, '')
+      AND NULLIF(cr.key_retro, '') IS NOT NULL;
+    
+    GET DIAGNOSTICS v_updated = ROW_COUNT;
+    RAISE NOTICE 'Updated % existing player records', v_updated;
+    
+    -- Commit statistics
+    RAISE NOTICE 'Chadwick Register sync complete: % inserted, % updated', v_inserted, v_updated;
+    
+    -- Log to metadata table if it exists
+    BEGIN
+        INSERT INTO metadata.bridge_sync_log (
+            sync_type, source_system, records_processed, records_inserted, records_updated, sync_timestamp
+        ) VALUES (
+            'player_xref_population', 'chadwick_register', v_total, v_inserted, v_updated, NOW()
+        );
+    EXCEPTION WHEN undefined_table THEN
+        -- metadata.bridge_sync_log doesn't exist, skip logging
+        NULL;
+    END;
+END;
+$$;
+
+
+--
+-- Name: PROCEDURE upsert_chadwick_to_player_xref(); Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON PROCEDURE bridge.upsert_chadwick_to_player_xref() IS 'Merges Chadwick Register staging data into bridge.player_xref, inserting new records and updating existing ones with additional IDs.';
+
+
+--
+-- Name: count_rows(regclass); Type: FUNCTION; Schema: core; Owner: -
+--
+
+CREATE FUNCTION core.count_rows(p_table regclass) RETURNS bigint
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    result bigint;
+BEGIN
+    EXECUTE format('SELECT COUNT(*) FROM %s', p_table::text) INTO result;
+    RETURN result;
+END;
+$$;
+
+
+--
+-- Name: safe_date_mmddyyyy(text); Type: FUNCTION; Schema: core; Owner: -
+--
+
+CREATE FUNCTION core.safe_date_mmddyyyy(value text) RETURNS date
+    LANGUAGE sql IMMUTABLE STRICT
+    AS $_$
+    SELECT CASE
+        WHEN btrim(value) ~ '^[0-9]{2}/[0-9]{2}/[0-9]{4}$'
+        THEN to_date(btrim(value), 'MM/DD/YYYY')
+    END
+$_$;
+
+
+--
+-- Name: safe_date_yyyymmdd(text); Type: FUNCTION; Schema: core; Owner: -
+--
+
+CREATE FUNCTION core.safe_date_yyyymmdd(value text) RETURNS date
+    LANGUAGE sql IMMUTABLE STRICT
+    AS $_$
+    SELECT CASE
+        WHEN btrim(value) ~ '^[0-9]{8}$'
+        THEN to_date(btrim(value), 'YYYYMMDD')
+    END
+$_$;
+
+
+--
+-- Name: safe_int(text); Type: FUNCTION; Schema: core; Owner: -
+--
+
+CREATE FUNCTION core.safe_int(value text) RETURNS integer
+    LANGUAGE sql IMMUTABLE STRICT
+    AS $_$
+    SELECT CASE WHEN btrim(value) ~ '^-?[0-9]+$' THEN btrim(value)::integer END
+$_$;
+
+
+--
+-- Name: season_range(); Type: FUNCTION; Schema: core; Owner: -
+--
+
+CREATE FUNCTION core.season_range() RETURNS TABLE(min_season integer, max_season integer)
+    LANGUAGE sql
+    AS $$
+    SELECT MIN(season) AS min_season, MAX(season) AS max_season FROM core.games;
+$$;
+
+
+--
+-- Name: refresh_all_materialized_views(); Type: FUNCTION; Schema: features; Owner: -
+--
+
+CREATE FUNCTION features.refresh_all_materialized_views() RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN SELECT matviewname FROM pg_matviews WHERE schemaname = 'features'
+    LOOP
+        EXECUTE format('REFRESH MATERIALIZED VIEW CONCURRENTLY features.%I', r.matviewname);
+    END LOOP;
+END;
+$$;
+
+
+--
+-- Name: generate_training_query(character varying, character varying[], boolean, boolean); Type: FUNCTION; Schema: features_pitch; Owner: -
+--
+
+CREATE FUNCTION features_pitch.generate_training_query(p_model_name character varying, p_feature_categories character varying[] DEFAULT ARRAY['physics'::text, 'location'::text, 'context'::text], p_include_engineered boolean DEFAULT true, p_include_player_context boolean DEFAULT true) RETURNS text
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_base_columns TEXT;
+    v_sql TEXT;
+BEGIN
+    -- Get base feature columns from registry
+    SELECT STRING_AGG(
+        'bf.' || fr.column_name,
+        ', ' ORDER BY fr.feature_id
+    )
+    INTO v_base_columns
+    FROM features_pitch.feature_registry fr
+    WHERE fr.table_name = 'base_features'
+      AND fr.feature_category = ANY(p_feature_categories);
+    
+    -- Build complete query
+    v_sql := format(
+        'SELECT %s FROM features_pitch.base_features bf 
+         WHERE bf.quality_flag = ''normal''
+         AND bf.game_year BETWEEN 2015 AND 2024',
+        v_base_columns
+    );
+    
+    RETURN v_sql;
+END;
+$$;
+
+
+--
+-- Name: get_feature_stats(character varying, character varying); Type: FUNCTION; Schema: features_pitch; Owner: -
+--
+
+CREATE FUNCTION features_pitch.get_feature_stats(p_table_name character varying, p_column_name character varying) RETURNS jsonb
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_stats JSONB;
+BEGIN
+    SELECT data_quality INTO v_stats
+    FROM features_pitch.feature_registry
+    WHERE table_name = p_table_name
+      AND column_name = p_column_name;
+    
+    RETURN v_stats;
+END;
+$$;
+
+
+--
+-- Name: update_timestamp(); Type: FUNCTION; Schema: features_pitch; Owner: -
+--
+
+CREATE FUNCTION features_pitch.update_timestamp() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: get_plate_appearance_features(integer, integer, boolean, integer, integer, integer, integer, integer, text, text, text, text, text, text); Type: FUNCTION; Schema: inference; Owner: -
+--
+
+CREATE FUNCTION inference.get_plate_appearance_features(p_season integer, p_inning integer, p_is_bottom_inning boolean, p_outs_before integer, p_start_bases integer, p_balls integer, p_strikes integer, p_home_score_diff integer, p_batter_hand text DEFAULT 'R'::text, p_pitcher_hand text DEFAULT 'R'::text, p_batter_id text DEFAULT NULL::text, p_pitcher_id text DEFAULT NULL::text, p_batting_team_id text DEFAULT NULL::text, p_fielding_team_id text DEFAULT NULL::text) RETURNS TABLE(batter_prior_pa integer, batter_prior_hit_rate numeric, batter_prior_walk_rate numeric, batter_prior_strikeout_rate numeric, batter_prior_home_run_rate numeric, batter_prior_reach_base_rate numeric, batter_prior_extra_base_hit_rate numeric, pitcher_prior_batters_faced integer, pitcher_prior_hit_allowed_rate numeric, pitcher_prior_walk_allowed_rate numeric, pitcher_prior_strikeout_rate numeric, pitcher_prior_home_run_allowed_rate numeric, pitcher_prior_reach_base_allowed_rate numeric, pitcher_prior_extra_base_hit_allowed_rate numeric, batting_team_prior_win_rate numeric, batting_team_prior_runs_scored_per_game numeric, batting_team_prior_runs_allowed_per_game numeric, fielding_team_prior_win_rate numeric, fielding_team_prior_runs_scored_per_game numeric, fielding_team_prior_runs_allowed_per_game numeric, context_prior_pa integer, context_prior_hit_rate numeric, context_prior_walk_rate numeric, context_prior_strikeout_rate numeric, context_prior_home_run_rate numeric, context_prior_reach_base_rate numeric, context_prior_extra_base_hit_rate numeric, context_prior_batting_team_win_rate numeric)
+    LANGUAGE plpgsql STABLE
+    AS $$
+DECLARE
+    batter_stats record;
+    pitcher_stats record;
+    batting_team_stats record;
+    fielding_team_stats record;
+    context_stats record;
+BEGIN
+    -- Get batter stats
+    IF p_batter_id IS NOT NULL THEN
+        SELECT * INTO batter_stats
+        FROM features.batter_prior_season_pa_summary
+        WHERE feature_season = p_season AND batter_id = p_batter_id;
+    END IF;
+
+    -- Get pitcher stats
+    IF p_pitcher_id IS NOT NULL THEN
+        SELECT * INTO pitcher_stats
+        FROM features.pitcher_prior_season_pa_summary
+        WHERE feature_season = p_season AND pitcher_id = p_pitcher_id;
+    END IF;
+
+    -- Get team stats
+    IF p_batting_team_id IS NOT NULL THEN
+        SELECT * INTO batting_team_stats
+        FROM features.team_prior_season_summary
+        WHERE feature_season = p_season AND team_id = p_batting_team_id;
+    END IF;
+
+    IF p_fielding_team_id IS NOT NULL THEN
+        SELECT * INTO fielding_team_stats
+        FROM features.team_prior_season_summary
+        WHERE feature_season = p_season AND team_id = p_fielding_team_id;
+    END IF;
+
+    -- Get context stats
+    SELECT * INTO context_stats
+    FROM features.pa_context_prior_season_rates
+    WHERE feature_season = p_season
+      AND batter_hand = COALESCE(p_batter_hand, 'R')
+      AND pitcher_hand = COALESCE(p_pitcher_hand, 'R')
+      AND inning = p_inning
+      AND is_bottom_inning = p_is_bottom_inning
+      AND outs_before = p_outs_before
+      AND start_bases = p_start_bases
+      AND balls = p_balls
+      AND strikes = p_strikes;
+
+    -- Return aggregated features with defaults
+    RETURN QUERY SELECT
+        COALESCE(batter_stats.prior_pa, 0)::integer,
+        COALESCE(batter_stats.prior_hit_rate, 0.25)::numeric,
+        COALESCE(batter_stats.prior_walk_rate, 0.08)::numeric,
+        COALESCE(batter_stats.prior_strikeout_rate, 0.20)::numeric,
+        COALESCE(batter_stats.prior_home_run_rate, 0.03)::numeric,
+        COALESCE(batter_stats.prior_reach_base_rate, 0.32)::numeric,
+        COALESCE(batter_stats.prior_extra_base_hit_rate, 0.07)::numeric,
+        COALESCE(pitcher_stats.prior_batters_faced, 0)::integer,
+        COALESCE(pitcher_stats.prior_hit_allowed_rate, 0.25)::numeric,
+        COALESCE(pitcher_stats.prior_walk_allowed_rate, 0.08)::numeric,
+        COALESCE(pitcher_stats.prior_strikeout_rate, 0.20)::numeric,
+        COALESCE(pitcher_stats.prior_home_run_allowed_rate, 0.03)::numeric,
+        COALESCE(pitcher_stats.prior_reach_base_allowed_rate, 0.32)::numeric,
+        COALESCE(pitcher_stats.prior_extra_base_hit_allowed_rate, 0.07)::numeric,
+        COALESCE(batting_team_stats.prior_win_rate, 0.5)::numeric,
+        COALESCE(batting_team_stats.prior_runs_scored_per_game, 4.5)::numeric,
+        COALESCE(batting_team_stats.prior_runs_allowed_per_game, 4.5)::numeric,
+        COALESCE(fielding_team_stats.prior_win_rate, 0.5)::numeric,
+        COALESCE(fielding_team_stats.prior_runs_scored_per_game, 4.5)::numeric,
+        COALESCE(fielding_team_stats.prior_runs_allowed_per_game, 4.5)::numeric,
+        COALESCE(context_stats.prior_pa, 0)::integer,
+        COALESCE(context_stats.prior_hit_rate, 0.25)::numeric,
+        COALESCE(context_stats.prior_walk_rate, 0.08)::numeric,
+        COALESCE(context_stats.prior_strikeout_rate, 0.20)::numeric,
+        COALESCE(context_stats.prior_home_run_rate, 0.03)::numeric,
+        COALESCE(context_stats.prior_reach_base_rate, 0.32)::numeric,
+        COALESCE(context_stats.prior_extra_base_hit_rate, 0.07)::numeric,
+        COALESCE(context_stats.prior_batting_team_win_rate, 0.5)::numeric;
+END;
+$$;
+
+
+--
+-- Name: get_simulation_state(text); Type: FUNCTION; Schema: inference; Owner: -
+--
+
+CREATE FUNCTION inference.get_simulation_state(p_simulation_id text) RETURNS TABLE(simulation_id text, game_id text, season integer, inning integer, is_bottom_inning boolean, outs integer, bases integer, balls integer, strikes integer, home_score integer, away_score integer, batter_id text, pitcher_id text, batter_hand text, pitcher_hand text, batting_team_id text, fielding_team_id text, plate_appearances_completed integer, runs_scored integer)
+    LANGUAGE plpgsql STABLE
+    AS $$
+BEGIN
+    RETURN QUERY SELECT
+        s.simulation_id, s.game_id, s.season, s.inning, s.is_bottom_inning,
+        s.outs, s.bases, s.balls, s.strikes, s.home_score, s.away_score,
+        s.batter_id, s.pitcher_id, s.batter_hand, s.pitcher_hand,
+        s.batting_team_id, s.fielding_team_id,
+        s.plate_appearances_completed, s.runs_scored
+    FROM inference.simulation_states s
+    WHERE s.simulation_id = p_simulation_id;
+END;
+$$;
+
+
+--
+-- Name: init_simulation(text, text, integer, integer, boolean, text, text, text, text, text, text); Type: FUNCTION; Schema: inference; Owner: -
+--
+
+CREATE FUNCTION inference.init_simulation(p_simulation_id text, p_game_id text, p_season integer, p_inning integer DEFAULT 1, p_is_bottom_inning boolean DEFAULT false, p_batter_id text DEFAULT NULL::text, p_pitcher_id text DEFAULT NULL::text, p_batter_hand text DEFAULT 'R'::text, p_pitcher_hand text DEFAULT 'R'::text, p_batting_team_id text DEFAULT NULL::text, p_fielding_team_id text DEFAULT NULL::text) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    INSERT INTO inference.simulation_states (
+        simulation_id, game_id, season, inning, is_bottom_inning,
+        outs, bases, balls, strikes, home_score, away_score,
+        batter_id, pitcher_id, batter_hand, pitcher_hand,
+        batting_team_id, fielding_team_id
+    ) VALUES (
+        p_simulation_id, p_game_id, p_season, p_inning, p_is_bottom_inning,
+        0, 0, 0, 0, 0, 0,
+        p_batter_id, p_pitcher_id, p_batter_hand, p_pitcher_hand,
+        p_batting_team_id, p_fielding_team_id
+    )
+    ON CONFLICT (simulation_id) DO UPDATE SET
+        outs = 0, bases = 0, balls = 0, strikes = 0,
+        home_score = 0, away_score = 0,
+        plate_appearances_completed = 0, runs_scored = 0,
+        updated_at = now();
+END;
+$$;
+
+
+--
+-- Name: predict_plate_appearance_batch(integer, integer, boolean, integer, integer, integer, integer, integer, text, text, text, text, text, text); Type: FUNCTION; Schema: inference; Owner: -
+--
+
+CREATE FUNCTION inference.predict_plate_appearance_batch(p_season integer, p_inning integer, p_is_bottom_inning boolean, p_outs_before integer, p_start_bases integer, p_balls integer, p_strikes integer, p_home_score_diff integer, p_batter_hand text DEFAULT 'R'::text, p_pitcher_hand text DEFAULT 'R'::text, p_batter_id text DEFAULT NULL::text, p_pitcher_id text DEFAULT NULL::text, p_batting_team_id text DEFAULT NULL::text, p_fielding_team_id text DEFAULT NULL::text) RETURNS TABLE(target_id text, probability numeric)
+    LANGUAGE plpgsql STABLE
+    AS $$
+BEGIN
+    -- This would interface with Python models, but for now return mock data
+    -- In production, this would call out to the Python prediction service
+    RETURN QUERY VALUES
+        ('pa_batter_hit', 0.250::numeric),
+        ('pa_batter_walk', 0.080::numeric),
+        ('pa_batter_strikeout', 0.200::numeric),
+        ('pa_batter_home_run', 0.030::numeric),
+        ('pa_batter_reach_base', 0.320::numeric),
+        ('pa_batter_extra_base_hit', 0.070::numeric);
+END;
+$$;
+
+
+--
+-- Name: has_scheduled_games_today(); Type: FUNCTION; Schema: metadata; Owner: -
+--
+
+CREATE FUNCTION metadata.has_scheduled_games_today() RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    has_games boolean;
+    today date;
+BEGIN
+    today := CURRENT_DATE;
+    
+    -- Check if there are any games scheduled for today
+    -- Based on raw_mlb.schedule_snapshots payload
+    SELECT EXISTS (
+        SELECT 1 FROM raw_mlb.schedule_snapshots s
+        WHERE s.snapshot_date = today
+          AND s.payload->>'totalGames' IS NOT NULL
+          AND (s.payload->>'totalGames')::int > 0
+    ) INTO has_games;
+    
+    RETURN has_games;
+END;
+$$;
+
+
+--
+-- Name: is_game_hours(); Type: FUNCTION; Schema: metadata; Owner: -
+--
+
+CREATE FUNCTION metadata.is_game_hours() RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    current_hour int;
+    current_dow int;
+BEGIN
+    current_hour := EXTRACT(HOUR FROM CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York');
+    current_dow := EXTRACT(DOW FROM CURRENT_DATE);
+    
+    -- Game hours: 11am - 1am ET (covers pre-game prep through extra innings)
+    -- Sunday night baseball starts later
+    -- Monday games often start later (7pm+)
+    
+    -- Regular game window: 11am - 1am
+    IF current_hour BETWEEN 11 AND 23 THEN
+        RETURN true;
+    END IF;
+    
+    -- Late games/Extra innings: midnight - 1am
+    IF current_hour = 0 THEN
+        RETURN true;
+    END IF;
+    
+    RETURN false;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION is_game_hours(); Type: COMMENT; Schema: metadata; Owner: -
+--
+
+COMMENT ON FUNCTION metadata.is_game_hours() IS 'Returns true during typical game hours (11am-1am ET)';
+
+
+--
+-- Name: is_mlb_season(); Type: FUNCTION; Schema: metadata; Owner: -
+--
+
+CREATE FUNCTION metadata.is_mlb_season() RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    current_month int;
+BEGIN
+    current_month := EXTRACT(MONTH FROM CURRENT_DATE);
+    -- MLB season: February (spring training) through October (postseason)
+    -- Offseason: November, December, January
+    RETURN current_month BETWEEN 2 AND 10;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION is_mlb_season(); Type: COMMENT; Schema: metadata; Owner: -
+--
+
+COMMENT ON FUNCTION metadata.is_mlb_season() IS 'Returns true during MLB season (Feb-Oct)';
+
+
+--
+-- Name: poll_active_games_conditional(); Type: FUNCTION; Schema: metadata; Owner: -
+--
+
+CREATE FUNCTION metadata.poll_active_games_conditional() RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    IF metadata.should_poll_games() THEN
+        PERFORM raw_sportradar.poll_active_games();
+    END IF;
+END;
+$$;
+
+
+--
+-- Name: poll_all_endpoints_conditional(); Type: FUNCTION; Schema: metadata; Owner: -
+--
+
+CREATE FUNCTION metadata.poll_all_endpoints_conditional() RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    IF metadata.should_poll_games() THEN
+        PERFORM raw_mlb.poll_all_active_endpoints();
+    END IF;
+END;
+$$;
+
+
+--
+-- Name: refresh_data_dictionary(); Type: FUNCTION; Schema: metadata; Owner: -
+--
+
+CREATE FUNCTION metadata.refresh_data_dictionary() RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    r record;
+    c record;
+    t_id bigint;
+    count integer := 0;
+BEGIN
+    -- Refresh table entries
+    FOR r IN
+        SELECT
+            schemaname,
+            tablename,
+            COALESCE(obj_description(('"' || schemaname || '".' || tablename)::regclass), '') as description,
+            (xpath('/row/cnt/text()', query_to_xml(format('SELECT COUNT(*) as cnt FROM %I.%I', schemaname, tablename), false, true, '')))[1]::text::bigint as row_count
+        FROM pg_tables
+        WHERE schemaname NOT IN ('pg_catalog', 'information_schema', 'cron')
+        AND tableowner = 'cbwinslow'
+    LOOP
+        INSERT INTO metadata.table_dictionary (schemaname, tablename, table_description, row_count, last_analyzed)
+        VALUES (r.schemaname, r.tablename, r.description, r.row_count, NOW())
+        ON CONFLICT (schemaname, tablename) DO UPDATE
+        SET table_description = EXCLUDED.table_description,
+            row_count = EXCLUDED.row_count,
+            last_analyzed = NOW(),
+            updated_at = NOW()
+        RETURNING table_id INTO t_id;
+
+        -- Refresh column entries
+        FOR c IN
+            SELECT
+                column_name,
+                data_type,
+                is_nullable = 'YES' as is_nullable
+            FROM information_schema.columns
+            WHERE table_schema = r.schemaname
+            AND table_name = r.tablename
+        LOOP
+            INSERT INTO metadata.column_dictionary (table_id, column_name, column_description, data_type, is_nullable)
+            VALUES (t_id, c.column_name, '', c.data_type, c.is_nullable)
+            ON CONFLICT (table_id, column_name) DO UPDATE
+            SET data_type = EXCLUDED.data_type,
+                is_nullable = EXCLUDED.is_nullable,
+                updated_at = NOW();
+        END LOOP;
+
+        count := count + 1;
+    END LOOP;
+
+    RETURN count;
+END;
+$$;
+
+
+--
+-- Name: should_poll_games(); Type: FUNCTION; Schema: metadata; Owner: -
+--
+
+CREATE FUNCTION metadata.should_poll_games() RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Only poll during MLB season
+    IF NOT metadata.is_mlb_season() THEN
+        RETURN false;
+    END IF;
+    
+    -- Only poll during game hours
+    IF NOT metadata.is_game_hours() THEN
+        RETURN false;
+    END IF;
+    
+    -- Check if games are scheduled today (optional - requires recent schedule fetch)
+    -- Comment this out if you want to poll even without confirmed schedule
+    -- IF NOT metadata.has_scheduled_games_today() THEN
+    --     RETURN false;
+    -- END IF;
+    
+    RETURN true;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION should_poll_games(); Type: COMMENT; Schema: metadata; Owner: -
+--
+
+COMMENT ON FUNCTION metadata.should_poll_games() IS 'Returns true if season + game hours conditions are met';
+
+
+--
+-- Name: resolve_team_id(text, date); Type: FUNCTION; Schema: mlb; Owner: -
+--
+
+CREATE FUNCTION mlb.resolve_team_id(mlb_team_name text, game_date date) RETURNS text
+    LANGUAGE sql STABLE
+    AS $_$
+    SELECT retrosheet_team_id 
+    FROM mlb.team_name_resolution 
+    WHERE mlb_team_name ILIKE '%' || $1 || '%'
+      AND (game_date >= to_date(first_season::text, 'YYYY') OR first_season IS NULL)
+      AND (game_date <= to_date(last_season::text, 'YYYY') OR last_season IS NULL)
+    LIMIT 1;
+$_$;
+
+
+--
+-- Name: FUNCTION resolve_team_id(mlb_team_name text, game_date date); Type: COMMENT; Schema: mlb; Owner: -
+--
+
+COMMENT ON FUNCTION mlb.resolve_team_id(mlb_team_name text, game_date date) IS 'Resolves MLB team name to Retrosheet team ID considering temporal validity';
+
+
+--
+-- Name: populate_game_state_from_mlb(); Type: FUNCTION; Schema: mlb_features; Owner: -
+--
+
+CREATE FUNCTION mlb_features.populate_game_state_from_mlb() RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    rows_inserted int := 0;
+BEGIN
+    INSERT INTO mlb_features.game_state_features (
+        game_id, event_sequence, season,
+        inning, is_bottom_inning, outs_before, balls, strikes,
+        score_diff, runners_on_base,
+        batter_id, pitcher_id, batting_team_id, fielding_team_id,
+        home_team_id, away_team_id, is_home_game,
+        pitch_type_code, pitch_velocity, pitch_spin_rate,
+        pitch_plate_x, pitch_plate_z, pitch_zone,
+        batting_team_wins, data_source
+    )
+    SELECT
+        le.game_id,
+        le.event_sequence,
+        le.season::int,
+        le.inning,
+        le.is_bottom_inning,
+        le.outs_before,
+        COALESCE(le.balls, 0),
+        COALESCE(le.strikes, 0),
+        le.home_score_after - le.away_score_after, -- Use after scores as approximation
+        COALESCE(le.start_bases, 0),
+        le.batter_id,
+        le.pitcher_id,
+        CASE WHEN le.is_bottom_inning THEN lg.home_team_id::text ELSE lg.away_team_id::text END,
+        CASE WHEN le.is_bottom_inning THEN lg.away_team_id::text ELSE lg.home_team_id::text END,
+        lg.home_team_id::text,
+        lg.away_team_id::text,
+        (CASE WHEN le.is_bottom_inning THEN lg.home_team_id::text ELSE lg.away_team_id::text END = lg.home_team_id::text),
+        -- Pitch data from latest pitch in this event
+        latest_pitch.pitch_type_code,
+        latest_pitch.start_speed,
+        latest_pitch.spin_rate,
+        latest_pitch.plate_x,
+        latest_pitch.plate_z,
+        latest_pitch.plate_zone,
+        (CASE WHEN lg.home_score > lg.away_score THEN le.is_bottom_inning
+              WHEN lg.away_score > lg.home_score THEN NOT le.is_bottom_inning
+              ELSE false END),
+        'mlb'
+    FROM core.live_events le
+    JOIN core.live_games lg ON le.game_id = lg.game_id
+    LEFT JOIN LATERAL (
+        SELECT p.*
+        FROM mlb.pitches p
+        WHERE p.game_pk = le.mlb_game_pk::int
+          AND p.event_index = le.event_sequence
+        ORDER BY p.pitch_index DESC
+        LIMIT 1
+    ) latest_pitch ON true
+    WHERE le.is_plate_appearance = true
+    ON CONFLICT (game_id, event_sequence) DO NOTHING;
+
+    GET DIAGNOSTICS rows_inserted = ROW_COUNT;
+    RAISE NOTICE 'Inserted % game state features from MLB', rows_inserted;
+
+    RETURN rows_inserted;
+END;
+$$;
+
+
+--
+-- Name: populate_game_state_from_retrosheet(integer, integer); Type: FUNCTION; Schema: mlb_features; Owner: -
+--
+
+CREATE FUNCTION mlb_features.populate_game_state_from_retrosheet(start_season integer DEFAULT 2000, end_season integer DEFAULT 2024) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    rows_inserted int := 0;
+BEGIN
+    INSERT INTO mlb_features.game_state_features (
+        game_id, event_sequence, season,
+        inning, is_bottom_inning, outs_before, balls, strikes,
+        score_diff, runners_on_base,
+        batter_id, pitcher_id, batting_team_id, fielding_team_id,
+        home_team_id, away_team_id, park_id, is_home_game,
+        batting_team_wins, data_source
+    )
+    SELECT
+        e.game_id,
+        e.event_sequence,
+        g.season,
+        e.inning,
+        e.is_bottom_inning,
+        e.outs_before,
+        COALESCE(e.balls, 0),
+        COALESCE(e.strikes, 0),
+        e.home_score_before - e.away_score_before,
+        COALESCE(e.start_bases, 0),
+        e.batter_id,
+        e.pitcher_id,
+        e.batting_team_id,
+        e.fielding_team_id,
+        g.home_team_id,
+        g.away_team_id,
+        g.park_id,
+        (e.batting_team_id = g.home_team_id),
+        (CASE WHEN g.home_score > g.away_score THEN (e.batting_team_id = g.home_team_id)
+              WHEN g.away_score > g.home_score THEN (e.batting_team_id = g.away_team_id)
+              ELSE false END),
+        'retrosheet'
+    FROM core.events e
+    JOIN core.games g ON e.game_id = g.game_id
+    WHERE g.season BETWEEN start_season AND end_season
+      AND e.is_plate_appearance = true
+    ON CONFLICT (game_id, event_sequence) DO NOTHING;
+
+    GET DIAGNOSTICS rows_inserted = ROW_COUNT;
+    RAISE NOTICE 'Inserted % game state features from Retrosheet', rows_inserted;
+
+    RETURN rows_inserted;
+END;
+$$;
+
+
+--
+-- Name: populate_player_season_stats(); Type: FUNCTION; Schema: mlb_features; Owner: -
+--
+
+CREATE FUNCTION mlb_features.populate_player_season_stats() RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    rows_inserted int := 0;
+BEGIN
+    -- Insert batting stats
+    INSERT INTO mlb_features.player_season_stats (
+        player_id, season, is_batter,
+        games_played, plate_appearances, at_bats, hits, doubles, triples, home_runs,
+        rbi, walks, strikeouts, batting_avg, on_base_pct, slugging_pct, ops
+    )
+    SELECT
+        batter_id,
+        season,
+        true as is_batter,
+        COUNT(DISTINCT game_id) as games_played,
+        COUNT(*) as plate_appearances,
+        COUNT(CASE WHEN is_at_bat THEN 1 END) as at_bats,
+        COUNT(CASE WHEN is_hit THEN 1 END) as hits,
+        COUNT(CASE WHEN hit_value = 2 THEN 1 END) as doubles,
+        COUNT(CASE WHEN hit_value = 3 THEN 1 END) as triples,
+        COUNT(CASE WHEN is_home_run THEN 1 END) as home_runs,
+        SUM(rbi) as rbi,
+        COUNT(CASE WHEN is_walk THEN 1 END) as walks,
+        COUNT(CASE WHEN is_strikeout THEN 1 END) as strikeouts,
+        ROUND(AVG(is_hit::int)::numeric, 3) as batting_avg,
+        ROUND(
+            (COUNT(CASE WHEN is_hit OR is_walk THEN 1 END))::numeric
+            / NULLIF(COUNT(*), 0),
+            3
+        ) as on_base_pct,
+        ROUND(
+            (COUNT(CASE WHEN is_hit THEN 1 END)
+           + COUNT(CASE WHEN hit_value = 2 THEN 1 END)
+           + 2 * COUNT(CASE WHEN hit_value = 3 THEN 1 END)
+           + 3 * COUNT(CASE WHEN is_home_run THEN 1 END))::numeric
+            / NULLIF(COUNT(CASE WHEN is_at_bat THEN 1 END), 0),
+            3
+        ) as slugging_pct,
+        ROUND(
+            (COUNT(CASE WHEN is_hit OR is_walk THEN 1 END))::numeric
+            / NULLIF(COUNT(*), 0)
+          + (COUNT(CASE WHEN is_hit THEN 1 END)
+           + COUNT(CASE WHEN hit_value = 2 THEN 1 END)
+           + 2 * COUNT(CASE WHEN hit_value = 3 THEN 1 END)
+           + 3 * COUNT(CASE WHEN is_home_run THEN 1 END))::numeric
+            / NULLIF(COUNT(CASE WHEN is_at_bat THEN 1 END), 0),
+            3
+        ) as ops
+    FROM features.plate_appearance_examples
+    WHERE batter_id IS NOT NULL
+    GROUP BY batter_id, season
+    ON CONFLICT (player_id, season, is_batter) DO NOTHING;
+
+    -- Insert pitching stats
+    INSERT INTO mlb_features.player_season_stats (
+        player_id, season, is_batter,
+        games_started, innings_pitched, earned_runs, pitcher_hits_allowed,
+        pitcher_walks, pitcher_strikeouts, pitcher_home_runs, era, whip, k_per_9
+    )
+    SELECT
+        pitcher_id,
+        season,
+        false as is_batter,
+        COUNT(DISTINCT game_id) as games_started,
+        SUM(CASE WHEN inning IS NOT NULL THEN 1 ELSE 0 END)::numeric / 3 as innings_pitched,
+        0 as earned_runs, -- Would need more complex calculation
+        COUNT(CASE WHEN is_hit THEN 1 END) as pitcher_hits_allowed,
+        COUNT(CASE WHEN is_walk THEN 1 END) as pitcher_walks,
+        COUNT(CASE WHEN is_strikeout THEN 1 END) as pitcher_strikeouts,
+        COUNT(CASE WHEN is_home_run THEN 1 END) as pitcher_home_runs,
+        ROUND(
+            0::numeric / NULLIF(SUM(CASE WHEN inning IS NOT NULL THEN 1 ELSE 0 END)::numeric / 3, 0) * 9,
+            2
+        ) as era,
+        ROUND(
+            (COUNT(CASE WHEN is_hit THEN 1 END) + COUNT(CASE WHEN is_walk THEN 1 END))::numeric
+            / NULLIF(SUM(CASE WHEN inning IS NOT NULL THEN 1 ELSE 0 END)::numeric / 3, 0),
+            2
+        ) as whip,
+        ROUND(
+            COUNT(CASE WHEN is_strikeout THEN 1 END)::numeric
+            / NULLIF(SUM(CASE WHEN inning IS NOT NULL THEN 1 ELSE 0 END)::numeric / 3, 0) * 9,
+            1
+        ) as k_per_9
+    FROM features.plate_appearance_examples
+    WHERE pitcher_id IS NOT NULL
+    GROUP BY pitcher_id, season
+    ON CONFLICT (player_id, season, is_batter) DO NOTHING;
+
+    GET DIAGNOSTICS rows_inserted = ROW_COUNT;
+    RAISE NOTICE 'Inserted % player season stats', rows_inserted;
+
+    RETURN rows_inserted;
+END;
+$$;
+
+
+--
+-- Name: update_updated_at_column(); Type: FUNCTION; Schema: predictions; Owner: -
+--
+
+CREATE FUNCTION predictions.update_updated_at_column() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: ingest_all_endpoints_for_game(bigint); Type: FUNCTION; Schema: raw_mlb; Owner: -
+--
+
+CREATE FUNCTION raw_mlb.ingest_all_endpoints_for_game(game_pk bigint) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    PERFORM raw_mlb.ingest_endpoint(game_pk, 'feed/live', 'raw_mlb.live_feed_snapshots');
+    PERFORM raw_mlb.ingest_endpoint(game_pk, 'playByPlay', 'raw_mlb.play_by_play_snapshots');
+    PERFORM raw_mlb.ingest_endpoint(game_pk, 'pitchMetrics', 'raw_mlb.pitch_metrics_snapshots');
+    PERFORM raw_mlb.ingest_endpoint(game_pk, 'winProbability', 'raw_mlb.win_probability_snapshots');
+    PERFORM raw_mlb.ingest_endpoint(game_pk, 'boxscore', 'raw_mlb.boxscore_snapshots');
+END;
+$$;
+
+
+--
+-- Name: ingest_endpoint(bigint, text, text); Type: FUNCTION; Schema: raw_mlb; Owner: -
+--
+
+CREATE FUNCTION raw_mlb.ingest_endpoint(game_pk bigint, endpoint_suffix text, target_table text) RETURNS void
+    LANGUAGE plpython3u
+    AS $_$
+    import httpx
+    import hashlib
+    
+    try:
+        url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/{endpoint_suffix}"
+        r = httpx.get(url, timeout=15)
+        
+        checksum = hashlib.sha256(r.content).hexdigest()
+        
+        plpy.execute(f"""
+            INSERT INTO {target_table} (game_pk, raw_payload, fetched_at, http_status, sha256_checksum)
+            VALUES ($1, $2, NOW(), $3, $4)
+            ON CONFLICT (game_pk, fetched_at) DO NOTHING
+        """, [game_pk, r.json(), r.status_code, checksum])
+        
+    except Exception as e:
+        NULL;
+$_$;
+
+
+--
+-- Name: poll_all_active_endpoints(); Type: FUNCTION; Schema: raw_mlb; Owner: -
+--
+
+CREATE FUNCTION raw_mlb.poll_all_active_endpoints() RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    active_game bigint;
+    count integer := 0;
+BEGIN
+    FOR active_game IN
+        SELECT DISTINCT game_pk
+        FROM core.live_games
+        WHERE status_code IN ('I', 'P')
+        AND game_date >= CURRENT_DATE - INTERVAL '1 day'
+    LOOP
+        PERFORM raw_mlb.ingest_all_endpoints_for_game(active_game);
+        count := count + 1;
+    END LOOP;
+    
+    RETURN count;
+END;
+$$;
+
+
+--
+-- Name: complete_ingest_run(bigint, jsonb); Type: FUNCTION; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE FUNCTION raw_retrosheet.complete_ingest_run(p_run_id bigint, p_final_details jsonb DEFAULT NULL::jsonb) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    UPDATE raw_retrosheet.ingest_runs
+    SET 
+        status = 'completed',
+        finished_at = now(),
+        details = CASE 
+            WHEN p_final_details IS NOT NULL THEN details || p_final_details
+            ELSE details
+        END
+    WHERE ingest_run_id = p_run_id;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION complete_ingest_run(p_run_id bigint, p_final_details jsonb); Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON FUNCTION raw_retrosheet.complete_ingest_run(p_run_id bigint, p_final_details jsonb) IS 'Mark an ingest run as completed';
+
+
+--
+-- Name: compute_checksum(jsonb); Type: FUNCTION; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE FUNCTION raw_retrosheet.compute_checksum(p_data jsonb) RETURNS text
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN encode(digest(p_data::text, 'sha256'), 'hex');
+END;
+$$;
+
+
+--
+-- Name: FUNCTION compute_checksum(p_data jsonb); Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON FUNCTION raw_retrosheet.compute_checksum(p_data jsonb) IS 'Compute SHA256 checksum for JSON data';
+
+
+--
+-- Name: fail_ingest_run(bigint, text, jsonb); Type: FUNCTION; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE FUNCTION raw_retrosheet.fail_ingest_run(p_run_id bigint, p_error_message text, p_error_details jsonb DEFAULT NULL::jsonb) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    UPDATE raw_retrosheet.ingest_runs
+    SET 
+        status = 'failed',
+        finished_at = now(),
+        error_message = p_error_message,
+        details = CASE 
+            WHEN p_error_details IS NOT NULL THEN details || p_error_details
+            ELSE details
+        END
+    WHERE ingest_run_id = p_run_id;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION fail_ingest_run(p_run_id bigint, p_error_message text, p_error_details jsonb); Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON FUNCTION raw_retrosheet.fail_ingest_run(p_run_id bigint, p_error_message text, p_error_details jsonb) IS 'Mark an ingest run as failed with error message';
+
+
+--
+-- Name: get_git_commit(); Type: FUNCTION; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE FUNCTION raw_retrosheet.get_git_commit() RETURNS text
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- This requires the script to be run from within a git repository
+    -- If not available, returns NULL
+    RETURN NULL;
+END;
+$$;
+
+
+--
+-- Name: start_ingest_run(text, text, text, text, text, jsonb); Type: FUNCTION; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE FUNCTION raw_retrosheet.start_ingest_run(p_source_name text, p_source_version text DEFAULT NULL::text, p_script_name text DEFAULT NULL::text, p_script_version text DEFAULT NULL::text, p_git_commit text DEFAULT NULL::text, p_command_args jsonb DEFAULT '{}'::jsonb) RETURNS bigint
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_run_id bigint;
+BEGIN
+    INSERT INTO raw_retrosheet.ingest_runs (
+        source_name,
+        source_version,
+        script_name,
+        script_version,
+        git_commit,
+        command_args,
+        status,
+        started_at,
+        details
+    ) VALUES (
+        p_source_name,
+        p_source_version,
+        p_script_name,
+        p_script_version,
+        p_git_commit,
+        p_command_args,
+        'running',
+        now(),
+        jsonb_build_object(
+            'started_by', current_user,
+            'hostname', inet_server_addr()
+        )
+    ) RETURNING ingest_run_id INTO v_run_id;
+    
+    RETURN v_run_id;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION start_ingest_run(p_source_name text, p_source_version text, p_script_name text, p_script_version text, p_git_commit text, p_command_args jsonb); Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON FUNCTION raw_retrosheet.start_ingest_run(p_source_name text, p_source_version text, p_script_name text, p_script_version text, p_git_commit text, p_command_args jsonb) IS 'Start a new ingest run and return run_id';
+
+
+--
+-- Name: update_ingest_run_progress(bigint, integer, integer, integer); Type: FUNCTION; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE FUNCTION raw_retrosheet.update_ingest_run_progress(p_run_id bigint, p_records_downloaded integer DEFAULT NULL::integer, p_records_ingested integer DEFAULT NULL::integer, p_records_failed integer DEFAULT NULL::integer) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    UPDATE raw_retrosheet.ingest_runs
+    SET 
+        records_downloaded = COALESCE(p_records_downloaded, records_downloaded),
+        records_ingested = COALESCE(p_records_ingested, records_ingested),
+        records_failed = COALESCE(p_records_failed, records_failed)
+    WHERE ingest_run_id = p_run_id;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION update_ingest_run_progress(p_run_id bigint, p_records_downloaded integer, p_records_ingested integer, p_records_failed integer); Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON FUNCTION raw_retrosheet.update_ingest_run_progress(p_run_id bigint, p_records_downloaded integer, p_records_ingested integer, p_records_failed integer) IS 'Update progress counters for an ingest run';
+
+
+--
+-- Name: update_updated_at(); Type: FUNCTION; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE FUNCTION raw_retrosheet.update_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: fetch_live_schedule(); Type: FUNCTION; Schema: raw_sportradar; Owner: -
+--
+
+CREATE FUNCTION raw_sportradar.fetch_live_schedule() RETURNS jsonb
+    LANGUAGE plpython3u
+    AS $$
+    import httpx
+    try:
+        r = httpx.get("https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=game", timeout=10)
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        return {"error": str(e), "status_code": getattr(r, 'status_code', 0)}
+$$;
+
+
+--
+-- Name: poll_active_games(); Type: FUNCTION; Schema: raw_sportradar; Owner: -
+--
+
+CREATE FUNCTION raw_sportradar.poll_active_games() RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    active_game text;
+    count integer := 0;
+BEGIN
+    FOR active_game IN
+        SELECT DISTINCT game_pk::text
+        FROM core.live_games
+        WHERE status_code IN ('I', 'P')
+        AND game_date >= CURRENT_DATE - INTERVAL '1 day'
+    LOOP
+        PERFORM raw_sportradar.ingest_live_game(active_game);
+        count := count + 1;
+    END LOOP;
+    
+    RETURN count;
+END;
+$$;
+
+
+--
+-- Name: refresh_data_quality_summary(); Type: FUNCTION; Schema: validation; Owner: -
+--
+
+CREATE FUNCTION validation.refresh_data_quality_summary() RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW validation.data_quality_summary;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION refresh_data_quality_summary(); Type: COMMENT; Schema: validation; Owner: -
+--
+
+COMMENT ON FUNCTION validation.refresh_data_quality_summary() IS 'Refresh the materialized data quality summary view';
+
+
+--
+-- Name: create_batch_checkpoint(text, text, bigint, bigint); Type: PROCEDURE; Schema: warehouse; Owner: -
+--
+
+CREATE PROCEDURE warehouse.create_batch_checkpoint(IN p_batch_name text, IN p_column_name text, IN p_total_rows bigint, IN p_processed_rows bigint)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    INSERT INTO warehouse.batch_operations (
+        operation_name,
+        entity_type,
+        entity_id,
+        status,
+        processed_count,
+        total_count,
+        started_at,
+        last_updated
+    )
+    VALUES (
+        p_batch_name,
+        'feature_population',
+        p_column_name,
+        CASE 
+            WHEN p_processed_rows >= p_total_rows THEN 'completed'
+            ELSE 'running'
+        END,
+        p_processed_rows,
+        p_total_rows,
+        NOW(),
+        NOW()
+    )
+    ON CONFLICT (operation_name, entity_type, entity_id)
+    DO UPDATE SET
+        status = EXCLUDED.status,
+        processed_count = EXCLUDED.processed_count,
+        last_updated = NOW();
+END;
+$$;
+
+
+--
+-- Name: PROCEDURE create_batch_checkpoint(IN p_batch_name text, IN p_column_name text, IN p_total_rows bigint, IN p_processed_rows bigint); Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON PROCEDURE warehouse.create_batch_checkpoint(IN p_batch_name text, IN p_column_name text, IN p_total_rows bigint, IN p_processed_rows bigint) IS 'Create or update checkpoint for batch feature population';
+
+
+--
+-- Name: estimate_batch_completion(text, integer, numeric); Type: FUNCTION; Schema: warehouse; Owner: -
+--
+
+CREATE FUNCTION warehouse.estimate_batch_completion(p_column_name text, p_batch_size integer DEFAULT 100000, p_seconds_per_batch numeric DEFAULT 30) RETURNS TABLE(unprocessed_rows bigint, estimated_batches integer, estimated_minutes numeric, estimated_completion timestamp without time zone)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_unprocessed BIGINT;
+    v_batches INTEGER;
+    v_minutes NUMERIC;
+BEGIN
+    -- Get unprocessed count
+    SELECT warehouse.get_unprocessed_count(p_column_name) INTO v_unprocessed;
+
+    -- Calculate estimates
+    v_batches := CEIL(v_unprocessed::NUMERIC / p_batch_size);
+    v_minutes := v_batches * p_seconds_per_batch / 60;
+
+    RETURN QUERY
+    SELECT 
+        v_unprocessed,
+        v_batches,
+        ROUND(v_minutes, 1),
+        NOW() + (v_minutes || ' minutes')::INTERVAL;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION estimate_batch_completion(p_column_name text, p_batch_size integer, p_seconds_per_batch numeric); Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON FUNCTION warehouse.estimate_batch_completion(p_column_name text, p_batch_size integer, p_seconds_per_batch numeric) IS 'Estimate time to complete batch population for a column';
+
+
+--
+-- Name: get_feature_stats(); Type: FUNCTION; Schema: warehouse; Owner: -
+--
+
+CREATE FUNCTION warehouse.get_feature_stats() RETURNS TABLE(total_columns bigint, numeric_columns bigint, boolean_columns bigint, text_columns bigint, populated_columns bigint, empty_columns bigint)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        COUNT(*)::BIGINT,
+        COUNT(*) FILTER (WHERE data_type IN ('numeric', 'real', 'integer', 'bigint', 'smallint'))::BIGINT,
+        COUNT(*) FILTER (WHERE data_type = 'boolean')::BIGINT,
+        COUNT(*) FILTER (WHERE data_type IN ('text', 'character varying'))::BIGINT,
+        0::BIGINT,  -- Populated would need actual query
+        0::BIGINT   -- Empty would need actual query
+    FROM information_schema.columns
+    WHERE table_schema = 'features_pitch'
+      AND table_name = 'engineered_features'
+      AND column_name NOT IN ('pitch_id', 'engineered_at', 'engineer_version', 'source_calculations');
+END;
+$$;
+
+
+--
+-- Name: FUNCTION get_feature_stats(); Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON FUNCTION warehouse.get_feature_stats() IS 'Get statistics about feature columns in engineered_features';
+
+
+--
+-- Name: get_last_successful_phase(character varying); Type: FUNCTION; Schema: warehouse; Owner: -
+--
+
+CREATE FUNCTION warehouse.get_last_successful_phase(p_run_mode character varying DEFAULT 'resume'::character varying) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_last_phase INT;
+BEGIN
+    IF p_run_mode = 'resume' THEN
+        SELECT COALESCE(MAX(phase_order), 0)
+        INTO v_last_phase
+        FROM warehouse.rebuild_log l
+        JOIN warehouse.rebuild_runs r ON l.run_id = r.run_id
+        WHERE r.status = 'failed'
+          AND l.status = 'completed'
+          AND r.run_id = (
+              SELECT MAX(run_id) FROM warehouse.rebuild_runs WHERE status = 'failed'
+          );
+    ELSE
+        v_last_phase := 0;  -- Start from beginning for full rebuild
+    END IF;
+    
+    RETURN v_last_phase;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION get_last_successful_phase(p_run_mode character varying); Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON FUNCTION warehouse.get_last_successful_phase(p_run_mode character varying) IS 'Determine where to resume from in resume mode';
+
+
+--
+-- Name: get_resumable_batch(text, text, text); Type: FUNCTION; Schema: warehouse; Owner: -
+--
+
+CREATE FUNCTION warehouse.get_resumable_batch(p_batch_name text, p_target_schema text, p_target_table text) RETURNS bigint
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_batch_id BIGINT;
+BEGIN
+    SELECT batch_id INTO v_batch_id
+    FROM warehouse.batch_operations
+    WHERE batch_name = p_batch_name
+      AND target_schema = p_target_schema
+      AND target_table = p_target_table
+      AND status IN ('running', 'failed', 'paused')
+    ORDER BY started_at DESC
+    LIMIT 1;
+    
+    RETURN v_batch_id;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION get_resumable_batch(p_batch_name text, p_target_schema text, p_target_table text); Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON FUNCTION warehouse.get_resumable_batch(p_batch_name text, p_target_schema text, p_target_table text) IS 'Find the most recent incomplete batch for resume';
+
+
+--
+-- Name: get_unprocessed_count(text); Type: FUNCTION; Schema: warehouse; Owner: -
+--
+
+CREATE FUNCTION warehouse.get_unprocessed_count(p_column_name text) RETURNS bigint
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_count BIGINT;
+    v_sql TEXT;
+BEGIN
+    v_sql := format('SELECT COUNT(*) FROM features_pitch.engineered_features WHERE %I IS NULL', p_column_name);
+    EXECUTE v_sql INTO v_count;
+    RETURN v_count;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION get_unprocessed_count(p_column_name text); Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON FUNCTION warehouse.get_unprocessed_count(p_column_name text) IS 'Get count of rows with NULL for a specific feature column';
+
+
+--
+-- Name: health_check(); Type: FUNCTION; Schema: warehouse; Owner: -
+--
+
+CREATE FUNCTION warehouse.health_check() RETURNS TABLE(min_season integer, max_season integer, games_count bigint, events_count bigint, plate_appearances_count bigint)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    SELECT MIN(season), MAX(season) INTO min_season, max_season FROM core.games;
+    SELECT COUNT(*) INTO games_count FROM core.games;
+    SELECT COUNT(*) INTO events_count FROM core.events;
+    SELECT COUNT(*) INTO plate_appearances_count FROM core.plate_appearances;
+    RETURN NEXT;
+END;
+$$;
+
+
+--
+-- Name: log_phase_end(bigint, character varying, bigint, text); Type: FUNCTION; Schema: warehouse; Owner: -
+--
+
+CREATE FUNCTION warehouse.log_phase_end(p_log_id bigint, p_status character varying, p_rows_affected bigint DEFAULT NULL::bigint, p_error_message text DEFAULT NULL::text) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_start_time TIMESTAMP WITH TIME ZONE;
+    v_exec_time_ms BIGINT;
+BEGIN
+    -- Get start time for duration calculation
+    SELECT started_at INTO v_start_time 
+    FROM warehouse.rebuild_log 
+    WHERE log_id = p_log_id;
+    
+    v_exec_time_ms := EXTRACT(EPOCH FROM (NOW() - v_start_time)) * 1000;
+    
+    UPDATE warehouse.rebuild_log
+    SET status = p_status,
+        completed_at = NOW(),
+        rows_affected = p_rows_affected,
+        execution_time_ms = v_exec_time_ms,
+        error_message = p_error_message
+    WHERE log_id = p_log_id;
+    
+    IF p_status = 'completed' THEN
+        RAISE NOTICE '[Phase Complete] % rows in % ms', p_rows_affected, v_exec_time_ms;
+    ELSIF p_status = 'failed' THEN
+        RAISE NOTICE '[Phase Failed] Error: %', p_error_message;
+    END IF;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION log_phase_end(p_log_id bigint, p_status character varying, p_rows_affected bigint, p_error_message text); Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON FUNCTION warehouse.log_phase_end(p_log_id bigint, p_status character varying, p_rows_affected bigint, p_error_message text) IS 'Log the completion or failure of a rebuild phase';
+
+
+--
+-- Name: log_phase_start(bigint, character varying, integer, jsonb); Type: FUNCTION; Schema: warehouse; Owner: -
+--
+
+CREATE FUNCTION warehouse.log_phase_start(p_run_id bigint, p_phase character varying, p_phase_order integer, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS bigint
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_log_id BIGINT;
+BEGIN
+    INSERT INTO warehouse.rebuild_log (run_id, phase, phase_order, status, phase_metadata)
+    VALUES (p_run_id, p_phase, p_phase_order, 'running', p_metadata)
+    RETURNING log_id INTO v_log_id;
+    
+    RAISE NOTICE '[Phase %] Started: %', p_phase_order, p_phase;
+    
+    RETURN v_log_id;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION log_phase_start(p_run_id bigint, p_phase character varying, p_phase_order integer, p_metadata jsonb); Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON FUNCTION warehouse.log_phase_start(p_run_id bigint, p_phase character varying, p_phase_order integer, p_metadata jsonb) IS 'Log the start of a rebuild phase';
+
+
+--
+-- Name: populate_features_phase(integer, boolean); Type: PROCEDURE; Schema: warehouse; Owner: -
+--
+
+CREATE PROCEDURE warehouse.populate_features_phase(IN p_phase_number integer, IN p_dry_run boolean DEFAULT false)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_run_id INTEGER;
+    v_sql_file TEXT;
+    v_start_time TIMESTAMP := NOW();
+    v_row_count BIGINT;
+    v_phase_name TEXT;
+BEGIN
+    -- Map phase numbers to names
+    v_phase_name := CASE p_phase_number
+        WHEN 1 THEN 'Core Engineered Features'
+        WHEN 2 THEN 'Additional Features Batch'
+        WHEN 3 THEN 'Extended Features'
+        WHEN 4 THEN 'Extended Features Batch'
+        WHEN 5 THEN 'Context Features Schema'
+        WHEN 6 THEN 'Context Features Population'
+        WHEN 7 THEN 'Context Features Batch'
+        WHEN 8 THEN 'Final Features Schema'
+        WHEN 9 THEN 'Final Features Population'
+        WHEN 10 THEN 'Final Features Batch'
+        WHEN 11 THEN 'Specialized Features'
+        WHEN 12 THEN 'Enhanced Views'
+        ELSE 'Unknown Phase'
+    END;
+
+    -- Log start
+    INSERT INTO warehouse.rebuild_log (run_id, phase_name, status, message, started_at)
+    VALUES (v_run_id, v_phase_name, 'running', 'Starting phase ' || p_phase_number, v_start_time);
+
+    RAISE NOTICE 'Phase % (%): Starting at %', p_phase_number, v_phase_name, v_start_time;
+
+    -- Get row count before
+    SELECT COUNT(*) INTO v_row_count FROM features_pitch.engineered_features;
+    RAISE NOTICE 'Rows in engineered_features: %', v_row_count;
+
+    -- Log completion
+    INSERT INTO warehouse.rebuild_log (run_id, phase_name, status, message, completed_at)
+    VALUES (v_run_id, v_phase_name, 'completed', 'Phase ' || p_phase_number || ' completed', NOW());
+
+    RAISE NOTICE 'Phase %: Completed at %', p_phase_number, NOW();
+END;
+$$;
+
+
+--
+-- Name: PROCEDURE populate_features_phase(IN p_phase_number integer, IN p_dry_run boolean); Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON PROCEDURE warehouse.populate_features_phase(IN p_phase_number integer, IN p_dry_run boolean) IS 'Execute a specific feature population phase with logging';
+
+
+--
+-- Name: update_batch_progress(bigint, bigint, bigint); Type: FUNCTION; Schema: warehouse; Owner: -
+--
+
+CREATE FUNCTION warehouse.update_batch_progress(p_batch_id bigint, p_last_processed_id bigint, p_processed_rows bigint) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    UPDATE warehouse.batch_operations
+    SET last_processed_id = p_last_processed_id,
+        processed_rows = p_processed_rows,
+        status = CASE 
+            WHEN p_processed_rows >= total_rows THEN 'completed'
+            ELSE 'running'
+        END,
+        completed_at = CASE 
+            WHEN p_processed_rows >= total_rows THEN NOW()
+            ELSE completed_at
+        END
+    WHERE batch_id = p_batch_id;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION update_batch_progress(p_batch_id bigint, p_last_processed_id bigint, p_processed_rows bigint); Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON FUNCTION warehouse.update_batch_progress(p_batch_id bigint, p_last_processed_id bigint, p_processed_rows bigint) IS 'Update batch progress during processing - call periodically for resume capability';
+
+
+--
+-- Name: verify_features_populated(); Type: FUNCTION; Schema: warehouse; Owner: -
+--
+
+CREATE FUNCTION warehouse.verify_features_populated() RETURNS TABLE(feature_category text, column_name text, populated_count bigint, total_count bigint, percent_complete numeric, status text)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_total BIGINT;
+BEGIN
+    -- Get total row count once
+    SELECT COUNT(*) INTO v_total FROM features_pitch.engineered_features;
+
+    -- Core features
+    RETURN QUERY
+    SELECT 
+        'Core'::TEXT,
+        'velocity_percentile'::TEXT,
+        COUNT(ef.velocity_percentile),
+        v_total,
+        ROUND(COUNT(ef.velocity_percentile)::NUMERIC / NULLIF(v_total, 0) * 100, 2),
+        CASE 
+            WHEN COUNT(ef.velocity_percentile) = v_total THEN 'COMPLETE'
+            WHEN COUNT(ef.velocity_percentile) > 0 THEN 'PARTIAL'
+            ELSE 'EMPTY'
+        END
+    FROM features_pitch.engineered_features ef;
+
+    -- Platoon features
+    RETURN QUERY
+    SELECT 
+        'Platoon'::TEXT,
+        'is_same_handed_matchup'::TEXT,
+        COUNT(ef.is_same_handed_matchup),
+        v_total,
+        ROUND(COUNT(ef.is_same_handed_matchup)::NUMERIC / NULLIF(v_total, 0) * 100, 2),
+        CASE 
+            WHEN COUNT(ef.is_same_handed_matchup) = v_total THEN 'COMPLETE'
+            WHEN COUNT(ef.is_same_handed_matchup) > 0 THEN 'PARTIAL'
+            ELSE 'EMPTY'
+        END
+    FROM features_pitch.engineered_features ef;
+
+    -- Quality features
+    RETURN QUERY
+    SELECT 
+        'Quality'::TEXT,
+        'pitch_quality_score'::TEXT,
+        COUNT(ef.pitch_quality_score),
+        v_total,
+        ROUND(COUNT(ef.pitch_quality_score)::NUMERIC / NULLIF(v_total, 0) * 100, 2),
+        CASE 
+            WHEN COUNT(ef.pitch_quality_score) = v_total THEN 'COMPLETE'
+            WHEN COUNT(ef.pitch_quality_score) > 0 THEN 'PARTIAL'
+            ELSE 'EMPTY'
+        END
+    FROM features_pitch.engineered_features ef;
+
+    -- Context features
+    RETURN QUERY
+    SELECT 
+        'Context'::TEXT,
+        'temp_extreme_flag'::TEXT,
+        COUNT(ef.temp_extreme_flag),
+        v_total,
+        ROUND(COUNT(ef.temp_extreme_flag)::NUMERIC / NULLIF(v_total, 0) * 100, 2),
+        CASE 
+            WHEN COUNT(ef.temp_extreme_flag) = v_total THEN 'COMPLETE'
+            WHEN COUNT(ef.temp_extreme_flag) > 0 THEN 'PARTIAL'
+            ELSE 'EMPTY'
+        END
+    FROM features_pitch.engineered_features ef;
+
+    -- Markov features
+    RETURN QUERY
+    SELECT 
+        'Markov'::TEXT,
+        'strike_accumulation_rate'::TEXT,
+        COUNT(ef.strike_accumulation_rate),
+        v_total,
+        ROUND(COUNT(ef.strike_accumulation_rate)::NUMERIC / NULLIF(v_total, 0) * 100, 2),
+        CASE 
+            WHEN COUNT(ef.strike_accumulation_rate) = v_total THEN 'COMPLETE'
+            WHEN COUNT(ef.strike_accumulation_rate) > 0 THEN 'PARTIAL'
+            ELSE 'EMPTY'
+        END
+    FROM features_pitch.engineered_features ef;
+
+    -- Matchup features
+    RETURN QUERY
+    SELECT 
+        'Matchup'::TEXT,
+        'matchup_prior_pa_count'::TEXT,
+        COUNT(ef.matchup_prior_pa_count),
+        v_total,
+        ROUND(COUNT(ef.matchup_prior_pa_count)::NUMERIC / NULLIF(v_total, 0) * 100, 2),
+        CASE 
+            WHEN COUNT(ef.matchup_prior_pa_count) = v_total THEN 'COMPLETE'
+            WHEN COUNT(ef.matchup_prior_pa_count) > 0 THEN 'PARTIAL'
+            ELSE 'EMPTY'
+        END
+    FROM features_pitch.engineered_features ef;
+
+    RETURN;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION verify_features_populated(); Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON FUNCTION warehouse.verify_features_populated() IS 'Returns population status for all major feature categories';
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: model_registry; Type: TABLE; Schema: models; Owner: -
+--
+
+CREATE TABLE models.model_registry (
+    model_id bigint NOT NULL,
+    target_id text NOT NULL,
+    model_name text NOT NULL,
+    model_family text NOT NULL,
+    model_version text NOT NULL,
+    artifact_uri text,
+    training_window daterange,
+    feature_spec jsonb DEFAULT '{}'::jsonb NOT NULL,
+    metrics jsonb DEFAULT '{}'::jsonb NOT NULL,
+    is_active boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE model_registry; Type: COMMENT; Schema: models; Owner: -
+--
+
+COMMENT ON TABLE models.model_registry IS 'Model registry with metadata (488 kB). Registered models with version, metrics, and deployment status.';
+
+
+--
+-- Name: live_pa_predictions; Type: TABLE; Schema: predictions; Owner: -
+--
+
+CREATE TABLE predictions.live_pa_predictions (
+    live_pa_prediction_id bigint NOT NULL,
+    game_id text NOT NULL,
+    plate_appearance_id integer NOT NULL,
+    target_id text NOT NULL,
+    model_id bigint NOT NULL,
+    prediction_run_id bigint,
+    feature_snapshot jsonb DEFAULT '{}'::jsonb NOT NULL,
+    state_snapshot jsonb DEFAULT '{}'::jsonb NOT NULL,
+    missing_features text[] DEFAULT '{}'::text[] NOT NULL,
+    predicted_outcome text NOT NULL,
+    predicted_probabilities jsonb DEFAULT '{}'::jsonb NOT NULL,
+    aggregated_metrics jsonb DEFAULT '{}'::jsonb NOT NULL,
+    request_context jsonb DEFAULT '{}'::jsonb NOT NULL,
+    prediction_timestamp timestamp with time zone DEFAULT now() NOT NULL,
+    is_calibrated boolean DEFAULT false NOT NULL,
+    calibration_artifact_uri text,
+    actual_outcome text,
+    outcome_timestamp timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE live_pa_predictions; Type: COMMENT; Schema: predictions; Owner: -
+--
+
+COMMENT ON TABLE predictions.live_pa_predictions IS 'Live game predictions (144 kB). Real-time predictions for in-progress PAs.';
+
+
+--
+-- Name: live_pa_prediction_cards; Type: VIEW; Schema: analysis; Owner: -
+--
+
+CREATE VIEW analysis.live_pa_prediction_cards AS
+ SELECT l.live_pa_prediction_id,
+    l.game_id,
+    l.plate_appearance_id,
+    l.target_id,
+    m.model_name,
+    m.model_version,
+    l.predicted_outcome,
+    l.predicted_probabilities,
+    l.aggregated_metrics,
+    l.state_snapshot,
+    l.missing_features,
+    l.prediction_timestamp,
+    l.actual_outcome,
+    l.outcome_timestamp,
+        CASE
+            WHEN (l.actual_outcome IS NOT NULL) THEN 'settled'::text
+            ELSE 'pending'::text
+        END AS settlement_status,
+        CASE
+            WHEN (l.actual_outcome IS NOT NULL) THEN ((l.predicted_probabilities ->> l.actual_outcome))::numeric
+            ELSE NULL::numeric
+        END AS assigned_probability
+   FROM (predictions.live_pa_predictions l
+     LEFT JOIN models.model_registry m ON ((l.model_id = m.model_id)))
+  ORDER BY l.prediction_timestamp DESC;
+
+
+--
+-- Name: live_pa_prediction_latest; Type: VIEW; Schema: analysis; Owner: -
+--
+
+CREATE VIEW analysis.live_pa_prediction_latest AS
+ SELECT DISTINCT ON (game_id, plate_appearance_id) live_pa_prediction_id,
+    game_id,
+    plate_appearance_id,
+    target_id,
+    model_id,
+    prediction_run_id,
+    feature_snapshot,
+    state_snapshot,
+    missing_features,
+    predicted_outcome,
+    predicted_probabilities,
+    aggregated_metrics,
+    request_context,
+    prediction_timestamp,
+    is_calibrated,
+    calibration_artifact_uri,
+    actual_outcome,
+    outcome_timestamp,
+    created_at,
+    updated_at
+   FROM predictions.live_pa_predictions
+  ORDER BY game_id, plate_appearance_id, prediction_timestamp DESC;
+
+
+--
+-- Name: live_events; Type: TABLE; Schema: core; Owner: -
+--
+
+CREATE TABLE core.live_events (
+    game_id text,
+    event_id bigint,
+    season text,
+    inning bigint,
+    is_bottom_inning boolean,
+    event_sequence bigint,
+    batter_id text,
+    pitcher_id text,
+    batter_hand text,
+    pitcher_hand text,
+    outs_before bigint,
+    balls bigint,
+    strikes bigint,
+    start_bases bigint,
+    event_code bigint,
+    event_text text,
+    is_at_bat boolean,
+    is_plate_appearance boolean,
+    hit_value bigint,
+    is_hit boolean,
+    is_walk boolean,
+    is_strikeout boolean,
+    is_home_run boolean,
+    runs_on_play bigint,
+    rbi bigint,
+    source_type text,
+    mlb_game_pk integer,
+    snapshot_id integer,
+    plate_appearance_index integer,
+    mlb_event_type text,
+    event_type_description text,
+    trajectory text,
+    home_score_after integer,
+    away_score_after integer,
+    updated_at timestamp with time zone DEFAULT now(),
+    raw_play jsonb,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE live_events; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON TABLE core.live_events IS 'Real-time play-by-play events (18 GB). Stores live event stream from MLB API. Updated continuously during games.';
+
+
+--
+-- Name: live_games; Type: TABLE; Schema: core; Owner: -
+--
+
+CREATE TABLE core.live_games (
+    game_id text,
+    season text,
+    game_date text,
+    home_team_id text,
+    away_team_id text,
+    home_team_name text,
+    away_team_name text,
+    park_id text,
+    home_score bigint,
+    away_score bigint,
+    is_complete boolean,
+    source_type text,
+    mlb_game_pk integer,
+    snapshot_id integer,
+    snapshot_fetched_at timestamp with time zone,
+    status_code text,
+    detailed_state text,
+    venue_name text,
+    raw_payload jsonb,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    game_date_parsed date,
+    season_int integer,
+    CONSTRAINT live_games_scores_positive CHECK (((home_score >= 0) AND (away_score >= 0)))
+);
+
+
+--
+-- Name: TABLE live_games; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON TABLE core.live_games IS 'Real-time game feeds (16 GB). Stores live game state from MLB API for in-progress games. Updated continuously during games.';
+
+
+--
+-- Name: mlb_combined_events; Type: VIEW; Schema: analysis; Owner: -
+--
+
+CREATE VIEW analysis.mlb_combined_events AS
+ SELECT le.game_id,
+    le.event_sequence,
+    le.mlb_event_type AS event_type,
+    le.event_text AS event_description,
+    le.inning,
+    le.is_bottom_inning,
+    le.batter_id,
+    le.pitcher_id,
+    le.hit_value,
+    le.runs_on_play AS runs_scored,
+    le.rbi AS runs_batted_in,
+    le.home_score_after,
+    le.away_score_after,
+    le.is_at_bat,
+    le.is_plate_appearance,
+    le.is_home_run,
+    le.source_type,
+    g.season,
+    g.home_team_name,
+    g.away_team_name
+   FROM (core.live_events le
+     JOIN core.live_games g ON ((le.game_id = g.game_id)));
+
+
+--
+-- Name: pitches; Type: TABLE; Schema: mlb; Owner: -
+--
+
+CREATE TABLE mlb.pitches (
+    game_pk integer NOT NULL,
+    event_index integer NOT NULL,
+    pitch_index integer NOT NULL,
+    pitch_number integer NOT NULL,
+    play_id text,
+    pitch_uid text,
+    pitch_type_code text,
+    pitch_type_description text,
+    pitch_type_confidence numeric(4,3),
+    pitch_call_code text,
+    pitch_call_description text,
+    pitch_call_confidence numeric(4,3),
+    plate_x numeric(6,2),
+    plate_z numeric(6,2),
+    plate_zone integer,
+    start_speed numeric(5,1),
+    end_speed numeric(5,1),
+    extension numeric(5,3),
+    spin_rate integer,
+    spin_direction integer,
+    break_angle numeric(4,1),
+    break_length numeric(4,1),
+    break_vertical numeric(5,1),
+    break_horizontal numeric(5,1),
+    pfx_x numeric(5,2),
+    pfx_z numeric(5,2),
+    plate_time numeric(6,4),
+    reaction_time numeric(6,4),
+    batter_id integer,
+    pitcher_id integer,
+    balls_before integer,
+    strikes_before integer,
+    outs_before integer,
+    inning integer,
+    is_top_inning boolean,
+    runner_on_1b boolean DEFAULT false,
+    runner_on_2b boolean DEFAULT false,
+    runner_on_3b boolean DEFAULT false,
+    home_score integer,
+    away_score integer,
+    api_source text DEFAULT 'mlb_api'::text,
+    data_quality_score numeric(3,2),
+    pitch_system text DEFAULT 'statcast'::text,
+    last_updated timestamp with time zone DEFAULT now(),
+    created_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT pitches_balls_before_check CHECK (((balls_before >= 0) AND (balls_before <= 4))),
+    CONSTRAINT pitches_outs_before_check CHECK (((outs_before >= 0) AND (outs_before <= 3))),
+    CONSTRAINT pitches_strikes_before_check CHECK (((strikes_before >= 0) AND (strikes_before <= 3)))
+);
+
+
+--
+-- Name: TABLE pitches; Type: COMMENT; Schema: mlb; Owner: -
+--
+
+COMMENT ON TABLE mlb.pitches IS 'MLB API pitch-level data (7.1 GB). Pitch records from MLB API.';
+
+
+--
+-- Name: players; Type: TABLE; Schema: mlb; Owner: -
+--
+
+CREATE TABLE mlb.players (
+    mlb_id integer NOT NULL,
+    retrosheet_id text,
+    full_name text NOT NULL,
+    first_name text,
+    last_name text,
+    primary_number text,
+    birth_date date,
+    birth_city text,
+    birth_state_province text,
+    birth_country text,
+    height text,
+    weight integer,
+    bat_side text,
+    pitch_hand text,
+    mlb_debut_date date,
+    last_game_date date,
+    active boolean DEFAULT true,
+    current_team_id integer,
+    position_code text,
+    position_name text,
+    position_type text,
+    bat_speed numeric(6,1),
+    swing_speed numeric(6,1),
+    sprint_speed numeric(5,2),
+    arm_strength text,
+    api_source text DEFAULT 'mlb_api'::text,
+    data_quality_score numeric(3,2),
+    last_updated timestamp with time zone DEFAULT now(),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE players; Type: COMMENT; Schema: mlb; Owner: -
+--
+
+COMMENT ON TABLE mlb.players IS 'MLB API player records (80 kB). Player data from MLB API.';
+
+
+--
+-- Name: mlb_pitch_analysis; Type: VIEW; Schema: analysis; Owner: -
+--
+
+CREATE VIEW analysis.mlb_pitch_analysis AS
+ SELECT p.game_pk,
+    p.event_index,
+    p.pitch_index,
+    p.pitch_type_code,
+    p.pitch_type_description,
+    p.start_speed,
+    p.spin_rate,
+    p.plate_x,
+    p.plate_z,
+    p.pitch_call_code,
+    bat.full_name AS batter_name,
+    pit.full_name AS pitcher_name,
+    g.home_team_name,
+    g.away_team_name,
+    g.game_date,
+        CASE
+            WHEN (((p.plate_x >= '-0.83'::numeric) AND (p.plate_x <= 0.83)) AND ((p.plate_z >= 1.5) AND (p.plate_z <= 3.5))) THEN 1
+            ELSE 0
+        END AS in_zone,
+        CASE
+            WHEN (p.pitch_call_code = 'S'::text) THEN 1
+            ELSE 0
+        END AS swing,
+        CASE
+            WHEN (p.pitch_call_code = ANY (ARRAY['S'::text, 'F'::text, 'B'::text])) THEN 1
+            ELSE 0
+        END AS decision_pitch
+   FROM (((mlb.pitches p
+     JOIN mlb.players bat ON ((p.batter_id = bat.mlb_id)))
+     JOIN mlb.players pit ON ((p.pitcher_id = pit.mlb_id)))
+     JOIN core.live_games g ON ((p.game_pk = (g.mlb_game_pk)::bigint)));
+
+
+--
+-- Name: mlb_player_performance; Type: VIEW; Schema: analysis; Owner: -
+--
+
+CREATE VIEW analysis.mlb_player_performance AS
+ SELECT p.mlb_id,
+    p.full_name,
+    p.bat_side,
+    p.pitch_hand,
+    COALESCE(mlb_stats.avg, (0)::numeric) AS batting_avg,
+    COALESCE(mlb_stats.hits, (0)::bigint) AS hits,
+    COALESCE(mlb_stats.homers, (0)::bigint) AS home_runs,
+    COALESCE(mlb_stats.rbi, (0)::numeric) AS rbi,
+    COALESCE(mlb_stats.games, (0)::bigint) AS games_played,
+    COALESCE(mlb_stats.plate_appearances, (0)::bigint) AS plate_appearances
+   FROM (mlb.players p
+     LEFT JOIN ( SELECT (live_events.batter_id)::bigint AS batter_id,
+            count(DISTINCT live_events.game_id) AS games,
+            count(
+                CASE
+                    WHEN live_events.is_plate_appearance THEN 1
+                    ELSE NULL::integer
+                END) AS plate_appearances,
+            avg(
+                CASE
+                    WHEN live_events.is_hit THEN 1.0
+                    ELSE 0.0
+                END) AS avg,
+            count(
+                CASE
+                    WHEN live_events.is_hit THEN 1
+                    ELSE NULL::integer
+                END) AS hits,
+            count(
+                CASE
+                    WHEN live_events.is_home_run THEN 1
+                    ELSE NULL::integer
+                END) AS homers,
+            sum(live_events.rbi) AS rbi
+           FROM core.live_events
+          WHERE (live_events.batter_id IS NOT NULL)
+          GROUP BY live_events.batter_id) mlb_stats ON ((p.mlb_id = mlb_stats.batter_id)));
+
+
+--
+-- Name: mlb_season_batting_leaders; Type: MATERIALIZED VIEW; Schema: analysis; Owner: -
+--
+
+CREATE MATERIALIZED VIEW analysis.mlb_season_batting_leaders AS
+ SELECT season,
+    batter_id,
+    player_name,
+    team_name,
+    games_played,
+    hits,
+    homers,
+    rbi,
+    batting_avg,
+    row_number() OVER (PARTITION BY season ORDER BY hits DESC) AS hits_rank,
+    row_number() OVER (PARTITION BY season ORDER BY homers DESC) AS hr_rank,
+    row_number() OVER (PARTITION BY season ORDER BY rbi DESC) AS rbi_rank
+   FROM ( SELECT (EXTRACT(year FROM (g.game_date)::date))::integer AS season,
+            (e.batter_id)::bigint AS batter_id,
+            p.full_name AS player_name,
+            g.home_team_name AS team_name,
+            count(DISTINCT g.game_id) AS games_played,
+            count(
+                CASE
+                    WHEN e.is_hit THEN 1
+                    ELSE NULL::integer
+                END) AS hits,
+            count(
+                CASE
+                    WHEN e.is_home_run THEN 1
+                    ELSE NULL::integer
+                END) AS homers,
+            COALESCE(sum(e.rbi), (0)::numeric) AS rbi,
+            round(((count(
+                CASE
+                    WHEN e.is_hit THEN 1
+                    ELSE NULL::integer
+                END))::numeric / (NULLIF(count(
+                CASE
+                    WHEN e.is_at_bat THEN 1
+                    ELSE NULL::integer
+                END), 0))::numeric), 3) AS batting_avg
+           FROM ((core.live_events e
+             JOIN core.live_games g ON ((e.game_id = g.game_id)))
+             JOIN mlb.players p ON (((e.batter_id)::bigint = p.mlb_id)))
+          WHERE (e.batter_id IS NOT NULL)
+          GROUP BY ((EXTRACT(year FROM (g.game_date)::date))::integer), (e.batter_id)::bigint, p.full_name, g.home_team_name
+         HAVING (count(
+                CASE
+                    WHEN e.is_at_bat THEN 1
+                    ELSE NULL::integer
+                END) >= 50)) stats
+  ORDER BY season, hits DESC
+  WITH NO DATA;
+
+
+--
+-- Name: mlb_season_pitching_leaders; Type: MATERIALIZED VIEW; Schema: analysis; Owner: -
+--
+
+CREATE MATERIALIZED VIEW analysis.mlb_season_pitching_leaders AS
+ SELECT season,
+    pitcher_id,
+    player_name,
+    team_name,
+    games_pitched,
+    hits_allowed,
+    runs_allowed,
+    home_runs_allowed,
+    row_number() OVER (PARTITION BY season ORDER BY games_pitched DESC) AS games_rank
+   FROM ( SELECT (EXTRACT(year FROM (g.game_date)::date))::integer AS season,
+            (e.pitcher_id)::bigint AS pitcher_id,
+            p.full_name AS player_name,
+            g.home_team_name AS team_name,
+            count(DISTINCT g.game_id) AS games_pitched,
+            count(
+                CASE
+                    WHEN e.is_hit THEN 1
+                    ELSE NULL::integer
+                END) AS hits_allowed,
+            sum((e.home_score_after - e.away_score_after)) AS runs_allowed,
+            count(
+                CASE
+                    WHEN e.is_home_run THEN 1
+                    ELSE NULL::integer
+                END) AS home_runs_allowed
+           FROM ((core.live_events e
+             JOIN core.live_games g ON ((e.game_id = g.game_id)))
+             JOIN mlb.players p ON (((e.pitcher_id)::bigint = p.mlb_id)))
+          WHERE (e.pitcher_id IS NOT NULL)
+          GROUP BY ((EXTRACT(year FROM (g.game_date)::date))::integer), (e.pitcher_id)::bigint, p.full_name, g.home_team_name) stats
+  ORDER BY season, games_pitched DESC
+  WITH NO DATA;
+
+
+--
+-- Name: mlb_team_season_stats; Type: MATERIALIZED VIEW; Schema: analysis; Owner: -
+--
+
+CREATE MATERIALIZED VIEW analysis.mlb_team_season_stats AS
+ SELECT season,
+    team_name,
+    games_played,
+    wins,
+    losses,
+    win_pct,
+    runs_scored,
+    runs_allowed,
+    row_number() OVER (PARTITION BY season ORDER BY wins DESC) AS wins_rank
+   FROM ( SELECT (EXTRACT(year FROM (g.game_date)::date))::integer AS season,
+            g.home_team_name AS team_name,
+            count(*) AS games_played,
+            count(
+                CASE
+                    WHEN (g.home_score > g.away_score) THEN 1
+                    ELSE NULL::integer
+                END) AS wins,
+            count(
+                CASE
+                    WHEN (g.home_score < g.away_score) THEN 1
+                    ELSE NULL::integer
+                END) AS losses,
+            round(((count(
+                CASE
+                    WHEN (g.home_score > g.away_score) THEN 1
+                    ELSE NULL::integer
+                END))::numeric / (count(*))::numeric), 3) AS win_pct,
+            sum(g.home_score) AS runs_scored,
+            sum(g.away_score) AS runs_allowed
+           FROM core.live_games g
+          GROUP BY ((EXTRACT(year FROM (g.game_date)::date))::integer), g.home_team_name) home_stats
+  ORDER BY season, wins DESC
+  WITH NO DATA;
+
+
+--
+-- Name: batter_stats; Type: TABLE; Schema: baseball_savant; Owner: -
+--
+
+CREATE TABLE baseball_savant.batter_stats (
+    "Rk." text,
+    "Player" text,
+    "Year" text,
+    "Age" text,
+    "AB" text,
+    "PA" text,
+    "H" text,
+    "1B" text,
+    "2B" text,
+    "3B" text,
+    "HR" text,
+    "SO" text,
+    "BB" text,
+    "K%" text,
+    "BB%" text,
+    "AVG" text,
+    "SLG" text,
+    "OBP" text,
+    "OPS" text,
+    "ISO" text,
+    "BABIP" text,
+    "RBI" text,
+    "LOB" text,
+    "TB" text,
+    "CS" text,
+    "SB" text,
+    "AB-Scoring" text,
+    "Balls" text,
+    "Called Strike" text,
+    "Catcher Int." text,
+    "Foul" text,
+    "Foul Tip" text,
+    "G" text,
+    "GIDP" text,
+    "GITP" text,
+    "2B-GRD" text,
+    "HBP" text,
+    "Hit-GB" text,
+    "Hit-FB" text,
+    "HIP" text,
+    "Hit-LD" text,
+    "H-Popup" text,
+    "Out-FB" text,
+    "Out-GB" text,
+    "Out-LD" text,
+    "Out-Popup" text,
+    "IntentBall" text,
+    "IBB" text,
+    "Interference" text,
+    "Pinch Hit" text,
+    "Pinch Run" text,
+    "Pitchout" text,
+    "G-DH" text,
+    "Sac Bunt" text,
+    "Sac Fly" text,
+    "Swing & Misses" text,
+    "CS-2B" text,
+    "CS-3B" text,
+    "CS-HP" text,
+    "Def Indiff" text,
+    "Runner Int." text,
+    "Pickoff 1B-Out" text,
+    "Pickoff 2B-Out" text,
+    "Pickoff 3B-Out" text,
+    "R" text,
+    "SB-2B" text,
+    "SB-3B" text,
+    "SB-HP" text,
+    "TotalBalls" text,
+    "Sac" text,
+    "Total Strikes" text,
+    "Total Swings" text,
+    "TP" text,
+    "SB%" text,
+    "Pickoff" text,
+    "ROE" text,
+    "Walkoff" text,
+    "ROI" text,
+    "xBA" text,
+    "xSLG" text,
+    "wOBA" text,
+    "xwOBA" text,
+    "xOBP" text,
+    "xISO" text,
+    "wOBAcon" text,
+    "xwOBAcon" text,
+    "BACON" text,
+    "xBACON" text,
+    "BA - xBA" text,
+    "SLG - xSLG" text,
+    "wOBA - xwOBA" text,
+    "Bat Speed" text,
+    "Fast Swing %" text,
+    "Blasts / Contact" text,
+    "Blasts / Swing" text,
+    "Squared-Up / Contact" text,
+    "Squared-Up / Swing" text,
+    "Swing Length" text,
+    "Swords" text,
+    "Attack Angle" text,
+    "Attack Direction" text,
+    "Ideal Attack Angle %" text,
+    "Swing Path Tilt" text,
+    "Avg EV (MPH)" text,
+    "Avg LA (°)" text,
+    "LA Sweet-Spot %" text,
+    "Barrels" text,
+    "Barrel%" text,
+    "Solid Contact %" text,
+    "Flare/Burner %" text,
+    "Under %" text,
+    "Topped %" text,
+    "Poor/Weak %" text,
+    "Hard Hit %" text,
+    "EV50For a batter" text,
+    " EV50 is an average of the hardest 50% of his batted balls. For" text,
+    "Adjusted EVAdjusted EV averages the maximum of 88 and the actua" text,
+    "Zone Swing %" text,
+    "Zone Swing & Miss %" text,
+    "Out of Zone Swing %" text,
+    "Out of Zone Swing & Miss%" text,
+    "Out of Zone Contact %" text,
+    "Out of Zone Swing & Miss" text,
+    "Out of Zone Swings" text,
+    "Out of Zone %" text,
+    "Out of Zone" text,
+    "Meatball Swing %" text,
+    "Meatball %" text,
+    "# Offspeed" text,
+    "# Fastball" text,
+    "# Breaking" text,
+    "Pitches" text,
+    "In Zone Contact %" text,
+    "In Zone Swing & Miss" text,
+    "In Zone Swings" text,
+    "In Zone %" text,
+    "In Zone" text,
+    "Edge %" text,
+    "Edge" text,
+    "Whiff %" text,
+    "Swing %" text,
+    "Pull %" text,
+    "Straight Away %" text,
+    "Oppo %" text,
+    "Batted Balls" text,
+    "First Strike %" text,
+    "GB%" text,
+    "GB" text,
+    "FB%" text,
+    "FB" text,
+    "LD %" text,
+    "LD" text,
+    "Popup %" text,
+    "Popups" text,
+    "2B Attempts" text,
+    "Pop Time 2B All" text,
+    "Pop Time 2B on SB" text,
+    "Pop Time 2B on CS" text,
+    "3B Attempts" text,
+    "Pop Time 3B All" text,
+    "Pop Time 3B on SB" text,
+    "Pop Time 2B on CS.1" text,
+    "Exchange" text,
+    "Arm Stength" text,
+    "OAA" text,
+    "5* Outs" text,
+    "5* Opp" text,
+    "5* %" text,
+    "4* Outs" text,
+    "4* Opp" text,
+    "4* %" text,
+    "3* Outs" text,
+    "3* Opp" text,
+    "3* %" text,
+    "2* Outs" text,
+    "2* Opp" text,
+    "2* %" text,
+    "1* Outs" text,
+    "1* Opp" text,
+    "1* %" text,
+    "Reaction" text,
+    "Burst" text,
+    "Route" text,
+    "Feet vs Avg" text,
+    "Feet Covered" text,
+    "Bolts" text,
+    "HP to 1B" text
+);
+
+
+--
+-- Name: TABLE batter_stats; Type: COMMENT; Schema: baseball_savant; Owner: -
+--
+
+COMMENT ON TABLE baseball_savant.batter_stats IS 'Batter statistics from Baseball Savant (1.1 MB). Savant-specific batting metrics.';
+
+
+--
+-- Name: pitcher_stats; Type: TABLE; Schema: baseball_savant; Owner: -
+--
+
+CREATE TABLE baseball_savant.pitcher_stats (
+    "Rk." text,
+    "Player" text,
+    "Year" text,
+    "Age" text,
+    "BF" text,
+    "AB" text,
+    "H" text,
+    "1B" text,
+    "2B" text,
+    "3B" text,
+    "HR" text,
+    "SO" text,
+    "BB" text,
+    "K%" text,
+    "BB%" text,
+    "AVG" text,
+    "SLG" text,
+    "OBP" text,
+    "OPS" text,
+    "ISO" text,
+    "BABIP" text,
+    "xBA" text,
+    "xSLG" text,
+    "wOBA" text,
+    "xwOBA" text,
+    "xOBP" text,
+    "xISO" text,
+    "wOBAcon" text,
+    "xwOBAcon" text,
+    "BACON" text,
+    "xBACON" text,
+    "BA - xBA" text,
+    "SLG - xSLG" text,
+    "wOBA - xwOBA" text,
+    "Bat Speed" text,
+    "Fast Swing %" text,
+    "Blasts / Contact" text,
+    "Blasts / Swing" text,
+    "Squared-Up / Contact" text,
+    "Squared-Up / Swing" text,
+    "Swing Length" text,
+    "Swords" text,
+    "Attack Angle" text,
+    "Attack Direction" text,
+    "Ideal Attack Angle %" text,
+    "Swing Path Tilt" text,
+    "Avg EV (MPH)" text,
+    "Avg LA (°)" text,
+    "LA Sweet-Spot %" text,
+    "Barrels" text,
+    "Barrel%" text,
+    "Solid Contact %" text,
+    "Flare/Burner %" text,
+    "Under %" text,
+    "Topped %" text,
+    "Poor/Weak %" text,
+    "Hard Hit %" text,
+    "EV50For a batter" text,
+    " EV50 is an average of the hardest 50% of his batted balls. For" text,
+    "Adjusted EVAdjusted EV averages the maximum of 88 and the actua" text,
+    "Zone Swing %" text,
+    "Zone Swing & Miss %" text,
+    "Out of Zone Swing %" text,
+    "Out of Zone Swing & Miss%" text,
+    "Out of Zone Contact %" text,
+    "Out of Zone Swing & Miss" text,
+    "Out of Zone Swings" text,
+    "Out of Zone %" text,
+    "Out of Zone" text,
+    "Meatball Swing %" text,
+    "Meatball %" text,
+    "# Offspeed" text,
+    "# Fastball" text,
+    "# Breaking" text,
+    "Pitches" text,
+    "In Zone Contact %" text,
+    "In Zone Swing & Miss" text,
+    "In Zone Swings" text,
+    "In Zone %" text,
+    "In Zone" text,
+    "Edge %" text,
+    "Edge" text,
+    "Whiff %" text,
+    "Swing %" text,
+    "Pull %" text,
+    "Straight Away %" text,
+    "Oppo %" text,
+    "Batted Balls" text,
+    "First Strike %" text,
+    "GB%" text,
+    "GB" text,
+    "FB%" text,
+    "FB" text,
+    "LD %" text,
+    "LD" text,
+    "Popup %" text,
+    "Popups" text
+);
+
+
+--
+-- Name: TABLE pitcher_stats; Type: COMMENT; Schema: baseball_savant; Owner: -
+--
+
+COMMENT ON TABLE baseball_savant.pitcher_stats IS 'Pitcher statistics from Baseball Savant (304 kB). Savant-specific pitching metrics.';
+
+
+--
+-- Name: total_stats; Type: TABLE; Schema: baseball_savant; Owner: -
+--
+
+CREATE TABLE baseball_savant.total_stats (
+    "last_name, first_name" text,
+    player_id text,
+    year text,
+    player_age text,
+    ab text,
+    pa text,
+    hit text,
+    single text,
+    double text,
+    triple text,
+    home_run text,
+    strikeout text,
+    walk text,
+    k_percent text,
+    bb_percent text,
+    batting_avg text,
+    slg_percent text,
+    on_base_percent text,
+    on_base_plus_slg text,
+    isolated_power text,
+    babip text,
+    b_rbi text,
+    b_lob text,
+    b_total_bases text,
+    r_total_caught_stealing text,
+    r_total_stolen_base text,
+    b_ab_scoring text,
+    b_ball text,
+    b_called_strike text,
+    b_catcher_interf text,
+    b_foul text,
+    b_foul_tip text,
+    b_game text,
+    b_gnd_into_dp text,
+    b_gnd_into_tp text,
+    b_gnd_rule_double text,
+    b_hit_by_pitch text,
+    b_hit_ground text,
+    b_hit_fly text,
+    b_hit_into_play text,
+    b_hit_line_drive text,
+    b_hit_popup text,
+    b_out_fly text,
+    b_out_ground text,
+    b_out_line_drive text,
+    b_out_popup text,
+    b_intent_ball text,
+    b_intent_walk text,
+    b_interference text,
+    b_pinch_hit text,
+    b_pinch_run text,
+    b_pitchout text,
+    b_played_dh text,
+    b_sac_bunt text,
+    b_sac_fly text,
+    b_swinging_strike text,
+    r_caught_stealing_2b text,
+    r_caught_stealing_3b text,
+    r_caught_stealing_home text,
+    r_defensive_indiff text,
+    r_interference text,
+    r_pickoff_1b text,
+    r_pickoff_2b text,
+    r_pickoff_3b text,
+    r_run text,
+    r_stolen_base_2b text,
+    r_stolen_base_3b text,
+    r_stolen_base_home text,
+    b_total_ball text,
+    b_total_sacrifices text,
+    b_total_strike text,
+    b_total_swinging_strike text,
+    b_total_pitches text,
+    r_stolen_base_pct text,
+    r_total_pickoff text,
+    b_reached_on_error text,
+    b_walkoff text,
+    b_reached_on_int text,
+    xba text,
+    xslg text,
+    woba text,
+    xwoba text,
+    xobp text,
+    xiso text,
+    wobacon text,
+    xwobacon text,
+    bacon text,
+    xbacon text,
+    xbadiff text,
+    xslgdiff text,
+    wobadiff text,
+    avg_swing_speed text,
+    fast_swing_rate text,
+    blasts_contact text,
+    blasts_swing text,
+    squared_up_contact text,
+    squared_up_swing text,
+    avg_swing_length text,
+    swords text,
+    attack_angle text,
+    attack_direction text,
+    ideal_angle_rate text,
+    vertical_swing_path text,
+    exit_velocity_avg text,
+    launch_angle_avg text,
+    sweet_spot_percent text,
+    barrel text,
+    barrel_batted_rate text,
+    solidcontact_percent text,
+    flareburner_percent text,
+    poorlyunder_percent text,
+    poorlytopped_percent text,
+    poorlyweak_percent text,
+    hard_hit_percent text,
+    avg_best_speed text,
+    avg_hyper_speed text,
+    z_swing_percent text,
+    z_swing_miss_percent text,
+    oz_swing_percent text,
+    oz_swing_miss_percent text,
+    oz_contact_percent text,
+    out_zone_swing_miss text,
+    out_zone_swing text,
+    out_zone_percent text,
+    out_zone text,
+    meatball_swing_percent text,
+    meatball_percent text,
+    pitch_count_offspeed text,
+    pitch_count_fastball text,
+    pitch_count_breaking text,
+    pitch_count text,
+    iz_contact_percent text,
+    in_zone_swing_miss text,
+    in_zone_swing text,
+    in_zone_percent text,
+    in_zone text,
+    edge_percent text,
+    edge text,
+    whiff_percent text,
+    swing_percent text,
+    pull_percent text,
+    straightaway_percent text,
+    opposite_percent text,
+    batted_ball text,
+    f_strike_percent text,
+    groundballs_percent text,
+    groundballs text,
+    flyballs_percent text,
+    flyballs text,
+    linedrives_percent text,
+    linedrives text,
+    popups_percent text,
+    popups text,
+    pop_2b_sba_count text,
+    pop_2b_sba text,
+    pop_2b_sb text,
+    pop_2b_cs text,
+    pop_3b_sba_count text,
+    pop_3b_sba text,
+    pop_3b_sb text,
+    pop_3b_cs text,
+    exchange_2b_3b_sba text,
+    maxeff_arm_2b_3b_sba text,
+    n_outs_above_average text,
+    n_fieldout_5stars text,
+    n_opp_5stars text,
+    n_5star_percent text,
+    n_fieldout_4stars text,
+    n_opp_4stars text,
+    n_4star_percent text,
+    n_fieldout_3stars text,
+    n_opp_3stars text,
+    n_3star_percent text,
+    n_fieldout_2stars text,
+    n_opp_2stars text,
+    n_2star_percent text,
+    n_fieldout_1stars text,
+    n_opp_1stars text,
+    n_1star_percent text,
+    rel_league_reaction_distance text,
+    rel_league_burst_distance text,
+    rel_league_routing_distance text,
+    rel_league_bootup_distance text,
+    f_bootup_distance text,
+    n_bolts text,
+    hp_to_1b text
+);
+
+
+--
+-- Name: TABLE total_stats; Type: COMMENT; Schema: baseball_savant; Owner: -
+--
+
+COMMENT ON TABLE baseball_savant.total_stats IS 'Combined batting/pitching totals (5.2 MB). Aggregate statistics from Savant.';
+
+
+--
+-- Name: _staging_chadwick_register; Type: TABLE; Schema: bridge; Owner: -
+--
+
+CREATE TABLE bridge._staging_chadwick_register (
+    key_uuid text NOT NULL,
+    key_mlbam text,
+    key_retro text,
+    key_bbref text,
+    key_fangraphs text,
+    key_baseball_prospectus text,
+    key_cbs text,
+    key_espn text,
+    key_fanduel text,
+    key_draftkings text,
+    key_yahoo text,
+    key_nfbc text,
+    key_rotowire text,
+    key_rotoworld text,
+    key_kffl text,
+    name_first text,
+    name_last text,
+    name_full text,
+    name_given text,
+    name_matrilineal text,
+    bats text,
+    throws text,
+    birth_year integer,
+    birth_month integer,
+    birth_day integer,
+    death_year integer,
+    death_month integer,
+    death_day integer,
+    birth_city text,
+    birth_state text,
+    birth_country text,
+    death_city text,
+    death_state text,
+    death_country text,
+    weight integer,
+    height integer,
+    debut date,
+    final_game date,
+    mlb_played_first integer,
+    mlb_played_last integer,
+    retro_played_first integer,
+    retro_played_last integer,
+    college text,
+    college_id integer,
+    high_school text,
+    high_school_id integer,
+    bats_throws_source text,
+    birth_source text,
+    death_source text,
+    weight_height_source text,
+    debut_source text,
+    mlb_organization text,
+    mlb_position text,
+    twitter_id text,
+    wikipedia_id text,
+    gelb_id text,
+    lahman_id text,
+    source_timestamp timestamp with time zone,
+    loaded_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE _staging_chadwick_register; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON TABLE bridge._staging_chadwick_register IS 'Staging table for Chadwick Bureau Register data. Loaded from CSV files before merging to player_xref.';
+
+
+--
+-- Name: _staging_lahman_people; Type: TABLE; Schema: bridge; Owner: -
+--
+
+CREATE TABLE bridge._staging_lahman_people (
+    lahman_id text NOT NULL,
+    retrosheet_id text,
+    baseball_reference_id text,
+    name_first text,
+    name_last text,
+    name_given text,
+    birth_date date,
+    birthcountry text,
+    birthstate text,
+    birthcity text,
+    death_date date,
+    weight integer,
+    height integer,
+    bats text,
+    throws text,
+    debut date,
+    final_game date,
+    loaded_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: external_player_xref; Type: TABLE; Schema: bridge; Owner: -
+--
+
+CREATE TABLE bridge.external_player_xref (
+    external_source text NOT NULL,
+    external_player_id text NOT NULL,
+    retrosheet_player_id text NOT NULL,
+    confidence_score numeric(3,2) DEFAULT 0.8,
+    confidence_source text DEFAULT 'id_cross_reference'::text
+);
+
+
+--
+-- Name: TABLE external_player_xref; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON TABLE bridge.external_player_xref IS 'External player ID mappings for non-MLB sources. Size: 14 MB';
+
+
+--
+-- Name: COLUMN external_player_xref.confidence_score; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.external_player_xref.confidence_score IS 'Confidence score (0.0-1.0) for mapping quality';
+
+
+--
+-- Name: COLUMN external_player_xref.confidence_source; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.external_player_xref.confidence_source IS 'Source of confidence assessment';
+
+
+--
+-- Name: game_xref; Type: TABLE; Schema: bridge; Owner: -
+--
+
+CREATE TABLE bridge.game_xref (
+    retrosheet_game_id text NOT NULL,
+    mlb_game_pk integer,
+    game_date date,
+    retrosheet_home_team_id text,
+    retrosheet_away_team_id text,
+    mlb_home_team_id integer,
+    mlb_away_team_id integer,
+    created_at timestamp with time zone DEFAULT now(),
+    confidence_score numeric(3,2) DEFAULT 0.8,
+    confidence_source text DEFAULT 'automated_match'::text
+);
+
+
+--
+-- Name: TABLE game_xref; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON TABLE bridge.game_xref IS 'Cross-reference table linking Retrosheet games to MLB API games. Contains 62,000+ game mappings for historical games 2008-2024.';
+
+
+--
+-- Name: COLUMN game_xref.confidence_score; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.game_xref.confidence_score IS 'Confidence score (0.0-1.0) for mapping quality';
+
+
+--
+-- Name: COLUMN game_xref.confidence_source; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.game_xref.confidence_source IS 'Source of confidence assessment';
+
+
+--
+-- Name: player_xref; Type: TABLE; Schema: bridge; Owner: -
+--
+
+CREATE TABLE bridge.player_xref (
+    player_xref_id bigint NOT NULL,
+    retrosheet_id text,
+    mlb_id bigint,
+    baseball_reference_id text,
+    name_first text,
+    name_last text,
+    source_notes jsonb DEFAULT '{}'::jsonb NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    confidence_score numeric(3,2) DEFAULT 0.8,
+    confidence_source text DEFAULT 'chadwick_register'::text
+);
+
+
+--
+-- Name: TABLE player_xref; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON TABLE bridge.player_xref IS 'Cross-reference table mapping player IDs across data sources: Retrosheet (primary key), MLB, Baseball-Reference, FanGraphs, Lahman, etc.';
+
+
+--
+-- Name: COLUMN player_xref.retrosheet_id; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.player_xref.retrosheet_id IS 'Primary identifier from Retrosheet event files (e.g., aardsd001)';
+
+
+--
+-- Name: COLUMN player_xref.mlb_id; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.player_xref.mlb_id IS 'MLBAM ID from MLB Stats API and Statcast (e.g., 605151)';
+
+
+--
+-- Name: COLUMN player_xref.baseball_reference_id; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.player_xref.baseball_reference_id IS 'Baseball-Reference ID (e.g., aardsda01)';
+
+
+--
+-- Name: COLUMN player_xref.name_first; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.player_xref.name_first IS 'Player first name';
+
+
+--
+-- Name: COLUMN player_xref.name_last; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.player_xref.name_last IS 'Player last name';
+
+
+--
+-- Name: COLUMN player_xref.source_notes; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.player_xref.source_notes IS 'JSONB field storing additional IDs and metadata from various sources';
+
+
+--
+-- Name: COLUMN player_xref.updated_at; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.player_xref.updated_at IS 'Timestamp of last update to this record';
+
+
+--
+-- Name: COLUMN player_xref.confidence_score; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.player_xref.confidence_score IS '0.0-1.0 confidence in ID mapping accuracy';
+
+
+--
+-- Name: COLUMN player_xref.confidence_source; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.player_xref.confidence_source IS 'Source system for the ID mapping (Chadwick Bureau, Lahman, etc.)';
+
+
+--
+-- Name: team_xref; Type: TABLE; Schema: bridge; Owner: -
+--
+
+CREATE TABLE bridge.team_xref (
+    team_xref_id bigint NOT NULL,
+    retrosheet_team_id text,
+    mlb_team_id bigint,
+    abbreviation text,
+    name text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    valid_from_season integer,
+    valid_to_season integer,
+    confidence_score numeric(3,2) DEFAULT 0.8,
+    confidence_source text DEFAULT 'chadwick_register'::text
+);
+
+
+--
+-- Name: TABLE team_xref; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON TABLE bridge.team_xref IS 'Cross-reference table mapping team IDs across sources. Links franchise IDs across Retrosheet, MLB API, Lahman, and ESPN.';
+
+
+--
+-- Name: COLUMN team_xref.confidence_score; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.team_xref.confidence_score IS 'Confidence score (0.0-1.0) for mapping quality';
+
+
+--
+-- Name: COLUMN team_xref.confidence_source; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.team_xref.confidence_source IS 'Source of confidence assessment';
+
+
+--
+-- Name: bridge_data_quality; Type: VIEW; Schema: bridge; Owner: -
+--
+
+CREATE VIEW bridge.bridge_data_quality AS
+ SELECT 'player_xref_null_retrosheet'::text AS check_name,
+    count(*) AS issue_count
+   FROM bridge.player_xref
+  WHERE ((player_xref.retrosheet_id IS NULL) AND ((player_xref.mlb_id IS NOT NULL) OR (player_xref.baseball_reference_id IS NOT NULL)))
+UNION ALL
+ SELECT 'team_xref_null_mlb'::text AS check_name,
+    count(*) AS issue_count
+   FROM bridge.team_xref
+  WHERE ((team_xref.retrosheet_team_id IS NOT NULL) AND (team_xref.mlb_team_id IS NULL))
+UNION ALL
+ SELECT 'external_player_null_retrosheet'::text AS check_name,
+    count(*) AS issue_count
+   FROM bridge.external_player_xref
+  WHERE ((external_player_xref.retrosheet_player_id IS NULL) OR (external_player_xref.retrosheet_player_id = '0'::text))
+UNION ALL
+ SELECT 'game_xref_date_mismatch'::text AS check_name,
+    count(*) AS issue_count
+   FROM bridge.game_xref
+  WHERE ((game_xref.retrosheet_game_id IS NOT NULL) AND (game_xref.mlb_game_pk IS NOT NULL) AND (game_xref.game_date IS NULL));
+
+
+--
+-- Name: VIEW bridge_data_quality; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON VIEW bridge.bridge_data_quality IS 'Data quality checks for bridge tables identifying potential issues';
+
+
+--
+-- Name: coach_xref; Type: TABLE; Schema: bridge; Owner: -
+--
+
+CREATE TABLE bridge.coach_xref (
+    retrosheet_coach_id text,
+    mlb_coach_id text,
+    lahman_coach_id text,
+    espn_coach_id text,
+    source_system text NOT NULL,
+    coach_name text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    confidence_score numeric(3,2) DEFAULT 0.3,
+    confidence_source text DEFAULT 'retrosheet_id_only'::text
+);
+
+
+--
+-- Name: TABLE coach_xref; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON TABLE bridge.coach_xref IS 'Coach and manager ID cross-references. Links coaching staff IDs across sources.';
+
+
+--
+-- Name: COLUMN coach_xref.confidence_score; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.coach_xref.confidence_score IS 'Confidence score (0.0-1.0) for mapping quality';
+
+
+--
+-- Name: COLUMN coach_xref.confidence_source; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.coach_xref.confidence_source IS 'Source of confidence assessment';
+
+
+--
+-- Name: park_xref; Type: TABLE; Schema: bridge; Owner: -
+--
+
+CREATE TABLE bridge.park_xref (
+    park_xref_id bigint NOT NULL,
+    retrosheet_park_id text,
+    mlb_venue_id bigint,
+    name text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    confidence_score numeric(3,2) DEFAULT 0.8,
+    confidence_source text DEFAULT 'chadwick_register'::text
+);
+
+
+--
+-- Name: TABLE park_xref; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON TABLE bridge.park_xref IS 'Stadium/ballpark ID cross-references across sources. Links park IDs from Retrosheet, MLB API, and Lahman.';
+
+
+--
+-- Name: COLUMN park_xref.confidence_score; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.park_xref.confidence_score IS 'Confidence score (0.0-1.0) for mapping quality';
+
+
+--
+-- Name: COLUMN park_xref.confidence_source; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.park_xref.confidence_source IS 'Source of confidence assessment';
+
+
+--
+-- Name: umpire_xref; Type: TABLE; Schema: bridge; Owner: -
+--
+
+CREATE TABLE bridge.umpire_xref (
+    retrosheet_umpire_id text,
+    mlb_umpire_id text,
+    lahman_umpire_id text,
+    espn_umpire_id text,
+    source_system text NOT NULL,
+    umpire_name text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    confidence_score numeric(3,2) DEFAULT 0.7,
+    confidence_source text DEFAULT 'retrosheet_name_match'::text
+);
+
+
+--
+-- Name: TABLE umpire_xref; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON TABLE bridge.umpire_xref IS 'Umpire ID cross-references. Links umpire IDs from Retrosheet to other sources.';
+
+
+--
+-- Name: COLUMN umpire_xref.confidence_score; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.umpire_xref.confidence_score IS 'Confidence score (0.0-1.0) for mapping quality';
+
+
+--
+-- Name: COLUMN umpire_xref.confidence_source; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.umpire_xref.confidence_source IS 'Source of confidence assessment';
+
+
+--
+-- Name: bridge_table_counts; Type: VIEW; Schema: bridge; Owner: -
+--
+
+CREATE VIEW bridge.bridge_table_counts AS
+ SELECT 'player_xref'::text AS table_name,
+    count(*) AS total_rows,
+    count(DISTINCT player_xref.retrosheet_id) AS retrosheet_ids,
+    count(DISTINCT player_xref.mlb_id) AS mlb_ids,
+    count(DISTINCT player_xref.baseball_reference_id) AS bref_ids
+   FROM bridge.player_xref
+UNION ALL
+ SELECT 'team_xref'::text AS table_name,
+    count(*) AS total_rows,
+    count(DISTINCT team_xref.retrosheet_team_id) AS retrosheet_ids,
+    count(DISTINCT team_xref.mlb_team_id) AS mlb_ids,
+    0 AS bref_ids
+   FROM bridge.team_xref
+UNION ALL
+ SELECT 'park_xref'::text AS table_name,
+    count(*) AS total_rows,
+    count(DISTINCT park_xref.retrosheet_park_id) AS retrosheet_ids,
+    count(DISTINCT park_xref.mlb_venue_id) AS mlb_ids,
+    0 AS bref_ids
+   FROM bridge.park_xref
+UNION ALL
+ SELECT 'game_xref'::text AS table_name,
+    count(*) AS total_rows,
+    count(DISTINCT game_xref.retrosheet_game_id) AS retrosheet_ids,
+    count(DISTINCT game_xref.mlb_game_pk) AS mlb_ids,
+    0 AS bref_ids
+   FROM bridge.game_xref
+UNION ALL
+ SELECT 'external_player_xref'::text AS table_name,
+    count(*) AS total_rows,
+    count(DISTINCT external_player_xref.retrosheet_player_id) AS retrosheet_ids,
+    0 AS mlb_ids,
+    0 AS bref_ids
+   FROM bridge.external_player_xref
+UNION ALL
+ SELECT 'coach_xref'::text AS table_name,
+    count(*) AS total_rows,
+    count(DISTINCT coach_xref.retrosheet_coach_id) AS retrosheet_ids,
+    count(DISTINCT coach_xref.mlb_coach_id) AS mlb_ids,
+    0 AS bref_ids
+   FROM bridge.coach_xref
+UNION ALL
+ SELECT 'umpire_xref'::text AS table_name,
+    count(*) AS total_rows,
+    count(DISTINCT umpire_xref.retrosheet_umpire_id) AS retrosheet_ids,
+    count(DISTINCT umpire_xref.mlb_umpire_id) AS mlb_ids,
+    0 AS bref_ids
+   FROM bridge.umpire_xref;
+
+
+--
+-- Name: VIEW bridge_table_counts; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON VIEW bridge.bridge_table_counts IS 'Row counts and ID coverage statistics for all bridge tables';
+
+
+--
+-- Name: confidence_score_distribution; Type: VIEW; Schema: bridge; Owner: -
+--
+
+CREATE VIEW bridge.confidence_score_distribution AS
+ SELECT 'player_xref'::text AS table_name,
+    player_xref.confidence_score,
+    count(*) AS count,
+    round(((100.0 * (count(*))::numeric) / sum(count(*)) OVER (PARTITION BY 'player_xref'::text)), 2) AS percentage
+   FROM bridge.player_xref
+  GROUP BY player_xref.confidence_score
+UNION ALL
+ SELECT 'team_xref'::text AS table_name,
+    team_xref.confidence_score,
+    count(*) AS count,
+    round(((100.0 * (count(*))::numeric) / sum(count(*)) OVER (PARTITION BY 'team_xref'::text)), 2) AS percentage
+   FROM bridge.team_xref
+  GROUP BY team_xref.confidence_score
+UNION ALL
+ SELECT 'game_xref'::text AS table_name,
+    game_xref.confidence_score,
+    count(*) AS count,
+    round(((100.0 * (count(*))::numeric) / sum(count(*)) OVER (PARTITION BY 'game_xref'::text)), 2) AS percentage
+   FROM bridge.game_xref
+  GROUP BY game_xref.confidence_score
+  ORDER BY 1, 2 DESC;
+
+
+--
+-- Name: VIEW confidence_score_distribution; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON VIEW bridge.confidence_score_distribution IS 'Distribution of confidence scores across bridge tables';
+
+
+--
+-- Name: confidence_summary_by_source; Type: VIEW; Schema: bridge; Owner: -
+--
+
+CREATE VIEW bridge.confidence_summary_by_source AS
+ SELECT table_name,
+    confidence_source,
+    count(*) AS total_mappings,
+    avg(confidence_score) AS avg_confidence,
+    min(confidence_score) AS min_confidence,
+    max(confidence_score) AS max_confidence,
+    count(*) FILTER (WHERE (confidence_score >= 0.9)) AS high_confidence_count,
+    count(*) FILTER (WHERE (confidence_score < 0.7)) AS low_confidence_count
+   FROM ( SELECT 'player_xref'::text AS table_name,
+            player_xref.confidence_source,
+            player_xref.confidence_score
+           FROM bridge.player_xref
+        UNION ALL
+         SELECT 'team_xref'::text AS table_name,
+            team_xref.confidence_source,
+            team_xref.confidence_score
+           FROM bridge.team_xref
+        UNION ALL
+         SELECT 'game_xref'::text AS table_name,
+            game_xref.confidence_source,
+            game_xref.confidence_score
+           FROM bridge.game_xref) combined
+  GROUP BY table_name, confidence_source
+  ORDER BY table_name, (avg(confidence_score)) DESC;
+
+
+--
+-- Name: VIEW confidence_summary_by_source; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON VIEW bridge.confidence_summary_by_source IS 'Summary statistics of confidence scores by table and source';
+
+
+--
+-- Name: external_player_coverage; Type: VIEW; Schema: bridge; Owner: -
+--
+
+CREATE VIEW bridge.external_player_coverage AS
+ SELECT external_source,
+    count(*) AS total_mappings,
+    count(DISTINCT retrosheet_player_id) AS unique_retrosheet_players,
+    count(DISTINCT external_player_id) AS unique_external_ids
+   FROM bridge.external_player_xref
+  GROUP BY external_source
+  ORDER BY (count(*)) DESC;
+
+
+--
+-- Name: VIEW external_player_coverage; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON VIEW bridge.external_player_coverage IS 'Coverage statistics for external player ID mappings by source';
+
+
+--
+-- Name: external_team_xref; Type: TABLE; Schema: bridge; Owner: -
+--
+
+CREATE TABLE bridge.external_team_xref (
+    external_source text NOT NULL,
+    external_team_id text NOT NULL,
+    retrosheet_team_id text NOT NULL,
+    confidence_score numeric(3,2) DEFAULT 0.8,
+    confidence_source text DEFAULT 'id_cross_reference'::text
+);
+
+
+--
+-- Name: TABLE external_team_xref; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON TABLE bridge.external_team_xref IS 'External team ID mappings for non-MLB sources.';
+
+
+--
+-- Name: COLUMN external_team_xref.confidence_score; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.external_team_xref.confidence_score IS 'Confidence score (0.0-1.0) for mapping quality';
+
+
+--
+-- Name: COLUMN external_team_xref.confidence_source; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON COLUMN bridge.external_team_xref.confidence_source IS 'Source of confidence assessment';
+
+
+--
+-- Name: low_confidence_mappings; Type: VIEW; Schema: bridge; Owner: -
+--
+
+CREATE VIEW bridge.low_confidence_mappings AS
+ SELECT 'player_xref'::text AS table_name,
+    player_xref.retrosheet_id AS entity_id,
+    player_xref.confidence_score,
+    player_xref.confidence_source,
+    player_xref.name_first,
+    player_xref.name_last
+   FROM bridge.player_xref
+  WHERE (player_xref.confidence_score < 0.7)
+UNION ALL
+ SELECT 'team_xref'::text AS table_name,
+    team_xref.retrosheet_team_id AS entity_id,
+    team_xref.confidence_score,
+    team_xref.confidence_source,
+    NULL::text AS name_first,
+    team_xref.name AS name_last
+   FROM bridge.team_xref
+  WHERE (team_xref.confidence_score < 0.7)
+UNION ALL
+ SELECT 'game_xref'::text AS table_name,
+    game_xref.retrosheet_game_id AS entity_id,
+    game_xref.confidence_score,
+    game_xref.confidence_source,
+    NULL::text AS name_first,
+    NULL::text AS name_last
+   FROM bridge.game_xref
+  WHERE (game_xref.confidence_score < 0.7)
+  ORDER BY 3, 1;
+
+
+--
+-- Name: VIEW low_confidence_mappings; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON VIEW bridge.low_confidence_mappings IS 'Mappings with confidence scores below 0.7 requiring manual review';
+
+
+--
+-- Name: park_xref_park_xref_id_seq; Type: SEQUENCE; Schema: bridge; Owner: -
+--
+
+CREATE SEQUENCE bridge.park_xref_park_xref_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: park_xref_park_xref_id_seq; Type: SEQUENCE OWNED BY; Schema: bridge; Owner: -
+--
+
+ALTER SEQUENCE bridge.park_xref_park_xref_id_seq OWNED BY bridge.park_xref.park_xref_id;
+
+
+--
+-- Name: player_mapping_summary; Type: VIEW; Schema: bridge; Owner: -
+--
+
+CREATE VIEW bridge.player_mapping_summary AS
+ SELECT px.retrosheet_id,
+    px.name_first,
+    px.name_last,
+    px.mlb_id,
+    px.baseball_reference_id,
+    ep.statcast_external_id,
+    ep.lahman_external_id,
+    ep.bref_external_id
+   FROM (bridge.player_xref px
+     LEFT JOIN ( SELECT external_player_xref.retrosheet_player_id,
+            max(
+                CASE
+                    WHEN (external_player_xref.external_source = 'statcast'::text) THEN external_player_xref.external_player_id
+                    ELSE NULL::text
+                END) AS statcast_external_id,
+            max(
+                CASE
+                    WHEN (external_player_xref.external_source = 'lahman'::text) THEN external_player_xref.external_player_id
+                    ELSE NULL::text
+                END) AS lahman_external_id,
+            max(
+                CASE
+                    WHEN (external_player_xref.external_source = 'baseball_reference'::text) THEN external_player_xref.external_player_id
+                    ELSE NULL::text
+                END) AS bref_external_id
+           FROM bridge.external_player_xref
+          GROUP BY external_player_xref.retrosheet_player_id) ep ON ((px.retrosheet_id = ep.retrosheet_player_id)))
+  WHERE (px.retrosheet_id IS NOT NULL)
+  ORDER BY px.name_last, px.name_first;
+
+
+--
+-- Name: VIEW player_mapping_summary; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON VIEW bridge.player_mapping_summary IS 'Summary of all ID mappings for each player across all sources';
+
+
+--
+-- Name: player_xref_player_xref_id_seq; Type: SEQUENCE; Schema: bridge; Owner: -
+--
+
+CREATE SEQUENCE bridge.player_xref_player_xref_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: player_xref_player_xref_id_seq; Type: SEQUENCE OWNED BY; Schema: bridge; Owner: -
+--
+
+ALTER SEQUENCE bridge.player_xref_player_xref_id_seq OWNED BY bridge.player_xref.player_xref_id;
+
+
+--
+-- Name: team_season_coverage; Type: VIEW; Schema: bridge; Owner: -
+--
+
+CREATE VIEW bridge.team_season_coverage AS
+ SELECT retrosheet_team_id,
+    abbreviation,
+    name,
+    valid_from_season,
+    valid_to_season,
+        CASE
+            WHEN (valid_to_season IS NULL) THEN 'Active'::text
+            ELSE 'Historical'::text
+        END AS status
+   FROM bridge.team_xref
+  WHERE (valid_from_season IS NOT NULL)
+  ORDER BY
+        CASE
+            WHEN (valid_to_season IS NULL) THEN 0
+            ELSE 1
+        END, retrosheet_team_id;
+
+
+--
+-- Name: VIEW team_season_coverage; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON VIEW bridge.team_season_coverage IS 'Team coverage with season ranges and active/historical status';
+
+
+--
+-- Name: team_xref_team_xref_id_seq; Type: SEQUENCE; Schema: bridge; Owner: -
+--
+
+CREATE SEQUENCE bridge.team_xref_team_xref_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: team_xref_team_xref_id_seq; Type: SEQUENCE OWNED BY; Schema: bridge; Owner: -
+--
+
+ALTER SEQUENCE bridge.team_xref_team_xref_id_seq OWNED BY bridge.team_xref.team_xref_id;
+
+
+--
+-- Name: unmapped_player_ids; Type: VIEW; Schema: bridge; Owner: -
+--
+
+CREATE VIEW bridge.unmapped_player_ids AS
+ SELECT 'mlb_id_missing'::text AS missing_type,
+    count(*) AS count
+   FROM bridge.player_xref
+  WHERE ((player_xref.retrosheet_id IS NOT NULL) AND (player_xref.mlb_id IS NULL))
+UNION ALL
+ SELECT 'bref_id_missing'::text AS missing_type,
+    count(*) AS count
+   FROM bridge.player_xref
+  WHERE ((player_xref.retrosheet_id IS NOT NULL) AND (player_xref.baseball_reference_id IS NULL))
+UNION ALL
+ SELECT 'retrosheet_id_missing'::text AS missing_type,
+    count(*) AS count
+   FROM bridge.player_xref
+  WHERE ((player_xref.retrosheet_id IS NULL) AND (player_xref.mlb_id IS NOT NULL));
+
+
+--
+-- Name: VIEW unmapped_player_ids; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON VIEW bridge.unmapped_player_ids IS 'Counts of players missing specific ID mappings';
+
+
+--
+-- Name: base_features; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.base_features (
+    pitch_id bigint NOT NULL,
+    game_pk integer NOT NULL,
+    at_bat_number integer,
+    pitch_number smallint,
+    game_year smallint,
+    game_date date,
+    sv_id character varying(50),
+    batter_id integer,
+    pitcher_id integer,
+    player_name character varying(100),
+    home_team character varying(3),
+    away_team character varying(3),
+    inning_topbot character varying(3),
+    pitch_type character varying(2),
+    pitch_name character varying(50),
+    description character varying(100),
+    events character varying(50),
+    type character varying(1),
+    start_speed real,
+    release_speed real,
+    effective_speed real,
+    release_spin_rate real,
+    spin_axis real,
+    spin_rate_deprecated real,
+    release_pos_x real,
+    release_pos_y real,
+    release_pos_z real,
+    release_extension real,
+    pfx_x real,
+    pfx_z real,
+    vx0 real,
+    vy0 real,
+    vz0 real,
+    ax real,
+    ay real,
+    az real,
+    plate_x real,
+    plate_z real,
+    zone smallint,
+    sz_top real,
+    sz_bot real,
+    location public.geometry(Point,4326),
+    balls smallint,
+    strikes smallint,
+    outs_when_up smallint,
+    inning smallint,
+    on_1b boolean,
+    on_2b boolean,
+    on_3b boolean,
+    home_score smallint,
+    away_score smallint,
+    bat_score smallint,
+    fld_score smallint,
+    post_home_score smallint,
+    post_away_score smallint,
+    post_bat_score smallint,
+    post_fld_score smallint,
+    at_bat_number_pitchfx integer,
+    stand character varying(1),
+    p_throws character varying(1),
+    hc_x real,
+    hc_y real,
+    hit_location smallint,
+    bb_type character varying(20),
+    launch_speed real,
+    launch_angle real,
+    launch_speed_angle real,
+    hit_distance_sc integer,
+    estimated_ba real,
+    estimated_slg real,
+    estimated_woba real,
+    woba_value real,
+    woba_denom real,
+    babip_value real,
+    iso_value real,
+    delta_home_win_exp real,
+    delta_run_exp real,
+    home_win_exp real,
+    bat_win_exp real,
+    fielder_2 integer,
+    fielder_3 integer,
+    fielder_4 integer,
+    fielder_5 integer,
+    fielder_6 integer,
+    fielder_7 integer,
+    fielder_8 integer,
+    fielder_9 integer,
+    if_fielding_alignment character varying(20),
+    of_fielding_alignment character varying(50),
+    quality_flag character varying(20) DEFAULT 'normal'::character varying,
+    source_table character varying(50) DEFAULT 'features_pitch.locations'::character varying,
+    source_row_id bigint,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now(),
+    data_version integer DEFAULT 1,
+    ingestion_batch_id character varying(50)
+);
+
+
+--
+-- Name: TABLE base_features; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.base_features IS 'Complete Statcast feature table (4 GB). 7.66M pitches with all 118 Statcast columns. Mirror of raw_mlb.statcast with computed game_year.';
+
+
+--
+-- Name: vw_bridge_coverage_gap_analysis; Type: VIEW; Schema: bridge; Owner: -
+--
+
+CREATE VIEW bridge.vw_bridge_coverage_gap_analysis AS
+ WITH player_gaps AS (
+         SELECT 'player_xref'::text AS table_name,
+            'mlb_id'::text AS id_type,
+            count(*) FILTER (WHERE (player_xref.mlb_id IS NULL)) AS null_count,
+            count(*) AS total_count,
+            round((((count(*) FILTER (WHERE (player_xref.mlb_id IS NULL)))::numeric / (NULLIF(count(*), 0))::numeric) * (100)::numeric), 2) AS gap_pct
+           FROM bridge.player_xref
+        UNION ALL
+         SELECT 'player_xref'::text,
+            'retrosheet_id'::text,
+            count(*) FILTER (WHERE (player_xref.retrosheet_id IS NULL)) AS count,
+            count(*) AS count,
+            round((((count(*) FILTER (WHERE (player_xref.retrosheet_id IS NULL)))::numeric / (NULLIF(count(*), 0))::numeric) * (100)::numeric), 2) AS round
+           FROM bridge.player_xref
+        UNION ALL
+         SELECT 'player_xref'::text,
+            'baseball_reference_id'::text,
+            count(*) FILTER (WHERE (player_xref.baseball_reference_id IS NULL)) AS count,
+            count(*) AS count,
+            round((((count(*) FILTER (WHERE (player_xref.baseball_reference_id IS NULL)))::numeric / (NULLIF(count(*), 0))::numeric) * (100)::numeric), 2) AS round
+           FROM bridge.player_xref
+        ), pitch_data_gaps AS (
+         SELECT 'pitch_data_players'::text AS table_name,
+            'linked_to_bridge'::text AS id_type,
+            count(DISTINCT p.player_id) FILTER (WHERE (px.player_xref_id IS NULL)) AS count,
+            count(DISTINCT p.player_id) AS count,
+            round((((count(DISTINCT p.player_id) FILTER (WHERE (px.player_xref_id IS NULL)))::numeric / (NULLIF(count(DISTINCT p.player_id), 0))::numeric) * (100)::numeric), 2) AS round
+           FROM (( SELECT base_features.pitcher_id AS player_id
+                   FROM features_pitch.base_features
+                UNION
+                 SELECT base_features.batter_id AS player_id
+                   FROM features_pitch.base_features) p
+             LEFT JOIN bridge.player_xref px ON (((p.player_id)::text = (px.mlb_id)::text)))
+        )
+ SELECT player_gaps.table_name,
+    player_gaps.id_type,
+    player_gaps.null_count,
+    player_gaps.total_count,
+    player_gaps.gap_pct
+   FROM player_gaps
+UNION ALL
+ SELECT pitch_data_gaps.table_name,
+    pitch_data_gaps.id_type,
+    pitch_data_gaps.count AS null_count,
+    pitch_data_gaps.count_1 AS total_count,
+    pitch_data_gaps.round AS gap_pct
+   FROM pitch_data_gaps pitch_data_gaps(table_name, id_type, count, count_1, round)
+  ORDER BY 5 DESC;
+
+
+--
+-- Name: VIEW vw_bridge_coverage_gap_analysis; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON VIEW bridge.vw_bridge_coverage_gap_analysis IS 'Identifies gaps in bridge table ID coverage, ordered by severity (highest gap % first).';
+
+
+--
+-- Name: vw_chadwick_coverage; Type: VIEW; Schema: bridge; Owner: -
+--
+
+CREATE VIEW bridge.vw_chadwick_coverage AS
+ SELECT 'Chadwick Register Coverage'::text AS metric_category,
+    count(*) AS total_players,
+    count(_staging_chadwick_register.key_mlbam) AS with_mlb_id,
+    count(_staging_chadwick_register.key_retro) AS with_retrosheet_id,
+    count(_staging_chadwick_register.key_bbref) AS with_bbref_id,
+    count(_staging_chadwick_register.key_fangraphs) AS with_fangraphs_id,
+    count(_staging_chadwick_register.lahman_id) AS with_lahman_id,
+    round((((count(_staging_chadwick_register.key_mlbam))::numeric / (NULLIF(count(*), 0))::numeric) * (100)::numeric), 2) AS mlb_coverage_pct,
+    round((((count(_staging_chadwick_register.key_retro))::numeric / (NULLIF(count(*), 0))::numeric) * (100)::numeric), 2) AS retro_coverage_pct,
+    round((((count(_staging_chadwick_register.key_bbref))::numeric / (NULLIF(count(*), 0))::numeric) * (100)::numeric), 2) AS bbref_coverage_pct
+   FROM bridge._staging_chadwick_register
+UNION ALL
+ SELECT 'Player Xref Coverage'::text AS metric_category,
+    count(*) AS total_players,
+    count(player_xref.mlb_id) AS with_mlb_id,
+    count(player_xref.retrosheet_id) AS with_retrosheet_id,
+    count(player_xref.baseball_reference_id) AS with_bbref_id,
+    NULL::bigint AS with_fangraphs_id,
+    NULL::bigint AS with_lahman_id,
+    round((((count(player_xref.mlb_id))::numeric / (NULLIF(count(*), 0))::numeric) * (100)::numeric), 2) AS mlb_coverage_pct,
+    round((((count(player_xref.retrosheet_id))::numeric / (NULLIF(count(*), 0))::numeric) * (100)::numeric), 2) AS retro_coverage_pct,
+    round((((count(player_xref.baseball_reference_id))::numeric / (NULLIF(count(*), 0))::numeric) * (100)::numeric), 2) AS bbref_coverage_pct
+   FROM bridge.player_xref;
+
+
+--
+-- Name: VIEW vw_chadwick_coverage; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON VIEW bridge.vw_chadwick_coverage IS 'Compares ID coverage between Chadwick Register staging and bridge.player_xref for gap analysis.';
+
+
+--
+-- Name: vw_lahman_chadwick_comparison; Type: VIEW; Schema: bridge; Owner: -
+--
+
+CREATE VIEW bridge.vw_lahman_chadwick_comparison AS
+ WITH lahman_summary AS (
+         SELECT count(*) AS total_lahman,
+            count(_staging_lahman_people.retrosheet_id) AS lahman_with_retro,
+            count(_staging_lahman_people.baseball_reference_id) AS lahman_with_bbref
+           FROM bridge._staging_lahman_people
+        ), chadwick_summary AS (
+         SELECT count(*) AS total_chadwick,
+            count(_staging_chadwick_register.key_retro) AS chadwick_with_retro,
+            count(_staging_chadwick_register.key_bbref) AS chadwick_with_bbref
+           FROM bridge._staging_chadwick_register
+        ), bridge_summary AS (
+         SELECT count(*) AS total_bridge,
+            count(player_xref.retrosheet_id) AS bridge_with_retro,
+            count(player_xref.mlb_id) AS bridge_with_mlb,
+            count(player_xref.baseball_reference_id) AS bridge_with_bbref
+           FROM bridge.player_xref
+        )
+ SELECT 'Total Records'::text AS metric,
+    l.total_lahman AS lahman_count,
+    c.total_chadwick AS chadwick_count,
+    b.total_bridge AS bridge_count
+   FROM lahman_summary l,
+    chadwick_summary c,
+    bridge_summary b
+UNION ALL
+ SELECT 'With Retrosheet ID'::text AS metric,
+    l.lahman_with_retro AS lahman_count,
+    c.chadwick_with_retro AS chadwick_count,
+    b.bridge_with_retro AS bridge_count
+   FROM lahman_summary l,
+    chadwick_summary c,
+    bridge_summary b
+UNION ALL
+ SELECT 'With BBRef ID'::text AS metric,
+    l.lahman_with_bbref AS lahman_count,
+    c.chadwick_with_bbref AS chadwick_count,
+    b.bridge_with_bbref AS bridge_count
+   FROM lahman_summary l,
+    chadwick_summary c,
+    bridge_summary b;
+
+
+--
+-- Name: VIEW vw_lahman_chadwick_comparison; Type: COMMENT; Schema: bridge; Owner: -
+--
+
+COMMENT ON VIEW bridge.vw_lahman_chadwick_comparison IS 'Compares ID coverage across Lahman, Chadwick Register, and bridge.player_xref for gap analysis.';
+
+
+--
+-- Name: query_logs; Type: TABLE; Schema: chat; Owner: -
+--
+
+CREATE TABLE chat.query_logs (
+    query_log_id bigint NOT NULL,
+    asked_at timestamp with time zone DEFAULT now() NOT NULL,
+    user_question text NOT NULL,
+    parsed_intent jsonb DEFAULT '{}'::jsonb NOT NULL,
+    response_summary text,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    tools_used jsonb DEFAULT '[]'::jsonb NOT NULL,
+    result_row_count integer
+);
+
+
+--
+-- Name: TABLE query_logs; Type: COMMENT; Schema: chat; Owner: -
+--
+
+COMMENT ON TABLE chat.query_logs IS 'Chatbot query and response log (72 kB). Tracks all chatbot interactions.';
+
+
+--
+-- Name: query_logs_query_log_id_seq; Type: SEQUENCE; Schema: chat; Owner: -
+--
+
+CREATE SEQUENCE chat.query_logs_query_log_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: query_logs_query_log_id_seq; Type: SEQUENCE OWNED BY; Schema: chat; Owner: -
+--
+
+ALTER SEQUENCE chat.query_logs_query_log_id_seq OWNED BY chat.query_logs.query_log_id;
+
+
+--
+-- Name: games; Type: TABLE; Schema: core; Owner: -
+--
+
+CREATE TABLE core.games (
+    game_id text NOT NULL,
+    season integer NOT NULL,
+    source_type text NOT NULL,
+    game_date date NOT NULL,
+    game_number smallint,
+    day_of_week text,
+    start_time text,
+    doubleheader_flag text,
+    day_night text,
+    away_team_id text NOT NULL,
+    home_team_id text NOT NULL,
+    park_id text,
+    away_starting_pitcher_id text,
+    home_starting_pitcher_id text,
+    attendance integer,
+    temperature_f integer,
+    wind_direction text,
+    wind_speed_mph integer,
+    field_condition text,
+    precipitation text,
+    sky_condition text,
+    duration_minutes integer,
+    innings integer,
+    away_score integer NOT NULL,
+    home_score integer NOT NULL,
+    away_hits integer,
+    home_hits integer,
+    away_errors integer,
+    home_errors integer,
+    away_lob integer,
+    home_lob integer,
+    winning_team_id text,
+    home_win boolean,
+    win_pitcher_id text,
+    loss_pitcher_id text,
+    save_pitcher_id text,
+    raw_loaded_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT games_score_check CHECK (((away_score >= 0) AND (home_score >= 0)))
+);
+
+
+--
+-- Name: TABLE games; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON TABLE core.games IS 'Canonical game records with 62,598 historical games. Primary source for game-level metadata including date, teams, venue, and final score. Links to raw_retrosheet.chadwick_games and raw_mlb.games via bridge.game_xref';
+
+
+--
+-- Name: allstar_games; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.allstar_games AS
+ SELECT game_id,
+    season,
+    source_type,
+    game_date,
+    game_number,
+    day_of_week,
+    start_time,
+    doubleheader_flag,
+    day_night,
+    away_team_id,
+    home_team_id,
+    park_id,
+    away_starting_pitcher_id,
+    home_starting_pitcher_id,
+    attendance,
+    temperature_f,
+    wind_direction,
+    wind_speed_mph,
+    field_condition,
+    precipitation,
+    sky_condition,
+    duration_minutes,
+    innings,
+    away_score,
+    home_score,
+    away_hits,
+    home_hits,
+    away_errors,
+    home_errors,
+    away_lob,
+    home_lob,
+    winning_team_id,
+    home_win,
+    win_pitcher_id,
+    loss_pitcher_id,
+    save_pitcher_id,
+    raw_loaded_at,
+    created_at,
+    updated_at
+   FROM core.games
+  WHERE (source_type = 'allstar'::text);
+
+
+--
+-- Name: players; Type: TABLE; Schema: core; Owner: -
+--
+
+CREATE TABLE core.players (
+    retrosheet_player_id text NOT NULL,
+    player_name text,
+    bats character(1),
+    throws character(1),
+    first_season integer,
+    last_season integer,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    name_first text,
+    name_last text,
+    nickname text,
+    play_debut date,
+    play_lastgame date,
+    height text,
+    weight integer,
+    hall_of_fame boolean,
+    CONSTRAINT players_bats_check CHECK (((bats IS NULL) OR (bats = ANY (ARRAY['L'::bpchar, 'R'::bpchar, 'B'::bpchar])))),
+    CONSTRAINT players_throws_check CHECK (((throws IS NULL) OR (throws = ANY (ARRAY['L'::bpchar, 'R'::bpchar]))))
+);
+
+
+--
+-- Name: TABLE players; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON TABLE core.players IS 'Canonical player registry with unique player IDs. Contains biographical information, bats/throws, and debut dates. Links to bridge.player_xref for cross-source lookups.';
+
+
+--
+-- Name: teams; Type: TABLE; Schema: core; Owner: -
+--
+
+CREATE TABLE core.teams (
+    retrosheet_team_id text NOT NULL,
+    first_season integer,
+    last_season integer,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    league text,
+    city text,
+    nickname text,
+    team_name text
+);
+
+
+--
+-- Name: TABLE teams; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON TABLE core.teams IS 'Canonical team registry with franchise information. Links to bridge.team_xref for cross-source lookups.';
+
+
+--
+-- Name: season_rosters; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.season_rosters (
+    source_file text NOT NULL,
+    source_row_number integer NOT NULL,
+    season integer NOT NULL,
+    roster_team_id text NOT NULL,
+    player_id text NOT NULL,
+    last_name text,
+    first_name text,
+    bats text,
+    throws text,
+    team_id text,
+    "position" text,
+    is_allstar boolean DEFAULT false NOT NULL,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE season_rosters; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.season_rosters IS 'Season roster data from Retrosheet (36 MB). Team rosters by season with player assignments.';
+
+
+--
+-- Name: roster_entries; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.roster_entries AS
+ SELECT rosters.season,
+    rosters.roster_team_id,
+    rosters.player_id,
+    players.player_name,
+    rosters.first_name,
+    rosters.last_name,
+    rosters.bats,
+    rosters.throws,
+    rosters."position",
+    rosters.is_allstar,
+    teams.league,
+    teams.city AS team_city,
+    teams.nickname AS team_nickname,
+    rosters.source_file
+   FROM ((raw_retrosheet.season_rosters rosters
+     LEFT JOIN core.players players ON ((players.retrosheet_player_id = rosters.player_id)))
+     LEFT JOIN core.teams teams ON ((teams.retrosheet_team_id = rosters.roster_team_id)));
+
+
+--
+-- Name: allstar_roster_entries; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.allstar_roster_entries AS
+ SELECT season,
+    roster_team_id,
+    player_id,
+    player_name,
+    first_name,
+    last_name,
+    bats,
+    throws,
+    "position",
+    is_allstar,
+    league,
+    team_city,
+    team_nickname,
+    source_file
+   FROM core.roster_entries
+  WHERE is_allstar;
+
+
+--
+-- Name: biofile_legacy; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.biofile_legacy (
+    player_id text NOT NULL,
+    last_name text,
+    use_name text,
+    full_name text,
+    birthdate text,
+    birth_city text,
+    birth_state text,
+    birth_country text,
+    deathdate text,
+    death_city text,
+    death_state text,
+    death_country text,
+    cemetery text,
+    cemetery_city text,
+    cemetery_state text,
+    cemetery_country text,
+    cemetery_note text,
+    birth_name text,
+    alt_name text,
+    play_debut text,
+    play_lastgame text,
+    coach_debut text,
+    coach_lastgame text,
+    manager_debut text,
+    manager_lastgame text,
+    umpire_debut text,
+    umpire_lastgame text,
+    bats text,
+    throws text,
+    height text,
+    weight text,
+    hall_of_fame text,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE biofile_legacy; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.biofile_legacy IS 'Legacy biofile format for backward compatibility (5.7 MB).';
+
+
+--
+-- Name: coaches; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.coaches (
+    source_row_number integer NOT NULL,
+    coach_id text NOT NULL,
+    season integer NOT NULL,
+    team_id text NOT NULL,
+    role text,
+    start_date text,
+    end_date text,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE coaches; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.coaches IS 'Coach records from Retrosheet (1.7 MB). Coaching staff by team and season.';
+
+
+--
+-- Name: ejections; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.ejections (
+    source_row_number integer NOT NULL,
+    game_id text,
+    game_date text,
+    doubleheader_flag text,
+    ejectee_id text,
+    ejectee_name text,
+    team_id text,
+    job text,
+    umpire_id text,
+    umpire_name text,
+    inning text,
+    reason text,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE ejections; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.ejections IS 'Ejection records from Retrosheet (4.7 MB). Tracks player/manager ejections with reasons.';
+
+
+--
+-- Name: relatives; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.relatives (
+    source_row_number integer NOT NULL,
+    player_id_1 text NOT NULL,
+    relationship text NOT NULL,
+    player_id_2 text NOT NULL,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE relatives; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.relatives IS 'Player relationship data from Retrosheet (184 kB). Family connections between players.';
+
+
+--
+-- Name: season_schedules; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.season_schedules (
+    source_file text NOT NULL,
+    source_row_number integer NOT NULL,
+    season integer NOT NULL,
+    game_date text,
+    game_number text,
+    day_of_week text,
+    visitor_team_id text,
+    visitor_league text,
+    visitor_game_number text,
+    home_team_id text,
+    home_league text,
+    home_game_number text,
+    day_night text,
+    park_id text,
+    postponed text,
+    makeup text,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE season_schedules; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.season_schedules IS 'Season schedules from Retrosheet (57 MB). Game dates and matchups by season.';
+
+
+--
+-- Name: season_teams; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.season_teams (
+    source_file text NOT NULL,
+    source_row_number integer NOT NULL,
+    season integer NOT NULL,
+    team_id text NOT NULL,
+    league text,
+    city text,
+    nickname text,
+    is_allstar boolean DEFAULT false NOT NULL,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE season_teams; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.season_teams IS 'Team season records from Retrosheet (920 kB). Season-level team statistics.';
+
+
+--
+-- Name: season_umpires; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.season_umpires (
+    source_file text NOT NULL,
+    source_row_number integer NOT NULL,
+    season integer NOT NULL,
+    umpire_id text NOT NULL,
+    last_name text,
+    first_name text,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE season_umpires; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.season_umpires IS 'Umpire assignments by season (2.4 MB). Tracks which umps worked which games.';
+
+
+--
+-- Name: special_gamelog_lines; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.special_gamelog_lines (
+    source_file text NOT NULL,
+    source_row_number integer NOT NULL,
+    game_type text NOT NULL,
+    row_text text NOT NULL,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE special_gamelog_lines; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.special_gamelog_lines IS 'Special game log events (2.8 MB). Records of unusual game events.';
+
+
+--
+-- Name: auxiliary_validation_summary; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.auxiliary_validation_summary AS
+ SELECT 'raw_retrosheet.biofile_legacy'::text AS object_name,
+    count(*) AS row_count
+   FROM raw_retrosheet.biofile_legacy
+UNION ALL
+ SELECT 'raw_retrosheet.coaches'::text AS object_name,
+    count(*) AS row_count
+   FROM raw_retrosheet.coaches
+UNION ALL
+ SELECT 'raw_retrosheet.ejections'::text AS object_name,
+    count(*) AS row_count
+   FROM raw_retrosheet.ejections
+UNION ALL
+ SELECT 'raw_retrosheet.relatives'::text AS object_name,
+    count(*) AS row_count
+   FROM raw_retrosheet.relatives
+UNION ALL
+ SELECT 'raw_retrosheet.season_rosters'::text AS object_name,
+    count(*) AS row_count
+   FROM raw_retrosheet.season_rosters
+UNION ALL
+ SELECT 'raw_retrosheet.allstar_rosters'::text AS object_name,
+    count(*) AS row_count
+   FROM raw_retrosheet.season_rosters
+  WHERE season_rosters.is_allstar
+UNION ALL
+ SELECT 'raw_retrosheet.season_teams'::text AS object_name,
+    count(*) AS row_count
+   FROM raw_retrosheet.season_teams
+UNION ALL
+ SELECT 'raw_retrosheet.season_schedules'::text AS object_name,
+    count(*) AS row_count
+   FROM raw_retrosheet.season_schedules
+UNION ALL
+ SELECT 'raw_retrosheet.season_umpires'::text AS object_name,
+    count(*) AS row_count
+   FROM raw_retrosheet.season_umpires
+UNION ALL
+ SELECT 'raw_retrosheet.special_gamelog_lines'::text AS object_name,
+    count(*) AS row_count
+   FROM raw_retrosheet.special_gamelog_lines
+UNION ALL
+ SELECT 'core.roster_entries'::text AS object_name,
+    count(*) AS row_count
+   FROM core.roster_entries
+UNION ALL
+ SELECT 'core.allstar_games'::text AS object_name,
+    count(*) AS row_count
+   FROM core.allstar_games;
+
+
+--
+-- Name: coach_assignments; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.coach_assignments AS
+ SELECT coaches.coach_id,
+    players.player_name AS coach_name,
+    coaches.season,
+    coaches.team_id,
+    coaches.role,
+    core.safe_date_mmddyyyy(coaches.start_date) AS start_date,
+    core.safe_date_mmddyyyy(coaches.end_date) AS end_date
+   FROM (raw_retrosheet.coaches coaches
+     LEFT JOIN core.players players ON ((players.retrosheet_player_id = coaches.coach_id)));
+
+
+--
+-- Name: ejections; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.ejections AS
+ SELECT game_id,
+    core.safe_date_yyyymmdd(game_date) AS game_date,
+    doubleheader_flag,
+    ejectee_id,
+    ejectee_name,
+    team_id,
+    job,
+    umpire_id,
+    umpire_name,
+    core.safe_int(inning) AS inning,
+    reason
+   FROM raw_retrosheet.ejections;
+
+
+--
+-- Name: events; Type: TABLE; Schema: core; Owner: -
+--
+
+CREATE TABLE core.events (
+    game_id text NOT NULL,
+    event_id integer NOT NULL,
+    season integer NOT NULL,
+    source_type text NOT NULL,
+    event_sequence integer NOT NULL,
+    inning integer NOT NULL,
+    is_bottom_inning boolean NOT NULL,
+    outs_before integer NOT NULL,
+    balls integer,
+    strikes integer,
+    away_score_before integer NOT NULL,
+    home_score_before integer NOT NULL,
+    batting_team_id text NOT NULL,
+    fielding_team_id text NOT NULL,
+    batter_id text,
+    batter_hand bpchar,
+    pitcher_id text,
+    pitcher_hand bpchar,
+    event_code integer,
+    event_text text,
+    is_plate_appearance boolean NOT NULL,
+    is_at_bat boolean NOT NULL,
+    hit_value integer NOT NULL,
+    is_hit boolean NOT NULL,
+    is_walk boolean NOT NULL,
+    is_strikeout boolean NOT NULL,
+    is_home_run boolean NOT NULL,
+    outs_on_play integer NOT NULL,
+    runs_on_play integer NOT NULL,
+    rbi integer NOT NULL,
+    start_bases integer,
+    end_bases integer,
+    away_score_after integer NOT NULL,
+    home_score_after integer NOT NULL,
+    game_pa_count integer,
+    inning_pa_count integer,
+    is_new_plate_appearance boolean,
+    is_inning_start boolean,
+    is_inning_end boolean,
+    is_game_end boolean,
+    raw_loaded_at timestamp with time zone,
+    created_at timestamp with time zone NOT NULL,
+    CONSTRAINT events_count_check CHECK ((((balls IS NULL) OR ((balls >= 0) AND (balls <= 4))) AND ((strikes IS NULL) OR ((strikes >= 0) AND (strikes <= 3))))),
+    CONSTRAINT events_hands_check CHECK ((((batter_hand IS NULL) OR (batter_hand = ANY (ARRAY['L'::bpchar, 'R'::bpchar, 'B'::bpchar]))) AND ((pitcher_hand IS NULL) OR (pitcher_hand = ANY (ARRAY['L'::bpchar, 'R'::bpchar]))))),
+    CONSTRAINT events_hit_value_check CHECK (((hit_value >= 0) AND (hit_value <= 4))),
+    CONSTRAINT events_inning_check CHECK ((inning > 0)),
+    CONSTRAINT events_outs_before_check CHECK (((outs_before >= 0) AND (outs_before <= 2)))
+);
+
+
+--
+-- Name: TABLE events; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON TABLE core.events IS '4.9 million play-level events from Retrosheet. Contains play-by-play data with event codes, descriptions, base running, and fielding. Parsed from Chadwick output.';
+
+
+--
+-- Name: game_states; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.game_states AS
+ SELECT events.game_id,
+    events.event_id,
+    events.season,
+    games.game_date,
+    events.inning,
+    events.is_bottom_inning,
+    events.outs_before,
+    events.balls,
+    events.strikes,
+    events.start_bases,
+    events.end_bases,
+    events.away_score_before,
+    events.home_score_before,
+    events.away_score_after,
+    events.home_score_after,
+        CASE
+            WHEN events.is_bottom_inning THEN (events.home_score_before - events.away_score_before)
+            ELSE (events.away_score_before - events.home_score_before)
+        END AS batting_team_score_diff,
+        CASE
+            WHEN events.is_bottom_inning THEN (events.home_score_before - events.away_score_before)
+            ELSE (events.away_score_before - events.home_score_before)
+        END AS score_diff_for_batting_team,
+    events.batting_team_id,
+    events.fielding_team_id,
+    games.home_team_id,
+    games.away_team_id,
+    events.batter_id,
+    events.batter_hand,
+    events.pitcher_id,
+    events.pitcher_hand,
+    events.event_code,
+    events.is_plate_appearance,
+    events.is_at_bat,
+    events.hit_value,
+    events.is_hit,
+    events.is_walk,
+    events.is_strikeout,
+    events.is_home_run,
+    events.runs_on_play,
+    games.home_win AS final_home_win,
+    games.winning_team_id,
+    (events.batting_team_id = games.winning_team_id) AS final_batting_team_win
+   FROM (core.events events
+     JOIN core.games games ON ((games.game_id = events.game_id)));
+
+
+--
+-- Name: live_plate_appearances; Type: TABLE; Schema: core; Owner: -
+--
+
+CREATE TABLE core.live_plate_appearances (
+    game_id text NOT NULL,
+    plate_appearance_id integer NOT NULL,
+    game_pa_number integer NOT NULL,
+    half_inning_pa_number integer NOT NULL,
+    season integer NOT NULL,
+    game_date date NOT NULL,
+    source_type text DEFAULT 'mlb_live'::text NOT NULL,
+    event_sequence integer NOT NULL,
+    inning integer NOT NULL,
+    is_bottom_inning boolean NOT NULL,
+    outs_before integer NOT NULL,
+    balls integer,
+    strikes integer,
+    start_bases integer,
+    end_bases integer,
+    away_score_before integer NOT NULL,
+    home_score_before integer NOT NULL,
+    away_score_after integer,
+    home_score_after integer,
+    home_team_id text,
+    away_team_id text,
+    batting_team_id text,
+    fielding_team_id text,
+    batter_id text,
+    batter_hand text,
+    pitcher_id text,
+    pitcher_hand text,
+    event_code integer,
+    event_text text,
+    is_at_bat boolean,
+    hit_value integer DEFAULT 0,
+    is_hit boolean DEFAULT false,
+    is_walk boolean DEFAULT false,
+    is_strikeout boolean DEFAULT false,
+    is_home_run boolean DEFAULT false,
+    is_hit_by_pitch boolean DEFAULT false,
+    is_interference boolean DEFAULT false,
+    is_reach_base boolean,
+    outs_on_play integer DEFAULT 0,
+    runs_on_play integer DEFAULT 0,
+    rbi integer DEFAULT 0,
+    is_new_pa boolean DEFAULT true,
+    pa_index integer,
+    batter_is_starter boolean,
+    pitcher_is_starter boolean,
+    park_id text,
+    park_name text,
+    temperature_f integer,
+    wind_speed_mph integer,
+    wind_direction text,
+    precipitation text,
+    sky_condition text,
+    game_pa_count integer,
+    inning_pa_count integer,
+    is_inning_start boolean DEFAULT false,
+    is_inning_end boolean DEFAULT false,
+    is_game_end boolean DEFAULT false,
+    mlb_game_pk integer,
+    snapshot_id integer,
+    snapshot_fetched_at timestamp with time zone,
+    raw_play jsonb,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE live_plate_appearances; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON TABLE core.live_plate_appearances IS 'Live PA tracking for current game state. Tracks current PA in progress with real-time feature updates.';
+
+
+--
+-- Name: COLUMN live_plate_appearances.plate_appearance_id; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON COLUMN core.live_plate_appearances.plate_appearance_id IS 'Sequential PA ID within the game (matches event_id from live_events)';
+
+
+--
+-- Name: COLUMN live_plate_appearances.game_pa_number; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON COLUMN core.live_plate_appearances.game_pa_number IS 'Sequential PA number within the entire game';
+
+
+--
+-- Name: COLUMN live_plate_appearances.half_inning_pa_number; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON COLUMN core.live_plate_appearances.half_inning_pa_number IS 'Sequential PA number within the half-inning';
+
+
+--
+-- Name: plate_appearances; Type: TABLE; Schema: core; Owner: -
+--
+
+CREATE TABLE core.plate_appearances (
+    game_id text NOT NULL,
+    plate_appearance_id integer NOT NULL,
+    game_pa_number integer NOT NULL,
+    half_inning_pa_number integer NOT NULL,
+    season integer NOT NULL,
+    game_date date NOT NULL,
+    source_type text NOT NULL,
+    event_sequence integer NOT NULL,
+    inning integer NOT NULL,
+    is_bottom_inning boolean NOT NULL,
+    outs_before integer NOT NULL,
+    balls integer,
+    strikes integer,
+    start_bases integer,
+    end_bases integer,
+    away_score_before integer NOT NULL,
+    home_score_before integer NOT NULL,
+    away_score_after integer NOT NULL,
+    home_score_after integer NOT NULL,
+    home_team_id text NOT NULL,
+    away_team_id text NOT NULL,
+    batting_team_id text NOT NULL,
+    fielding_team_id text NOT NULL,
+    batter_id text,
+    batter_hand bpchar,
+    pitcher_id text,
+    pitcher_hand bpchar,
+    event_code integer,
+    event_text text,
+    is_at_bat boolean NOT NULL,
+    hit_value integer NOT NULL,
+    is_hit boolean NOT NULL,
+    is_walk boolean NOT NULL,
+    is_strikeout boolean NOT NULL,
+    is_home_run boolean NOT NULL,
+    is_hit_by_pitch boolean NOT NULL,
+    is_interference boolean NOT NULL,
+    is_reach_base boolean NOT NULL,
+    is_extra_base_hit boolean NOT NULL,
+    runs_on_play integer NOT NULL,
+    rbi integer NOT NULL,
+    final_home_win boolean,
+    final_batting_team_win boolean,
+    raw_loaded_at timestamp with time zone,
+    created_at timestamp with time zone NOT NULL,
+    CONSTRAINT plate_appearances_count_check CHECK ((((balls IS NULL) OR ((balls >= 0) AND (balls <= 4))) AND ((strikes IS NULL) OR ((strikes >= 0) AND (strikes <= 3))))),
+    CONSTRAINT plate_appearances_hit_value_check CHECK (((hit_value >= 0) AND (hit_value <= 4)))
+);
+
+
+--
+-- Name: TABLE plate_appearances; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON TABLE core.plate_appearances IS '4.8 million plate appearance outcomes derived from core.events. One row per PA with batter, pitcher, outcome, and base state. Primary training table for PA outcome models.';
+
+
+--
+-- Name: plate_appearance_examples; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.plate_appearance_examples AS
+ SELECT game_id,
+    plate_appearance_id,
+    season,
+    game_date,
+    inning,
+    is_bottom_inning,
+    outs_before,
+    COALESCE(start_bases, 0) AS start_bases,
+    COALESCE(balls, 0) AS balls,
+    COALESCE(strikes, 0) AS strikes,
+    (home_score_before - away_score_before) AS home_score_diff,
+    batting_team_id,
+    fielding_team_id,
+    home_team_id,
+    away_team_id,
+    batter_id,
+    COALESCE((batter_hand)::text, 'U'::text) AS batter_hand,
+    pitcher_id,
+    COALESCE((pitcher_hand)::text, 'U'::text) AS pitcher_hand,
+    is_at_bat,
+    is_hit,
+    is_walk,
+    is_strikeout,
+    is_home_run,
+    is_hit_by_pitch,
+    is_reach_base,
+    is_extra_base_hit,
+    hit_value,
+    runs_on_play,
+    rbi,
+    final_home_win,
+    final_batting_team_win
+   FROM core.plate_appearances
+  WITH NO DATA;
+
+
+--
+-- Name: metadata_validation_summary; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.metadata_validation_summary AS
+ SELECT 'core.players'::text AS object_name,
+    count(*) AS row_count,
+    count(*) FILTER (WHERE (players.bats IS NOT NULL)) AS populated_bats,
+    count(*) FILTER (WHERE (players.throws IS NOT NULL)) AS populated_throws
+   FROM core.players
+UNION ALL
+ SELECT 'features.plate_appearance_examples'::text AS object_name,
+    count(*) AS row_count,
+    count(*) FILTER (WHERE (plate_appearance_examples.batter_hand <> 'U'::text)) AS populated_bats,
+    count(*) FILTER (WHERE (plate_appearance_examples.pitcher_hand <> 'U'::text)) AS populated_throws
+   FROM features.plate_appearance_examples;
+
+
+--
+-- Name: reference_snapshots; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.reference_snapshots (
+    snapshot_id bigint NOT NULL,
+    endpoint_family text NOT NULL,
+    resource_key text,
+    season integer,
+    endpoint text NOT NULL,
+    payload jsonb NOT NULL,
+    fetched_at timestamp with time zone DEFAULT now(),
+    request_params jsonb,
+    http_status integer,
+    response_time_ms integer,
+    error_text text,
+    payload_checksum text
+);
+
+
+--
+-- Name: TABLE reference_snapshots; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.reference_snapshots IS 'Reference data JSON from MLB API (14 MB). Teams, players, venues reference data.';
+
+
+--
+-- Name: COLUMN reference_snapshots.endpoint_family; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.reference_snapshots.endpoint_family IS 'Logical endpoint family, such as teams, rosters, people, venues, or standings';
+
+
+--
+-- Name: COLUMN reference_snapshots.resource_key; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.reference_snapshots.resource_key IS 'Natural resource identifier for the fetched object or batch, such as season, team, venue, or people batch';
+
+
+--
+-- Name: COLUMN reference_snapshots.season; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.reference_snapshots.season IS 'Season associated with the snapshot when applicable';
+
+
+--
+-- Name: COLUMN reference_snapshots.endpoint; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.reference_snapshots.endpoint IS 'API endpoint used to fetch the payload';
+
+
+--
+-- Name: COLUMN reference_snapshots.payload; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.reference_snapshots.payload IS 'Full JSON response from the MLB Stats API';
+
+
+--
+-- Name: COLUMN reference_snapshots.request_params; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.reference_snapshots.request_params IS 'Normalized request parameters used for the fetch';
+
+
+--
+-- Name: COLUMN reference_snapshots.http_status; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.reference_snapshots.http_status IS 'HTTP status code returned by the MLB API';
+
+
+--
+-- Name: COLUMN reference_snapshots.error_text; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.reference_snapshots.error_text IS 'Error captured during fetch when a request fails or returns unexpected content';
+
+
+--
+-- Name: COLUMN reference_snapshots.payload_checksum; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.reference_snapshots.payload_checksum IS 'Checksum for payload-level deduping and replay audit';
+
+
+--
+-- Name: mlb_api_players; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.mlb_api_players AS
+ WITH latest AS (
+         SELECT DISTINCT ON (reference_snapshots.resource_key) reference_snapshots.resource_key,
+            reference_snapshots.season,
+            reference_snapshots.payload
+           FROM raw_mlb.reference_snapshots
+          WHERE ((reference_snapshots.endpoint_family = 'people'::text) AND (reference_snapshots.http_status = 200))
+          ORDER BY reference_snapshots.resource_key, reference_snapshots.fetched_at DESC, reference_snapshots.snapshot_id DESC
+        )
+ SELECT DISTINCT ON ((person.value ->> 'id'::text)) latest.season,
+    ((person.value ->> 'id'::text))::bigint AS mlb_player_id,
+    (person.value ->> 'fullName'::text) AS full_name,
+    (person.value ->> 'firstName'::text) AS first_name,
+    (person.value ->> 'lastName'::text) AS last_name,
+    (person.value ->> 'primaryNumber'::text) AS primary_number,
+    (person.value ->> 'birthDate'::text) AS birth_date_text,
+    (person.value ->> 'currentAge'::text) AS current_age_text,
+    (person.value ->> 'height'::text) AS height_text,
+    (person.value ->> 'weight'::text) AS weight_text,
+    ((person.value -> 'batSide'::text) ->> 'code'::text) AS bat_side,
+    ((person.value -> 'pitchHand'::text) ->> 'code'::text) AS pitch_hand,
+    ((person.value -> 'primaryPosition'::text) ->> 'code'::text) AS primary_position_code,
+    ((person.value -> 'primaryPosition'::text) ->> 'name'::text) AS primary_position_name,
+    ((person.value -> 'primaryPosition'::text) ->> 'abbreviation'::text) AS primary_position_abbreviation,
+    (((person.value -> 'currentTeam'::text) ->> 'id'::text))::bigint AS current_team_id,
+    COALESCE(((person.value ->> 'active'::text))::boolean, true) AS is_active,
+    person.value AS raw_person
+   FROM (latest
+     CROSS JOIN LATERAL jsonb_array_elements((latest.payload -> 'people'::text)) person(value))
+  ORDER BY (person.value ->> 'id'::text), latest.season DESC NULLS LAST;
+
+
+--
+-- Name: mlb_api_standings; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.mlb_api_standings AS
+ WITH latest AS (
+         SELECT DISTINCT ON (reference_snapshots.season, reference_snapshots.resource_key) reference_snapshots.season,
+            reference_snapshots.payload
+           FROM raw_mlb.reference_snapshots
+          WHERE ((reference_snapshots.endpoint_family = 'standings'::text) AND (reference_snapshots.http_status = 200))
+          ORDER BY reference_snapshots.season, reference_snapshots.resource_key, reference_snapshots.fetched_at DESC, reference_snapshots.snapshot_id DESC
+        )
+ SELECT latest.season,
+    (((record.value -> 'league'::text) ->> 'id'::text))::bigint AS league_id,
+    ((record.value -> 'league'::text) ->> 'name'::text) AS league_name,
+    (((record.value -> 'division'::text) ->> 'id'::text))::bigint AS division_id,
+    ((record.value -> 'division'::text) ->> 'name'::text) AS division_name,
+    (((team_record.value -> 'team'::text) ->> 'id'::text))::bigint AS mlb_team_id,
+    ((team_record.value -> 'team'::text) ->> 'name'::text) AS team_name,
+    ((team_record.value ->> 'wins'::text))::integer AS wins,
+    ((team_record.value ->> 'losses'::text))::integer AS losses,
+    (team_record.value ->> 'winningPercentage'::text) AS winning_percentage_text,
+    ((team_record.value ->> 'gamesPlayed'::text))::integer AS games_played,
+    ((team_record.value ->> 'runsScored'::text))::integer AS runs_scored,
+    ((team_record.value ->> 'runsAllowed'::text))::integer AS runs_allowed,
+    (team_record.value ->> 'runDifferential'::text) AS run_differential_text,
+    ((team_record.value ->> 'divisionRank'::text))::integer AS division_rank,
+    team_record.value AS raw_team_record
+   FROM ((latest
+     CROSS JOIN LATERAL jsonb_array_elements((latest.payload -> 'records'::text)) record(value))
+     CROSS JOIN LATERAL jsonb_array_elements((record.value -> 'teamRecords'::text)) team_record(value));
+
+
+--
+-- Name: mlb_api_team_rosters; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.mlb_api_team_rosters AS
+ WITH latest AS (
+         SELECT DISTINCT ON (reference_snapshots.season, reference_snapshots.resource_key) reference_snapshots.season,
+            reference_snapshots.resource_key,
+            reference_snapshots.payload
+           FROM raw_mlb.reference_snapshots
+          WHERE ((reference_snapshots.endpoint_family = 'rosters'::text) AND (reference_snapshots.http_status = 200))
+          ORDER BY reference_snapshots.season, reference_snapshots.resource_key, reference_snapshots.fetched_at DESC, reference_snapshots.snapshot_id DESC
+        )
+ SELECT latest.season,
+    (split_part(latest.resource_key, ':'::text, 4))::bigint AS mlb_team_id,
+    (((roster_entry.value -> 'person'::text) ->> 'id'::text))::bigint AS mlb_player_id,
+    ((roster_entry.value -> 'person'::text) ->> 'fullName'::text) AS player_name,
+    (roster_entry.value ->> 'jerseyNumber'::text) AS jersey_number,
+    ((roster_entry.value -> 'position'::text) ->> 'code'::text) AS position_code,
+    ((roster_entry.value -> 'position'::text) ->> 'name'::text) AS position_name,
+    ((roster_entry.value -> 'position'::text) ->> 'abbreviation'::text) AS position_abbreviation,
+    ((roster_entry.value -> 'status'::text) ->> 'code'::text) AS roster_status_code,
+    ((roster_entry.value -> 'status'::text) ->> 'description'::text) AS roster_status_description,
+    roster_entry.value AS raw_roster_entry
+   FROM (latest
+     CROSS JOIN LATERAL jsonb_array_elements((latest.payload -> 'roster'::text)) roster_entry(value));
+
+
+--
+-- Name: mlb_api_teams; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.mlb_api_teams AS
+ WITH latest AS (
+         SELECT DISTINCT ON (reference_snapshots.season, reference_snapshots.resource_key) reference_snapshots.season,
+            reference_snapshots.payload
+           FROM raw_mlb.reference_snapshots
+          WHERE ((reference_snapshots.endpoint_family = 'teams'::text) AND (reference_snapshots.http_status = 200))
+          ORDER BY reference_snapshots.season, reference_snapshots.resource_key, reference_snapshots.fetched_at DESC, reference_snapshots.snapshot_id DESC
+        )
+ SELECT latest.season,
+    ((team.value ->> 'id'::text))::bigint AS mlb_team_id,
+    (team.value ->> 'name'::text) AS team_name,
+    (team.value ->> 'teamCode'::text) AS team_code,
+    (team.value ->> 'fileCode'::text) AS file_code,
+    (team.value ->> 'abbreviation'::text) AS abbreviation,
+    (team.value ->> 'teamName'::text) AS team_nickname,
+    (team.value ->> 'locationName'::text) AS location_name,
+    (team.value ->> 'shortName'::text) AS short_name,
+    ((team.value -> 'league'::text) ->> 'id'::text) AS league_id,
+    ((team.value -> 'league'::text) ->> 'name'::text) AS league_name,
+    ((team.value -> 'division'::text) ->> 'id'::text) AS division_id,
+    ((team.value -> 'division'::text) ->> 'name'::text) AS division_name,
+    (((team.value -> 'venue'::text) ->> 'id'::text))::bigint AS venue_id,
+    ((team.value -> 'venue'::text) ->> 'name'::text) AS venue_name,
+    COALESCE(((team.value ->> 'active'::text))::boolean, true) AS is_active,
+    team.value AS raw_team
+   FROM (latest
+     CROSS JOIN LATERAL jsonb_array_elements((latest.payload -> 'teams'::text)) team(value));
+
+
+--
+-- Name: mlb_api_venues; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.mlb_api_venues AS
+ WITH latest AS (
+         SELECT DISTINCT ON (reference_snapshots.resource_key) reference_snapshots.season,
+            reference_snapshots.resource_key,
+            reference_snapshots.payload
+           FROM raw_mlb.reference_snapshots
+          WHERE ((reference_snapshots.endpoint_family = 'venues'::text) AND (reference_snapshots.http_status = 200))
+          ORDER BY reference_snapshots.resource_key, reference_snapshots.fetched_at DESC, reference_snapshots.snapshot_id DESC
+        )
+ SELECT latest.season,
+    ((venue.value ->> 'id'::text))::bigint AS venue_id,
+    (venue.value ->> 'name'::text) AS venue_name,
+    ((venue.value -> 'location'::text) ->> 'city'::text) AS city,
+    ((venue.value -> 'location'::text) ->> 'state'::text) AS state,
+    ((venue.value -> 'location'::text) ->> 'stateAbbrev'::text) AS state_abbrev,
+    ((venue.value -> 'location'::text) ->> 'country'::text) AS country,
+    ((venue.value -> 'timeZone'::text) ->> 'id'::text) AS time_zone_id,
+    ((venue.value -> 'timeZone'::text) ->> 'tz'::text) AS time_zone_abbrev,
+    ((venue.value -> 'fieldInfo'::text) ->> 'capacity'::text) AS capacity_text,
+    ((venue.value -> 'fieldInfo'::text) ->> 'turfType'::text) AS turf_type,
+    ((venue.value -> 'fieldInfo'::text) ->> 'roofType'::text) AS roof_type,
+    ((venue.value -> 'fieldInfo'::text) ->> 'leftLine'::text) AS left_line_text,
+    ((venue.value -> 'fieldInfo'::text) ->> 'leftCenter'::text) AS left_center_text,
+    ((venue.value -> 'fieldInfo'::text) ->> 'center'::text) AS center_text,
+    ((venue.value -> 'fieldInfo'::text) ->> 'rightCenter'::text) AS right_center_text,
+    ((venue.value -> 'fieldInfo'::text) ->> 'rightLine'::text) AS right_line_text,
+    venue.value AS raw_venue
+   FROM (latest
+     CROSS JOIN LATERAL jsonb_array_elements((latest.payload -> 'venues'::text)) venue(value));
+
+
+--
+-- Name: mlb_pbp; Type: TABLE; Schema: core; Owner: -
+--
+
+CREATE TABLE core.mlb_pbp (
+    game_pk bigint,
+    game_date date,
+    home_team text,
+    away_team text,
+    venue text,
+    retro_game_id text,
+    retro_event_id text,
+    inning integer,
+    inning_half text,
+    outs_after integer,
+    balls integer,
+    strikes integer,
+    batter_id bigint,
+    batter_name text,
+    pitcher_id bigint,
+    pitcher_name text,
+    stand text,
+    p_throws text,
+    runner_1b_id bigint,
+    runner_2b_id bigint,
+    runner_3b_id bigint,
+    runner_1b text,
+    runner_2b text,
+    runner_3b text,
+    pitch_type text,
+    pitch_desc text,
+    release_speed double precision,
+    spin_rate double precision,
+    plate_x double precision,
+    plate_z double precision,
+    zone integer,
+    launch_speed double precision,
+    launch_angle double precision,
+    hit_distance_sc double precision,
+    estimated_ba_using_speedangle double precision,
+    estimated_woba_using_speedangle double precision,
+    event_type text,
+    event_desc text,
+    hit_location text,
+    is_out boolean,
+    rbi integer,
+    runs_scored integer,
+    pitch_sequence text,
+    retro_event_cd integer,
+    retro_event_code text,
+    retro_bat_event_fl boolean,
+    home_team_id text,
+    away_team_id text
+);
+
+
+--
+-- Name: TABLE mlb_pbp; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON TABLE core.mlb_pbp IS 'MLB play-by-play structured data. Alternative to live_events with normalized schema.';
+
+
+--
+-- Name: parks; Type: TABLE; Schema: core; Owner: -
+--
+
+CREATE TABLE core.parks (
+    retrosheet_park_id text NOT NULL,
+    first_season integer,
+    last_season integer,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    name text,
+    aka text,
+    city text,
+    state text,
+    start_date date,
+    end_date date,
+    league text,
+    notes text
+);
+
+
+--
+-- Name: TABLE parks; Type: COMMENT; Schema: core; Owner: -
+--
+
+COMMENT ON TABLE core.parks IS 'Stadium and ballpark information including capacity, surface type, and dimensions.';
+
+
+--
+-- Name: plate_appearance_validation_summary; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.plate_appearance_validation_summary AS
+ SELECT 'core.plate_appearances'::text AS object_name,
+    count(*) AS row_count,
+    count(DISTINCT plate_appearances.game_id) AS distinct_games
+   FROM core.plate_appearances
+UNION ALL
+ SELECT 'features.plate_appearance_examples'::text AS object_name,
+    count(*) AS row_count,
+    count(DISTINCT plate_appearance_examples.game_id) AS distinct_games
+   FROM features.plate_appearance_examples;
+
+
+--
+-- Name: player_relatives; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.player_relatives AS
+ SELECT relatives.player_id_1,
+    player_1.player_name AS player_1_name,
+    relatives.relationship,
+    relatives.player_id_2,
+    player_2.player_name AS player_2_name
+   FROM ((raw_retrosheet.relatives relatives
+     LEFT JOIN core.players player_1 ON ((player_1.retrosheet_player_id = relatives.player_id_1)))
+     LEFT JOIN core.players player_2 ON ((player_2.retrosheet_player_id = relatives.player_id_2)));
+
+
+--
+-- Name: chadwick_events; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.chadwick_events (
+    season integer NOT NULL,
+    source_type text NOT NULL,
+    row_number integer NOT NULL,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL,
+    game_id text,
+    away_team_id text,
+    inn_ct text,
+    bat_home_id text,
+    outs_ct text,
+    balls_ct text,
+    strikes_ct text,
+    pitch_seq_tx text,
+    away_score_ct text,
+    home_score_ct text,
+    bat_id text,
+    bat_hand_cd text,
+    resp_bat_id text,
+    resp_bat_hand_cd text,
+    pit_id text,
+    pit_hand_cd text,
+    resp_pit_id text,
+    resp_pit_hand_cd text,
+    pos2_fld_id text,
+    pos3_fld_id text,
+    pos4_fld_id text,
+    pos5_fld_id text,
+    pos6_fld_id text,
+    pos7_fld_id text,
+    pos8_fld_id text,
+    pos9_fld_id text,
+    base1_run_id text,
+    base2_run_id text,
+    base3_run_id text,
+    event_tx text,
+    leadoff_fl text,
+    ph_fl text,
+    bat_fld_cd text,
+    bat_lineup_id text,
+    event_cd text,
+    bat_event_fl text,
+    ab_fl text,
+    h_cd text,
+    sh_fl text,
+    sf_fl text,
+    event_outs_ct text,
+    dp_fl text,
+    tp_fl text,
+    rbi_ct text,
+    wp_fl text,
+    pb_fl text,
+    fld_cd text,
+    battedball_cd text,
+    bunt_fl text,
+    foul_fl text,
+    battedball_loc_tx text,
+    err_ct text,
+    err1_fld_cd text,
+    err1_cd text,
+    err2_fld_cd text,
+    err2_cd text,
+    err3_fld_cd text,
+    err3_cd text,
+    bat_dest_id text,
+    run1_dest_id text,
+    run2_dest_id text,
+    run3_dest_id text,
+    bat_play_tx text,
+    run1_play_tx text,
+    run2_play_tx text,
+    run3_play_tx text,
+    run1_sb_fl text,
+    run2_sb_fl text,
+    run3_sb_fl text,
+    run1_cs_fl text,
+    run2_cs_fl text,
+    run3_cs_fl text,
+    run1_pk_fl text,
+    run2_pk_fl text,
+    run3_pk_fl text,
+    run1_resp_pit_id text,
+    run2_resp_pit_id text,
+    run3_resp_pit_id text,
+    game_new_fl text,
+    game_end_fl text,
+    pr_run1_fl text,
+    pr_run2_fl text,
+    pr_run3_fl text,
+    removed_for_pr_run1_id text,
+    removed_for_pr_run2_id text,
+    removed_for_pr_run3_id text,
+    removed_for_ph_bat_id text,
+    removed_for_ph_bat_fld_cd text,
+    po1_fld_cd text,
+    po2_fld_cd text,
+    po3_fld_cd text,
+    ass1_fld_cd text,
+    ass2_fld_cd text,
+    ass3_fld_cd text,
+    ass4_fld_cd text,
+    ass5_fld_cd text,
+    event_id text,
+    home_team_id text,
+    bat_team_id text,
+    fld_team_id text,
+    bat_last_id text,
+    inn_new_fl text,
+    inn_end_fl text,
+    start_bat_score_ct text,
+    start_fld_score_ct text,
+    inn_runs_ct text,
+    game_pa_ct text,
+    inn_pa_ct text,
+    pa_new_fl text,
+    pa_trunc_fl text,
+    start_bases_cd text,
+    end_bases_cd text,
+    bat_start_fl text,
+    resp_bat_start_fl text,
+    bat_on_deck_id text,
+    bat_in_hold_id text,
+    pit_start_fl text,
+    resp_pit_start_fl text,
+    run1_fld_cd text,
+    run1_lineup_cd text,
+    run1_origin_event_id text,
+    run2_fld_cd text,
+    run2_lineup_cd text,
+    run2_origin_event_id text,
+    run3_fld_cd text,
+    run3_lineup_cd text,
+    run3_origin_event_id text,
+    run1_resp_cat_id text,
+    run2_resp_cat_id text,
+    run3_resp_cat_id text,
+    pa_ball_ct text,
+    pa_called_ball_ct text,
+    pa_intent_ball_ct text,
+    pa_pitchout_ball_ct text,
+    pa_hitbatter_ball_ct text,
+    pa_other_ball_ct text,
+    pa_strike_ct text,
+    pa_called_strike_ct text,
+    pa_swingmiss_strike_ct text,
+    pa_foul_strike_ct text,
+    pa_inplay_strike_ct text,
+    pa_other_strike_ct text,
+    event_runs_ct text,
+    fld_id text,
+    base2_force_fl text,
+    base3_force_fl text,
+    base4_force_fl text,
+    bat_safe_err_fl text,
+    bat_fate_id text,
+    run1_fate_id text,
+    run2_fate_id text,
+    run3_fate_id text,
+    fate_runs_ct text,
+    ass6_fld_cd text,
+    ass7_fld_cd text,
+    ass8_fld_cd text,
+    ass9_fld_cd text,
+    ass10_fld_cd text,
+    unknown_out_exc_fl text,
+    uncertain_play_exc_fl text
+);
+
+
+--
+-- Name: TABLE chadwick_events; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.chadwick_events IS 'Parsed Retrosheet event data (4.2 GB). One row per event with 96 fields covering play description, base running, fielding, and scoring. Source-preserved from Chadwick output.';
+
+
+--
+-- Name: retrosheet_event_state_seed; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.retrosheet_event_state_seed AS
+ SELECT season,
+    source_type,
+    row_number,
+    game_id,
+    (NULLIF(event_id, ''::text))::integer AS event_id,
+    (NULLIF(inn_ct, ''::text))::integer AS inning,
+    bat_home_id AS batting_team_flag,
+    bat_id AS batter_retrosheet_id,
+    bat_hand_cd AS batter_hand,
+    pit_id AS pitcher_retrosheet_id,
+    pit_hand_cd AS pitcher_hand,
+    event_tx AS event_text,
+    (NULLIF(event_outs_ct, ''::text))::integer AS outs_on_play,
+    (NULLIF(event_runs_ct, ''::text))::integer AS runs_on_play,
+    (NULLIF(start_bases_cd, ''::text))::integer AS start_bases,
+    (NULLIF(end_bases_cd, ''::text))::integer AS end_bases,
+    loaded_at
+   FROM raw_retrosheet.chadwick_events;
+
+
+--
+-- Name: scheduled_games; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.scheduled_games AS
+ SELECT season,
+    core.safe_date_yyyymmdd(game_date) AS game_date,
+    core.safe_int(game_number) AS game_number,
+    day_of_week,
+    visitor_team_id AS away_team_id,
+    visitor_league AS away_league,
+    core.safe_int(visitor_game_number) AS away_game_number,
+    home_team_id,
+    home_league,
+    core.safe_int(home_game_number) AS home_game_number,
+    day_night,
+    park_id,
+    NULLIF(postponed, ''::text) AS postponed,
+    NULLIF(makeup, ''::text) AS makeup,
+    source_file
+   FROM raw_retrosheet.season_schedules;
+
+
+--
+-- Name: umpires; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.umpires AS
+ SELECT umpire_id,
+    max(NULLIF(first_name, ''::text)) AS first_name,
+    max(NULLIF(last_name, ''::text)) AS last_name,
+    min(season) AS first_season,
+    max(season) AS last_season
+   FROM raw_retrosheet.season_umpires
+  GROUP BY umpire_id;
+
+
+--
+-- Name: game_outcome_examples; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.game_outcome_examples AS
+ SELECT game_id,
+    event_id,
+    season,
+    game_date,
+    inning,
+    is_bottom_inning,
+    outs_before,
+    COALESCE(start_bases, 0) AS start_bases,
+    COALESCE(balls, 0) AS balls,
+    COALESCE(strikes, 0) AS strikes,
+    (home_score_before - away_score_before) AS home_score_diff,
+    away_score_before,
+    home_score_before,
+    batting_team_id,
+    fielding_team_id,
+    home_team_id,
+    away_team_id,
+    batter_id,
+    batter_hand,
+    pitcher_id,
+    pitcher_hand,
+    final_home_win
+   FROM core.game_states
+  WHERE (is_plate_appearance AND (final_home_win IS NOT NULL))
+  WITH NO DATA;
+
+
+--
+-- Name: validation_summary; Type: VIEW; Schema: core; Owner: -
+--
+
+CREATE VIEW core.validation_summary AS
+ SELECT 'core.games'::text AS object_name,
+    count(*) AS row_count,
+    count(DISTINCT games.game_id) AS distinct_games
+   FROM core.games
+UNION ALL
+ SELECT 'core.events'::text AS object_name,
+    count(*) AS row_count,
+    count(DISTINCT events.game_id) AS distinct_games
+   FROM core.events
+UNION ALL
+ SELECT 'features.game_outcome_examples'::text AS object_name,
+    count(*) AS row_count,
+    count(DISTINCT game_outcome_examples.game_id) AS distinct_games
+   FROM features.game_outcome_examples;
+
+
+--
+-- Name: locations; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.locations (
+    id integer NOT NULL,
+    game_year integer,
+    game_pk integer,
+    batter_id integer,
+    pitcher_id integer,
+    pitch_type text,
+    plate_x numeric,
+    plate_z numeric,
+    sz_top numeric,
+    sz_bot numeric,
+    pfx_x numeric,
+    pfx_z numeric,
+    start_speed numeric,
+    pitch_result text,
+    launch_speed numeric,
+    launch_angle numeric,
+    hit_distance numeric,
+    created_at timestamp with time zone DEFAULT now(),
+    location public.geometry(Point,4326),
+    spin_rate numeric,
+    zone integer,
+    balls integer,
+    strikes integer,
+    inning integer,
+    inning_topbot text,
+    hc_x numeric,
+    hc_y numeric,
+    hit_location integer,
+    bb_type text,
+    release_pos_x numeric,
+    release_pos_y numeric,
+    release_pos_z numeric,
+    on_3b integer,
+    on_2b integer,
+    on_1b integer,
+    outs_when_up integer,
+    game_date date,
+    sv_id text,
+    vx0 numeric,
+    vy0 numeric,
+    vz0 numeric,
+    ax numeric,
+    ay numeric,
+    az numeric,
+    release_spin_rate numeric,
+    effective_speed numeric,
+    release_extension numeric,
+    spin_axis numeric,
+    estimated_ba numeric,
+    estimated_woba numeric,
+    estimated_slg numeric,
+    woba_value numeric,
+    woba_denom numeric,
+    babip_value numeric,
+    iso_value numeric,
+    home_score integer,
+    away_score integer,
+    bat_score integer,
+    fld_score integer,
+    at_bat_number integer,
+    pitch_number integer,
+    player_name text,
+    pitch_name text,
+    description text,
+    events text,
+    stand text,
+    p_throws text,
+    home_team text,
+    away_team text,
+    type text,
+    post_home_score integer,
+    post_away_score integer,
+    post_bat_score integer,
+    post_fld_score integer,
+    fielder_2 integer,
+    fielder_3 integer,
+    fielder_4 integer,
+    fielder_5 integer,
+    fielder_6 integer,
+    fielder_7 integer,
+    fielder_8 integer,
+    fielder_9 integer,
+    delta_home_win_exp numeric,
+    delta_run_exp numeric,
+    home_win_exp numeric,
+    bat_win_exp numeric,
+    if_fielding_alignment text,
+    of_fielding_alignment text,
+    launch_speed_angle numeric,
+    spin_rate_deprecated numeric,
+    quality_flag text DEFAULT 'normal'::text
+);
+
+
+--
+-- Name: TABLE locations; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.locations IS 'PostGIS-enabled pitch location table (13 GB). 7.66M pitches 2015-2025 with spatial geometry column for GIS analysis. Includes plate_x, plate_z coordinates and calculated geometry.';
+
+
+--
+-- Name: COLUMN locations.quality_flag; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.locations.quality_flag IS 'Data quality classification: normal, high_passed_ball, wide_wild_pitch, extreme_outlier_low, missing_location, velocity_outlier';
+
+
+--
+-- Name: batter_zone_performance; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.batter_zone_performance AS
+ SELECT batter_id,
+    game_year,
+    pitch_type,
+        CASE
+            WHEN ((plate_x < '-8.5'::numeric) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 'inside_strike'::text
+            WHEN ((plate_x > 8.5) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 'outside_strike'::text
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND (plate_z > sz_top)) THEN 'high_strike'::text
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND (plate_z < sz_bot)) THEN 'low_strike'::text
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 'heart'::text
+            WHEN (plate_x < '-13.5'::numeric) THEN 'far_inside'::text
+            WHEN (plate_x > 13.5) THEN 'far_outside'::text
+            WHEN (plate_z > (sz_top + (3)::numeric)) THEN 'way_high'::text
+            WHEN (plate_z < (sz_bot - (3)::numeric)) THEN 'way_low'::text
+            ELSE 'edge'::text
+        END AS location_zone,
+    count(*) AS total_pitches,
+    sum(
+        CASE
+            WHEN ((pitch_result ~~* '%swing%'::text) OR (pitch_result ~~* '%foul%'::text)) THEN 1
+            ELSE 0
+        END) AS swings,
+    sum(
+        CASE
+            WHEN ((pitch_result ~~* '%called strike%'::text) OR (pitch_result ~~* '%swinging strike%'::text)) THEN 1
+            ELSE 0
+        END) AS strikes,
+    sum(
+        CASE
+            WHEN (pitch_result ~~* '%ball%'::text) THEN 1
+            ELSE 0
+        END) AS balls,
+    sum(
+        CASE
+            WHEN ((pitch_result ~~* '%hit%'::text) OR (pitch_result ~~* '%single%'::text) OR (pitch_result ~~* '%double%'::text) OR (pitch_result ~~* '%triple%'::text) OR (pitch_result ~~* '%home%'::text)) THEN 1
+            ELSE 0
+        END) AS hits,
+    sum(
+        CASE
+            WHEN ((pitch_result ~~* '%out%'::text) OR (pitch_result ~~* '%groundout%'::text) OR (pitch_result ~~* '%flyout%'::text) OR (pitch_result ~~* '%lineout%'::text)) THEN 1
+            ELSE 0
+        END) AS outs,
+    avg(launch_speed) AS avg_exit_velocity,
+    avg(launch_angle) AS avg_launch_angle,
+    avg(hit_distance) AS avg_hit_distance
+   FROM features_pitch.locations
+  WHERE ((plate_x IS NOT NULL) AND (plate_z IS NOT NULL))
+  GROUP BY batter_id, game_year, pitch_type,
+        CASE
+            WHEN ((plate_x < '-8.5'::numeric) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 'inside_strike'::text
+            WHEN ((plate_x > 8.5) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 'outside_strike'::text
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND (plate_z > sz_top)) THEN 'high_strike'::text
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND (plate_z < sz_bot)) THEN 'low_strike'::text
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 'heart'::text
+            WHEN (plate_x < '-13.5'::numeric) THEN 'far_inside'::text
+            WHEN (plate_x > 13.5) THEN 'far_outside'::text
+            WHEN (plate_z > (sz_top + (3)::numeric)) THEN 'way_high'::text
+            WHEN (plate_z < (sz_bot - (3)::numeric)) THEN 'way_low'::text
+            ELSE 'edge'::text
+        END;
+
+
+--
+-- Name: VIEW batter_zone_performance; Type: COMMENT; Schema: eda; Owner: -
+--
+
+COMMENT ON VIEW eda.batter_zone_performance IS 'Batter performance by pitch location zone';
+
+
+--
+-- Name: plate_appearance_outcome_examples; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.plate_appearance_outcome_examples AS
+ SELECT pa.game_id,
+    pa.plate_appearance_id,
+    pa.game_pa_number,
+    pa.half_inning_pa_number,
+    pa.season,
+    pa.game_date,
+        CASE
+            WHEN ((pa.season >= 2000) AND (pa.season <= 2009)) THEN '2000_2009'::text
+            WHEN ((pa.season >= 2010) AND (pa.season <= 2014)) THEN '2010_2014'::text
+            WHEN ((pa.season >= 2015) AND (pa.season <= 2019)) THEN '2015_2019'::text
+            WHEN (pa.season = 2020) THEN '2020'::text
+            WHEN ((pa.season >= 2021) AND (pa.season <= 2022)) THEN '2021_2022'::text
+            ELSE '2023_plus'::text
+        END AS season_era,
+        CASE
+            WHEN (pa.season = 2020) THEN 'pandemic_2020'::text
+            WHEN ((pa.season >= 2021) AND (pa.season <= 2022)) THEN 'enforcement_transition'::text
+            WHEN (pa.season >= 2023) THEN 'post_2023_rules'::text
+            ELSE 'pre_2020_rules'::text
+        END AS rules_context_era,
+    pa.inning,
+    pa.is_bottom_inning,
+    pa.outs_before,
+    COALESCE(pa.start_bases, 0) AS start_bases,
+    COALESCE(pa.balls, 0) AS balls,
+    COALESCE(pa.strikes, 0) AS strikes,
+    (pa.home_score_before - pa.away_score_before) AS home_score_diff,
+    pa.away_score_before,
+    pa.home_score_before,
+    pa.batting_team_id,
+    pa.fielding_team_id,
+    pa.home_team_id,
+    pa.away_team_id,
+    pa.batter_id,
+    COALESCE((pa.batter_hand)::text, 'U'::text) AS batter_hand,
+    pa.pitcher_id,
+    COALESCE((pa.pitcher_hand)::text, 'U'::text) AS pitcher_hand,
+    pa.event_code,
+    raw.pitch_seq_tx,
+    raw.battedball_cd,
+    raw.battedball_loc_tx,
+    (raw.sh_fl = 'T'::text) AS is_sacrifice_hit,
+    (raw.sf_fl = 'T'::text) AS is_sacrifice_fly,
+    pa.is_at_bat,
+    pa.hit_value,
+    pa.is_hit,
+    pa.is_walk,
+    pa.is_strikeout,
+    pa.is_home_run,
+    pa.is_hit_by_pitch,
+    pa.is_interference,
+    pa.is_reach_base,
+    pa.is_extra_base_hit,
+    pa.runs_on_play,
+    pa.rbi,
+        CASE
+            WHEN (raw.sh_fl = 'T'::text) THEN 'sacrifice_hit'::text
+            WHEN (raw.sf_fl = 'T'::text) THEN 'sacrifice_fly'::text
+            WHEN (pa.event_code = 20) THEN 'single'::text
+            WHEN (pa.event_code = 21) THEN 'double'::text
+            WHEN (pa.event_code = 22) THEN 'triple'::text
+            WHEN (pa.event_code = 23) THEN 'home_run'::text
+            WHEN (pa.event_code = 14) THEN 'walk'::text
+            WHEN (pa.event_code = 15) THEN 'intentional_walk'::text
+            WHEN (pa.event_code = 16) THEN 'hit_by_pitch'::text
+            WHEN (pa.event_code = 3) THEN 'strikeout'::text
+            WHEN (pa.event_code = 18) THEN 'error_on_batter'::text
+            WHEN (pa.event_code = 19) THEN 'fielders_choice'::text
+            WHEN (pa.event_code = 17) THEN 'interference'::text
+            WHEN ((pa.event_code = 2) AND (raw.battedball_cd = 'G'::text)) THEN 'ground_out'::text
+            WHEN ((pa.event_code = 2) AND (raw.battedball_cd = 'F'::text)) THEN 'fly_out'::text
+            WHEN ((pa.event_code = 2) AND (raw.battedball_cd = 'L'::text)) THEN 'line_out'::text
+            WHEN ((pa.event_code = 2) AND (raw.battedball_cd = 'P'::text)) THEN 'pop_out'::text
+            WHEN (pa.event_code = 2) THEN 'generic_out'::text
+            ELSE 'other'::text
+        END AS outcome_class,
+        CASE
+            WHEN (pa.event_code = ANY (ARRAY[20, 21, 22, 23])) THEN 'hit'::text
+            WHEN (pa.event_code = ANY (ARRAY[14, 15])) THEN 'walk'::text
+            WHEN (pa.event_code = ANY (ARRAY[16, 17, 18])) THEN 'reach_non_hit'::text
+            WHEN ((pa.event_code = ANY (ARRAY[2, 3])) OR (raw.sh_fl = 'T'::text) OR (raw.sf_fl = 'T'::text)) THEN 'out'::text
+            ELSE 'other'::text
+        END AS outcome_group,
+    (pa.event_code = ANY (ARRAY[20, 21, 22, 23, 14, 15, 16])) AS on_base_traditional,
+    (pa.event_code = ANY (ARRAY[20, 21, 22, 23, 14, 15, 16, 17, 18])) AS reach_base_any,
+    (pa.event_code = ANY (ARRAY[20, 21, 22, 23])) AS is_hit_outcome,
+    (pa.event_code = ANY (ARRAY[21, 22, 23])) AS is_extra_base_hit_outcome,
+    ((pa.event_code = ANY (ARRAY[20, 21, 22, 23, 18, 19])) OR ((pa.event_code = 2) AND (raw.battedball_cd = ANY (ARRAY['G'::text, 'F'::text, 'L'::text, 'P'::text])))) AS is_ball_in_play,
+        CASE
+            WHEN (pa.event_code = 20) THEN 1
+            WHEN (pa.event_code = 21) THEN 2
+            WHEN (pa.event_code = 22) THEN 3
+            WHEN (pa.event_code = 23) THEN 4
+            ELSE 0
+        END AS outcome_total_bases,
+    pa.final_home_win,
+    pa.final_batting_team_win
+   FROM (core.plate_appearances pa
+     JOIN raw_retrosheet.chadwick_events raw ON (((raw.game_id = pa.game_id) AND ((raw.event_id)::integer = pa.plate_appearance_id))))
+  WITH NO DATA;
+
+
+--
+-- Name: count_state_outcomes; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.count_state_outcomes AS
+ SELECT ((balls || '-'::text) || strikes) AS count_state,
+    count(*) AS pa_count,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'strikeout'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS strikeout_pct,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'walk'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS walk_pct,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'single'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS single_pct,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'double'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS double_pct,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'home_run'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS hr_pct
+   FROM features.plate_appearance_outcome_examples
+  GROUP BY balls, strikes
+  ORDER BY balls, strikes;
+
+
+--
+-- Name: era_comparison; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.era_comparison AS
+ SELECT
+        CASE
+            WHEN (season < 1998) THEN 'pre_steroid'::text
+            WHEN ((season >= 1998) AND (season <= 2008)) THEN 'steroid_era'::text
+            WHEN (season > 2008) THEN 'post_modern'::text
+            ELSE 'unknown'::text
+        END AS era,
+    season,
+    count(*) AS pa,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'home_run'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS hr_pct,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'strikeout'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS k_pct,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'walk'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS bb_pct,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = ANY (ARRAY['single'::text, 'double'::text, 'triple'::text, 'home_run'::text])) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS hit_pct
+   FROM features.plate_appearance_outcome_examples
+  WHERE ((season >= 1990) AND (season <= 2024))
+  GROUP BY
+        CASE
+            WHEN (season < 1998) THEN 'pre_steroid'::text
+            WHEN ((season >= 1998) AND (season <= 2008)) THEN 'steroid_era'::text
+            WHEN (season > 2008) THEN 'post_modern'::text
+            ELSE 'unknown'::text
+        END, season
+  ORDER BY season;
+
+
+--
+-- Name: handedness_matchup_outcomes; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.handedness_matchup_outcomes AS
+ SELECT batter_hand,
+    pitcher_hand,
+    outcome_class,
+    count(*) AS count,
+    round((((count(*))::numeric / sum(count(*)) OVER (PARTITION BY batter_hand, pitcher_hand)) * (100)::numeric), 2) AS pct
+   FROM features.plate_appearance_outcome_examples
+  GROUP BY batter_hand, pitcher_hand, outcome_class
+  ORDER BY batter_hand, pitcher_hand, (count(*)) DESC;
+
+
+--
+-- Name: home_field_by_team; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.home_field_by_team AS
+ SELECT home_team_id AS team,
+    count(*) AS games,
+    sum(
+        CASE
+            WHEN (home_score > away_score) THEN 1
+            ELSE 0
+        END) AS wins,
+    round((((sum(
+        CASE
+            WHEN (home_score > away_score) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS home_win_pct,
+    round(avg(home_score), 2) AS avg_home_score,
+    round(avg(away_score), 2) AS avg_away_score
+   FROM core.games
+  WHERE (home_score IS NOT NULL)
+  GROUP BY home_team_id
+  ORDER BY (round((((sum(
+        CASE
+            WHEN (home_score > away_score) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2)) DESC;
+
+
+--
+-- Name: matchup_location_patterns; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.matchup_location_patterns AS
+ SELECT pitcher_id,
+    batter_id,
+    game_year,
+    count(*) AS total_matchups,
+    avg(plate_x) AS avg_plate_x,
+    avg(plate_z) AS avg_plate_z,
+    stddev(plate_x) AS std_plate_x,
+    stddev(plate_z) AS std_plate_z,
+    avg(
+        CASE
+            WHEN (plate_x < (0)::numeric) THEN 1
+            ELSE 0
+        END) AS inside_pct,
+    avg(
+        CASE
+            WHEN (plate_x > (0)::numeric) THEN 1
+            ELSE 0
+        END) AS outside_pct,
+    avg(
+        CASE
+            WHEN (plate_z > 2.5) THEN 1
+            ELSE 0
+        END) AS high_pct,
+    avg(
+        CASE
+            WHEN (plate_z < 2.0) THEN 1
+            ELSE 0
+        END) AS low_pct,
+    avg(
+        CASE
+            WHEN ((pitch_result ~~* '%hit%'::text) OR (pitch_result ~~* '%single%'::text) OR (pitch_result ~~* '%double%'::text) OR (pitch_result ~~* '%triple%'::text) OR (pitch_result ~~* '%home%'::text)) THEN 1
+            ELSE 0
+        END) AS hit_rate,
+    avg(
+        CASE
+            WHEN (pitch_result ~~* '%strike%'::text) THEN 1
+            ELSE 0
+        END) AS strike_rate
+   FROM features_pitch.locations
+  WHERE ((plate_x IS NOT NULL) AND (plate_z IS NOT NULL))
+  GROUP BY pitcher_id, batter_id, game_year
+ HAVING (count(*) >= 10);
+
+
+--
+-- Name: VIEW matchup_location_patterns; Type: COMMENT; Schema: eda; Owner: -
+--
+
+COMMENT ON VIEW eda.matchup_location_patterns IS 'Pitcher-batter specific location tendencies and outcomes';
+
+
+--
+-- Name: pa_outcomes_by_season; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.pa_outcomes_by_season AS
+ SELECT season,
+    outcome_class,
+    count(*) AS count,
+    round((((count(*))::numeric / sum(count(*)) OVER (PARTITION BY season)) * (100)::numeric), 2) AS pct
+   FROM features.plate_appearance_outcome_examples
+  GROUP BY season, outcome_class
+  ORDER BY season, (count(*)) DESC;
+
+
+--
+-- Name: park_totals; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.park_totals AS
+ SELECT e.park_id,
+    p.name AS park_name,
+    count(DISTINCT e.game_id) AS games,
+    sum((e.home_score + e.away_score)) AS total_runs,
+    round(avg((e.home_score + e.away_score)), 2) AS runs_per_game,
+    sum(e.home_score) AS home_runs,
+    sum(e.away_score) AS away_runs,
+    round(avg(e.home_score), 2) AS home_runs_per_game,
+    round(avg(e.away_score), 2) AS away_runs_per_game
+   FROM (core.games e
+     LEFT JOIN core.parks p ON ((e.park_id = p.retrosheet_park_id)))
+  WHERE (e.home_score IS NOT NULL)
+  GROUP BY e.park_id, p.name
+ HAVING (count(DISTINCT e.game_id) > 10)
+  ORDER BY (round(avg((e.home_score + e.away_score)), 2)) DESC;
+
+
+--
+-- Name: pitch_locations_by_type; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.pitch_locations_by_type AS
+ SELECT pitch_type,
+    count(*) AS pitches,
+    avg(plate_x) AS avg_x,
+    avg(plate_z) AS avg_z,
+    stddev(plate_x) AS std_x,
+    stddev(plate_z) AS std_z,
+    (((sum(
+        CASE
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric) AS in_zone_pct
+   FROM features_pitch.locations
+  WHERE (pitch_type IS NOT NULL)
+  GROUP BY pitch_type
+  ORDER BY (count(*)) DESC;
+
+
+--
+-- Name: pitch_movement_analysis; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.pitch_movement_analysis AS
+ SELECT pitcher_id,
+    game_year,
+    pitch_type,
+        CASE
+            WHEN (pfx_x < ('-5'::integer)::numeric) THEN 'heavy_break_left'::text
+            WHEN ((pfx_x >= ('-5'::integer)::numeric) AND (pfx_x <= ('-2'::integer)::numeric)) THEN 'moderate_break_left'::text
+            WHEN ((pfx_x >= ('-2'::integer)::numeric) AND (pfx_x <= (2)::numeric)) THEN 'straight'::text
+            WHEN ((pfx_x >= (2)::numeric) AND (pfx_x <= (5)::numeric)) THEN 'moderate_break_right'::text
+            WHEN (pfx_x > (5)::numeric) THEN 'heavy_break_right'::text
+            ELSE NULL::text
+        END AS horizontal_movement,
+        CASE
+            WHEN (pfx_z < ('-5'::integer)::numeric) THEN 'heavy_drop'::text
+            WHEN ((pfx_z >= ('-5'::integer)::numeric) AND (pfx_z <= ('-2'::integer)::numeric)) THEN 'moderate_drop'::text
+            WHEN ((pfx_z >= ('-2'::integer)::numeric) AND (pfx_z <= (2)::numeric)) THEN 'flat'::text
+            WHEN ((pfx_z >= (2)::numeric) AND (pfx_z <= (5)::numeric)) THEN 'moderate_rise'::text
+            WHEN (pfx_z > (5)::numeric) THEN 'heavy_rise'::text
+            ELSE NULL::text
+        END AS vertical_movement,
+    avg(pfx_x) AS avg_pfx_x,
+    avg(pfx_z) AS avg_pfx_z,
+    avg(start_speed) AS avg_velocity,
+    stddev(start_speed) AS velocity_stddev,
+    count(*) AS pitch_count,
+    ((sum(
+        CASE
+            WHEN (pitch_result ~~* '%swinging strike%'::text) THEN 1
+            ELSE 0
+        END))::double precision / (NULLIF(count(*), 0))::double precision) AS whiff_rate,
+    ((sum(
+        CASE
+            WHEN ((pitch_result ~~* '%hit%'::text) OR (pitch_result ~~* '%single%'::text) OR (pitch_result ~~* '%double%'::text) OR (pitch_result ~~* '%triple%'::text) OR (pitch_result ~~* '%home%'::text)) THEN 1
+            ELSE 0
+        END))::double precision / (NULLIF(count(*), 0))::double precision) AS hit_rate
+   FROM features_pitch.locations
+  WHERE ((pfx_x IS NOT NULL) AND (pfx_z IS NOT NULL))
+  GROUP BY pitcher_id, game_year, pitch_type,
+        CASE
+            WHEN (pfx_x < ('-5'::integer)::numeric) THEN 'heavy_break_left'::text
+            WHEN ((pfx_x >= ('-5'::integer)::numeric) AND (pfx_x <= ('-2'::integer)::numeric)) THEN 'moderate_break_left'::text
+            WHEN ((pfx_x >= ('-2'::integer)::numeric) AND (pfx_x <= (2)::numeric)) THEN 'straight'::text
+            WHEN ((pfx_x >= (2)::numeric) AND (pfx_x <= (5)::numeric)) THEN 'moderate_break_right'::text
+            WHEN (pfx_x > (5)::numeric) THEN 'heavy_break_right'::text
+            ELSE NULL::text
+        END,
+        CASE
+            WHEN (pfx_z < ('-5'::integer)::numeric) THEN 'heavy_drop'::text
+            WHEN ((pfx_z >= ('-5'::integer)::numeric) AND (pfx_z <= ('-2'::integer)::numeric)) THEN 'moderate_drop'::text
+            WHEN ((pfx_z >= ('-2'::integer)::numeric) AND (pfx_z <= (2)::numeric)) THEN 'flat'::text
+            WHEN ((pfx_z >= (2)::numeric) AND (pfx_z <= (5)::numeric)) THEN 'moderate_rise'::text
+            WHEN (pfx_z > (5)::numeric) THEN 'heavy_rise'::text
+            ELSE NULL::text
+        END;
+
+
+--
+-- Name: VIEW pitch_movement_analysis; Type: COMMENT; Schema: eda; Owner: -
+--
+
+COMMENT ON VIEW eda.pitch_movement_analysis IS 'Pitch movement patterns using pfx_x/pfx_z with outcome rates';
+
+
+--
+-- Name: pitch_outcomes_by_zone; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.pitch_outcomes_by_zone AS
+ SELECT
+        CASE
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 'strike_zone'::text
+            WHEN ((plate_x < '-8.5'::numeric) OR (plate_x > 8.5)) THEN 'outside_width'::text
+            WHEN (plate_z < sz_bot) THEN 'below_zone'::text
+            WHEN (plate_z > sz_top) THEN 'above_zone'::text
+            ELSE 'other'::text
+        END AS zone_location,
+    pitch_result,
+    count(*) AS count
+   FROM features_pitch.locations
+  GROUP BY
+        CASE
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 'strike_zone'::text
+            WHEN ((plate_x < '-8.5'::numeric) OR (plate_x > 8.5)) THEN 'outside_width'::text
+            WHEN (plate_z < sz_bot) THEN 'below_zone'::text
+            WHEN (plate_z > sz_top) THEN 'above_zone'::text
+            ELSE 'other'::text
+        END, pitch_result
+  ORDER BY
+        CASE
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 'strike_zone'::text
+            WHEN ((plate_x < '-8.5'::numeric) OR (plate_x > 8.5)) THEN 'outside_width'::text
+            WHEN (plate_z < sz_bot) THEN 'below_zone'::text
+            WHEN (plate_z > sz_top) THEN 'above_zone'::text
+            ELSE 'other'::text
+        END, (count(*)) DESC;
+
+
+--
+-- Name: pitch_zone_classification; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.pitch_zone_classification AS
+ SELECT id,
+    game_year,
+    game_pk,
+    batter_id,
+    pitcher_id,
+    pitch_type,
+    plate_x,
+    plate_z,
+    sz_top,
+    sz_bot,
+    location,
+        CASE
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 'in_zone'::text
+            WHEN (((plate_x >= '-13.5'::numeric) AND (plate_x <= 13.5)) AND ((plate_z >= (sz_bot - (2)::numeric)) AND (plate_z <= (sz_top + (2)::numeric)))) THEN 'edge'::text
+            ELSE 'way_outside'::text
+        END AS zone_classification,
+        CASE
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 'heart'::text
+            WHEN (((plate_x >= '-13.5'::numeric) AND (plate_x <= '-8.5'::numeric)) OR ((plate_x >= 8.5) AND (plate_x <= 13.5))) THEN 'edge_horizontal'::text
+            WHEN (((plate_z >= (sz_bot - (2)::numeric)) AND (plate_z <= sz_bot)) OR ((plate_z >= sz_top) AND (plate_z <= (sz_top + (2)::numeric)))) THEN 'edge_vertical'::text
+            WHEN ((plate_x < '-13.5'::numeric) OR (plate_x > 13.5)) THEN 'far_horizontal'::text
+            WHEN (plate_z < (sz_bot - (2)::numeric)) THEN 'low'::text
+            WHEN (plate_z > (sz_top + (2)::numeric)) THEN 'high'::text
+            ELSE 'other'::text
+        END AS zone_detail,
+    sqrt((power(plate_x, (2)::numeric) + power((plate_z - ((sz_top + sz_bot) / (2)::numeric)), (2)::numeric))) AS distance_from_center,
+    pitch_result,
+    balls,
+    strikes,
+    inning,
+    inning_topbot
+   FROM features_pitch.locations
+  WHERE ((plate_x IS NOT NULL) AND (plate_z IS NOT NULL) AND (sz_top IS NOT NULL) AND (sz_bot IS NOT NULL));
+
+
+--
+-- Name: VIEW pitch_zone_classification; Type: COMMENT; Schema: eda; Owner: -
+--
+
+COMMENT ON VIEW eda.pitch_zone_classification IS 'Classifies each pitch location relative to strike zone with detailed zone breakdown';
+
+
+--
+-- Name: pitcher_batter_matchup; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.pitcher_batter_matchup AS
+ SELECT pitcher_hand,
+    batter_hand,
+    count(*) AS pa,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'strikeout'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS k_pct,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'home_run'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS hr_pct,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = ANY (ARRAY['single'::text, 'double'::text, 'triple'::text, 'home_run'::text])) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS hit_pct
+   FROM features.plate_appearance_outcome_examples
+  GROUP BY pitcher_hand, batter_hand
+  ORDER BY (count(*)) DESC;
+
+
+--
+-- Name: pitcher_location_heatmap; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.pitcher_location_heatmap AS
+ SELECT pitcher_id,
+    game_year,
+    pitch_type,
+    (round((plate_x / 3.0)) * (3)::numeric) AS bin_x,
+    (round((plate_z / 3.0)) * (3)::numeric) AS bin_z,
+    count(*) AS pitch_count,
+    avg(launch_speed) AS avg_launch_speed,
+    avg(start_speed) AS avg_start_speed,
+    ((sum(
+        CASE
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 1
+            ELSE 0
+        END))::double precision / (count(*))::double precision) AS in_zone_pct,
+    ((sum(
+        CASE
+            WHEN ((pitch_result ~~* '%swing%'::text) OR (pitch_result ~~* '%foul%'::text)) THEN 1
+            ELSE 0
+        END))::double precision / (NULLIF(count(*), 0))::double precision) AS swing_rate,
+    ((sum(
+        CASE
+            WHEN (pitch_result ~~* '%swinging strike%'::text) THEN 1
+            ELSE 0
+        END))::double precision / (NULLIF(sum(
+        CASE
+            WHEN ((pitch_result ~~* '%swing%'::text) OR (pitch_result ~~* '%foul%'::text)) THEN 1
+            ELSE 0
+        END), 0))::double precision) AS whiff_rate
+   FROM features_pitch.locations
+  WHERE ((plate_x IS NOT NULL) AND (plate_z IS NOT NULL))
+  GROUP BY pitcher_id, game_year, pitch_type, (round((plate_x / 3.0)) * (3)::numeric), (round((plate_z / 3.0)) * (3)::numeric);
+
+
+--
+-- Name: VIEW pitcher_location_heatmap; Type: COMMENT; Schema: eda; Owner: -
+--
+
+COMMENT ON VIEW eda.pitcher_location_heatmap IS '3-inch binned heatmap of pitcher locations with swing/whiff rates';
+
+
+--
+-- Name: runner_context_outcomes; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.runner_context_outcomes AS
+ SELECT start_bases,
+    count(*) AS pa,
+    round((avg(
+        CASE
+            WHEN (outcome_class = 'home_run'::text) THEN 1.0
+            ELSE 0.0
+        END) * (100)::numeric), 2) AS hr_pct,
+    round((avg(
+        CASE
+            WHEN (outcome_class = ANY (ARRAY['single'::text, 'double'::text, 'triple'::text])) THEN 1.0
+            ELSE 0.0
+        END) * (100)::numeric), 2) AS xbh_pct,
+    round((avg(
+        CASE
+            WHEN (outcome_class = 'walk'::text) THEN 1.0
+            ELSE 0.0
+        END) * (100)::numeric), 2) AS walk_pct
+   FROM features.plate_appearance_outcome_examples
+  WHERE (season >= 2000)
+  GROUP BY start_bases
+  ORDER BY start_bases;
+
+
+--
+-- Name: season_summary; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.season_summary AS
+ SELECT season,
+    count(*) AS total_pa,
+    count(DISTINCT batter_id) AS unique_batters,
+    count(DISTINCT pitcher_id) AS unique_pitchers,
+    count(DISTINCT game_id) AS unique_games,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = ANY (ARRAY['single'::text, 'double'::text, 'triple'::text, 'home_run'::text])) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS hit_pct,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'strikeout'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS k_pct,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'walk'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS bb_pct,
+    round((((sum(
+        CASE
+            WHEN (outcome_class = 'home_run'::text) THEN 1
+            ELSE 0
+        END))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS hr_pct
+   FROM features.plate_appearance_outcome_examples
+  GROUP BY season
+  ORDER BY season;
+
+
+--
+-- Name: strike_zone_density; Type: VIEW; Schema: eda; Owner: -
+--
+
+CREATE VIEW eda.strike_zone_density AS
+ WITH binned_pitches AS (
+         SELECT locations.game_year,
+            locations.pitch_type,
+            locations.plate_x,
+            locations.plate_z,
+            locations.sz_bot,
+            locations.sz_top,
+            locations.pitch_result,
+            (round(locations.plate_x))::integer AS x_inch,
+            (round(locations.plate_z))::integer AS z_inch
+           FROM features_pitch.locations
+          WHERE ((locations.plate_x IS NOT NULL) AND (locations.plate_z IS NOT NULL))
+        )
+ SELECT game_year,
+    pitch_type,
+    x_inch,
+    z_inch,
+    count(*) AS pitch_count,
+    public.st_setsrid(public.st_makepoint((x_inch)::double precision, (z_inch)::double precision), 4326) AS bin_center,
+    ((sum(
+        CASE
+            WHEN (((plate_x >= '-8.5'::numeric) AND (plate_x <= 8.5)) AND ((plate_z >= sz_bot) AND (plate_z <= sz_top))) THEN 1
+            ELSE 0
+        END))::double precision / (NULLIF(count(*), 0))::double precision) AS strike_rate,
+    ((sum(
+        CASE
+            WHEN (pitch_result ~~* '%swing%'::text) THEN 1
+            ELSE 0
+        END))::double precision / (NULLIF(count(*), 0))::double precision) AS swing_rate,
+    ((sum(
+        CASE
+            WHEN (pitch_result ~~* '%swinging strike%'::text) THEN 1
+            ELSE 0
+        END))::double precision / (NULLIF(sum(
+        CASE
+            WHEN (pitch_result ~~* '%swing%'::text) THEN 1
+            ELSE 0
+        END), 0))::double precision) AS whiff_rate
+   FROM binned_pitches
+  GROUP BY game_year, pitch_type, x_inch, z_inch;
+
+
+--
+-- Name: VIEW strike_zone_density; Type: COMMENT; Schema: eda; Owner: -
+--
+
+COMMENT ON VIEW eda.strike_zone_density IS '1-inch binned strike zone density for GIS heatmaps';
+
+
+--
+-- Name: batter_career_prior_pa_summary; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.batter_career_prior_pa_summary AS
+ WITH seasons AS (
+         SELECT DISTINCT plate_appearance_examples.season AS feature_season
+           FROM features.plate_appearance_examples
+        )
+ SELECT seasons.feature_season,
+    examples.batter_id,
+    (count(*))::integer AS career_prior_pa,
+    (count(*) FILTER (WHERE examples.is_at_bat))::integer AS career_prior_at_bats,
+    (count(*) FILTER (WHERE examples.is_hit))::integer AS career_prior_hits,
+    (count(*) FILTER (WHERE examples.is_walk))::integer AS career_prior_walks,
+    (count(*) FILTER (WHERE examples.is_strikeout))::integer AS career_prior_strikeouts,
+    (count(*) FILTER (WHERE examples.is_home_run))::integer AS career_prior_home_runs,
+    (count(*) FILTER (WHERE examples.is_extra_base_hit))::integer AS career_prior_extra_base_hits,
+    round(avg((examples.is_hit)::integer), 4) AS career_prior_hit_rate,
+    round(avg((examples.is_walk)::integer), 4) AS career_prior_walk_rate,
+    round(avg((examples.is_strikeout)::integer), 4) AS career_prior_strikeout_rate,
+    round(avg((examples.is_home_run)::integer), 4) AS career_prior_home_run_rate,
+    round(avg((examples.is_reach_base)::integer), 4) AS career_prior_reach_base_rate,
+    round(avg((examples.is_extra_base_hit)::integer), 4) AS career_prior_extra_base_hit_rate
+   FROM (seasons
+     JOIN features.plate_appearance_examples examples ON ((examples.season < seasons.feature_season)))
+  WHERE (examples.batter_id IS NOT NULL)
+  GROUP BY seasons.feature_season, examples.batter_id
+  WITH NO DATA;
+
+
+--
+-- Name: batter_pitcher_prior_matchup_summary; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.batter_pitcher_prior_matchup_summary AS
+ SELECT (season + 1) AS feature_season,
+    batter_id,
+    pitcher_id,
+    (count(*))::integer AS prior_matchup_pa,
+    (count(*) FILTER (WHERE is_hit))::integer AS prior_matchup_hits,
+    (count(*) FILTER (WHERE is_walk))::integer AS prior_matchup_walks,
+    (count(*) FILTER (WHERE is_strikeout))::integer AS prior_matchup_strikeouts,
+    (count(*) FILTER (WHERE is_home_run))::integer AS prior_matchup_home_runs,
+    round(avg((is_hit)::integer), 4) AS prior_matchup_hit_rate,
+    round(avg((is_walk)::integer), 4) AS prior_matchup_walk_rate,
+    round(avg((is_strikeout)::integer), 4) AS prior_matchup_strikeout_rate,
+    round(avg((is_home_run)::integer), 4) AS prior_matchup_home_run_rate,
+    round(avg((is_reach_base)::integer), 4) AS prior_matchup_reach_base_rate
+   FROM features.plate_appearance_examples
+  WHERE ((batter_id IS NOT NULL) AND (pitcher_id IS NOT NULL))
+  GROUP BY season, batter_id, pitcher_id
+ HAVING (count(*) >= 2)
+  WITH NO DATA;
+
+
+--
+-- Name: pa_context_coarse_prior_season_rates; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.pa_context_coarse_prior_season_rates AS
+ SELECT (season + 1) AS feature_season,
+    batter_hand,
+    pitcher_hand,
+    outs_before,
+    start_bases,
+    (count(*))::integer AS prior_pa,
+    round(avg((is_hit)::integer), 4) AS prior_hit_rate,
+    round(avg((is_walk)::integer), 4) AS prior_walk_rate,
+    round(avg((is_strikeout)::integer), 4) AS prior_strikeout_rate,
+    round(avg((is_home_run)::integer), 4) AS prior_home_run_rate,
+    round(avg((is_reach_base)::integer), 4) AS prior_reach_base_rate,
+    round(avg((is_extra_base_hit)::integer), 4) AS prior_extra_base_hit_rate,
+    round(avg((final_batting_team_win)::integer), 4) AS prior_batting_team_win_rate
+   FROM features.plate_appearance_examples
+  GROUP BY season, batter_hand, pitcher_hand, outs_before, start_bases
+  WITH NO DATA;
+
+
+--
+-- Name: park_prior_season_run_environment; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.park_prior_season_run_environment AS
+ SELECT (season + 1) AS feature_season,
+    park_id,
+    (count(*))::integer AS prior_games,
+    round(avg(((home_score + away_score))::numeric), 3) AS prior_total_runs_per_game,
+    round(avg((home_score)::numeric), 3) AS prior_home_runs_per_game,
+    round(avg((away_score)::numeric), 3) AS prior_away_runs_per_game,
+    round(avg((home_win)::integer), 4) AS prior_home_win_rate,
+    round(avg(COALESCE(temperature_f, 70)), 2) AS prior_avg_temperature_f
+   FROM core.games games
+  WHERE (park_id IS NOT NULL)
+  GROUP BY season, park_id
+  WITH NO DATA;
+
+
+--
+-- Name: pitcher_career_prior_pa_summary; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.pitcher_career_prior_pa_summary AS
+ WITH seasons AS (
+         SELECT DISTINCT plate_appearance_examples.season AS feature_season
+           FROM features.plate_appearance_examples
+        )
+ SELECT seasons.feature_season,
+    examples.pitcher_id,
+    (count(*))::integer AS career_prior_batters_faced,
+    (count(*) FILTER (WHERE examples.is_hit))::integer AS career_prior_hits_allowed,
+    (count(*) FILTER (WHERE examples.is_walk))::integer AS career_prior_walks_allowed,
+    (count(*) FILTER (WHERE examples.is_strikeout))::integer AS career_prior_strikeouts,
+    (count(*) FILTER (WHERE examples.is_home_run))::integer AS career_prior_home_runs_allowed,
+    (count(*) FILTER (WHERE examples.is_extra_base_hit))::integer AS career_prior_extra_base_hits_allowed,
+    round(avg((examples.is_hit)::integer), 4) AS career_prior_hit_allowed_rate,
+    round(avg((examples.is_walk)::integer), 4) AS career_prior_walk_allowed_rate,
+    round(avg((examples.is_strikeout)::integer), 4) AS career_prior_strikeout_rate,
+    round(avg((examples.is_home_run)::integer), 4) AS career_prior_home_run_allowed_rate,
+    round(avg((examples.is_reach_base)::integer), 4) AS career_prior_reach_base_allowed_rate,
+    round(avg((examples.is_extra_base_hit)::integer), 4) AS career_prior_extra_base_hit_allowed_rate
+   FROM (seasons
+     JOIN features.plate_appearance_examples examples ON ((examples.season < seasons.feature_season)))
+  WHERE (examples.pitcher_id IS NOT NULL)
+  GROUP BY seasons.feature_season, examples.pitcher_id
+  WITH NO DATA;
+
+
+--
+-- Name: team_rolling_30_game_summary; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.team_rolling_30_game_summary AS
+ WITH team_games AS (
+         SELECT games.game_id,
+            games.season,
+            games.game_date,
+            games.home_team_id AS team_id,
+            games.away_team_id AS opponent_team_id,
+            true AS is_home_team,
+            games.home_win AS won,
+            games.home_score AS runs_scored,
+            games.away_score AS runs_allowed
+           FROM core.games
+        UNION ALL
+         SELECT games.game_id,
+            games.season,
+            games.game_date,
+            games.away_team_id AS team_id,
+            games.home_team_id AS opponent_team_id,
+            false AS is_home_team,
+            (NOT games.home_win) AS won,
+            games.away_score AS runs_scored,
+            games.home_score AS runs_allowed
+           FROM core.games
+        ), rolling AS (
+         SELECT team_games.game_id,
+            team_games.season,
+            team_games.game_date,
+            team_games.team_id,
+            team_games.opponent_team_id,
+            team_games.is_home_team,
+            team_games.won,
+            team_games.runs_scored,
+            team_games.runs_allowed,
+            count(*) OVER prior_games AS rolling_30_games,
+            sum((team_games.won)::integer) OVER prior_games AS rolling_30_wins,
+            avg((team_games.won)::integer) OVER prior_games AS rolling_30_win_rate,
+            avg(team_games.runs_scored) OVER prior_games AS rolling_30_runs_scored_per_game,
+            avg(team_games.runs_allowed) OVER prior_games AS rolling_30_runs_allowed_per_game
+           FROM team_games
+          WINDOW prior_games AS (PARTITION BY team_games.team_id ORDER BY team_games.game_date, team_games.game_id ROWS BETWEEN 30 PRECEDING AND 1 PRECEDING)
+        )
+ SELECT game_id,
+    season,
+    game_date,
+    team_id,
+    opponent_team_id,
+    is_home_team,
+    (COALESCE(rolling_30_games, (0)::bigint))::integer AS rolling_30_games,
+    (COALESCE(rolling_30_wins, (0)::bigint))::integer AS rolling_30_wins,
+    round(rolling_30_win_rate, 4) AS rolling_30_win_rate,
+    round(rolling_30_runs_scored_per_game, 3) AS rolling_30_runs_scored_per_game,
+    round(rolling_30_runs_allowed_per_game, 3) AS rolling_30_runs_allowed_per_game
+   FROM rolling
+  WITH NO DATA;
+
+
+--
+-- Name: advanced_feature_mart_validation_summary; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.advanced_feature_mart_validation_summary AS
+ SELECT 'features.pa_context_coarse_prior_season_rates'::text AS object_name,
+    count(*) AS row_count
+   FROM features.pa_context_coarse_prior_season_rates
+UNION ALL
+ SELECT 'features.batter_career_prior_pa_summary'::text AS object_name,
+    count(*) AS row_count
+   FROM features.batter_career_prior_pa_summary
+UNION ALL
+ SELECT 'features.pitcher_career_prior_pa_summary'::text AS object_name,
+    count(*) AS row_count
+   FROM features.pitcher_career_prior_pa_summary
+UNION ALL
+ SELECT 'features.batter_pitcher_prior_matchup_summary'::text AS object_name,
+    count(*) AS row_count
+   FROM features.batter_pitcher_prior_matchup_summary
+UNION ALL
+ SELECT 'features.park_prior_season_run_environment'::text AS object_name,
+    count(*) AS row_count
+   FROM features.park_prior_season_run_environment
+UNION ALL
+ SELECT 'features.team_rolling_30_game_summary'::text AS object_name,
+    count(*) AS row_count
+   FROM features.team_rolling_30_game_summary;
+
+
+--
+-- Name: batter_count_state_prior_pa_summary; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.batter_count_state_prior_pa_summary AS
+ SELECT (season + 1) AS feature_season,
+    batter_id,
+    balls,
+    strikes,
+    (count(*))::integer AS prior_pa,
+    round(avg((is_hit)::integer), 4) AS prior_hit_rate,
+    round(avg((is_walk)::integer), 4) AS prior_walk_rate,
+    round(avg((is_strikeout)::integer), 4) AS prior_strikeout_rate,
+    round(avg((is_home_run)::integer), 4) AS prior_home_run_rate,
+    round(avg((is_reach_base)::integer), 4) AS prior_reach_base_rate,
+    round(avg((is_extra_base_hit)::integer), 4) AS prior_extra_base_hit_rate
+   FROM features.plate_appearance_examples
+  WHERE (batter_id IS NOT NULL)
+  GROUP BY season, batter_id, balls, strikes
+  WITH NO DATA;
+
+
+--
+-- Name: statcast; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.statcast (
+    pitch_type text,
+    game_date text,
+    release_speed real,
+    release_pos_x real,
+    release_pos_z real,
+    player_name text,
+    batter integer,
+    pitcher integer,
+    events text,
+    description text,
+    spin_dir real,
+    spin_rate_deprecated real,
+    break_angle_deprecated real,
+    break_length_deprecated real,
+    zone text,
+    des text,
+    game_type text,
+    stand text,
+    p_throws text,
+    home_team text,
+    away_team text,
+    type text,
+    hit_location text,
+    bb_type text,
+    balls integer,
+    strikes integer,
+    game_year integer,
+    pfx_x real,
+    pfx_z real,
+    plate_x real,
+    plate_z real,
+    on_3b integer,
+    on_2b integer,
+    on_1b integer,
+    outs_when_up integer,
+    inning integer,
+    inning_topbot text,
+    hc_x real,
+    hc_y real,
+    tfs_deprecated text,
+    tfs_zulu_deprecated text,
+    umpire text,
+    sv_id text,
+    vx0 real,
+    vy0 real,
+    vz0 real,
+    ax real,
+    ay real,
+    az real,
+    sz_top real,
+    sz_bot real,
+    hit_distance_sc real,
+    launch_speed real,
+    launch_angle real,
+    effective_speed real,
+    release_spin_rate real,
+    release_extension real,
+    game_pk bigint NOT NULL,
+    fielder_2 integer,
+    fielder_3 integer,
+    fielder_4 integer,
+    fielder_5 integer,
+    fielder_6 integer,
+    fielder_7 integer,
+    fielder_8 integer,
+    fielder_9 integer,
+    release_pos_y real,
+    estimated_ba_using_speedangle real,
+    estimated_woba_using_speedangle real,
+    woba_value real,
+    woba_denom real,
+    babip_value real,
+    iso_value real,
+    launch_speed_angle real,
+    at_bat_number integer NOT NULL,
+    pitch_number integer NOT NULL,
+    pitch_name text,
+    home_score integer,
+    away_score integer,
+    bat_score integer,
+    fld_score integer,
+    post_away_score integer,
+    post_home_score integer,
+    post_bat_score integer,
+    post_fld_score integer,
+    if_fielding_alignment text,
+    of_fielding_alignment text,
+    spin_axis real,
+    delta_home_win_exp real,
+    delta_run_exp real,
+    bat_speed real,
+    swing_length real,
+    estimated_slg_using_speedangle real,
+    delta_pitcher_run_exp real,
+    hyper_speed real,
+    home_score_diff integer,
+    bat_score_diff integer,
+    home_win_exp real,
+    bat_win_exp real,
+    age_pit_legacy integer,
+    age_bat_legacy integer,
+    age_pit integer,
+    age_bat integer,
+    n_thruorder_pitcher integer,
+    n_priorpa_thisgame_player_at_bat integer,
+    pitcher_days_since_prev_game integer,
+    batter_days_since_prev_game integer,
+    pitcher_days_until_next_game integer,
+    batter_days_until_next_game integer,
+    api_break_z_with_gravity real,
+    api_break_x_arm real,
+    api_break_x_batter_in real,
+    arm_angle real,
+    attack_angle real,
+    attack_direction real,
+    swing_path_tilt real,
+    intercept_ball_minus_batter_pos_x_inches real,
+    intercept_ball_minus_batter_pos_y_inches real
+);
+
+
+--
+-- Name: TABLE statcast; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.statcast IS 'Statcast pitch-level data - ALL fields preserved - never drop columns';
+
+
+--
+-- Name: batter_pitcher_matchup_features; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.batter_pitcher_matchup_features AS
+ WITH historical_matchups AS (
+         SELECT statcast.batter AS batter_id,
+            statcast.pitcher AS pitcher_id,
+            EXTRACT(year FROM (statcast.game_date)::date) AS season,
+            count(*) AS total_matchup_pa,
+            count(
+                CASE
+                    WHEN ((statcast.events ~~ '%hit%'::text) OR (statcast.events ~~ '%single%'::text) OR (statcast.events ~~ '%double%'::text) OR (statcast.events ~~ '%triple%'::text) OR (statcast.events ~~ '%home_run%'::text)) THEN 1
+                    ELSE NULL::integer
+                END) AS hits,
+            count(
+                CASE
+                    WHEN (statcast.events = ANY (ARRAY['strikeout'::text, 'strikeout_double_play'::text])) THEN 1
+                    ELSE NULL::integer
+                END) AS strikeouts,
+            count(
+                CASE
+                    WHEN (statcast.events = ANY (ARRAY['walk'::text, 'intent_walk'::text, 'hit_by_pitch'::text])) THEN 1
+                    ELSE NULL::integer
+                END) AS walks,
+            count(
+                CASE
+                    WHEN (statcast.events = 'home_run'::text) THEN 1
+                    ELSE NULL::integer
+                END) AS home_runs,
+            avg(statcast.launch_speed) FILTER (WHERE (statcast.launch_speed IS NOT NULL)) AS avg_launch_speed,
+            avg(statcast.launch_angle) FILTER (WHERE (statcast.launch_angle IS NOT NULL)) AS avg_launch_angle,
+            avg(statcast.estimated_ba_using_speedangle) FILTER (WHERE (statcast.estimated_ba_using_speedangle IS NOT NULL)) AS avg_expected_ba
+           FROM raw_mlb.statcast
+          WHERE ((statcast.batter IS NOT NULL) AND (statcast.pitcher IS NOT NULL) AND (statcast.game_date IS NOT NULL))
+          GROUP BY statcast.batter, statcast.pitcher, (EXTRACT(year FROM (statcast.game_date)::date))
+        )
+ SELECT batter_id,
+    pitcher_id,
+    season,
+    (season + (1)::numeric) AS feature_season,
+    total_matchup_pa,
+    round(((hits)::numeric / (NULLIF(total_matchup_pa, 0))::numeric), 4) AS matchup_hit_rate,
+    round(((strikeouts)::numeric / (NULLIF(total_matchup_pa, 0))::numeric), 4) AS matchup_strikeout_rate,
+    round(((walks)::numeric / (NULLIF(total_matchup_pa, 0))::numeric), 4) AS matchup_walk_rate,
+    round(((home_runs)::numeric / (NULLIF(total_matchup_pa, 0))::numeric), 4) AS matchup_home_run_rate,
+    round((avg_launch_speed)::numeric, 1) AS matchup_avg_launch_speed,
+    round((avg_launch_angle)::numeric, 1) AS matchup_avg_launch_angle,
+    round((avg_expected_ba)::numeric, 4) AS matchup_expected_ba
+   FROM historical_matchups
+  WHERE (total_matchup_pa >= 5)
+  WITH NO DATA;
+
+
+--
+-- Name: batter_prior_season_pa_summary; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.batter_prior_season_pa_summary AS
+ SELECT (season + 1) AS feature_season,
+    batter_id,
+    (count(*))::integer AS prior_pa,
+    (count(*) FILTER (WHERE is_at_bat))::integer AS prior_at_bats,
+    (count(*) FILTER (WHERE is_hit))::integer AS prior_hits,
+    (count(*) FILTER (WHERE is_walk))::integer AS prior_walks,
+    (count(*) FILTER (WHERE is_strikeout))::integer AS prior_strikeouts,
+    (count(*) FILTER (WHERE is_home_run))::integer AS prior_home_runs,
+    (count(*) FILTER (WHERE is_extra_base_hit))::integer AS prior_extra_base_hits,
+    round(avg((is_hit)::integer), 4) AS prior_hit_rate,
+    round(avg((is_walk)::integer), 4) AS prior_walk_rate,
+    round(avg((is_strikeout)::integer), 4) AS prior_strikeout_rate,
+    round(avg((is_home_run)::integer), 4) AS prior_home_run_rate,
+    round(avg((is_reach_base)::integer), 4) AS prior_reach_base_rate,
+    round(avg((is_extra_base_hit)::integer), 4) AS prior_extra_base_hit_rate
+   FROM features.plate_appearance_examples
+  WHERE (batter_id IS NOT NULL)
+  GROUP BY season, batter_id
+  WITH NO DATA;
+
+
+--
+-- Name: pa_count_state_context_prior_season_rates; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.pa_count_state_context_prior_season_rates AS
+ SELECT (season + 1) AS feature_season,
+    batter_hand,
+    pitcher_hand,
+    outs_before,
+    start_bases,
+    balls,
+    strikes,
+    (count(*))::integer AS prior_pa,
+    round(avg((is_hit)::integer), 4) AS prior_hit_rate,
+    round(avg((is_walk)::integer), 4) AS prior_walk_rate,
+    round(avg((is_strikeout)::integer), 4) AS prior_strikeout_rate,
+    round(avg((is_home_run)::integer), 4) AS prior_home_run_rate,
+    round(avg((is_reach_base)::integer), 4) AS prior_reach_base_rate,
+    round(avg((is_extra_base_hit)::integer), 4) AS prior_extra_base_hit_rate
+   FROM features.plate_appearance_examples
+  GROUP BY season, batter_hand, pitcher_hand, outs_before, start_bases, balls, strikes
+  WITH NO DATA;
+
+
+--
+-- Name: pitcher_count_state_prior_pa_summary; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.pitcher_count_state_prior_pa_summary AS
+ SELECT (season + 1) AS feature_season,
+    pitcher_id,
+    balls,
+    strikes,
+    (count(*))::integer AS prior_batters_faced,
+    round(avg((is_hit)::integer), 4) AS prior_hit_allowed_rate,
+    round(avg((is_walk)::integer), 4) AS prior_walk_allowed_rate,
+    round(avg((is_strikeout)::integer), 4) AS prior_strikeout_rate,
+    round(avg((is_home_run)::integer), 4) AS prior_home_run_allowed_rate,
+    round(avg((is_reach_base)::integer), 4) AS prior_reach_base_allowed_rate,
+    round(avg((is_extra_base_hit)::integer), 4) AS prior_extra_base_hit_allowed_rate
+   FROM features.plate_appearance_examples
+  WHERE (pitcher_id IS NOT NULL)
+  GROUP BY season, pitcher_id, balls, strikes
+  WITH NO DATA;
+
+
+--
+-- Name: plate_appearance_advanced_examples; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.plate_appearance_advanced_examples AS
+ SELECT examples.game_id,
+    examples.plate_appearance_id,
+    examples.season,
+    examples.game_date,
+    examples.inning,
+    examples.is_bottom_inning,
+    examples.outs_before,
+    examples.start_bases,
+    examples.balls,
+    examples.strikes,
+    examples.home_score_diff,
+    examples.batting_team_id,
+    examples.fielding_team_id,
+    examples.home_team_id,
+    examples.away_team_id,
+    examples.batter_id,
+    examples.batter_hand,
+    examples.pitcher_id,
+    examples.pitcher_hand,
+    examples.is_at_bat,
+    examples.is_hit,
+    examples.is_walk,
+    examples.is_strikeout,
+    examples.is_home_run,
+    examples.is_hit_by_pitch,
+    examples.is_reach_base,
+    examples.is_extra_base_hit,
+    examples.hit_value,
+    examples.runs_on_play,
+    examples.rbi,
+    examples.final_home_win,
+    examples.final_batting_team_win,
+    games.park_id,
+    batter_career.career_prior_pa AS batter_career_prior_pa,
+    batter_career.career_prior_hit_rate AS batter_career_prior_hit_rate,
+    batter_career.career_prior_walk_rate AS batter_career_prior_walk_rate,
+    batter_career.career_prior_strikeout_rate AS batter_career_prior_strikeout_rate,
+    batter_career.career_prior_home_run_rate AS batter_career_prior_home_run_rate,
+    batter_career.career_prior_reach_base_rate AS batter_career_prior_reach_base_rate,
+    pitcher_career.career_prior_batters_faced AS pitcher_career_prior_batters_faced,
+    pitcher_career.career_prior_hit_allowed_rate AS pitcher_career_prior_hit_allowed_rate,
+    pitcher_career.career_prior_walk_allowed_rate AS pitcher_career_prior_walk_allowed_rate,
+    pitcher_career.career_prior_strikeout_rate AS pitcher_career_prior_strikeout_rate,
+    pitcher_career.career_prior_home_run_allowed_rate AS pitcher_career_prior_home_run_allowed_rate,
+    pitcher_career.career_prior_reach_base_allowed_rate AS pitcher_career_prior_reach_base_allowed_rate,
+    matchup.prior_matchup_pa,
+    matchup.prior_matchup_hit_rate,
+    matchup.prior_matchup_walk_rate,
+    matchup.prior_matchup_strikeout_rate,
+    matchup.prior_matchup_home_run_rate,
+    matchup.prior_matchup_reach_base_rate,
+    coarse_context.prior_pa AS coarse_context_prior_pa,
+    coarse_context.prior_hit_rate AS coarse_context_prior_hit_rate,
+    coarse_context.prior_walk_rate AS coarse_context_prior_walk_rate,
+    coarse_context.prior_strikeout_rate AS coarse_context_prior_strikeout_rate,
+    coarse_context.prior_home_run_rate AS coarse_context_prior_home_run_rate,
+    coarse_context.prior_reach_base_rate AS coarse_context_prior_reach_base_rate,
+    coarse_context.prior_extra_base_hit_rate AS coarse_context_prior_extra_base_hit_rate,
+    park.prior_total_runs_per_game AS park_prior_total_runs_per_game,
+    park.prior_home_win_rate AS park_prior_home_win_rate,
+    batting_form.rolling_30_games AS batting_team_rolling_30_games,
+    batting_form.rolling_30_win_rate AS batting_team_rolling_30_win_rate,
+    batting_form.rolling_30_runs_scored_per_game AS batting_team_rolling_30_runs_scored_per_game,
+    batting_form.rolling_30_runs_allowed_per_game AS batting_team_rolling_30_runs_allowed_per_game,
+    fielding_form.rolling_30_games AS fielding_team_rolling_30_games,
+    fielding_form.rolling_30_win_rate AS fielding_team_rolling_30_win_rate,
+    fielding_form.rolling_30_runs_scored_per_game AS fielding_team_rolling_30_runs_scored_per_game,
+    fielding_form.rolling_30_runs_allowed_per_game AS fielding_team_rolling_30_runs_allowed_per_game
+   FROM ((((((((features.plate_appearance_examples examples
+     JOIN core.games games ON ((games.game_id = examples.game_id)))
+     LEFT JOIN features.batter_career_prior_pa_summary batter_career ON (((batter_career.feature_season = examples.season) AND (batter_career.batter_id = examples.batter_id))))
+     LEFT JOIN features.pitcher_career_prior_pa_summary pitcher_career ON (((pitcher_career.feature_season = examples.season) AND (pitcher_career.pitcher_id = examples.pitcher_id))))
+     LEFT JOIN features.batter_pitcher_prior_matchup_summary matchup ON (((matchup.feature_season = examples.season) AND (matchup.batter_id = examples.batter_id) AND (matchup.pitcher_id = examples.pitcher_id))))
+     LEFT JOIN features.pa_context_coarse_prior_season_rates coarse_context ON (((coarse_context.feature_season = examples.season) AND (coarse_context.batter_hand = examples.batter_hand) AND (coarse_context.pitcher_hand = examples.pitcher_hand) AND (coarse_context.outs_before = examples.outs_before) AND (coarse_context.start_bases = examples.start_bases))))
+     LEFT JOIN features.park_prior_season_run_environment park ON (((park.feature_season = examples.season) AND (park.park_id = games.park_id))))
+     LEFT JOIN features.team_rolling_30_game_summary batting_form ON (((batting_form.game_id = examples.game_id) AND (batting_form.team_id = examples.batting_team_id))))
+     LEFT JOIN features.team_rolling_30_game_summary fielding_form ON (((fielding_form.game_id = examples.game_id) AND (fielding_form.team_id = examples.fielding_team_id))));
+
+
+--
+-- Name: plate_appearance_count_state_advanced_examples; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.plate_appearance_count_state_advanced_examples AS
+ SELECT advanced.game_id,
+    advanced.plate_appearance_id,
+    advanced.season,
+    advanced.game_date,
+    advanced.inning,
+    advanced.is_bottom_inning,
+    advanced.outs_before,
+    advanced.start_bases,
+    advanced.balls,
+    advanced.strikes,
+    advanced.home_score_diff,
+    advanced.batting_team_id,
+    advanced.fielding_team_id,
+    advanced.home_team_id,
+    advanced.away_team_id,
+    advanced.batter_id,
+    advanced.batter_hand,
+    advanced.pitcher_id,
+    advanced.pitcher_hand,
+    advanced.is_at_bat,
+    advanced.is_hit,
+    advanced.is_walk,
+    advanced.is_strikeout,
+    advanced.is_home_run,
+    advanced.is_hit_by_pitch,
+    advanced.is_reach_base,
+    advanced.is_extra_base_hit,
+    advanced.hit_value,
+    advanced.runs_on_play,
+    advanced.rbi,
+    advanced.final_home_win,
+    advanced.final_batting_team_win,
+    advanced.park_id,
+    advanced.batter_career_prior_pa,
+    advanced.batter_career_prior_hit_rate,
+    advanced.batter_career_prior_walk_rate,
+    advanced.batter_career_prior_strikeout_rate,
+    advanced.batter_career_prior_home_run_rate,
+    advanced.batter_career_prior_reach_base_rate,
+    advanced.pitcher_career_prior_batters_faced,
+    advanced.pitcher_career_prior_hit_allowed_rate,
+    advanced.pitcher_career_prior_walk_allowed_rate,
+    advanced.pitcher_career_prior_strikeout_rate,
+    advanced.pitcher_career_prior_home_run_allowed_rate,
+    advanced.pitcher_career_prior_reach_base_allowed_rate,
+    advanced.prior_matchup_pa,
+    advanced.prior_matchup_hit_rate,
+    advanced.prior_matchup_walk_rate,
+    advanced.prior_matchup_strikeout_rate,
+    advanced.prior_matchup_home_run_rate,
+    advanced.prior_matchup_reach_base_rate,
+    advanced.coarse_context_prior_pa,
+    advanced.coarse_context_prior_hit_rate,
+    advanced.coarse_context_prior_walk_rate,
+    advanced.coarse_context_prior_strikeout_rate,
+    advanced.coarse_context_prior_home_run_rate,
+    advanced.coarse_context_prior_reach_base_rate,
+    advanced.coarse_context_prior_extra_base_hit_rate,
+    advanced.park_prior_total_runs_per_game,
+    advanced.park_prior_home_win_rate,
+    advanced.batting_team_rolling_30_games,
+    advanced.batting_team_rolling_30_win_rate,
+    advanced.batting_team_rolling_30_runs_scored_per_game,
+    advanced.batting_team_rolling_30_runs_allowed_per_game,
+    advanced.fielding_team_rolling_30_games,
+    advanced.fielding_team_rolling_30_win_rate,
+    advanced.fielding_team_rolling_30_runs_scored_per_game,
+    advanced.fielding_team_rolling_30_runs_allowed_per_game,
+    batter_count.prior_pa AS batter_count_state_prior_pa,
+    batter_count.prior_hit_rate AS batter_count_state_prior_hit_rate,
+    batter_count.prior_walk_rate AS batter_count_state_prior_walk_rate,
+    batter_count.prior_strikeout_rate AS batter_count_state_prior_strikeout_rate,
+    batter_count.prior_home_run_rate AS batter_count_state_prior_home_run_rate,
+    batter_count.prior_reach_base_rate AS batter_count_state_prior_reach_base_rate,
+    batter_count.prior_extra_base_hit_rate AS batter_count_state_prior_extra_base_hit_rate,
+    pitcher_count.prior_batters_faced AS pitcher_count_state_prior_batters_faced,
+    pitcher_count.prior_hit_allowed_rate AS pitcher_count_state_prior_hit_allowed_rate,
+    pitcher_count.prior_walk_allowed_rate AS pitcher_count_state_prior_walk_allowed_rate,
+    pitcher_count.prior_strikeout_rate AS pitcher_count_state_prior_strikeout_rate,
+    pitcher_count.prior_home_run_allowed_rate AS pitcher_count_state_prior_home_run_allowed_rate,
+    pitcher_count.prior_reach_base_allowed_rate AS pitcher_count_state_prior_reach_base_allowed_rate,
+    pitcher_count.prior_extra_base_hit_allowed_rate AS pitcher_count_state_prior_extra_base_hit_allowed_rate,
+    context_count.prior_pa AS count_state_context_prior_pa,
+    context_count.prior_hit_rate AS count_state_context_prior_hit_rate,
+    context_count.prior_walk_rate AS count_state_context_prior_walk_rate,
+    context_count.prior_strikeout_rate AS count_state_context_prior_strikeout_rate,
+    context_count.prior_home_run_rate AS count_state_context_prior_home_run_rate,
+    context_count.prior_reach_base_rate AS count_state_context_prior_reach_base_rate,
+    context_count.prior_extra_base_hit_rate AS count_state_context_prior_extra_base_hit_rate
+   FROM (((features.plate_appearance_advanced_examples advanced
+     LEFT JOIN features.batter_count_state_prior_pa_summary batter_count ON (((batter_count.feature_season = advanced.season) AND (batter_count.batter_id = advanced.batter_id) AND (batter_count.balls = advanced.balls) AND (batter_count.strikes = advanced.strikes))))
+     LEFT JOIN features.pitcher_count_state_prior_pa_summary pitcher_count ON (((pitcher_count.feature_season = advanced.season) AND (pitcher_count.pitcher_id = advanced.pitcher_id) AND (pitcher_count.balls = advanced.balls) AND (pitcher_count.strikes = advanced.strikes))))
+     LEFT JOIN features.pa_count_state_context_prior_season_rates context_count ON (((context_count.feature_season = advanced.season) AND (context_count.batter_hand = advanced.batter_hand) AND (context_count.pitcher_hand = advanced.pitcher_hand) AND (context_count.outs_before = advanced.outs_before) AND (context_count.start_bases = advanced.start_bases) AND (context_count.balls = advanced.balls) AND (context_count.strikes = advanced.strikes))));
+
+
+--
+-- Name: count_state_feature_mart_validation_summary; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.count_state_feature_mart_validation_summary AS
+ SELECT 'features.batter_count_state_prior_pa_summary'::text AS object_name,
+    count(*) AS row_count
+   FROM features.batter_count_state_prior_pa_summary
+UNION ALL
+ SELECT 'features.pitcher_count_state_prior_pa_summary'::text AS object_name,
+    count(*) AS row_count
+   FROM features.pitcher_count_state_prior_pa_summary
+UNION ALL
+ SELECT 'features.pa_count_state_context_prior_season_rates'::text AS object_name,
+    count(*) AS row_count
+   FROM features.pa_count_state_context_prior_season_rates
+UNION ALL
+ SELECT 'features.plate_appearance_count_state_advanced_examples'::text AS object_name,
+    count(*) AS row_count
+   FROM features.plate_appearance_count_state_advanced_examples;
+
+
+--
+-- Name: half_inning_outcome_summary; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.half_inning_outcome_summary AS
+ SELECT game_id,
+    season,
+    game_date,
+    inning,
+    is_bottom_inning,
+        CASE
+            WHEN is_bottom_inning THEN home_team_id
+            ELSE away_team_id
+        END AS batting_team_id,
+        CASE
+            WHEN is_bottom_inning THEN away_team_id
+            ELSE home_team_id
+        END AS fielding_team_id,
+    (count(*))::integer AS plate_appearances,
+    (count(*) FILTER (WHERE is_hit))::integer AS hits,
+    (count(*) FILTER (WHERE is_walk))::integer AS walks,
+    (count(*) FILTER (WHERE is_strikeout))::integer AS strikeouts,
+    (count(*) FILTER (WHERE is_home_run))::integer AS home_runs,
+    (sum(runs_on_play))::integer AS runs_scored,
+    bool_or((is_hit AND (batter_hand = 'L'::bpchar))) AS any_left_handed_hit,
+    (count(*) FILTER (WHERE (batter_hand = 'L'::bpchar)))::integer AS left_handed_pa,
+    (count(*) FILTER (WHERE ((batter_hand = 'L'::bpchar) AND is_hit)))::integer AS left_handed_hits,
+    ((count(*) FILTER (WHERE (batter_hand = 'L'::bpchar)) > 0) AND (count(*) FILTER (WHERE (batter_hand = 'L'::bpchar)) = count(*) FILTER (WHERE ((batter_hand = 'L'::bpchar) AND is_hit)))) AS all_left_handed_batters_hit
+   FROM core.plate_appearances
+  GROUP BY game_id, season, game_date, inning, is_bottom_inning, home_team_id, away_team_id
+  WITH NO DATA;
+
+
+--
+-- Name: pa_context_prior_season_rates; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.pa_context_prior_season_rates AS
+ SELECT (season + 1) AS feature_season,
+    batter_hand,
+    pitcher_hand,
+    inning,
+    is_bottom_inning,
+    outs_before,
+    start_bases,
+    balls,
+    strikes,
+    (count(*))::integer AS prior_pa,
+    round(avg((is_hit)::integer), 4) AS prior_hit_rate,
+    round(avg((is_walk)::integer), 4) AS prior_walk_rate,
+    round(avg((is_strikeout)::integer), 4) AS prior_strikeout_rate,
+    round(avg((is_home_run)::integer), 4) AS prior_home_run_rate,
+    round(avg((is_reach_base)::integer), 4) AS prior_reach_base_rate,
+    round(avg((is_extra_base_hit)::integer), 4) AS prior_extra_base_hit_rate,
+    round(avg((final_batting_team_win)::integer), 4) AS prior_batting_team_win_rate
+   FROM features.plate_appearance_examples
+  GROUP BY season, batter_hand, pitcher_hand, inning, is_bottom_inning, outs_before, start_bases, balls, strikes
+  WITH NO DATA;
+
+
+--
+-- Name: pitcher_prior_season_pa_summary; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.pitcher_prior_season_pa_summary AS
+ SELECT (season + 1) AS feature_season,
+    pitcher_id,
+    (count(*))::integer AS prior_batters_faced,
+    (count(*) FILTER (WHERE is_hit))::integer AS prior_hits_allowed,
+    (count(*) FILTER (WHERE is_walk))::integer AS prior_walks_allowed,
+    (count(*) FILTER (WHERE is_strikeout))::integer AS prior_strikeouts,
+    (count(*) FILTER (WHERE is_home_run))::integer AS prior_home_runs_allowed,
+    (count(*) FILTER (WHERE is_extra_base_hit))::integer AS prior_extra_base_hits_allowed,
+    round(avg((is_hit)::integer), 4) AS prior_hit_allowed_rate,
+    round(avg((is_walk)::integer), 4) AS prior_walk_allowed_rate,
+    round(avg((is_strikeout)::integer), 4) AS prior_strikeout_rate,
+    round(avg((is_home_run)::integer), 4) AS prior_home_run_allowed_rate,
+    round(avg((is_reach_base)::integer), 4) AS prior_reach_base_allowed_rate,
+    round(avg((is_extra_base_hit)::integer), 4) AS prior_extra_base_hit_allowed_rate
+   FROM features.plate_appearance_examples
+  WHERE (pitcher_id IS NOT NULL)
+  GROUP BY season, pitcher_id
+  WITH NO DATA;
+
+
+--
+-- Name: team_prior_season_summary; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.team_prior_season_summary AS
+ WITH team_games AS (
+         SELECT games.season,
+            games.home_team_id AS team_id,
+            (count(*))::integer AS games,
+            (count(*) FILTER (WHERE games.home_win))::integer AS wins,
+            (sum(games.home_score))::integer AS runs_scored,
+            (sum(games.away_score))::integer AS runs_allowed
+           FROM core.games
+          GROUP BY games.season, games.home_team_id
+        UNION ALL
+         SELECT games.season,
+            games.away_team_id AS team_id,
+            (count(*))::integer AS games,
+            (count(*) FILTER (WHERE (NOT games.home_win)))::integer AS wins,
+            (sum(games.away_score))::integer AS runs_scored,
+            (sum(games.home_score))::integer AS runs_allowed
+           FROM core.games
+          GROUP BY games.season, games.away_team_id
+        )
+ SELECT (season + 1) AS feature_season,
+    team_id,
+    (sum(games))::integer AS prior_games,
+    (sum(wins))::integer AS prior_wins,
+    round(((sum(wins))::numeric / (NULLIF(sum(games), 0))::numeric), 4) AS prior_win_rate,
+    (sum(runs_scored))::integer AS prior_runs_scored,
+    (sum(runs_allowed))::integer AS prior_runs_allowed,
+    round(((sum(runs_scored))::numeric / (NULLIF(sum(games), 0))::numeric), 3) AS prior_runs_scored_per_game,
+    round(((sum(runs_allowed))::numeric / (NULLIF(sum(games), 0))::numeric), 3) AS prior_runs_allowed_per_game
+   FROM team_games
+  GROUP BY season, team_id
+  WITH NO DATA;
+
+
+--
+-- Name: feature_mart_validation_summary; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.feature_mart_validation_summary AS
+ SELECT 'features.batter_prior_season_pa_summary'::text AS object_name,
+    count(*) AS row_count
+   FROM features.batter_prior_season_pa_summary
+UNION ALL
+ SELECT 'features.pitcher_prior_season_pa_summary'::text AS object_name,
+    count(*) AS row_count
+   FROM features.pitcher_prior_season_pa_summary
+UNION ALL
+ SELECT 'features.team_prior_season_summary'::text AS object_name,
+    count(*) AS row_count
+   FROM features.team_prior_season_summary
+UNION ALL
+ SELECT 'features.pa_context_prior_season_rates'::text AS object_name,
+    count(*) AS row_count
+   FROM features.pa_context_prior_season_rates
+UNION ALL
+ SELECT 'features.half_inning_outcome_summary'::text AS object_name,
+    count(*) AS row_count
+   FROM features.half_inning_outcome_summary;
+
+
+--
+-- Name: game_attendance_features; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.game_attendance_features AS
+ WITH game_attendance AS (
+         SELECT games.game_id AS game_pk,
+            games.home_team_id,
+            games.season,
+            games.attendance,
+            games.temperature_f,
+            games.wind_speed_mph,
+            games.wind_direction,
+            games.day_night,
+            games.field_condition,
+            games.sky_condition
+           FROM core.games
+          WHERE (games.attendance IS NOT NULL)
+        )
+ SELECT game_pk,
+    home_team_id,
+    season,
+    (season + 1) AS feature_season,
+    attendance AS game_attendance,
+        CASE
+            WHEN (temperature_f >= 90) THEN 1.0
+            WHEN (temperature_f <= 50) THEN 1.0
+            ELSE 0.0
+        END AS temp_extreme_flag,
+        CASE
+            WHEN (wind_direction = ANY (ARRAY['Out To Center'::text, 'Out To LF'::text, 'Out To RF'::text])) THEN 1.0
+            ELSE 0.0
+        END AS wind_blowing_out_flag,
+        CASE
+            WHEN (wind_direction = ANY (ARRAY['In From Center'::text, 'In From LF'::text, 'In From RF'::text])) THEN 1.0
+            ELSE 0.0
+        END AS wind_blowing_in_flag,
+    ((wind_speed_mph)::numeric *
+        CASE
+            WHEN (wind_direction = ANY (ARRAY['Out To Center'::text, 'Out To LF'::text, 'Out To RF'::text])) THEN 1.0
+            ELSE 0.0
+        END) AS wind_out_speed,
+        CASE
+            WHEN (day_night = 'N'::text) THEN 1
+            ELSE 0
+        END AS is_night_game,
+        CASE
+            WHEN (field_condition = 'Dry'::text) THEN 1
+            ELSE 0
+        END AS field_dry_flag,
+        CASE
+            WHEN (sky_condition = 'Clear'::text) THEN 1
+            ELSE 0
+        END AS sky_clear_flag,
+        CASE
+            WHEN (sky_condition = 'Cloudy'::text) THEN 1
+            ELSE 0
+        END AS sky_cloudy_flag
+   FROM game_attendance
+  WITH NO DATA;
+
+
+--
+-- Name: game_outcome_advanced_examples; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.game_outcome_advanced_examples AS
+ SELECT examples.game_id,
+    examples.event_id,
+    examples.season,
+    examples.game_date,
+    examples.inning,
+    examples.is_bottom_inning,
+    examples.outs_before,
+    examples.start_bases,
+    examples.balls,
+    examples.strikes,
+    examples.home_score_diff,
+    examples.away_score_before,
+    examples.home_score_before,
+    examples.batting_team_id,
+    examples.fielding_team_id,
+    examples.home_team_id,
+    examples.away_team_id,
+    examples.batter_id,
+    examples.batter_hand,
+    examples.pitcher_id,
+    examples.pitcher_hand,
+    examples.final_home_win,
+    games.park_id,
+    batter_career.career_prior_pa AS batter_career_prior_pa,
+    batter_career.career_prior_hit_rate AS batter_career_prior_hit_rate,
+    batter_career.career_prior_walk_rate AS batter_career_prior_walk_rate,
+    batter_career.career_prior_strikeout_rate AS batter_career_prior_strikeout_rate,
+    batter_career.career_prior_home_run_rate AS batter_career_prior_home_run_rate,
+    batter_career.career_prior_reach_base_rate AS batter_career_prior_reach_base_rate,
+    pitcher_career.career_prior_batters_faced AS pitcher_career_prior_batters_faced,
+    pitcher_career.career_prior_hit_allowed_rate AS pitcher_career_prior_hit_allowed_rate,
+    pitcher_career.career_prior_walk_allowed_rate AS pitcher_career_prior_walk_allowed_rate,
+    pitcher_career.career_prior_strikeout_rate AS pitcher_career_prior_strikeout_rate,
+    pitcher_career.career_prior_home_run_allowed_rate AS pitcher_career_prior_home_run_allowed_rate,
+    pitcher_career.career_prior_reach_base_allowed_rate AS pitcher_career_prior_reach_base_allowed_rate,
+    matchup.prior_matchup_pa,
+    matchup.prior_matchup_hit_rate,
+    matchup.prior_matchup_walk_rate,
+    matchup.prior_matchup_strikeout_rate,
+    matchup.prior_matchup_home_run_rate,
+    matchup.prior_matchup_reach_base_rate,
+    coarse_context.prior_pa AS coarse_context_prior_pa,
+    coarse_context.prior_hit_rate AS coarse_context_prior_hit_rate,
+    coarse_context.prior_walk_rate AS coarse_context_prior_walk_rate,
+    coarse_context.prior_strikeout_rate AS coarse_context_prior_strikeout_rate,
+    coarse_context.prior_home_run_rate AS coarse_context_prior_home_run_rate,
+    coarse_context.prior_reach_base_rate AS coarse_context_prior_reach_base_rate,
+    coarse_context.prior_extra_base_hit_rate AS coarse_context_prior_extra_base_hit_rate,
+    park.prior_total_runs_per_game AS park_prior_total_runs_per_game,
+    park.prior_home_win_rate AS park_prior_home_win_rate,
+    home_form.rolling_30_games AS home_team_rolling_30_games,
+    home_form.rolling_30_win_rate AS home_team_rolling_30_win_rate,
+    home_form.rolling_30_runs_scored_per_game AS home_team_rolling_30_runs_scored_per_game,
+    home_form.rolling_30_runs_allowed_per_game AS home_team_rolling_30_runs_allowed_per_game,
+    away_form.rolling_30_games AS away_team_rolling_30_games,
+    away_form.rolling_30_win_rate AS away_team_rolling_30_win_rate,
+    away_form.rolling_30_runs_scored_per_game AS away_team_rolling_30_runs_scored_per_game,
+    away_form.rolling_30_runs_allowed_per_game AS away_team_rolling_30_runs_allowed_per_game
+   FROM ((((((((features.game_outcome_examples examples
+     JOIN core.games games ON ((games.game_id = examples.game_id)))
+     LEFT JOIN features.batter_career_prior_pa_summary batter_career ON (((batter_career.feature_season = examples.season) AND (batter_career.batter_id = examples.batter_id))))
+     LEFT JOIN features.pitcher_career_prior_pa_summary pitcher_career ON (((pitcher_career.feature_season = examples.season) AND (pitcher_career.pitcher_id = examples.pitcher_id))))
+     LEFT JOIN features.batter_pitcher_prior_matchup_summary matchup ON (((matchup.feature_season = examples.season) AND (matchup.batter_id = examples.batter_id) AND (matchup.pitcher_id = examples.pitcher_id))))
+     LEFT JOIN features.pa_context_coarse_prior_season_rates coarse_context ON (((coarse_context.feature_season = examples.season) AND (coarse_context.batter_hand = (examples.batter_hand)::text) AND (coarse_context.pitcher_hand = (examples.pitcher_hand)::text) AND (coarse_context.outs_before = examples.outs_before) AND (coarse_context.start_bases = examples.start_bases))))
+     LEFT JOIN features.park_prior_season_run_environment park ON (((park.feature_season = examples.season) AND (park.park_id = games.park_id))))
+     LEFT JOIN features.team_rolling_30_game_summary home_form ON (((home_form.game_id = examples.game_id) AND (home_form.team_id = examples.home_team_id))))
+     LEFT JOIN features.team_rolling_30_game_summary away_form ON (((away_form.game_id = examples.game_id) AND (away_form.team_id = examples.away_team_id))));
+
+
+--
+-- Name: team_game_context; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.team_game_context AS
+ WITH team_games AS (
+         SELECT games.game_id,
+            games.season,
+            games.game_date,
+            games.game_number,
+            games.day_of_week,
+            games.day_night,
+            games.park_id,
+            games.home_team_id AS team_id,
+            games.away_team_id AS opponent_team_id,
+            true AS is_home_team,
+            games.home_win AS won,
+            games.home_score AS runs_scored,
+            games.away_score AS runs_allowed,
+            games.home_starting_pitcher_id AS starting_pitcher_id,
+            games.attendance,
+            games.temperature_f,
+            games.wind_speed_mph,
+            games.duration_minutes
+           FROM core.games games
+        UNION ALL
+         SELECT games.game_id,
+            games.season,
+            games.game_date,
+            games.game_number,
+            games.day_of_week,
+            games.day_night,
+            games.park_id,
+            games.away_team_id AS team_id,
+            games.home_team_id AS opponent_team_id,
+            false AS is_home_team,
+            (NOT games.home_win) AS won,
+            games.away_score AS runs_scored,
+            games.home_score AS runs_allowed,
+            games.away_starting_pitcher_id AS starting_pitcher_id,
+            games.attendance,
+            games.temperature_f,
+            games.wind_speed_mph,
+            games.duration_minutes
+           FROM core.games games
+        ), lagged AS (
+         SELECT team_games.game_id,
+            team_games.season,
+            team_games.game_date,
+            team_games.game_number,
+            team_games.day_of_week,
+            team_games.day_night,
+            team_games.park_id,
+            team_games.team_id,
+            team_games.opponent_team_id,
+            team_games.is_home_team,
+            team_games.won,
+            team_games.runs_scored,
+            team_games.runs_allowed,
+            team_games.starting_pitcher_id,
+            team_games.attendance,
+            team_games.temperature_f,
+            team_games.wind_speed_mph,
+            team_games.duration_minutes,
+            lag(team_games.game_date) OVER team_order AS previous_game_date,
+            lag(team_games.park_id) OVER team_order AS previous_park_id,
+            lag(team_games.is_home_team) OVER team_order AS previous_is_home_team,
+            lag(team_games.opponent_team_id) OVER team_order AS previous_opponent_team_id,
+            (row_number() OVER (PARTITION BY team_games.team_id, team_games.season ORDER BY team_games.game_date, COALESCE((team_games.game_number)::integer, 0), team_games.game_id))::integer AS team_game_number
+           FROM team_games
+          WINDOW team_order AS (PARTITION BY team_games.team_id ORDER BY team_games.game_date, COALESCE((team_games.game_number)::integer, 0), team_games.game_id)
+        )
+ SELECT game_id,
+    season,
+    game_date,
+    game_number,
+    team_game_number,
+    day_of_week,
+    day_night,
+    team_id,
+    opponent_team_id,
+    is_home_team,
+    park_id,
+    starting_pitcher_id,
+    won,
+    runs_scored,
+    runs_allowed,
+    previous_game_date,
+    (game_date - previous_game_date) AS days_since_previous_game,
+    ((game_date - previous_game_date) = 1) AS played_yesterday,
+    ((game_date - previous_game_date) = 0) AS doubleheader_same_day,
+    previous_park_id,
+    (previous_park_id = park_id) AS same_park_as_previous_game,
+    previous_is_home_team,
+    ((previous_is_home_team IS NOT NULL) AND (previous_is_home_team IS DISTINCT FROM is_home_team)) AS changed_home_road_status,
+    previous_opponent_team_id,
+    (previous_opponent_team_id = opponent_team_id) AS same_opponent_as_previous_game,
+    attendance,
+    temperature_f,
+    wind_speed_mph,
+    duration_minutes
+   FROM lagged
+  WITH NO DATA;
+
+
+--
+-- Name: game_outcome_temporal_examples; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.game_outcome_temporal_examples AS
+ SELECT advanced.game_id,
+    advanced.event_id,
+    advanced.season,
+    advanced.game_date,
+    advanced.inning,
+    advanced.is_bottom_inning,
+    advanced.outs_before,
+    advanced.start_bases,
+    advanced.balls,
+    advanced.strikes,
+    advanced.home_score_diff,
+    advanced.away_score_before,
+    advanced.home_score_before,
+    advanced.batting_team_id,
+    advanced.fielding_team_id,
+    advanced.home_team_id,
+    advanced.away_team_id,
+    advanced.batter_id,
+    advanced.batter_hand,
+    advanced.pitcher_id,
+    advanced.pitcher_hand,
+    advanced.final_home_win,
+    advanced.park_id,
+    advanced.batter_career_prior_pa,
+    advanced.batter_career_prior_hit_rate,
+    advanced.batter_career_prior_walk_rate,
+    advanced.batter_career_prior_strikeout_rate,
+    advanced.batter_career_prior_home_run_rate,
+    advanced.batter_career_prior_reach_base_rate,
+    advanced.pitcher_career_prior_batters_faced,
+    advanced.pitcher_career_prior_hit_allowed_rate,
+    advanced.pitcher_career_prior_walk_allowed_rate,
+    advanced.pitcher_career_prior_strikeout_rate,
+    advanced.pitcher_career_prior_home_run_allowed_rate,
+    advanced.pitcher_career_prior_reach_base_allowed_rate,
+    advanced.prior_matchup_pa,
+    advanced.prior_matchup_hit_rate,
+    advanced.prior_matchup_walk_rate,
+    advanced.prior_matchup_strikeout_rate,
+    advanced.prior_matchup_home_run_rate,
+    advanced.prior_matchup_reach_base_rate,
+    advanced.coarse_context_prior_pa,
+    advanced.coarse_context_prior_hit_rate,
+    advanced.coarse_context_prior_walk_rate,
+    advanced.coarse_context_prior_strikeout_rate,
+    advanced.coarse_context_prior_home_run_rate,
+    advanced.coarse_context_prior_reach_base_rate,
+    advanced.coarse_context_prior_extra_base_hit_rate,
+    advanced.park_prior_total_runs_per_game,
+    advanced.park_prior_home_win_rate,
+    advanced.home_team_rolling_30_games,
+    advanced.home_team_rolling_30_win_rate,
+    advanced.home_team_rolling_30_runs_scored_per_game,
+    advanced.home_team_rolling_30_runs_allowed_per_game,
+    advanced.away_team_rolling_30_games,
+    advanced.away_team_rolling_30_win_rate,
+    advanced.away_team_rolling_30_runs_scored_per_game,
+    advanced.away_team_rolling_30_runs_allowed_per_game,
+    home_context.days_since_previous_game AS home_days_since_previous_game,
+    home_context.played_yesterday AS home_played_yesterday,
+    home_context.doubleheader_same_day AS home_doubleheader_same_day,
+    home_context.same_park_as_previous_game AS home_same_park_as_previous_game,
+    home_context.changed_home_road_status AS home_changed_home_road_status,
+    away_context.days_since_previous_game AS away_days_since_previous_game,
+    away_context.played_yesterday AS away_played_yesterday,
+    away_context.doubleheader_same_day AS away_doubleheader_same_day,
+    away_context.same_park_as_previous_game AS away_same_park_as_previous_game,
+    away_context.changed_home_road_status AS away_changed_home_road_status
+   FROM ((features.game_outcome_advanced_examples advanced
+     LEFT JOIN features.team_game_context home_context ON (((home_context.game_id = advanced.game_id) AND (home_context.team_id = advanced.home_team_id))))
+     LEFT JOIN features.team_game_context away_context ON (((away_context.game_id = advanced.game_id) AND (away_context.team_id = advanced.away_team_id))));
+
+
+--
+-- Name: live_plate_appearance_advanced_count_examples; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.live_plate_appearance_advanced_count_examples AS
+ WITH live_pa AS (
+         SELECT ev.game_id,
+            ev.event_id AS plate_appearance_id,
+            COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) AS season,
+            gm.game_date_parsed AS game_date,
+            (ev.inning)::integer AS inning,
+            ev.is_bottom_inning,
+            (ev.outs_before)::integer AS outs_before,
+            (COALESCE(ev.start_bases, (0)::bigint))::integer AS start_bases,
+            (COALESCE(ev.balls, (0)::bigint))::integer AS balls,
+            (COALESCE(ev.strikes, (0)::bigint))::integer AS strikes,
+            (((COALESCE(ev.home_score_after, 0) -
+                CASE
+                    WHEN ev.is_bottom_inning THEN COALESCE(ev.runs_on_play, (0)::bigint)
+                    ELSE (0)::bigint
+                END) - (COALESCE(ev.away_score_after, 0) -
+                CASE
+                    WHEN ev.is_bottom_inning THEN (0)::bigint
+                    ELSE COALESCE(ev.runs_on_play, (0)::bigint)
+                END)))::integer AS home_score_diff,
+                CASE
+                    WHEN ev.is_bottom_inning THEN gm.home_team_id
+                    ELSE gm.away_team_id
+                END AS batting_team_id,
+                CASE
+                    WHEN ev.is_bottom_inning THEN gm.away_team_id
+                    ELSE gm.home_team_id
+                END AS fielding_team_id,
+            gm.home_team_id,
+            gm.away_team_id,
+            ev.batter_id,
+            COALESCE(ev.batter_hand, 'U'::text) AS batter_hand,
+            ev.pitcher_id,
+            COALESCE(ev.pitcher_hand, 'U'::text) AS pitcher_hand,
+            COALESCE(gm.park_id, 'UNK'::text) AS park_id,
+            ev.mlb_game_pk,
+            ev.snapshot_id,
+            ev.plate_appearance_index,
+            ev.event_text,
+            ev.event_code,
+            ev.is_at_bat,
+            ev.is_plate_appearance,
+            ev.hit_value,
+            ev.is_hit,
+            ev.is_walk,
+            ev.is_strikeout,
+            ev.is_home_run,
+            ev.runs_on_play,
+            ev.rbi,
+                CASE
+                    WHEN ((COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) >= 2000) AND (COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) <= 2009)) THEN '2000_2009'::text
+                    WHEN ((COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) >= 2010) AND (COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) <= 2014)) THEN '2010_2014'::text
+                    WHEN ((COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) >= 2015) AND (COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) <= 2019)) THEN '2015_2019'::text
+                    WHEN (COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) = 2020) THEN '2020'::text
+                    WHEN ((COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) >= 2021) AND (COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) <= 2022)) THEN '2021_2022'::text
+                    ELSE '2023_plus'::text
+                END AS season_era,
+                CASE
+                    WHEN (COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) = 2020) THEN 'pandemic_2020'::text
+                    WHEN ((COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) >= 2021) AND (COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) <= 2022)) THEN 'enforcement_transition'::text
+                    WHEN (COALESCE(gm.season_int, (NULLIF(ev.season, ''::text))::integer) >= 2023) THEN 'post_2023_rules'::text
+                    ELSE 'pre_2020_rules'::text
+                END AS rules_context_era
+           FROM (core.live_events ev
+             JOIN core.live_games gm ON ((gm.game_id = ev.game_id)))
+          WHERE (ev.is_plate_appearance = true)
+        )
+ SELECT live_pa.game_id,
+    live_pa.plate_appearance_id,
+    live_pa.season,
+    live_pa.game_date,
+    live_pa.inning,
+    live_pa.is_bottom_inning,
+    live_pa.outs_before,
+    live_pa.start_bases,
+    live_pa.balls,
+    live_pa.strikes,
+    live_pa.home_score_diff,
+    live_pa.batting_team_id,
+    live_pa.fielding_team_id,
+    live_pa.home_team_id,
+    live_pa.away_team_id,
+    live_pa.batter_id,
+    live_pa.batter_hand,
+    live_pa.pitcher_id,
+    live_pa.pitcher_hand,
+    live_pa.park_id,
+    live_pa.mlb_game_pk,
+    live_pa.snapshot_id,
+    live_pa.plate_appearance_index,
+    live_pa.event_text,
+    live_pa.event_code,
+    live_pa.is_at_bat,
+    live_pa.is_plate_appearance,
+    live_pa.hit_value,
+    live_pa.is_hit,
+    live_pa.is_walk,
+    live_pa.is_strikeout,
+    live_pa.is_home_run,
+    live_pa.runs_on_play,
+    live_pa.rbi,
+    live_pa.season_era,
+    live_pa.rules_context_era,
+    batter_career.career_prior_pa AS batter_career_prior_pa,
+    batter_career.career_prior_hit_rate AS batter_career_prior_hit_rate,
+    batter_career.career_prior_walk_rate AS batter_career_prior_walk_rate,
+    batter_career.career_prior_strikeout_rate AS batter_career_prior_strikeout_rate,
+    batter_career.career_prior_home_run_rate AS batter_career_prior_home_run_rate,
+    batter_career.career_prior_reach_base_rate AS batter_career_prior_reach_base_rate,
+    pitcher_career.career_prior_batters_faced AS pitcher_career_prior_batters_faced,
+    pitcher_career.career_prior_hit_allowed_rate AS pitcher_career_prior_hit_allowed_rate,
+    pitcher_career.career_prior_walk_allowed_rate AS pitcher_career_prior_walk_allowed_rate,
+    pitcher_career.career_prior_strikeout_rate AS pitcher_career_prior_strikeout_rate,
+    pitcher_career.career_prior_home_run_allowed_rate AS pitcher_career_prior_home_run_allowed_rate,
+    pitcher_career.career_prior_reach_base_allowed_rate AS pitcher_career_prior_reach_base_allowed_rate,
+    matchup.prior_matchup_pa,
+    matchup.prior_matchup_hit_rate,
+    matchup.prior_matchup_walk_rate,
+    matchup.prior_matchup_strikeout_rate,
+    matchup.prior_matchup_home_run_rate,
+    matchup.prior_matchup_reach_base_rate,
+    coarse_context.prior_pa AS coarse_context_prior_pa,
+    coarse_context.prior_hit_rate AS coarse_context_prior_hit_rate,
+    coarse_context.prior_walk_rate AS coarse_context_prior_walk_rate,
+    coarse_context.prior_strikeout_rate AS coarse_context_prior_strikeout_rate,
+    coarse_context.prior_home_run_rate AS coarse_context_prior_home_run_rate,
+    coarse_context.prior_reach_base_rate AS coarse_context_prior_reach_base_rate,
+    coarse_context.prior_extra_base_hit_rate AS coarse_context_prior_extra_base_hit_rate,
+    park.prior_total_runs_per_game AS park_prior_total_runs_per_game,
+    park.prior_home_win_rate AS park_prior_home_win_rate,
+    batting_form.rolling_30_games AS batting_team_rolling_30_games,
+    batting_form.rolling_30_win_rate AS batting_team_rolling_30_win_rate,
+    batting_form.rolling_30_runs_scored_per_game AS batting_team_rolling_30_runs_scored_per_game,
+    batting_form.rolling_30_runs_allowed_per_game AS batting_team_rolling_30_runs_allowed_per_game,
+    fielding_form.rolling_30_games AS fielding_team_rolling_30_games,
+    fielding_form.rolling_30_win_rate AS fielding_team_rolling_30_win_rate,
+    fielding_form.rolling_30_runs_scored_per_game AS fielding_team_rolling_30_runs_scored_per_game,
+    fielding_form.rolling_30_runs_allowed_per_game AS fielding_team_rolling_30_runs_allowed_per_game,
+    batter_count.prior_pa AS batter_count_state_prior_pa,
+    batter_count.prior_hit_rate AS batter_count_state_prior_hit_rate,
+    batter_count.prior_walk_rate AS batter_count_state_prior_walk_rate,
+    batter_count.prior_strikeout_rate AS batter_count_state_prior_strikeout_rate,
+    batter_count.prior_home_run_rate AS batter_count_state_prior_home_run_rate,
+    batter_count.prior_reach_base_rate AS batter_count_state_prior_reach_base_rate,
+    batter_count.prior_extra_base_hit_rate AS batter_count_state_prior_extra_base_hit_rate,
+    pitcher_count.prior_batters_faced AS pitcher_count_state_prior_batters_faced,
+    pitcher_count.prior_hit_allowed_rate AS pitcher_count_state_prior_hit_allowed_rate,
+    pitcher_count.prior_walk_allowed_rate AS pitcher_count_state_prior_walk_allowed_rate,
+    pitcher_count.prior_strikeout_rate AS pitcher_count_state_prior_strikeout_rate,
+    pitcher_count.prior_home_run_allowed_rate AS pitcher_count_state_prior_home_run_allowed_rate,
+    pitcher_count.prior_reach_base_allowed_rate AS pitcher_count_state_prior_reach_base_allowed_rate,
+    pitcher_count.prior_extra_base_hit_allowed_rate AS pitcher_count_state_prior_extra_base_hit_allowed_rate,
+    context_count.prior_pa AS count_state_context_prior_pa,
+    context_count.prior_hit_rate AS count_state_context_prior_hit_rate,
+    context_count.prior_walk_rate AS count_state_context_prior_walk_rate,
+    context_count.prior_strikeout_rate AS count_state_context_prior_strikeout_rate,
+    context_count.prior_home_run_rate AS count_state_context_prior_home_run_rate,
+    context_count.prior_reach_base_rate AS count_state_context_prior_reach_base_rate,
+    context_count.prior_extra_base_hit_rate AS count_state_context_prior_extra_base_hit_rate
+   FROM ((((((((((live_pa
+     LEFT JOIN features.batter_career_prior_pa_summary batter_career ON (((batter_career.feature_season = live_pa.season) AND (batter_career.batter_id = live_pa.batter_id))))
+     LEFT JOIN features.pitcher_career_prior_pa_summary pitcher_career ON (((pitcher_career.feature_season = live_pa.season) AND (pitcher_career.pitcher_id = live_pa.pitcher_id))))
+     LEFT JOIN features.batter_pitcher_prior_matchup_summary matchup ON (((matchup.feature_season = live_pa.season) AND (matchup.batter_id = live_pa.batter_id) AND (matchup.pitcher_id = live_pa.pitcher_id))))
+     LEFT JOIN features.pa_context_coarse_prior_season_rates coarse_context ON (((coarse_context.feature_season = live_pa.season) AND (coarse_context.batter_hand = live_pa.batter_hand) AND (coarse_context.pitcher_hand = live_pa.pitcher_hand) AND (coarse_context.outs_before = live_pa.outs_before) AND (coarse_context.start_bases = live_pa.start_bases))))
+     LEFT JOIN features.park_prior_season_run_environment park ON (((park.feature_season = live_pa.season) AND (park.park_id = live_pa.park_id))))
+     LEFT JOIN features.team_rolling_30_game_summary batting_form ON (((batting_form.game_id = live_pa.game_id) AND (batting_form.team_id = live_pa.batting_team_id))))
+     LEFT JOIN features.team_rolling_30_game_summary fielding_form ON (((fielding_form.game_id = live_pa.game_id) AND (fielding_form.team_id = live_pa.fielding_team_id))))
+     LEFT JOIN features.batter_count_state_prior_pa_summary batter_count ON (((batter_count.feature_season = live_pa.season) AND (batter_count.batter_id = live_pa.batter_id) AND (batter_count.balls = live_pa.balls) AND (batter_count.strikes = live_pa.strikes))))
+     LEFT JOIN features.pitcher_count_state_prior_pa_summary pitcher_count ON (((pitcher_count.feature_season = live_pa.season) AND (pitcher_count.pitcher_id = live_pa.pitcher_id) AND (pitcher_count.balls = live_pa.balls) AND (pitcher_count.strikes = live_pa.strikes))))
+     LEFT JOIN features.pa_count_state_context_prior_season_rates context_count ON (((context_count.feature_season = live_pa.season) AND (context_count.batter_hand = live_pa.batter_hand) AND (context_count.pitcher_hand = live_pa.pitcher_hand) AND (context_count.outs_before = live_pa.outs_before) AND (context_count.start_bases = live_pa.start_bases) AND (context_count.balls = live_pa.balls) AND (context_count.strikes = live_pa.strikes))));
+
+
+--
+-- Name: pitch_sequence_symbol_reference; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.pitch_sequence_symbol_reference AS
+ SELECT symbol,
+    symbol_meaning,
+    symbol_group,
+    is_pitch_symbol,
+    counts_toward_ball,
+    counts_toward_strike,
+    is_ball_in_play_symbol
+   FROM ( VALUES ('+'::text,'following pickoff throw by catcher'::text,'marker'::text,false,false,false,false), ('*'::text,'blocked by catcher'::text,'marker'::text,false,false,false,false), ('.'::text,'play not involving batter'::text,'marker'::text,false,false,false,false), ('1'::text,'pickoff throw to first'::text,'pickoff_throw'::text,false,false,false,false), ('2'::text,'pickoff throw to second'::text,'pickoff_throw'::text,false,false,false,false), ('3'::text,'pickoff throw to third'::text,'pickoff_throw'::text,false,false,false,false), ('>'::text,'runner going on pitch'::text,'runner_movement'::text,false,false,false,false), ('A'::text,'automatic strike'::text,'automatic_strike'::text,true,false,true,false), ('B'::text,'ball'::text,'ball'::text,true,true,false,false), ('C'::text,'called strike'::text,'called_strike'::text,true,false,true,false), ('F'::text,'foul'::text,'foul'::text,true,false,true,false), ('H'::text,'hit batter'::text,'hit_by_pitch'::text,true,false,false,false), ('I'::text,'intentional ball'::text,'intentional_ball'::text,true,true,false,false), ('K'::text,'strike unknown type'::text,'strike_unknown'::text,true,false,true,false), ('L'::text,'foul bunt'::text,'foul_bunt'::text,true,false,true,false), ('M'::text,'missed bunt attempt'::text,'missed_bunt'::text,true,false,true,false), ('N'::text,'no pitch'::text,'no_pitch'::text,true,false,false,false), ('O'::text,'foul tip on bunt'::text,'foul_tip_bunt'::text,true,false,true,false), ('P'::text,'pitchout'::text,'pitchout'::text,true,true,false,false), ('Q'::text,'swinging on pitchout'::text,'swinging_pitchout'::text,true,false,true,false), ('R'::text,'foul ball on pitchout'::text,'foul_pitchout'::text,true,false,true,false), ('S'::text,'swinging strike'::text,'swinging_strike'::text,true,false,true,false), ('T'::text,'foul tip'::text,'foul_tip'::text,true,false,true,false), ('U'::text,'unknown or missed pitch'::text,'unknown_pitch'::text,true,false,false,false), ('V'::text,'automatic or awarded ball'::text,'awarded_ball'::text,true,true,false,false), ('X'::text,'ball put into play'::text,'in_play'::text,true,false,false,true), ('Y'::text,'ball put into play on pitchout'::text,'in_play_pitchout'::text,true,false,false,true)) t(symbol, symbol_meaning, symbol_group, is_pitch_symbol, counts_toward_ball, counts_toward_strike, is_ball_in_play_symbol);
+
+
+--
+-- Name: pitcher_arsenal_features; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.pitcher_arsenal_features AS
+ WITH pitch_stats AS (
+         SELECT statcast.pitcher,
+            statcast.game_year AS season,
+            count(*) AS total_pitches,
+            count(
+                CASE
+                    WHEN (statcast.pitch_type = ANY (ARRAY['FF'::text, 'FT'::text, 'FC'::text, 'SI'::text, 'FS'::text])) THEN 1
+                    ELSE NULL::integer
+                END) AS fastball_count,
+            count(
+                CASE
+                    WHEN (statcast.pitch_type = ANY (ARRAY['SL'::text, 'CU'::text, 'KC'::text, 'SC'::text])) THEN 1
+                    ELSE NULL::integer
+                END) AS breaking_count,
+            count(
+                CASE
+                    WHEN (statcast.pitch_type = ANY (ARRAY['CH'::text, 'FS'::text, 'FO'::text])) THEN 1
+                    ELSE NULL::integer
+                END) AS offspeed_count,
+            percentile_cont((0.9)::double precision) WITHIN GROUP (ORDER BY ((statcast.release_speed)::double precision)) AS fb_velocity_90th,
+            avg(statcast.release_speed) AS avg_release_speed,
+            stddev(statcast.release_speed) AS velocity_stddev,
+            avg(statcast.release_spin_rate) AS avg_spin_rate,
+            avg(statcast.spin_axis) AS avg_spin_axis,
+            avg(statcast.release_extension) AS avg_release_extension,
+            avg(statcast.release_pos_x) AS avg_release_x,
+            avg(statcast.release_pos_z) AS avg_release_z
+           FROM raw_mlb.statcast
+          WHERE ((statcast.pitcher IS NOT NULL) AND (statcast.game_date IS NOT NULL) AND (statcast.pitch_type IS NOT NULL))
+          GROUP BY statcast.pitcher, statcast.game_year
+        )
+ SELECT pitcher AS pitcher_id,
+    season,
+    (season + 1) AS feature_season,
+    round(((fastball_count)::numeric / (NULLIF(total_pitches, 0))::numeric), 4) AS pitcher_fastball_pct,
+    round(((breaking_count)::numeric / (NULLIF(total_pitches, 0))::numeric), 4) AS pitcher_breaking_pct,
+    round(((offspeed_count)::numeric / (NULLIF(total_pitches, 0))::numeric), 4) AS pitcher_offspeed_pct,
+    round((fb_velocity_90th)::numeric, 2) AS pitcher_fb_velocity_90th,
+    round((avg_release_speed)::numeric, 2) AS pitcher_avg_velocity,
+    round((velocity_stddev)::numeric, 3) AS pitcher_velocity_consistency,
+    round((avg_spin_rate)::numeric, 1) AS pitcher_spin_rate_avg,
+    round((avg_spin_axis)::numeric, 1) AS pitcher_spin_axis_avg,
+    round((avg_release_extension)::numeric, 2) AS pitcher_release_extension,
+    round((avg_release_x)::numeric, 3) AS pitcher_release_x,
+    round((avg_release_z)::numeric, 3) AS pitcher_release_z,
+    total_pitches AS pitcher_sample_pitches
+   FROM pitch_stats
+  WHERE (total_pitches >= 100)
+  WITH NO DATA;
+
+
+--
+-- Name: pitcher_production_season; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.pitcher_production_season AS
+ SELECT plate_appearances.season,
+    plate_appearances.pitcher_id AS player_id,
+    max(players.player_name) AS player_name,
+    (count(*))::integer AS batters_faced,
+    (count(*) FILTER (WHERE plate_appearances.is_at_bat))::integer AS at_bats_against,
+    (count(*) FILTER (WHERE plate_appearances.is_hit))::integer AS hits_allowed,
+    (count(*) FILTER (WHERE plate_appearances.is_walk))::integer AS walks_allowed,
+    (count(*) FILTER (WHERE plate_appearances.is_strikeout))::integer AS strikeouts,
+    (count(*) FILTER (WHERE plate_appearances.is_home_run))::integer AS home_runs_allowed,
+    (count(*) FILTER (WHERE plate_appearances.is_extra_base_hit))::integer AS extra_base_hits_allowed,
+    (sum(plate_appearances.runs_on_play))::integer AS runs_allowed_on_pa,
+    (sum(plate_appearances.hit_value))::integer AS total_bases_allowed,
+    round(avg((plate_appearances.is_hit)::integer), 4) AS hit_allowed_rate,
+    round(avg((plate_appearances.is_walk)::integer), 4) AS walk_allowed_rate,
+    round(avg((plate_appearances.is_strikeout)::integer), 4) AS strikeout_rate,
+    round(avg((plate_appearances.is_home_run)::integer), 4) AS home_run_allowed_rate,
+    round(avg((plate_appearances.is_reach_base)::integer), 4) AS reach_base_allowed_rate,
+    round(((sum(plate_appearances.hit_value))::numeric / (NULLIF(count(*) FILTER (WHERE plate_appearances.is_at_bat), 0))::numeric), 4) AS slugging_allowed,
+    round((((count(*) FILTER (WHERE plate_appearances.is_strikeout))::numeric - (count(*) FILTER (WHERE plate_appearances.is_walk))::numeric) - (count(*) FILTER (WHERE plate_appearances.is_home_run))::numeric), 4) AS command_power_score_proxy
+   FROM (core.plate_appearances plate_appearances
+     LEFT JOIN core.players players ON ((players.retrosheet_player_id = plate_appearances.pitcher_id)))
+  WHERE (plate_appearances.pitcher_id IS NOT NULL)
+  GROUP BY plate_appearances.season, plate_appearances.pitcher_id
+  WITH NO DATA;
+
+
+--
+-- Name: plate_appearance_enhanced_examples; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.plate_appearance_enhanced_examples AS
+ SELECT pa.game_id,
+    pa.plate_appearance_id,
+    pa.season,
+    pa.game_date,
+    pa.inning,
+    pa.is_bottom_inning,
+    pa.outs_before,
+    pa.start_bases,
+    pa.balls,
+    pa.strikes,
+    pa.home_score_diff,
+    pa.batting_team_id,
+    pa.fielding_team_id,
+    pa.home_team_id,
+    pa.away_team_id,
+    pa.batter_id,
+    pa.batter_hand,
+    pa.pitcher_id,
+    pa.pitcher_hand,
+    pa.is_at_bat,
+    pa.is_hit,
+    pa.is_walk,
+    pa.is_strikeout,
+    pa.is_home_run,
+    pa.is_hit_by_pitch,
+    pa.is_reach_base,
+    pa.is_extra_base_hit,
+    pa.hit_value,
+    pa.runs_on_play,
+    pa.rbi,
+    pa.final_home_win,
+    pa.final_batting_team_win,
+    pa.park_id,
+    pa.batter_career_prior_pa,
+    pa.batter_career_prior_hit_rate,
+    pa.batter_career_prior_walk_rate,
+    pa.batter_career_prior_strikeout_rate,
+    pa.batter_career_prior_home_run_rate,
+    pa.batter_career_prior_reach_base_rate,
+    pa.pitcher_career_prior_batters_faced,
+    pa.pitcher_career_prior_hit_allowed_rate,
+    pa.pitcher_career_prior_walk_allowed_rate,
+    pa.pitcher_career_prior_strikeout_rate,
+    pa.pitcher_career_prior_home_run_allowed_rate,
+    pa.pitcher_career_prior_reach_base_allowed_rate,
+    pa.prior_matchup_pa,
+    pa.prior_matchup_hit_rate,
+    pa.prior_matchup_walk_rate,
+    pa.prior_matchup_strikeout_rate,
+    pa.prior_matchup_home_run_rate,
+    pa.prior_matchup_reach_base_rate,
+    pa.coarse_context_prior_pa,
+    pa.coarse_context_prior_hit_rate,
+    pa.coarse_context_prior_walk_rate,
+    pa.coarse_context_prior_strikeout_rate,
+    pa.coarse_context_prior_home_run_rate,
+    pa.coarse_context_prior_reach_base_rate,
+    pa.coarse_context_prior_extra_base_hit_rate,
+    pa.park_prior_total_runs_per_game,
+    pa.park_prior_home_win_rate,
+    pa.batting_team_rolling_30_games,
+    pa.batting_team_rolling_30_win_rate,
+    pa.batting_team_rolling_30_runs_scored_per_game,
+    pa.batting_team_rolling_30_runs_allowed_per_game,
+    pa.fielding_team_rolling_30_games,
+    pa.fielding_team_rolling_30_win_rate,
+    pa.fielding_team_rolling_30_runs_scored_per_game,
+    pa.fielding_team_rolling_30_runs_allowed_per_game,
+    ars.pitcher_fastball_pct,
+    ars.pitcher_breaking_pct,
+    ars.pitcher_offspeed_pct,
+    ars.pitcher_fb_velocity_90th,
+    ars.pitcher_avg_velocity,
+    ars.pitcher_velocity_consistency,
+    ars.pitcher_spin_rate_avg,
+    ars.pitcher_spin_axis_avg,
+    ars.pitcher_release_extension,
+    att.temp_extreme_flag,
+    att.wind_blowing_out_flag,
+    att.wind_blowing_in_flag,
+    att.wind_out_speed,
+    att.is_night_game,
+    att.field_dry_flag,
+    att.sky_clear_flag,
+    att.sky_cloudy_flag
+   FROM ((features.plate_appearance_advanced_examples pa
+     LEFT JOIN features.pitcher_arsenal_features ars ON ((((pa.pitcher_id)::bigint = ars.pitcher_id) AND (pa.season = ars.feature_season))))
+     LEFT JOIN features.game_attendance_features att ON ((pa.game_id = att.game_pk)));
+
+
+--
+-- Name: postseason_clutch_features; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.postseason_clutch_features AS
+ SELECT game_id,
+    home_team_id,
+    away_team_id,
+    season,
+        CASE
+            WHEN (source_type = 'postseason'::text) THEN 1
+            ELSE 0
+        END AS is_postseason,
+        CASE
+            WHEN (source_type = 'spring'::text) THEN 1
+            ELSE 0
+        END AS is_spring_training,
+        CASE
+            WHEN ((innings >= 7) AND (abs((home_score - away_score)) <= 3)) THEN 1
+            ELSE 0
+        END AS is_high_leverage_situation,
+        CASE
+            WHEN (day_of_week = ANY (ARRAY['5'::text, '6'::text, '7'::text])) THEN 1
+            ELSE 0
+        END AS is_weekend_game,
+        CASE
+            WHEN (doubleheader_flag <> '0'::text) THEN 1
+            ELSE 0
+        END AS is_doubleheader
+   FROM core.games
+  WITH NO DATA;
+
+
+--
+-- Name: team_momentum_features; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.team_momentum_features AS
+ WITH team_game_results AS (
+         SELECT games.game_id,
+            games.game_date,
+            games.home_team_id AS team_id,
+                CASE
+                    WHEN (games.home_score > games.away_score) THEN 1
+                    ELSE 0
+                END AS win,
+            games.home_score AS runs_scored,
+            games.away_score AS runs_allowed
+           FROM core.games
+        UNION ALL
+         SELECT games.game_id,
+            games.game_date,
+            games.away_team_id AS team_id,
+                CASE
+                    WHEN (games.away_score > games.home_score) THEN 1
+                    ELSE 0
+                END AS win,
+            games.away_score AS runs_scored,
+            games.home_score AS runs_allowed
+           FROM core.games
+        ), team_rolling_stats AS (
+         SELECT team_game_results.game_id,
+            team_game_results.team_id,
+            team_game_results.game_date,
+            avg(team_game_results.win) OVER last_5 AS team_last_5_win_rate,
+            avg(team_game_results.win) OVER last_10 AS team_last_10_win_rate,
+            avg(team_game_results.runs_scored) OVER last_3 AS team_last_3_runs_scored_avg,
+            avg(team_game_results.runs_allowed) OVER last_3 AS team_last_3_runs_allowed_avg,
+            sum(team_game_results.win) OVER last_30 AS last_30_wins,
+            row_number() OVER (PARTITION BY team_game_results.team_id ORDER BY team_game_results.game_date DESC) AS game_rank
+           FROM team_game_results
+          WINDOW last_3 AS (PARTITION BY team_game_results.team_id ORDER BY team_game_results.game_date ROWS BETWEEN 3 PRECEDING AND 1 PRECEDING), last_5 AS (PARTITION BY team_game_results.team_id ORDER BY team_game_results.game_date ROWS BETWEEN 5 PRECEDING AND 1 PRECEDING), last_10 AS (PARTITION BY team_game_results.team_id ORDER BY team_game_results.game_date ROWS BETWEEN 10 PRECEDING AND 1 PRECEDING), last_30 AS (PARTITION BY team_game_results.team_id ORDER BY team_game_results.game_date ROWS BETWEEN 30 PRECEDING AND 1 PRECEDING)
+        )
+ SELECT game_id,
+    team_id,
+    round(team_last_5_win_rate, 4) AS team_last_5_win_rate,
+    round(team_last_10_win_rate, 4) AS team_last_10_win_rate,
+    round(team_last_3_runs_scored_avg, 2) AS team_last_3_runs_scored_avg,
+    round(team_last_3_runs_allowed_avg, 2) AS team_last_3_runs_allowed_avg,
+    round((team_last_10_win_rate - avg(team_last_10_win_rate) OVER (PARTITION BY team_id ORDER BY game_date ROWS BETWEEN 30 PRECEDING AND 10 PRECEDING)), 4) AS team_momentum_delta
+   FROM team_rolling_stats
+  WITH NO DATA;
+
+
+--
+-- Name: plate_appearance_phase2_features; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.plate_appearance_phase2_features AS
+ SELECT pa.game_id,
+    pa.plate_appearance_id,
+    pa.season,
+    pa.game_date,
+    pa.inning,
+    pa.is_bottom_inning,
+    pa.outs_before,
+    pa.start_bases,
+    pa.balls,
+    pa.strikes,
+    pa.home_score_diff,
+    pa.batting_team_id,
+    pa.fielding_team_id,
+    pa.home_team_id,
+    pa.away_team_id,
+    pa.batter_id,
+    pa.batter_hand,
+    pa.pitcher_id,
+    pa.pitcher_hand,
+    pa.is_at_bat,
+    pa.is_hit,
+    pa.is_walk,
+    pa.is_strikeout,
+    pa.is_home_run,
+    pa.is_hit_by_pitch,
+    pa.is_reach_base,
+    pa.is_extra_base_hit,
+    pa.hit_value,
+    pa.runs_on_play,
+    pa.rbi,
+    pa.final_home_win,
+    pa.final_batting_team_win,
+    pa.park_id,
+    pa.batter_career_prior_pa,
+    pa.batter_career_prior_hit_rate,
+    pa.batter_career_prior_walk_rate,
+    pa.batter_career_prior_strikeout_rate,
+    pa.batter_career_prior_home_run_rate,
+    pa.batter_career_prior_reach_base_rate,
+    pa.pitcher_career_prior_batters_faced,
+    pa.pitcher_career_prior_hit_allowed_rate,
+    pa.pitcher_career_prior_walk_allowed_rate,
+    pa.pitcher_career_prior_strikeout_rate,
+    pa.pitcher_career_prior_home_run_allowed_rate,
+    pa.pitcher_career_prior_reach_base_allowed_rate,
+    pa.prior_matchup_pa,
+    pa.prior_matchup_hit_rate,
+    pa.prior_matchup_walk_rate,
+    pa.prior_matchup_strikeout_rate,
+    pa.prior_matchup_home_run_rate,
+    pa.prior_matchup_reach_base_rate,
+    pa.coarse_context_prior_pa,
+    pa.coarse_context_prior_hit_rate,
+    pa.coarse_context_prior_walk_rate,
+    pa.coarse_context_prior_strikeout_rate,
+    pa.coarse_context_prior_home_run_rate,
+    pa.coarse_context_prior_reach_base_rate,
+    pa.coarse_context_prior_extra_base_hit_rate,
+    pa.park_prior_total_runs_per_game,
+    pa.park_prior_home_win_rate,
+    pa.batting_team_rolling_30_games,
+    pa.batting_team_rolling_30_win_rate,
+    pa.batting_team_rolling_30_runs_scored_per_game,
+    pa.batting_team_rolling_30_runs_allowed_per_game,
+    pa.fielding_team_rolling_30_games,
+    pa.fielding_team_rolling_30_win_rate,
+    pa.fielding_team_rolling_30_runs_scored_per_game,
+    pa.fielding_team_rolling_30_runs_allowed_per_game,
+    pa.pitcher_fastball_pct,
+    pa.pitcher_breaking_pct,
+    pa.pitcher_offspeed_pct,
+    pa.pitcher_fb_velocity_90th,
+    pa.pitcher_avg_velocity,
+    pa.pitcher_velocity_consistency,
+    pa.pitcher_spin_rate_avg,
+    pa.pitcher_spin_axis_avg,
+    pa.pitcher_release_extension,
+    pa.temp_extreme_flag,
+    pa.wind_blowing_out_flag,
+    pa.wind_blowing_in_flag,
+    pa.wind_out_speed,
+    pa.is_night_game,
+    pa.field_dry_flag,
+    pa.sky_clear_flag,
+    pa.sky_cloudy_flag,
+    home_team.team_last_5_win_rate AS home_team_last_5_win_rate,
+    home_team.team_last_10_win_rate AS home_team_last_10_win_rate,
+    home_team.team_last_3_runs_scored_avg AS home_team_last_3_runs_scored_avg,
+    home_team.team_momentum_delta AS home_team_momentum_delta,
+    away_team.team_last_5_win_rate AS away_team_last_5_win_rate,
+    away_team.team_last_10_win_rate AS away_team_last_10_win_rate,
+    away_team.team_last_3_runs_scored_avg AS away_team_last_3_runs_scored_avg,
+    away_team.team_momentum_delta AS away_team_momentum_delta,
+    post.is_postseason,
+    post.is_high_leverage_situation,
+    post.is_weekend_game,
+    post.is_doubleheader
+   FROM (((features.plate_appearance_enhanced_examples pa
+     LEFT JOIN features.team_momentum_features home_team ON (((pa.game_id = home_team.game_id) AND (pa.home_team_id = home_team.team_id))))
+     LEFT JOIN features.team_momentum_features away_team ON (((pa.game_id = away_team.game_id) AND (pa.away_team_id = away_team.team_id))))
+     LEFT JOIN features.postseason_clutch_features post ON ((pa.game_id = post.game_id)));
+
+
+--
+-- Name: stadium_physics_features; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.stadium_physics_features AS
+ WITH park_stats AS (
+         SELECT g.park_id,
+            g.season,
+            count(*) AS total_games,
+            avg((g.home_score + g.away_score)) AS avg_total_runs_per_game,
+            avg(g.home_score) AS avg_home_runs,
+            avg(g.away_score) AS avg_away_runs,
+            avg((g.away_hits + g.home_hits)) AS avg_total_hits,
+            avg((g.away_errors + g.home_errors)) AS avg_total_errors,
+            (avg((g.home_score + g.away_score)) / ( SELECT avg((games.home_score + games.away_score)) AS avg
+                   FROM core.games
+                  WHERE (games.season = g.season))) AS park_run_factor
+           FROM core.games g
+          WHERE ((g.park_id IS NOT NULL) AND (g.season IS NOT NULL))
+          GROUP BY g.park_id, g.season
+        )
+ SELECT park_id,
+    season,
+    (season + 1) AS feature_season,
+    total_games,
+    round(avg_total_runs_per_game, 2) AS avg_total_runs_per_game,
+    round(park_run_factor, 4) AS park_run_factor,
+        CASE
+            WHEN (park_run_factor > 1.05) THEN 1.0
+            ELSE 0.0
+        END AS park_hitter_friendly,
+        CASE
+            WHEN (park_run_factor < 0.95) THEN 1.0
+            ELSE 0.0
+        END AS park_pitcher_friendly,
+        CASE
+            WHEN (park_run_factor > 1.10) THEN 1.0
+            ELSE 0.0
+        END AS park_extreme_hitter
+   FROM park_stats
+  WITH NO DATA;
+
+
+--
+-- Name: plate_appearance_final_features; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.plate_appearance_final_features AS
+ SELECT pa.game_id,
+    pa.plate_appearance_id,
+    pa.season,
+    pa.game_date,
+    pa.inning,
+    pa.is_bottom_inning,
+    pa.outs_before,
+    pa.start_bases,
+    pa.balls,
+    pa.strikes,
+    pa.home_score_diff,
+    pa.batting_team_id,
+    pa.fielding_team_id,
+    pa.home_team_id,
+    pa.away_team_id,
+    pa.batter_id,
+    pa.batter_hand,
+    pa.pitcher_id,
+    pa.pitcher_hand,
+    pa.is_at_bat,
+    pa.is_hit,
+    pa.is_walk,
+    pa.is_strikeout,
+    pa.is_home_run,
+    pa.is_hit_by_pitch,
+    pa.is_reach_base,
+    pa.is_extra_base_hit,
+    pa.hit_value,
+    pa.runs_on_play,
+    pa.rbi,
+    pa.final_home_win,
+    pa.final_batting_team_win,
+    pa.park_id,
+    pa.batter_career_prior_pa,
+    pa.batter_career_prior_hit_rate,
+    pa.batter_career_prior_walk_rate,
+    pa.batter_career_prior_strikeout_rate,
+    pa.batter_career_prior_home_run_rate,
+    pa.batter_career_prior_reach_base_rate,
+    pa.pitcher_career_prior_batters_faced,
+    pa.pitcher_career_prior_hit_allowed_rate,
+    pa.pitcher_career_prior_walk_allowed_rate,
+    pa.pitcher_career_prior_strikeout_rate,
+    pa.pitcher_career_prior_home_run_allowed_rate,
+    pa.pitcher_career_prior_reach_base_allowed_rate,
+    pa.prior_matchup_pa,
+    pa.prior_matchup_hit_rate,
+    pa.prior_matchup_walk_rate,
+    pa.prior_matchup_strikeout_rate,
+    pa.prior_matchup_home_run_rate,
+    pa.prior_matchup_reach_base_rate,
+    pa.coarse_context_prior_pa,
+    pa.coarse_context_prior_hit_rate,
+    pa.coarse_context_prior_walk_rate,
+    pa.coarse_context_prior_strikeout_rate,
+    pa.coarse_context_prior_home_run_rate,
+    pa.coarse_context_prior_reach_base_rate,
+    pa.coarse_context_prior_extra_base_hit_rate,
+    pa.park_prior_total_runs_per_game,
+    pa.park_prior_home_win_rate,
+    pa.batting_team_rolling_30_games,
+    pa.batting_team_rolling_30_win_rate,
+    pa.batting_team_rolling_30_runs_scored_per_game,
+    pa.batting_team_rolling_30_runs_allowed_per_game,
+    pa.fielding_team_rolling_30_games,
+    pa.fielding_team_rolling_30_win_rate,
+    pa.fielding_team_rolling_30_runs_scored_per_game,
+    pa.fielding_team_rolling_30_runs_allowed_per_game,
+    pa.pitcher_fastball_pct,
+    pa.pitcher_breaking_pct,
+    pa.pitcher_offspeed_pct,
+    pa.pitcher_fb_velocity_90th,
+    pa.pitcher_avg_velocity,
+    pa.pitcher_velocity_consistency,
+    pa.pitcher_spin_rate_avg,
+    pa.pitcher_spin_axis_avg,
+    pa.pitcher_release_extension,
+    pa.temp_extreme_flag,
+    pa.wind_blowing_out_flag,
+    pa.wind_blowing_in_flag,
+    pa.wind_out_speed,
+    pa.is_night_game,
+    pa.field_dry_flag,
+    pa.sky_clear_flag,
+    pa.sky_cloudy_flag,
+    pa.home_team_last_5_win_rate,
+    pa.home_team_last_10_win_rate,
+    pa.home_team_last_3_runs_scored_avg,
+    pa.home_team_momentum_delta,
+    pa.away_team_last_5_win_rate,
+    pa.away_team_last_10_win_rate,
+    pa.away_team_last_3_runs_scored_avg,
+    pa.away_team_momentum_delta,
+    pa.is_postseason,
+    pa.is_high_leverage_situation,
+    pa.is_weekend_game,
+    pa.is_doubleheader,
+    match.matchup_hit_rate,
+    match.matchup_strikeout_rate,
+    match.matchup_walk_rate,
+    match.matchup_home_run_rate,
+    match.matchup_avg_launch_speed,
+    match.matchup_avg_launch_angle,
+    match.matchup_expected_ba,
+    stadium.park_run_factor,
+    stadium.park_hitter_friendly,
+    stadium.park_pitcher_friendly,
+    stadium.park_extreme_hitter
+   FROM ((features.plate_appearance_phase2_features pa
+     LEFT JOIN features.batter_pitcher_matchup_features match ON ((((pa.batter_id)::bigint = match.batter_id) AND ((pa.pitcher_id)::bigint = match.pitcher_id) AND ((pa.season)::numeric = match.feature_season))))
+     LEFT JOIN features.stadium_physics_features stadium ON (((pa.park_id = stadium.park_id) AND (pa.season = stadium.feature_season))));
+
+
+--
+-- Name: plate_appearance_outcome_grouped_examples; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.plate_appearance_outcome_grouped_examples AS
+ SELECT game_id,
+    plate_appearance_id,
+    game_pa_number,
+    half_inning_pa_number,
+    season,
+    game_date,
+    season_era,
+    rules_context_era,
+    inning,
+    is_bottom_inning,
+    outs_before,
+    start_bases,
+    balls,
+    strikes,
+    home_score_diff,
+    away_score_before,
+    home_score_before,
+    batting_team_id,
+    fielding_team_id,
+    home_team_id,
+    away_team_id,
+    batter_id,
+    batter_hand,
+    pitcher_id,
+    pitcher_hand,
+    event_code,
+    pitch_seq_tx,
+    battedball_cd,
+    battedball_loc_tx,
+    is_sacrifice_hit,
+    is_sacrifice_fly,
+    is_at_bat,
+    hit_value,
+    is_hit,
+    is_walk,
+    is_strikeout,
+    is_home_run,
+    is_hit_by_pitch,
+    is_interference,
+    is_reach_base,
+    is_extra_base_hit,
+    runs_on_play,
+    rbi,
+    outcome_class AS raw_outcome_class,
+    outcome_group AS raw_outcome_group,
+        CASE
+            WHEN (outcome_class = ANY (ARRAY['single'::text, 'double'::text, 'triple'::text, 'home_run'::text])) THEN outcome_class
+            WHEN (outcome_class = ANY (ARRAY['walk'::text, 'intentional_walk'::text])) THEN 'walk'::text
+            WHEN (outcome_class = 'hit_by_pitch'::text) THEN 'hit_by_pitch'::text
+            WHEN (outcome_class = 'strikeout'::text) THEN 'strikeout'::text
+            WHEN (outcome_class = 'ground_out'::text) THEN 'ground_out'::text
+            WHEN (outcome_class = ANY (ARRAY['fly_out'::text, 'line_out'::text, 'pop_out'::text, 'generic_out'::text])) THEN 'air_or_other_out'::text
+            WHEN (outcome_class = ANY (ARRAY['error_on_batter'::text, 'fielders_choice'::text])) THEN 'reach_on_error_or_fc'::text
+            WHEN (outcome_class = ANY (ARRAY['sacrifice_hit'::text, 'sacrifice_fly'::text])) THEN 'productive_out'::text
+            ELSE 'other_rare'::text
+        END AS grouped_outcome_class,
+        CASE
+            WHEN (outcome_class = ANY (ARRAY['single'::text, 'double'::text, 'triple'::text, 'home_run'::text])) THEN 'hit'::text
+            WHEN (outcome_class = ANY (ARRAY['walk'::text, 'intentional_walk'::text, 'hit_by_pitch'::text])) THEN 'free_pass'::text
+            WHEN (outcome_class = ANY (ARRAY['error_on_batter'::text, 'fielders_choice'::text, 'interference'::text])) THEN 'non_hit_reach'::text
+            WHEN (outcome_class = ANY (ARRAY['strikeout'::text, 'ground_out'::text, 'fly_out'::text, 'line_out'::text, 'pop_out'::text, 'generic_out'::text, 'sacrifice_hit'::text, 'sacrifice_fly'::text])) THEN 'out'::text
+            ELSE 'other'::text
+        END AS grouped_outcome_family,
+    on_base_traditional,
+    reach_base_any,
+    is_hit_outcome,
+    is_extra_base_hit_outcome,
+    is_ball_in_play,
+    outcome_total_bases,
+    final_home_win,
+    final_batting_team_win
+   FROM features.plate_appearance_outcome_examples outcome
+  WITH NO DATA;
+
+
+--
+-- Name: plate_appearance_outcome_grouped_validation_summary; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.plate_appearance_outcome_grouped_validation_summary AS
+ SELECT 'features.plate_appearance_outcome_grouped_examples'::text AS object_name,
+    count(*) AS row_count,
+    count(DISTINCT game_id) AS distinct_games,
+    count(DISTINCT grouped_outcome_class) AS distinct_grouped_outcomes,
+    count(DISTINCT raw_outcome_class) AS distinct_raw_outcomes,
+    round(avg((((pitch_seq_tx IS NOT NULL) AND (pitch_seq_tx <> ''::text)))::integer), 4) AS pitch_sequence_coverage,
+    round(avg((((battedball_cd IS NOT NULL) AND (battedball_cd <> ''::text)))::integer), 4) AS batted_ball_coverage
+   FROM features.plate_appearance_outcome_grouped_examples;
+
+
+--
+-- Name: plate_appearance_outcome_validation_summary; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.plate_appearance_outcome_validation_summary AS
+ SELECT 'features.plate_appearance_outcome_examples'::text AS object_name,
+    count(*) AS row_count,
+    count(DISTINCT game_id) AS distinct_games,
+    count(DISTINCT outcome_class) AS distinct_outcome_classes,
+    round(avg((((pitch_seq_tx IS NOT NULL) AND (pitch_seq_tx <> ''::text)))::integer), 4) AS pitch_sequence_coverage,
+    round(avg((((battedball_cd IS NOT NULL) AND (battedball_cd <> ''::text)))::integer), 4) AS batted_ball_coverage
+   FROM features.plate_appearance_outcome_examples;
+
+
+--
+-- Name: plate_appearance_temporal_examples; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.plate_appearance_temporal_examples AS
+ SELECT advanced.game_id,
+    advanced.plate_appearance_id,
+    advanced.season,
+    advanced.game_date,
+    advanced.inning,
+    advanced.is_bottom_inning,
+    advanced.outs_before,
+    advanced.start_bases,
+    advanced.balls,
+    advanced.strikes,
+    advanced.home_score_diff,
+    advanced.batting_team_id,
+    advanced.fielding_team_id,
+    advanced.home_team_id,
+    advanced.away_team_id,
+    advanced.batter_id,
+    advanced.batter_hand,
+    advanced.pitcher_id,
+    advanced.pitcher_hand,
+    advanced.is_at_bat,
+    advanced.is_hit,
+    advanced.is_walk,
+    advanced.is_strikeout,
+    advanced.is_home_run,
+    advanced.is_hit_by_pitch,
+    advanced.is_reach_base,
+    advanced.is_extra_base_hit,
+    advanced.hit_value,
+    advanced.runs_on_play,
+    advanced.rbi,
+    advanced.final_home_win,
+    advanced.final_batting_team_win,
+    advanced.park_id,
+    advanced.batter_career_prior_pa,
+    advanced.batter_career_prior_hit_rate,
+    advanced.batter_career_prior_walk_rate,
+    advanced.batter_career_prior_strikeout_rate,
+    advanced.batter_career_prior_home_run_rate,
+    advanced.batter_career_prior_reach_base_rate,
+    advanced.pitcher_career_prior_batters_faced,
+    advanced.pitcher_career_prior_hit_allowed_rate,
+    advanced.pitcher_career_prior_walk_allowed_rate,
+    advanced.pitcher_career_prior_strikeout_rate,
+    advanced.pitcher_career_prior_home_run_allowed_rate,
+    advanced.pitcher_career_prior_reach_base_allowed_rate,
+    advanced.prior_matchup_pa,
+    advanced.prior_matchup_hit_rate,
+    advanced.prior_matchup_walk_rate,
+    advanced.prior_matchup_strikeout_rate,
+    advanced.prior_matchup_home_run_rate,
+    advanced.prior_matchup_reach_base_rate,
+    advanced.coarse_context_prior_pa,
+    advanced.coarse_context_prior_hit_rate,
+    advanced.coarse_context_prior_walk_rate,
+    advanced.coarse_context_prior_strikeout_rate,
+    advanced.coarse_context_prior_home_run_rate,
+    advanced.coarse_context_prior_reach_base_rate,
+    advanced.coarse_context_prior_extra_base_hit_rate,
+    advanced.park_prior_total_runs_per_game,
+    advanced.park_prior_home_win_rate,
+    advanced.batting_team_rolling_30_games,
+    advanced.batting_team_rolling_30_win_rate,
+    advanced.batting_team_rolling_30_runs_scored_per_game,
+    advanced.batting_team_rolling_30_runs_allowed_per_game,
+    advanced.fielding_team_rolling_30_games,
+    advanced.fielding_team_rolling_30_win_rate,
+    advanced.fielding_team_rolling_30_runs_scored_per_game,
+    advanced.fielding_team_rolling_30_runs_allowed_per_game,
+    batting_context.days_since_previous_game AS batting_team_days_since_previous_game,
+    batting_context.played_yesterday AS batting_team_played_yesterday,
+    batting_context.doubleheader_same_day AS batting_team_doubleheader_same_day,
+    batting_context.same_park_as_previous_game AS batting_team_same_park_as_previous_game,
+    batting_context.changed_home_road_status AS batting_team_changed_home_road_status,
+    fielding_context.days_since_previous_game AS fielding_team_days_since_previous_game,
+    fielding_context.played_yesterday AS fielding_team_played_yesterday,
+    fielding_context.doubleheader_same_day AS fielding_team_doubleheader_same_day,
+    fielding_context.same_park_as_previous_game AS fielding_team_same_park_as_previous_game,
+    fielding_context.changed_home_road_status AS fielding_team_changed_home_road_status
+   FROM ((features.plate_appearance_advanced_examples advanced
+     LEFT JOIN features.team_game_context batting_context ON (((batting_context.game_id = advanced.game_id) AND (batting_context.team_id = advanced.batting_team_id))))
+     LEFT JOIN features.team_game_context fielding_context ON (((fielding_context.game_id = advanced.game_id) AND (fielding_context.team_id = advanced.fielding_team_id))));
+
+
+--
+-- Name: play_snapshot; Type: TABLE; Schema: features; Owner: -
+--
+
+CREATE TABLE features.play_snapshot (
+    game_pk bigint NOT NULL,
+    play_id bigint NOT NULL,
+    inning integer NOT NULL,
+    half_inning text NOT NULL,
+    outs integer NOT NULL,
+    balls integer NOT NULL,
+    strikes integer NOT NULL,
+    base_state text,
+    home_score integer,
+    away_score integer,
+    score_diff integer,
+    home_team_id integer,
+    away_team_id integer,
+    batter_id bigint,
+    pitcher_id bigint,
+    batter_hand text,
+    pitcher_hand text,
+    leverage_idx numeric,
+    is_hit boolean,
+    is_strikeout boolean,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE play_snapshot; Type: COMMENT; Schema: features; Owner: -
+--
+
+COMMENT ON TABLE features.play_snapshot IS 'Play state snapshots for feature generation (24 kB). Captures game state at each play.';
+
+
+--
+-- Name: player_production_season; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.player_production_season AS
+ SELECT plate_appearances.season,
+    plate_appearances.batter_id AS player_id,
+    max(players.player_name) AS player_name,
+    (count(*))::integer AS plate_appearances,
+    (count(*) FILTER (WHERE plate_appearances.is_at_bat))::integer AS at_bats,
+    (count(*) FILTER (WHERE plate_appearances.is_hit))::integer AS hits,
+    (count(*) FILTER (WHERE plate_appearances.is_walk))::integer AS walks,
+    (count(*) FILTER (WHERE plate_appearances.is_strikeout))::integer AS strikeouts,
+    (count(*) FILTER (WHERE plate_appearances.is_home_run))::integer AS home_runs,
+    (count(*) FILTER (WHERE plate_appearances.is_extra_base_hit))::integer AS extra_base_hits,
+    (count(*) FILTER (WHERE plate_appearances.is_hit_by_pitch))::integer AS hit_by_pitch,
+    (sum(plate_appearances.hit_value))::integer AS total_bases,
+    (sum(plate_appearances.rbi))::integer AS rbi,
+    round(((count(*) FILTER (WHERE plate_appearances.is_hit))::numeric / (NULLIF(count(*) FILTER (WHERE plate_appearances.is_at_bat), 0))::numeric), 4) AS batting_average,
+    round(((((count(*) FILTER (WHERE plate_appearances.is_hit) + count(*) FILTER (WHERE plate_appearances.is_walk)) + count(*) FILTER (WHERE plate_appearances.is_hit_by_pitch)))::numeric / (NULLIF(count(*) FILTER (WHERE (plate_appearances.is_at_bat OR plate_appearances.is_walk OR plate_appearances.is_hit_by_pitch)), 0))::numeric), 4) AS on_base_percentage_proxy,
+    round(((sum(plate_appearances.hit_value))::numeric / (NULLIF(count(*) FILTER (WHERE plate_appearances.is_at_bat), 0))::numeric), 4) AS slugging_percentage,
+    round(avg((plate_appearances.is_hit)::integer), 4) AS hit_rate,
+    round(avg((plate_appearances.is_walk)::integer), 4) AS walk_rate,
+    round(avg((plate_appearances.is_strikeout)::integer), 4) AS strikeout_rate,
+    round(avg((plate_appearances.is_home_run)::integer), 4) AS home_run_rate,
+    round(avg((plate_appearances.is_reach_base)::integer), 4) AS reach_base_rate
+   FROM (core.plate_appearances plate_appearances
+     LEFT JOIN core.players players ON ((players.retrosheet_player_id = plate_appearances.batter_id)))
+  WHERE (plate_appearances.batter_id IS NOT NULL)
+  GROUP BY plate_appearances.season, plate_appearances.batter_id
+  WITH NO DATA;
+
+
+--
+-- Name: temporal_production_validation_summary; Type: VIEW; Schema: features; Owner: -
+--
+
+CREATE VIEW features.temporal_production_validation_summary AS
+ SELECT 'features.team_game_context'::text AS object_name,
+    count(*) AS row_count
+   FROM features.team_game_context
+UNION ALL
+ SELECT 'features.player_production_season'::text AS object_name,
+    count(*) AS row_count
+   FROM features.player_production_season
+UNION ALL
+ SELECT 'features.pitcher_production_season'::text AS object_name,
+    count(*) AS row_count
+   FROM features.pitcher_production_season
+UNION ALL
+ SELECT 'features.game_outcome_temporal_examples_2025'::text AS object_name,
+    count(*) AS row_count
+   FROM features.game_outcome_temporal_examples
+  WHERE (game_outcome_temporal_examples.season = 2025)
+UNION ALL
+ SELECT 'features.plate_appearance_temporal_examples_2025'::text AS object_name,
+    count(*) AS row_count
+   FROM features.plate_appearance_temporal_examples
+  WHERE (plate_appearance_temporal_examples.season = 2025);
+
+
+--
+-- Name: umpire_strike_zone_features; Type: MATERIALIZED VIEW; Schema: features; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features.umpire_strike_zone_features AS
+ WITH umpire_stats AS (
+         SELECT statcast.umpire,
+            statcast.game_year AS season,
+            count(*) AS total_pitches,
+            count(
+                CASE
+                    WHEN (statcast.description ~~ '%called strike%'::text) THEN 1
+                    ELSE NULL::integer
+                END) AS called_strike_count,
+            count(
+                CASE
+                    WHEN (statcast.description ~~ '%ball%'::text) THEN 1
+                    ELSE NULL::integer
+                END) AS called_ball_count,
+            round(((count(
+                CASE
+                    WHEN (statcast.description ~~ '%called strike%'::text) THEN 1
+                    ELSE NULL::integer
+                END))::numeric / (NULLIF(count(
+                CASE
+                    WHEN (statcast.description = ANY (ARRAY['ball'::text, 'called_strike'::text])) THEN 1
+                    ELSE NULL::integer
+                END), 0))::numeric), 4) AS called_strike_rate,
+            avg(statcast.sz_top) AS avg_strike_zone_top,
+            avg(statcast.sz_bot) AS avg_strike_zone_bottom,
+            stddev(statcast.sz_top) AS strike_zone_variance_top,
+            stddev(statcast.sz_bot) AS strike_zone_variance_bottom,
+            ((1.0)::double precision - ((stddev(statcast.sz_top) + stddev(statcast.sz_bot)) / (2.0)::double precision)) AS umpire_consistency_score,
+            count(
+                CASE
+                    WHEN (statcast.events = 'strikeout'::text) THEN 1
+                    ELSE NULL::integer
+                END) AS strikeout_count,
+            count(
+                CASE
+                    WHEN (statcast.events = 'walk'::text) THEN 1
+                    ELSE NULL::integer
+                END) AS walk_count,
+            round(((count(
+                CASE
+                    WHEN (statcast.events = 'strikeout'::text) THEN 1
+                    ELSE NULL::integer
+                END))::numeric / (NULLIF(count(DISTINCT statcast.game_pk), 0))::numeric), 2) AS strikeouts_per_game,
+            round(((count(
+                CASE
+                    WHEN (statcast.events = 'walk'::text) THEN 1
+                    ELSE NULL::integer
+                END))::numeric / (NULLIF(count(DISTINCT statcast.game_pk), 0))::numeric), 2) AS walks_per_game
+           FROM raw_mlb.statcast
+          WHERE ((statcast.umpire IS NOT NULL) AND (statcast.description IS NOT NULL) AND (statcast.game_year IS NOT NULL))
+          GROUP BY statcast.umpire, statcast.game_year
+        )
+ SELECT umpire AS umpire_id,
+    season,
+    (season + 1) AS feature_season,
+    total_pitches,
+    called_strike_rate,
+    avg_strike_zone_top,
+    avg_strike_zone_bottom,
+    strike_zone_variance_top,
+    strike_zone_variance_bottom,
+    round((umpire_consistency_score)::numeric, 4) AS umpire_consistency_score,
+    strikeouts_per_game,
+    walks_per_game,
+        CASE
+            WHEN (strikeouts_per_game > 6.5) THEN 1
+            ELSE 0
+        END AS umpire_k_friendly,
+        CASE
+            WHEN (walks_per_game > 3.5) THEN 1
+            ELSE 0
+        END AS umpire_walk_friendly,
+        CASE
+            WHEN (called_strike_rate > 0.34) THEN 1
+            ELSE 0
+        END AS umpire_pitcher_favored,
+        CASE
+            WHEN (called_strike_rate < 0.30) THEN 1
+            ELSE 0
+        END AS umpire_hitter_favored
+   FROM umpire_stats
+  WHERE (total_pitches >= 1000)
+  WITH NO DATA;
+
+
+--
+-- Name: base_features_pitch_id_seq; Type: SEQUENCE; Schema: features_pitch; Owner: -
+--
+
+CREATE SEQUENCE features_pitch.base_features_pitch_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: base_features_pitch_id_seq; Type: SEQUENCE OWNED BY; Schema: features_pitch; Owner: -
+--
+
+ALTER SEQUENCE features_pitch.base_features_pitch_id_seq OWNED BY features_pitch.base_features.pitch_id;
+
+
+--
+-- Name: batter_pitch_type_performance; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.batter_pitch_type_performance (
+    batter_id integer NOT NULL,
+    game_year integer NOT NULL,
+    pitch_type text NOT NULL,
+    total_pitches integer,
+    swings integer,
+    whiffs integer,
+    contact integer,
+    fouls integer,
+    balls_in_play integer,
+    singles integer,
+    doubles integer,
+    triples integer,
+    home_runs integer,
+    outs integer,
+    avg_launch_speed numeric(5,1),
+    avg_launch_angle numeric(5,1),
+    slugging_pct numeric(5,3),
+    babip numeric(4,3),
+    iso numeric(5,3),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: TABLE batter_pitch_type_performance; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.batter_pitch_type_performance IS 'Batter performance against each pitch type. Aggregated outcomes for batter-pitch_type combinations.';
+
+
+--
+-- Name: batter_zone_profiles; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.batter_zone_profiles (
+    batter_id integer NOT NULL,
+    game_year integer NOT NULL,
+    zone integer NOT NULL,
+    total_pitches integer,
+    swing_pct numeric(4,1),
+    contact_pct numeric(4,1),
+    whiff_pct numeric(4,1),
+    foul_pct numeric(4,1),
+    in_play_pct numeric(4,1),
+    hard_hit_pct numeric(4,1),
+    avg_launch_speed numeric(5,1),
+    avg_launch_angle numeric(5,1),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: TABLE batter_zone_profiles; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.batter_zone_profiles IS 'Batter zone swing rates by zone. Historical swing decision patterns for each batter in each strike zone region.';
+
+
+--
+-- Name: count_performance; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.count_performance (
+    player_id integer NOT NULL,
+    player_type text NOT NULL,
+    game_year integer NOT NULL,
+    balls integer NOT NULL,
+    strikes integer NOT NULL,
+    total_pas integer,
+    avg_woba numeric(5,3),
+    ops numeric(5,3),
+    hr_rate numeric(5,4),
+    k_rate numeric(4,3),
+    bb_rate numeric(4,3),
+    avg_woba_allowed numeric(5,3),
+    ops_allowed numeric(5,3),
+    hr_allowed_rate numeric(5,4),
+    k_induced_rate numeric(4,3),
+    bb_allowed_rate numeric(4,3),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT count_performance_player_type_check CHECK ((player_type = ANY (ARRAY['batter'::text, 'pitcher'::text])))
+);
+
+
+--
+-- Name: TABLE count_performance; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.count_performance IS 'Count-specific performance statistics. Batter and pitcher stats broken down by ball-strike count.';
+
+
+--
+-- Name: data_quality_summary; Type: VIEW; Schema: features_pitch; Owner: -
+--
+
+CREATE VIEW features_pitch.data_quality_summary AS
+ SELECT quality_flag,
+    count(*) AS pitch_count,
+    round((((count(*))::numeric / (( SELECT count(*) AS count
+           FROM features_pitch.locations locations_1))::numeric) * (100)::numeric), 4) AS pct_of_total,
+    round((((count(*))::numeric / (( SELECT count(*) AS count
+           FROM features_pitch.locations locations_1))::numeric) * (1000000)::numeric), 2) AS per_million
+   FROM features_pitch.locations
+  GROUP BY quality_flag
+  ORDER BY (count(*)) DESC;
+
+
+--
+-- Name: engineered_features; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.engineered_features (
+    pitch_id bigint NOT NULL,
+    velocity_category character varying(20),
+    velocity_percentile real,
+    velocity_diff_from_avg real,
+    zone_region character varying(20),
+    is_in_zone boolean,
+    is_in_shadow_zone boolean,
+    is_in_chase_zone boolean,
+    distance_from_zone_center real,
+    is_strike boolean,
+    is_swing boolean,
+    is_whiff boolean,
+    is_called_strike boolean,
+    is_foul boolean,
+    is_foul_tip boolean,
+    is_ball_in_play boolean,
+    is_hit boolean,
+    is_single boolean,
+    is_double boolean,
+    is_triple boolean,
+    is_home_run boolean,
+    is_xbh boolean,
+    is_out boolean,
+    is_ground_ball boolean,
+    is_fly_ball boolean,
+    is_line_drive boolean,
+    is_popup boolean,
+    is_hard_hit boolean,
+    is_barrel boolean,
+    outcome_tier1 character varying(20),
+    outcome_tier2 character varying(20),
+    swing_decision character varying(20),
+    horizontal_break real,
+    vertical_break real,
+    approach_angle real,
+    spin_efficiency real,
+    induced_vertical_break real,
+    horizontal_release_deviation real,
+    release_velocity_diff real,
+    pa_pitch_count smallint,
+    pitches_remaining_pa integer,
+    prev_pitch_type character varying(2),
+    prev_pitch_result character varying(50),
+    prev_plate_x real,
+    prev_plate_z real,
+    prev_velocity real,
+    prev_break_x real,
+    prev_break_z real,
+    time_since_prev_pitch real,
+    prev_was_strike boolean,
+    prev_was_ball boolean,
+    prev_was_swing boolean,
+    count_started_this_pa boolean,
+    is_full_count boolean,
+    is_two_strike boolean,
+    is_three_ball boolean,
+    pitcher_arsenal_index real,
+    pitcher_repertoire_depth real,
+    game_pitch_count integer,
+    pitch_usage_pct_this_game real,
+    batter_performance_vs_type real,
+    batter_swing_rate_vs_type real,
+    batter_whiff_rate_vs_type real,
+    is_batter_hot_zone boolean,
+    is_batter_cold_zone boolean,
+    score_diff integer,
+    score_diff_bucket character varying(20),
+    is_late_game boolean,
+    is_high_leverage boolean,
+    base_state_code smallint,
+    base_state_name character varying(20),
+    count_code character varying(5),
+    times_faced_this_game integer,
+    total_pitches_in_matchup integer,
+    engineered_at timestamp without time zone DEFAULT now(),
+    engineer_version integer DEFAULT 1,
+    source_calculations jsonb DEFAULT '{}'::jsonb,
+    velocity_change_from_prev numeric,
+    spin_rate_percentile numeric,
+    spin_rate_vs_pitchtype_avg numeric,
+    is_backspin boolean,
+    is_topspin boolean,
+    is_gyro_spin boolean,
+    spin_axis_quadrant text,
+    is_same_handed_matchup boolean,
+    is_platoon_advantage_pitcher boolean,
+    pitcher_fatigue_score numeric,
+    inning_normalized numeric,
+    score_pressure_ratio numeric,
+    is_first_time_through_order boolean,
+    is_second_time_through_order boolean,
+    is_third_plus_time_through_order boolean,
+    pa_pressure_index numeric,
+    is_high_pressure_pa boolean,
+    release_point_consistency_5pitch numeric,
+    plate_appearance_importance numeric,
+    is_walk_off_situation boolean,
+    is_run_expectancy_critical boolean,
+    day_of_week text,
+    is_weekend boolean,
+    month_of_season integer,
+    is_early_season boolean,
+    is_late_season boolean,
+    pitch_shape_consistency numeric,
+    is_ace_pitcher boolean,
+    is_closer_situation boolean,
+    lineup_position_estimated integer,
+    is_top_of_lineup boolean,
+    is_bottom_of_lineup boolean,
+    pitch_quality_score numeric,
+    is_payoff_pitch boolean,
+    velocity_bucket text,
+    spin_efficiency_estimate numeric,
+    pitch_distance_from_heart numeric,
+    pitch_shape_uniqueness numeric,
+    count_leverage_index numeric,
+    is_pitcher_ahead boolean,
+    is_hitter_ahead boolean,
+    is_strikeout_count boolean,
+    is_walk_count boolean,
+    is_2_strike_approach boolean,
+    is_3_ball_approach boolean,
+    consecutive_same_type integer,
+    pitches_since_last_swing integer,
+    run_expectancy_24 numeric,
+    win_probability_added numeric,
+    leverage_index_bracket text,
+    inning_phase text,
+    score_differential_bucket text,
+    is_one_run_game boolean,
+    is_save_situation boolean,
+    pitcher_rest_days integer,
+    pitcher_season_pitch_count integer,
+    is_workhorse_pitcher boolean,
+    pitcher_velocity_trend numeric,
+    batter_rest_days integer,
+    is_platoonsplit_batter boolean,
+    temperature_bucket text,
+    wind_effect_bucket text,
+    is_day_game boolean,
+    game_month text,
+    is_opening_series boolean,
+    is_getaway_day boolean,
+    times_through_order_detailed integer,
+    is_first_time_seeing_pitcher boolean,
+    is_second_time_seeing_pitcher boolean,
+    is_third_plus_time_seeing_pitcher boolean,
+    ttop_penalty_applies boolean,
+    pitch_type_family text,
+    is_primary_pitch_type boolean,
+    pitch_usage_pct_vs_batter_hand numeric,
+    velocity_diff_from_pitcher_avg numeric,
+    temp_extreme_flag text,
+    wind_in_direction boolean,
+    wind_effect_score numeric,
+    humidity_proxy numeric,
+    altitude_factor numeric,
+    is_shadow_game boolean,
+    home_run_environment_boost numeric,
+    batting_team_last_5_win_rate numeric,
+    batting_team_last_10_win_rate numeric,
+    batting_team_momentum_delta numeric,
+    fielding_team_last_5_win_rate numeric,
+    fielding_team_last_10_win_rate numeric,
+    fielding_team_momentum_delta numeric,
+    batter_7day_pa_count integer,
+    pitcher_last_3_era numeric,
+    pitcher_last_3_strikeout_rate numeric,
+    pitcher_last_3_walk_rate numeric,
+    pitcher_last_3_ip_avg numeric,
+    pitcher_quality_starts_last_5 integer,
+    home_plate_umpire_id text,
+    umpire_strike_zone_size text,
+    umpire_strike_calls_pct numeric,
+    umpire_ball_calls_pct numeric,
+    umpire_k_friendly boolean,
+    umpire_walk_friendly boolean,
+    umpire_hitter_favored boolean,
+    umpire_pitcher_favored boolean,
+    umpire_consistency_score numeric,
+    umpire_experience_estimate integer,
+    attendance integer,
+    attendance_vs_capacity_pct numeric,
+    attendance_vs_team_avg_pct numeric,
+    is_sellout boolean,
+    crowd_noise_proxy numeric,
+    home_field_advantage_score numeric,
+    is_rivalry_game boolean,
+    park_id text,
+    park_elevation_feet numeric,
+    park_left_field_distance integer,
+    park_center_field_distance integer,
+    park_right_field_distance integer,
+    park_grass_turf boolean,
+    park_has_retractable_roof boolean,
+    park_is_dome boolean,
+    park_hr_factor_lf numeric,
+    park_hr_factor_cf numeric,
+    park_hr_factor_rf numeric,
+    park_overall_hr_factor numeric,
+    park_foul_ground_sqft integer,
+    pitcher_inning_velocity_decline numeric,
+    pitcher_season_workload integer,
+    pitcher_back_to_back boolean,
+    pitcher_days_rest integer,
+    is_short_rest_start boolean
+);
+
+
+--
+-- Name: TABLE engineered_features; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.engineered_features IS 'ML-ready engineered features (4 GB). 7.66M pitches with 220+ derived features including velocity differential, spin efficiency, count leverage, run expectancy, and matchup history.';
+
+
+--
+-- Name: COLUMN engineered_features.pitch_quality_score; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.pitch_quality_score IS 'Composite score: velocity + movement quality + location (research-backed pitch quality metric)';
+
+
+--
+-- Name: COLUMN engineered_features.is_payoff_pitch; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.is_payoff_pitch IS 'True if 2 strikes (must protect) or 3 balls (walk threat) - research shows pitch selection changes';
+
+
+--
+-- Name: COLUMN engineered_features.count_leverage_index; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.count_leverage_index IS 'Count pressure: 0=neutral, positive=pitcher advantage, negative=hitter advantage';
+
+
+--
+-- Name: COLUMN engineered_features.run_expectancy_24; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.run_expectancy_24 IS 'Run Expectancy based on 24 base-out states (baseball research standard)';
+
+
+--
+-- Name: COLUMN engineered_features.win_probability_added; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.win_probability_added IS 'Change in win probability from this plate appearance';
+
+
+--
+-- Name: COLUMN engineered_features.times_through_order_detailed; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.times_through_order_detailed IS 'Times Through Order Penalty: 1st/2nd/3rd+ time facing pitcher this game';
+
+
+--
+-- Name: COLUMN engineered_features.ttop_penalty_applies; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.ttop_penalty_applies IS 'True on 3rd+ time through order - research shows pitcher performance declines';
+
+
+--
+-- Name: COLUMN engineered_features.temp_extreme_flag; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.temp_extreme_flag IS 'Weather extreme: hot (>90F), cold (<50F), or normal - affects grip and ball carry';
+
+
+--
+-- Name: COLUMN engineered_features.wind_in_direction; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.wind_in_direction IS 'Wind blowing toward LF/CF/RF (home run helper) vs blowing in';
+
+
+--
+-- Name: COLUMN engineered_features.wind_effect_score; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.wind_effect_score IS 'Combined wind direction + speed impact score (-1 to +1)';
+
+
+--
+-- Name: COLUMN engineered_features.altitude_factor; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.altitude_factor IS 'Park elevation effect on ball flight (1.0 = sea level, 1.2 = Coors Field)';
+
+
+--
+-- Name: COLUMN engineered_features.umpire_strike_zone_size; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.umpire_strike_zone_size IS 'Umpire tendency: small, normal, or large strike zone';
+
+
+--
+-- Name: COLUMN engineered_features.umpire_k_friendly; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.umpire_k_friendly IS 'True if umpire has higher than average strikeout rate';
+
+
+--
+-- Name: COLUMN engineered_features.home_field_advantage_score; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.home_field_advantage_score IS 'Composite of attendance, park factors, and team home performance';
+
+
+--
+-- Name: COLUMN engineered_features.park_overall_hr_factor; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.park_overall_hr_factor IS 'Park factor for home runs (1.0 = neutral, >1 = hitter friendly)';
+
+
+--
+-- Name: COLUMN engineered_features.pitcher_inning_velocity_decline; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.pitcher_inning_velocity_decline IS 'Velocity drop from early innings to current inning (fatigue indicator)';
+
+
+--
+-- Name: COLUMN engineered_features.pitcher_days_rest; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.pitcher_days_rest IS 'Days since last appearance (5+ is normal rest)';
+
+
+--
+-- Name: COLUMN engineered_features.is_short_rest_start; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON COLUMN features_pitch.engineered_features.is_short_rest_start IS 'True if pitcher starting on < 4 days rest (fatigue risk)';
+
+
+--
+-- Name: feature_registry; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.feature_registry (
+    feature_id integer NOT NULL,
+    schema_name character varying(50) DEFAULT 'features_pitch'::character varying NOT NULL,
+    table_name character varying(100) NOT NULL,
+    column_name character varying(100) NOT NULL,
+    feature_category character varying(50),
+    feature_type character varying(20),
+    is_default boolean DEFAULT false,
+    is_engineered boolean DEFAULT false,
+    is_nullable boolean DEFAULT true,
+    description text,
+    units character varying(30),
+    source_column character varying(100),
+    derivation_sql text,
+    model_usage character varying[] DEFAULT '{}'::character varying[],
+    null_percentage real,
+    unique_percentage real,
+    correlation_with_target real,
+    importance_score real,
+    data_quality jsonb DEFAULT '{}'::jsonb,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE feature_registry; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.feature_registry IS 'Feature metadata catalog. Documents all features with descriptions, data types, sources, and population status.';
+
+
+--
+-- Name: feature_registry_feature_id_seq; Type: SEQUENCE; Schema: features_pitch; Owner: -
+--
+
+CREATE SEQUENCE features_pitch.feature_registry_feature_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: feature_registry_feature_id_seq; Type: SEQUENCE OWNED BY; Schema: features_pitch; Owner: -
+--
+
+ALTER SEQUENCE features_pitch.feature_registry_feature_id_seq OWNED BY features_pitch.feature_registry.feature_id;
+
+
+--
+-- Name: locations_clean; Type: VIEW; Schema: features_pitch; Owner: -
+--
+
+CREATE VIEW features_pitch.locations_clean AS
+ SELECT id,
+    game_year,
+    game_pk,
+    batter_id,
+    pitcher_id,
+    pitch_type,
+    plate_x,
+    plate_z,
+    sz_top,
+    sz_bot,
+    pfx_x,
+    pfx_z,
+    start_speed,
+    pitch_result,
+    launch_speed,
+    launch_angle,
+    hit_distance,
+    created_at,
+    location,
+    spin_rate,
+    zone,
+    balls,
+    strikes,
+    inning,
+    inning_topbot,
+    hc_x,
+    hc_y,
+    hit_location,
+    bb_type,
+    release_pos_x,
+    release_pos_y,
+    release_pos_z,
+    on_3b,
+    on_2b,
+    on_1b,
+    outs_when_up,
+    game_date,
+    sv_id,
+    vx0,
+    vy0,
+    vz0,
+    ax,
+    ay,
+    az,
+    release_spin_rate,
+    effective_speed,
+    release_extension,
+    spin_axis,
+    estimated_ba,
+    estimated_woba,
+    estimated_slg,
+    woba_value,
+    woba_denom,
+    babip_value,
+    iso_value,
+    home_score,
+    away_score,
+    bat_score,
+    fld_score,
+    at_bat_number,
+    pitch_number,
+    player_name,
+    pitch_name,
+    description,
+    events,
+    stand,
+    p_throws,
+    home_team,
+    away_team,
+    type,
+    post_home_score,
+    post_away_score,
+    post_bat_score,
+    post_fld_score,
+    fielder_2,
+    fielder_3,
+    fielder_4,
+    fielder_5,
+    fielder_6,
+    fielder_7,
+    fielder_8,
+    fielder_9,
+    delta_home_win_exp,
+    delta_run_exp,
+    home_win_exp,
+    bat_win_exp,
+    if_fielding_alignment,
+    of_fielding_alignment,
+    launch_speed_angle,
+    spin_rate_deprecated,
+    quality_flag
+   FROM features_pitch.locations
+  WHERE ((quality_flag = 'normal'::text) OR (quality_flag = 'high_passed_ball'::text) OR (quality_flag = 'wide_wild_pitch'::text));
+
+
+--
+-- Name: VIEW locations_clean; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON VIEW features_pitch.locations_clean IS 'Pitch data excluding only extreme outliers (plate_z < -5). Includes normal pitches and reasonable wild pitches.';
+
+
+--
+-- Name: locations_id_seq; Type: SEQUENCE; Schema: features_pitch; Owner: -
+--
+
+CREATE SEQUENCE features_pitch.locations_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: locations_id_seq; Type: SEQUENCE OWNED BY; Schema: features_pitch; Owner: -
+--
+
+ALTER SEQUENCE features_pitch.locations_id_seq OWNED BY features_pitch.locations.id;
+
+
+--
+-- Name: locations_strict; Type: VIEW; Schema: features_pitch; Owner: -
+--
+
+CREATE VIEW features_pitch.locations_strict AS
+ SELECT id,
+    game_year,
+    game_pk,
+    batter_id,
+    pitcher_id,
+    pitch_type,
+    plate_x,
+    plate_z,
+    sz_top,
+    sz_bot,
+    pfx_x,
+    pfx_z,
+    start_speed,
+    pitch_result,
+    launch_speed,
+    launch_angle,
+    hit_distance,
+    created_at,
+    location,
+    spin_rate,
+    zone,
+    balls,
+    strikes,
+    inning,
+    inning_topbot,
+    hc_x,
+    hc_y,
+    hit_location,
+    bb_type,
+    release_pos_x,
+    release_pos_y,
+    release_pos_z,
+    on_3b,
+    on_2b,
+    on_1b,
+    outs_when_up,
+    game_date,
+    sv_id,
+    vx0,
+    vy0,
+    vz0,
+    ax,
+    ay,
+    az,
+    release_spin_rate,
+    effective_speed,
+    release_extension,
+    spin_axis,
+    estimated_ba,
+    estimated_woba,
+    estimated_slg,
+    woba_value,
+    woba_denom,
+    babip_value,
+    iso_value,
+    home_score,
+    away_score,
+    bat_score,
+    fld_score,
+    at_bat_number,
+    pitch_number,
+    player_name,
+    pitch_name,
+    description,
+    events,
+    stand,
+    p_throws,
+    home_team,
+    away_team,
+    type,
+    post_home_score,
+    post_away_score,
+    post_bat_score,
+    post_fld_score,
+    fielder_2,
+    fielder_3,
+    fielder_4,
+    fielder_5,
+    fielder_6,
+    fielder_7,
+    fielder_8,
+    fielder_9,
+    delta_home_win_exp,
+    delta_run_exp,
+    home_win_exp,
+    bat_win_exp,
+    if_fielding_alignment,
+    of_fielding_alignment,
+    launch_speed_angle,
+    spin_rate_deprecated,
+    quality_flag
+   FROM features_pitch.locations
+  WHERE (quality_flag = 'normal'::text);
+
+
+--
+-- Name: VIEW locations_strict; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON VIEW features_pitch.locations_strict IS 'Pitch data with only normal tracking (no outliers of any kind). Use for strict analysis.';
+
+
+--
+-- Name: matchup_history; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.matchup_history (
+    pitcher_id integer NOT NULL,
+    batter_id integer NOT NULL,
+    game_year integer NOT NULL,
+    times_faced integer,
+    total_pitches integer,
+    pa_count integer,
+    walk_count integer,
+    strikeout_count integer,
+    hit_count integer,
+    hr_count integer,
+    avg_launch_speed numeric(5,1),
+    common_pitch_sequence text,
+    last_faced_date date,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: TABLE matchup_history; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.matchup_history IS 'Batter-pitcher matchup history. Historical PA outcomes between specific batter-pitcher pairs.';
+
+
+--
+-- Name: model_training_set; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.model_training_set (
+    training_id bigint NOT NULL,
+    model_name character varying(50) NOT NULL,
+    model_version character varying(20) NOT NULL,
+    model_family character varying(20),
+    pitch_id bigint,
+    game_year smallint,
+    feature_names text[],
+    feature_vector real[],
+    feature_count integer,
+    normalization_method character varying(20),
+    normalization_params jsonb,
+    target_type character varying(30),
+    target_label character varying(50),
+    target_value real,
+    target_onehot real[],
+    secondary_targets jsonb,
+    split_set character varying(10),
+    split_method character varying(20),
+    split_seed integer,
+    fold_number integer,
+    stratify_group character varying(50),
+    data_hash character varying(64),
+    feature_query_hash character varying(64),
+    feature_config_id integer,
+    base_features_version integer,
+    engineered_features_version integer,
+    player_context_version integer,
+    source_query text,
+    created_at timestamp without time zone DEFAULT now(),
+    materialized_at timestamp without time zone,
+    CONSTRAINT model_training_set_split_set_check CHECK (((split_set)::text = ANY ((ARRAY['train'::character varying, 'val'::character varying, 'test'::character varying])::text[])))
+);
+
+
+--
+-- Name: TABLE model_training_set; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.model_training_set IS 'Versioned model training data. Snapshots of training data with version labels for reproducibility.';
+
+
+--
+-- Name: model_training_set_training_id_seq; Type: SEQUENCE; Schema: features_pitch; Owner: -
+--
+
+CREATE SEQUENCE features_pitch.model_training_set_training_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: model_training_set_training_id_seq; Type: SEQUENCE OWNED BY; Schema: features_pitch; Owner: -
+--
+
+ALTER SEQUENCE features_pitch.model_training_set_training_id_seq OWNED BY features_pitch.model_training_set.training_id;
+
+
+--
+-- Name: mv_game_context; Type: MATERIALIZED VIEW; Schema: features_pitch; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features_pitch.mv_game_context AS
+ SELECT x.mlb_game_pk AS game_pk,
+    g.game_date,
+    g.temperature_f,
+    g.wind_speed_mph,
+    g.wind_direction,
+        CASE
+            WHEN (g.temperature_f > 90) THEN 'hot'::text
+            WHEN (g.temperature_f < 50) THEN 'cold'::text
+            ELSE 'normal'::text
+        END AS temp_extreme_flag,
+    (((COALESCE(g.wind_speed_mph, 0))::numeric / 30.0) *
+        CASE
+            WHEN ((g.wind_direction ~~* '%out%'::text) OR (g.wind_direction ~~* '%left%out%'::text)) THEN 0.8
+            WHEN ((g.wind_direction ~~* '%in%'::text) OR (g.wind_direction ~~* '%right%in%'::text)) THEN '-0.8'::numeric
+            ELSE 0.0
+        END) AS wind_effect_score,
+    (
+        CASE EXTRACT(month FROM g.game_date)
+            WHEN 6 THEN 0.70
+            WHEN 7 THEN 0.75
+            WHEN 8 THEN 0.72
+            WHEN 4 THEN 0.55
+            WHEN 5 THEN 0.60
+            WHEN 9 THEN 0.65
+            WHEN 10 THEN 0.60
+            ELSE 0.60
+        END + ((((g.temperature_f - 70))::numeric / 100.0) * 0.1)) AS humidity_proxy,
+    g.attendance,
+    (((g.attendance)::numeric / 40000.0) * (100)::numeric) AS attendance_vs_capacity_pct,
+    (g.attendance > 38000) AS is_sellout,
+        CASE
+            WHEN (((EXTRACT(hour FROM (g.game_date)::timestamp without time zone) >= (12)::numeric) AND (EXTRACT(hour FROM (g.game_date)::timestamp without time zone) <= (17)::numeric)) AND (g.attendance > 30000)) THEN 1.0
+            WHEN ((EXTRACT(hour FROM (g.game_date)::timestamp without time zone) >= (12)::numeric) AND (EXTRACT(hour FROM (g.game_date)::timestamp without time zone) <= (17)::numeric)) THEN 0.7
+            WHEN (g.attendance > 30000) THEN 0.8
+            ELSE 0.5
+        END AS crowd_noise_proxy,
+    g.park_id,
+    (((g.home_team_id = ANY (ARRAY['NYA'::text, 'BOS'::text])) AND (g.away_team_id = ANY (ARRAY['NYA'::text, 'BOS'::text]))) OR ((g.home_team_id = ANY (ARRAY['LAN'::text, 'SFN'::text])) AND (g.away_team_id = ANY (ARRAY['LAN'::text, 'SFN'::text]))) OR ((g.home_team_id = ANY (ARRAY['CHN'::text, 'SLN'::text])) AND (g.away_team_id = ANY (ARRAY['CHN'::text, 'SLN'::text]))) OR ((g.home_team_id = ANY (ARRAY['NYN'::text, 'PHI'::text])) AND (g.away_team_id = ANY (ARRAY['NYN'::text, 'PHI'::text])))) AS is_rivalry_game,
+    ((EXTRACT(hour FROM (g.game_date)::timestamp without time zone) >= (12)::numeric) AND (EXTRACT(hour FROM (g.game_date)::timestamp without time zone) <= (18)::numeric)) AS is_day_game,
+    ((EXTRACT(hour FROM (g.game_date)::timestamp without time zone) >= (16)::numeric) AND (EXTRACT(hour FROM (g.game_date)::timestamp without time zone) <= (18)::numeric)) AS is_shadow_game,
+    NULL::text AS home_plate_umpire_id
+   FROM (core.games g
+     JOIN bridge.game_xref x ON ((g.game_id = x.retrosheet_game_id)))
+  WHERE (x.mlb_game_pk IS NOT NULL)
+  WITH NO DATA;
+
+
+--
+-- Name: MATERIALIZED VIEW mv_game_context; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON MATERIALIZED VIEW features_pitch.mv_game_context IS 'Pre-computed game-level context features. Refresh with: REFRESH MATERIALIZED VIEW CONCURRENTLY features_pitch.mv_game_context;';
+
+
+--
+-- Name: venues; Type: TABLE; Schema: mlb; Owner: -
+--
+
+CREATE TABLE mlb.venues (
+    mlb_id integer NOT NULL,
+    retrosheet_id text,
+    name text NOT NULL,
+    location text,
+    time_zone text,
+    left_field_distance integer,
+    center_field_distance integer,
+    right_field_distance integer,
+    left_center_distance integer,
+    right_center_distance integer,
+    turf_type text,
+    roof_type text,
+    active boolean DEFAULT true,
+    api_source text DEFAULT 'mlb_api'::text,
+    last_updated timestamp with time zone DEFAULT now(),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE venues; Type: COMMENT; Schema: mlb; Owner: -
+--
+
+COMMENT ON TABLE mlb.venues IS 'MLB API venue records (16 kB). Stadium data from MLB API.';
+
+
+--
+-- Name: mv_park_context; Type: MATERIALIZED VIEW; Schema: features_pitch; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features_pitch.mv_park_context AS
+ SELECT retrosheet_id AS park_id,
+    left_field_distance,
+    center_field_distance,
+    right_field_distance,
+    left_center_distance,
+    right_center_distance,
+    (turf_type ~~* '%grass%'::text) AS park_grass_turf,
+    ((roof_type IS NOT NULL) AND (roof_type <> 'open'::text)) AS has_retractable_roof,
+    ((roof_type ~~* '%dome%'::text) OR (roof_type ~~* '%closed%'::text)) AS is_dome,
+        CASE
+            WHEN (left_field_distance <= 320) THEN 1.15
+            WHEN (left_field_distance >= 340) THEN 0.85
+            ELSE 1.0
+        END AS park_hr_factor_lf,
+        CASE
+            WHEN (center_field_distance <= 390) THEN 1.10
+            WHEN (center_field_distance >= 420) THEN 0.90
+            ELSE 1.0
+        END AS park_hr_factor_cf,
+        CASE
+            WHEN (right_field_distance <= 320) THEN 1.15
+            WHEN (right_field_distance >= 340) THEN 0.85
+            ELSE 1.0
+        END AS park_hr_factor_rf,
+    (((
+        CASE
+            WHEN (left_field_distance <= 320) THEN 1.15
+            WHEN (left_field_distance >= 340) THEN 0.85
+            ELSE 1.0
+        END +
+        CASE
+            WHEN (center_field_distance <= 390) THEN 1.10
+            WHEN (center_field_distance >= 420) THEN 0.90
+            ELSE 1.0
+        END) +
+        CASE
+            WHEN (right_field_distance <= 320) THEN 1.15
+            WHEN (right_field_distance >= 340) THEN 0.85
+            ELSE 1.0
+        END) / 3.0) AS park_overall_hr_factor
+   FROM mlb.venues v
+  WHERE (retrosheet_id IS NOT NULL)
+  WITH NO DATA;
+
+
+--
+-- Name: MATERIALIZED VIEW mv_park_context; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON MATERIALIZED VIEW features_pitch.mv_park_context IS 'Pre-computed park factors and dimensions. Refresh with: REFRESH MATERIALIZED VIEW CONCURRENTLY features_pitch.mv_park_context;';
+
+
+--
+-- Name: mv_pitcher_fatigue; Type: MATERIALIZED VIEW; Schema: features_pitch; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features_pitch.mv_pitcher_fatigue AS
+ WITH pitcher_appearances AS (
+         SELECT DISTINCT base_features.game_pk,
+            base_features.pitcher_id,
+            base_features.game_date,
+            lag(base_features.game_date) OVER (PARTITION BY base_features.pitcher_id ORDER BY base_features.game_date) AS prev_appearance_date,
+            row_number() OVER (PARTITION BY base_features.pitcher_id, (date_trunc('month'::text, (base_features.game_date)::timestamp with time zone)) ORDER BY base_features.game_date) AS appearances_this_month,
+            row_number() OVER (PARTITION BY base_features.pitcher_id, (date_trunc('year'::text, (base_features.game_date)::timestamp with time zone)) ORDER BY base_features.game_date) AS appearances_this_season
+           FROM features_pitch.base_features
+        )
+ SELECT game_pk,
+    pitcher_id,
+    game_date,
+        CASE
+            WHEN (prev_appearance_date IS NOT NULL) THEN (game_date - prev_appearance_date)
+            ELSE 99
+        END AS pitcher_days_rest,
+    ((prev_appearance_date IS NOT NULL) AND ((game_date - prev_appearance_date) < 4)) AS is_short_rest_start,
+    appearances_this_month AS pitcher_month_workload,
+    appearances_this_season AS pitcher_season_workload,
+    prev_appearance_date
+   FROM pitcher_appearances
+  WITH NO DATA;
+
+
+--
+-- Name: MATERIALIZED VIEW mv_pitcher_fatigue; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON MATERIALIZED VIEW features_pitch.mv_pitcher_fatigue IS 'Pre-computed pitcher fatigue metrics. Refresh with: REFRESH MATERIALIZED VIEW CONCURRENTLY features_pitch.mv_pitcher_fatigue;';
+
+
+--
+-- Name: mv_team_momentum; Type: MATERIALIZED VIEW; Schema: features_pitch; Owner: -
+--
+
+CREATE MATERIALIZED VIEW features_pitch.mv_team_momentum AS
+ WITH team_games AS (
+         SELECT games.game_id,
+            games.season,
+            games.game_date,
+            games.home_team_id AS team_id,
+            games.home_win AS won,
+            games.home_score AS runs_scored,
+            games.away_score AS runs_allowed
+           FROM core.games
+        UNION ALL
+         SELECT games.game_id,
+            games.season,
+            games.game_date,
+            games.away_team_id,
+            (NOT games.home_win),
+            games.away_score AS runs_scored,
+            games.home_score AS runs_allowed
+           FROM core.games
+        )
+ SELECT game_id,
+    team_id,
+    season,
+    game_date,
+    avg((won)::integer) OVER (PARTITION BY team_id ORDER BY game_date ROWS BETWEEN 5 PRECEDING AND 1 PRECEDING) AS last_5_win_rate,
+    avg((won)::integer) OVER (PARTITION BY team_id ORDER BY game_date ROWS BETWEEN 10 PRECEDING AND 1 PRECEDING) AS last_10_win_rate,
+    avg((won)::integer) OVER (PARTITION BY team_id ORDER BY game_date ROWS BETWEEN 30 PRECEDING AND 1 PRECEDING) AS last_30_win_rate,
+    avg((runs_scored)::numeric) OVER (PARTITION BY team_id ORDER BY game_date ROWS BETWEEN 5 PRECEDING AND 1 PRECEDING) AS last_5_runs_per_game,
+    avg((runs_allowed)::numeric) OVER (PARTITION BY team_id ORDER BY game_date ROWS BETWEEN 5 PRECEDING AND 1 PRECEDING) AS last_5_runs_allowed
+   FROM team_games
+  WITH NO DATA;
+
+
+--
+-- Name: MATERIALIZED VIEW mv_team_momentum; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON MATERIALIZED VIEW features_pitch.mv_team_momentum IS 'Pre-computed team momentum metrics (rolling averages). Refresh with: REFRESH MATERIALIZED VIEW CONCURRENTLY features_pitch.mv_team_momentum;';
+
+
+--
+-- Name: pitch_sequences; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.pitch_sequences (
+    sequence_id bigint NOT NULL,
+    pa_id bigint,
+    game_pk integer NOT NULL,
+    at_bat_number integer NOT NULL,
+    game_year smallint,
+    batter_id integer,
+    pitcher_id integer,
+    pitches_in_pa smallint,
+    sequence_outcome character varying(50),
+    pitch_sequence integer[],
+    sequence_duration_seconds real,
+    avg_velocity real,
+    velocity_range real,
+    pitch_type_count smallint,
+    started_with_fastball boolean,
+    started_with_offspeed boolean,
+    finished_with_swinging_strike boolean,
+    finished_with_called_strike boolean,
+    finished_with_ball_in_play boolean,
+    sequence_classification character varying(30),
+    strikes_thrown smallint,
+    balls_thrown smallint,
+    swings_induced smallint,
+    whiffs_induced smallint,
+    fouls_induced smallint,
+    sequence_details jsonb,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE pitch_sequences; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.pitch_sequences IS 'PA-level pitch arrays. Array of all pitches within each plate appearance for sequence analysis.';
+
+
+--
+-- Name: pitch_sequences_sequence_id_seq; Type: SEQUENCE; Schema: features_pitch; Owner: -
+--
+
+CREATE SEQUENCE features_pitch.pitch_sequences_sequence_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pitch_sequences_sequence_id_seq; Type: SEQUENCE OWNED BY; Schema: features_pitch; Owner: -
+--
+
+ALTER SEQUENCE features_pitch.pitch_sequences_sequence_id_seq OWNED BY features_pitch.pitch_sequences.sequence_id;
+
+
+--
+-- Name: pitcher_arsenals; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.pitcher_arsenals (
+    pitcher_id integer NOT NULL,
+    game_year integer NOT NULL,
+    pitch_type text NOT NULL,
+    total_pitches integer,
+    avg_velocity numeric(5,1),
+    max_velocity numeric(5,1),
+    min_velocity numeric(5,1),
+    std_velocity numeric(5,2),
+    avg_spin_rate numeric(7,0),
+    avg_spin_axis numeric(5,1),
+    avg_release_x numeric(6,3),
+    avg_release_z numeric(6,3),
+    avg_pfx_x numeric(6,3),
+    avg_pfx_z numeric(6,3),
+    zone_pct numeric(4,1),
+    swing_pct numeric(4,1),
+    whiff_pct numeric(4,1),
+    in_play_pct numeric(4,1),
+    movement_signature text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: TABLE pitcher_arsenals; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.pitcher_arsenals IS 'Pitcher pitch type arsenal breakdowns. Aggregated pitch usage and effectiveness by pitcher-pitch type combination.';
+
+
+--
+-- Name: player_context; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.player_context (
+    player_id integer NOT NULL,
+    season smallint NOT NULL,
+    game_date date NOT NULL,
+    role character varying(10) NOT NULL,
+    window_type character varying(20) NOT NULL,
+    pa_count integer,
+    bip_count integer,
+    ab_count integer,
+    k_rate real,
+    bb_rate real,
+    hr_rate real,
+    hit_rate real,
+    xbh_rate real,
+    single_rate real,
+    double_rate real,
+    triple_rate real,
+    gb_rate real,
+    fb_rate real,
+    ld_rate real,
+    popup_rate real,
+    hard_hit_rate real,
+    sweet_spot_rate real,
+    barrel_rate real,
+    avg_launch_speed real,
+    avg_launch_angle real,
+    avg_hit_distance real,
+    avg_estimated_woba real,
+    avg_estimated_ba real,
+    avg_estimated_slg real,
+    zone_rate real,
+    swing_rate real,
+    o_swing_rate real,
+    z_swing_rate real,
+    contact_rate real,
+    whiff_rate real,
+    avg_velocity real,
+    avg_spin_rate real,
+    avg_effective_speed real,
+    strike_rate real,
+    called_strike_rate real,
+    swinging_strike_rate real,
+    foul_rate real,
+    ball_in_play_rate real,
+    pitch_mix jsonb,
+    pitch_mix_entropy real,
+    primary_pitch character varying(2),
+    secondary_pitch character varying(2),
+    arsenal_size integer,
+    arsenal_quality_score real,
+    vs_righty_pa integer,
+    vs_lefty_pa integer,
+    vs_righty_ops real,
+    vs_lefty_ops real,
+    first_game_date date,
+    last_game_date date,
+    days_active integer,
+    games_count integer,
+    calculated_at timestamp without time zone DEFAULT now(),
+    calculation_version integer DEFAULT 1,
+    sample_size_note character varying(50),
+    CONSTRAINT player_context_role_check CHECK (((role)::text = ANY ((ARRAY['batter'::character varying, 'pitcher'::character varying])::text[]))),
+    CONSTRAINT player_context_window_type_check CHECK (((window_type)::text = ANY ((ARRAY['30day'::character varying, 'season'::character varying, 'career'::character varying])::text[])))
+);
+
+
+--
+-- Name: TABLE player_context; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.player_context IS 'Player rolling context. 30/60/90-day rolling statistics for batters and pitchers.';
+
+
+--
+-- Name: sequential_features; Type: TABLE; Schema: features_pitch; Owner: -
+--
+
+CREATE TABLE features_pitch.sequential_features (
+    sequence_id bigint NOT NULL,
+    pa_id bigint,
+    game_pk integer NOT NULL,
+    at_bat_number integer NOT NULL,
+    batter_id integer,
+    pitcher_id integer,
+    game_year smallint,
+    sequence_position smallint,
+    total_pa_pitches smallint,
+    pitches_before smallint,
+    pitches_after smallint,
+    pitch_id bigint,
+    window_2pitch jsonb,
+    window_3pitch jsonb,
+    window_5pitch jsonb,
+    full_pa_sequence jsonb,
+    pitch_type_sequence character varying[],
+    velocity_sequence real[],
+    result_sequence character varying[],
+    pitches_since_last_fastball smallint,
+    pitches_since_last_breaking smallint,
+    pitches_since_last_offspeed smallint,
+    velocity_trend real,
+    location_variance_x real,
+    location_variance_z real,
+    location_pattern character varying(20),
+    is_fastball_setup boolean,
+    is_offspeed_setup boolean,
+    count_sequence character varying[],
+    created_at timestamp without time zone DEFAULT now(),
+    sequence_version integer DEFAULT 1
+);
+
+
+--
+-- Name: TABLE sequential_features; Type: COMMENT; Schema: features_pitch; Owner: -
+--
+
+COMMENT ON TABLE features_pitch.sequential_features IS 'LSTM sequence features. Pitch sequences within plate appearances for sequence modeling.';
+
+
+--
+-- Name: sequential_features_sequence_id_seq; Type: SEQUENCE; Schema: features_pitch; Owner: -
+--
+
+CREATE SEQUENCE features_pitch.sequential_features_sequence_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: sequential_features_sequence_id_seq; Type: SEQUENCE OWNED BY; Schema: features_pitch; Owner: -
+--
+
+ALTER SEQUENCE features_pitch.sequential_features_sequence_id_seq OWNED BY features_pitch.sequential_features.sequence_id;
+
+
+--
+-- Name: simulation_states; Type: TABLE; Schema: inference; Owner: -
+--
+
+CREATE TABLE inference.simulation_states (
+    simulation_id text NOT NULL,
+    game_id text,
+    season integer,
+    inning integer,
+    is_bottom_inning boolean,
+    outs integer,
+    bases integer,
+    balls integer,
+    strikes integer,
+    home_score integer,
+    away_score integer,
+    batter_id text,
+    pitcher_id text,
+    batter_hand text,
+    pitcher_hand text,
+    batting_team_id text,
+    fielding_team_id text,
+    plate_appearances_completed integer DEFAULT 0,
+    runs_scored integer DEFAULT 0,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE simulation_states; Type: COMMENT; Schema: inference; Owner: -
+--
+
+COMMENT ON TABLE inference.simulation_states IS 'Monte Carlo simulation state storage (24 kB). Tracks simulation progress and results.';
+
+
+--
+-- Name: allstarfull; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.allstarfull (
+    "playerID" text,
+    "yearID" text,
+    "gameNum" text,
+    "gameID" text,
+    "teamID" text,
+    "lgID" text,
+    "GP" text,
+    "startingPos" text
+);
+
+
+--
+-- Name: TABLE allstarfull; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.allstarfull IS 'All-Star game rosters from Lahman (424 kB). ASG appearances by player.';
+
+
+--
+-- Name: appearances; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.appearances (
+    "yearID" text,
+    "teamID" text,
+    "lgID" text,
+    "playerID" text,
+    "G_all" text,
+    "GS" text,
+    "G_batting" text,
+    "G_defense" text,
+    "G_p" text,
+    "G_c" text,
+    "G_1b" text,
+    "G_2b" text,
+    "G_3b" text,
+    "G_ss" text,
+    "G_lf" text,
+    "G_cf" text,
+    "G_rf" text,
+    "G_of" text,
+    "G_dh" text,
+    "G_ph" text,
+    "G_pr" text
+);
+
+
+--
+-- Name: TABLE appearances; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.appearances IS 'Player game appearances from Lahman (11 MB). Games played by position.';
+
+
+--
+-- Name: batting; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.batting (
+    "playerID" text,
+    "yearID" text,
+    stint text,
+    "teamID" text,
+    "lgID" text,
+    "G" text,
+    "AB" text,
+    "R" text,
+    "H" text,
+    "2B" text,
+    "3B" text,
+    "HR" text,
+    "RBI" text,
+    "SB" text,
+    "CS" text,
+    "BB" text,
+    "SO" text,
+    "IBB" text,
+    "HBP" text,
+    "SH" text,
+    "SF" text,
+    "GIDP" text
+);
+
+
+--
+-- Name: TABLE batting; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.batting IS 'Season-level batting statistics from Lahman (12 MB). Standard batting stats by player-season.';
+
+
+--
+-- Name: battingpost; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.battingpost (
+    "yearID" text,
+    round text,
+    "playerID" text,
+    "teamID" text,
+    "lgID" text,
+    "G" text,
+    "AB" text,
+    "R" text,
+    "H" text,
+    "2B" text,
+    "3B" text,
+    "HR" text,
+    "RBI" text,
+    "SB" text,
+    "CS" text,
+    "BB" text,
+    "SO" text,
+    "IBB" text,
+    "HBP" text,
+    "SH" text,
+    "SF" text,
+    "GIDP" text
+);
+
+
+--
+-- Name: TABLE battingpost; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.battingpost IS 'Postseason batting statistics from Lahman (1.6 MB). Playoff batting stats.';
+
+
+--
+-- Name: fielding; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.fielding (
+    "playerID" text,
+    "yearID" text,
+    stint text,
+    "teamID" text,
+    "lgID" text,
+    "POS" text,
+    "G" text,
+    "GS" text,
+    "InnOuts" text,
+    "PO" text,
+    "A" text,
+    "E" text,
+    "DP" text,
+    "PB" text,
+    "WP" text,
+    "SB" text,
+    "CS" text,
+    "ZR" text
+);
+
+
+--
+-- Name: TABLE fielding; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.fielding IS 'Season-level fielding statistics from Lahman (13 MB). Fielding stats by player-season-position.';
+
+
+--
+-- Name: fieldingof; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.fieldingof (
+    "playerID" text,
+    "yearID" text,
+    stint text,
+    "Glf" text,
+    "Gcf" text,
+    "Grf" text
+);
+
+
+--
+-- Name: TABLE fieldingof; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.fieldingof IS 'Outfield fielding statistics from Lahman (752 kB). OF positional stats.';
+
+
+--
+-- Name: fieldingofsplit; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.fieldingofsplit (
+    "playerID" text,
+    "yearID" text,
+    stint text,
+    "teamID" text,
+    "lgID" text,
+    "POS" text,
+    "G" text,
+    "GS" text,
+    "InnOuts" text,
+    "PO" text,
+    "A" text,
+    "E" text,
+    "DP" text,
+    "PB" text,
+    "WP" text,
+    "SB" text,
+    "CS" text,
+    "ZR" text
+);
+
+
+--
+-- Name: TABLE fieldingofsplit; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.fieldingofsplit IS 'Outfield split position stats from Lahman (2.9 MB). Detailed OF positioning.';
+
+
+--
+-- Name: fieldingpost; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.fieldingpost (
+    "playerID" text,
+    "yearID" text,
+    "teamID" text,
+    "lgID" text,
+    round text,
+    "POS" text,
+    "G" text,
+    "GS" text,
+    "InnOuts" text,
+    "PO" text,
+    "A" text,
+    "E" text,
+    "DP" text,
+    "TP" text,
+    "PB" text,
+    "SB" text,
+    "CS" text
+);
+
+
+--
+-- Name: TABLE fieldingpost; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.fieldingpost IS 'Postseason fielding statistics from Lahman (1.3 MB). Playoff fielding stats.';
+
+
+--
+-- Name: homegames; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.homegames (
+    "year.key" text,
+    "league.key" text,
+    "team.key" text,
+    "park.key" text,
+    "span.first" text,
+    "span.last" text,
+    games text,
+    openings text,
+    attendance text
+);
+
+
+--
+-- Name: TABLE homegames; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.homegames IS 'Home game attendance from Lahman (304 kB). Games and attendance by team-park-season.';
+
+
+--
+-- Name: managers; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.managers (
+    "playerID" text,
+    "yearID" text,
+    "teamID" text,
+    "lgID" text,
+    inseason text,
+    "G" text,
+    "W" text,
+    "L" text,
+    rank text,
+    "plyrMgr" text
+);
+
+
+--
+-- Name: TABLE managers; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.managers IS 'Manager records from Lahman (288 kB). Manager assignments and records.';
+
+
+--
+-- Name: managershalf; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.managershalf (
+    "playerID" text,
+    "yearID" text,
+    "teamID" text,
+    "lgID" text,
+    inseason text,
+    half text,
+    "G" text,
+    "W" text,
+    "L" text,
+    rank text
+);
+
+
+--
+-- Name: TABLE managershalf; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.managershalf IS 'Mid-season manager changes from Lahman (16 kB). Manager transitions.';
+
+
+--
+-- Name: parks; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.parks (
+    "park.key" text,
+    "park.name" text,
+    "park.alias" text,
+    city text,
+    state text,
+    country text
+);
+
+
+--
+-- Name: TABLE parks; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.parks IS 'Ballpark information from Lahman (56 kB). Park names and locations.';
+
+
+--
+-- Name: people; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.people (
+    "playerID" text,
+    "birthYear" text,
+    "birthMonth" text,
+    "birthDay" text,
+    "birthCountry" text,
+    "birthState" text,
+    "birthCity" text,
+    "deathYear" text,
+    "deathMonth" text,
+    "deathDay" text,
+    "deathCountry" text,
+    "deathState" text,
+    "deathCity" text,
+    "nameFirst" text,
+    "nameLast" text,
+    "nameGiven" text,
+    weight text,
+    height text,
+    bats text,
+    throws text,
+    debut text,
+    "finalGame" text,
+    "retroID" text,
+    "bbrefID" text
+);
+
+
+--
+-- Name: TABLE people; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.people IS 'Player biographical data from Lahman database (3.6 MB). Names, birth dates, debut dates.';
+
+
+--
+-- Name: pitching; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.pitching (
+    "playerID" text,
+    "yearID" text,
+    stint text,
+    "teamID" text,
+    "lgID" text,
+    "W" text,
+    "L" text,
+    "G" text,
+    "GS" text,
+    "CG" text,
+    "SHO" text,
+    "SV" text,
+    "IPouts" text,
+    "H" text,
+    "ER" text,
+    "HR" text,
+    "BB" text,
+    "SO" text,
+    "BAOpp" text,
+    "ERA" text,
+    "IBB" text,
+    "WP" text,
+    "HBP" text,
+    "BK" text,
+    "BFP" text,
+    "GF" text,
+    "R" text,
+    "SH" text,
+    "SF" text,
+    "GIDP" text
+);
+
+
+--
+-- Name: TABLE pitching; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.pitching IS 'Season-level pitching statistics from Lahman (6.4 MB). Standard pitching stats by player-season.';
+
+
+--
+-- Name: pitchingpost; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.pitchingpost (
+    "playerID" text,
+    "yearID" text,
+    round text,
+    "teamID" text,
+    "lgID" text,
+    "W" text,
+    "L" text,
+    "G" text,
+    "GS" text,
+    "CG" text,
+    "SHO" text,
+    "SV" text,
+    "IPouts" text,
+    "H" text,
+    "ER" text,
+    "HR" text,
+    "BB" text,
+    "SO" text,
+    "BAOpp" text,
+    "ERA" text,
+    "IBB" text,
+    "WP" text,
+    "HBP" text,
+    "BK" text,
+    "BFP" text,
+    "GF" text,
+    "R" text,
+    "SH" text,
+    "SF" text,
+    "GIDP" text
+);
+
+
+--
+-- Name: TABLE pitchingpost; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.pitchingpost IS 'Postseason pitching statistics from Lahman (864 kB). Playoff pitching stats.';
+
+
+--
+-- Name: seriespost; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.seriespost (
+    "yearID" text,
+    round text,
+    "teamIDwinner" text,
+    "lgIDwinner" text,
+    "teamIDloser" text,
+    "lgIDloser" text,
+    wins text,
+    losses text,
+    ties text
+);
+
+
+--
+-- Name: TABLE seriespost; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.seriespost IS 'Postseason series results from Lahman (56 kB). Playoff series outcomes.';
+
+
+--
+-- Name: teams; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.teams (
+    "yearID" text,
+    "lgID" text,
+    "teamID" text,
+    "franchID" text,
+    "divID" text,
+    "Rank" text,
+    "G" text,
+    "Ghome" text,
+    "W" text,
+    "L" text,
+    "DivWin" text,
+    "WCWin" text,
+    "LgWin" text,
+    "WSWin" text,
+    "R" text,
+    "AB" text,
+    "H" text,
+    "2B" text,
+    "3B" text,
+    "HR" text,
+    "BB" text,
+    "SO" text,
+    "SB" text,
+    "CS" text,
+    "HBP" text,
+    "SF" text,
+    "RA" text,
+    "ER" text,
+    "ERA" text,
+    "CG" text,
+    "SHO" text,
+    "SV" text,
+    "IPouts" text,
+    "HA" text,
+    "HRA" text,
+    "BBA" text,
+    "SOA" text,
+    "E" text,
+    "DP" text,
+    "FP" text,
+    name text,
+    park text,
+    attendance text,
+    "BPF" text,
+    "PPF" text,
+    "teamIDBR" text,
+    "teamIDlahman45" text,
+    "teamIDretro" text
+);
+
+
+--
+-- Name: TABLE teams; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.teams IS 'Team season records from Lahman (768 kB). Team standings and totals by season.';
+
+
+--
+-- Name: teamsfranchises; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.teamsfranchises (
+    "franchID" text,
+    "franchName" text,
+    active text,
+    "NAassoc" text
+);
+
+
+--
+-- Name: TABLE teamsfranchises; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.teamsfranchises IS 'Franchise information from Lahman (16 kB). Franchise IDs and current teams.';
+
+
+--
+-- Name: teamshalf; Type: TABLE; Schema: lahman; Owner: -
+--
+
+CREATE TABLE lahman.teamshalf (
+    "yearID" text,
+    "lgID" text,
+    "teamID" text,
+    "Half" text,
+    "divID" text,
+    "DivWin" text,
+    "Rank" text,
+    "G" text,
+    "W" text,
+    "L" text
+);
+
+
+--
+-- Name: TABLE teamshalf; Type: COMMENT; Schema: lahman; Owner: -
+--
+
+COMMENT ON TABLE lahman.teamshalf IS 'Team half-season records from Lahman (16 kB). First/second half splits.';
+
+
+--
+-- Name: detected_edges; Type: TABLE; Schema: market_edges; Owner: -
+--
+
+CREATE TABLE market_edges.detected_edges (
+    detected_edge_id bigint NOT NULL,
+    prediction_id bigint NOT NULL,
+    market_price_id bigint NOT NULL,
+    detected_at timestamp with time zone DEFAULT now() NOT NULL,
+    model_probability numeric(8,7) NOT NULL,
+    market_implied_probability numeric(8,7) NOT NULL,
+    edge numeric(9,7) NOT NULL,
+    expected_value numeric(12,6),
+    assumptions jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+--
+-- Name: TABLE detected_edges; Type: COMMENT; Schema: market_edges; Owner: -
+--
+
+COMMENT ON TABLE market_edges.detected_edges IS 'Detected value opportunities. Cases where model differs significantly from market.';
+
+
+--
+-- Name: detected_edges_detected_edge_id_seq; Type: SEQUENCE; Schema: market_edges; Owner: -
+--
+
+CREATE SEQUENCE market_edges.detected_edges_detected_edge_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: detected_edges_detected_edge_id_seq; Type: SEQUENCE OWNED BY; Schema: market_edges; Owner: -
+--
+
+ALTER SEQUENCE market_edges.detected_edges_detected_edge_id_seq OWNED BY market_edges.detected_edges.detected_edge_id;
+
+
+--
+-- Name: market_prices; Type: TABLE; Schema: market_edges; Owner: -
+--
+
+CREATE TABLE market_edges.market_prices (
+    market_price_id bigint NOT NULL,
+    venue text NOT NULL,
+    market_id text NOT NULL,
+    target_id text,
+    observed_at timestamp with time zone DEFAULT now() NOT NULL,
+    side text NOT NULL,
+    bid_price numeric(10,6),
+    ask_price numeric(10,6),
+    implied_probability numeric(8,7),
+    liquidity jsonb DEFAULT '{}'::jsonb NOT NULL,
+    settlement_rules text,
+    raw_snapshot_id bigint,
+    CONSTRAINT market_prices_probability_check CHECK (((implied_probability IS NULL) OR ((implied_probability >= (0)::numeric) AND (implied_probability <= (1)::numeric))))
+);
+
+
+--
+-- Name: TABLE market_prices; Type: COMMENT; Schema: market_edges; Owner: -
+--
+
+COMMENT ON TABLE market_edges.market_prices IS 'Prediction market odds and prices. Market data for comparison with model predictions.';
+
+
+--
+-- Name: market_prices_market_price_id_seq; Type: SEQUENCE; Schema: market_edges; Owner: -
+--
+
+CREATE SEQUENCE market_edges.market_prices_market_price_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: market_prices_market_price_id_seq; Type: SEQUENCE OWNED BY; Schema: market_edges; Owner: -
+--
+
+ALTER SEQUENCE market_edges.market_prices_market_price_id_seq OWNED BY market_edges.market_prices.market_price_id;
+
+
+--
+-- Name: column_dictionary; Type: TABLE; Schema: metadata; Owner: -
+--
+
+CREATE TABLE metadata.column_dictionary (
+    column_id bigint NOT NULL,
+    table_id bigint,
+    column_name text NOT NULL,
+    column_description text NOT NULL,
+    data_type text NOT NULL,
+    is_nullable boolean DEFAULT true,
+    is_primary_key boolean DEFAULT false,
+    is_foreign_key boolean DEFAULT false,
+    ai_hints text[],
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE column_dictionary; Type: COMMENT; Schema: metadata; Owner: -
+--
+
+COMMENT ON TABLE metadata.column_dictionary IS 'Column metadata and definitions (1.5 MB). Documents all columns with data types and descriptions.';
+
+
+--
+-- Name: column_dictionary_column_id_seq; Type: SEQUENCE; Schema: metadata; Owner: -
+--
+
+CREATE SEQUENCE metadata.column_dictionary_column_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: column_dictionary_column_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: -
+--
+
+ALTER SEQUENCE metadata.column_dictionary_column_id_seq OWNED BY metadata.column_dictionary.column_id;
+
+
+--
+-- Name: table_dictionary; Type: TABLE; Schema: metadata; Owner: -
+--
+
+CREATE TABLE metadata.table_dictionary (
+    table_id bigint NOT NULL,
+    schemaname text NOT NULL,
+    tablename text NOT NULL,
+    table_description text NOT NULL,
+    row_count bigint DEFAULT 0,
+    last_analyzed timestamp with time zone,
+    is_active boolean DEFAULT true,
+    priority_level integer DEFAULT 3,
+    ai_hints text[],
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE table_dictionary; Type: COMMENT; Schema: metadata; Owner: -
+--
+
+COMMENT ON TABLE metadata.table_dictionary IS 'Table metadata and descriptions (144 kB). Documents all tables with descriptions and purposes.';
+
+
+--
+-- Name: table_dictionary_table_id_seq; Type: SEQUENCE; Schema: metadata; Owner: -
+--
+
+CREATE SEQUENCE metadata.table_dictionary_table_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: table_dictionary_table_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: -
+--
+
+ALTER SEQUENCE metadata.table_dictionary_table_id_seq OWNED BY metadata.table_dictionary.table_id;
+
+
+--
+-- Name: games; Type: TABLE; Schema: mlb; Owner: -
+--
+
+CREATE TABLE mlb.games (
+    game_pk integer NOT NULL,
+    game_date date NOT NULL,
+    season integer NOT NULL,
+    game_type text,
+    game_number integer,
+    day_night text,
+    scheduled_innings integer DEFAULT 9,
+    home_team_id integer NOT NULL,
+    away_team_id integer NOT NULL,
+    home_team_name text,
+    away_team_name text,
+    venue_id integer,
+    venue_name text,
+    field_condition text,
+    precipitation text,
+    sky_condition text,
+    temperature_f integer,
+    wind_speed_mph integer,
+    wind_direction integer,
+    status_code text,
+    status_description text,
+    status_abstract text,
+    status_detailed text,
+    home_plate_umpire_id integer,
+    first_base_umpire_id integer,
+    second_base_umpire_id integer,
+    third_base_umpire_id integer,
+    home_score integer DEFAULT 0,
+    away_score integer DEFAULT 0,
+    home_hits integer,
+    away_hits integer,
+    home_errors integer,
+    away_errors integer,
+    home_lob integer,
+    away_lob integer,
+    winning_team_id integer,
+    losing_team_id integer,
+    game_start_time timestamp with time zone,
+    game_end_time timestamp with time zone,
+    game_duration_minutes integer,
+    api_source text DEFAULT 'mlb_api'::text,
+    data_quality_score numeric(3,2),
+    last_updated timestamp with time zone DEFAULT now(),
+    created_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT games_away_score_check CHECK ((away_score >= 0)),
+    CONSTRAINT games_data_quality_score_check CHECK (((data_quality_score >= 0.0) AND (data_quality_score <= 1.0))),
+    CONSTRAINT games_home_score_check CHECK ((home_score >= 0)),
+    CONSTRAINT games_season_check CHECK ((season >= 2000))
+);
+
+
+--
+-- Name: TABLE games; Type: COMMENT; Schema: mlb; Owner: -
+--
+
+COMMENT ON TABLE mlb.games IS 'MLB API game records (12 MB). Games from MLB Stats API with metadata and outcomes.';
+
+
+--
+-- Name: play_events; Type: TABLE; Schema: mlb; Owner: -
+--
+
+CREATE TABLE mlb.play_events (
+    game_pk integer NOT NULL,
+    event_index integer NOT NULL,
+    event_type text,
+    event_description text,
+    inning integer NOT NULL,
+    is_top_inning boolean NOT NULL,
+    balls_before integer DEFAULT 0,
+    strikes_before integer DEFAULT 0,
+    outs_before integer DEFAULT 0,
+    batter_id integer,
+    pitcher_id integer,
+    on_deck_batter_id integer,
+    in_hole_batter_id integer,
+    runner_on_1b_id integer,
+    runner_on_2b_id integer,
+    runner_on_3b_id integer,
+    event_code text,
+    event_result text,
+    is_scoring_play boolean DEFAULT false,
+    runs_batted_in integer DEFAULT 0,
+    balls_after integer,
+    strikes_after integer,
+    outs_after integer,
+    home_score_after integer,
+    away_score_after integer,
+    event_start_time timestamp with time zone,
+    event_end_time timestamp with time zone,
+    api_source text DEFAULT 'mlb_api'::text,
+    data_quality_score numeric(3,2),
+    last_updated timestamp with time zone DEFAULT now(),
+    created_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT play_events_balls_after_check CHECK (((balls_after >= 0) AND (balls_after <= 6))),
+    CONSTRAINT play_events_balls_before_check CHECK (((balls_before >= 0) AND (balls_before <= 6))),
+    CONSTRAINT play_events_inning_check CHECK (((inning >= 1) AND (inning <= 25))),
+    CONSTRAINT play_events_outs_after_check CHECK (((outs_after >= 0) AND (outs_after <= 4))),
+    CONSTRAINT play_events_outs_before_check CHECK (((outs_before >= 0) AND (outs_before <= 3))),
+    CONSTRAINT play_events_strikes_after_check CHECK (((strikes_after >= 0) AND (strikes_after <= 6))),
+    CONSTRAINT play_events_strikes_before_check CHECK (((strikes_before >= 0) AND (strikes_before <= 6)))
+);
+
+
+--
+-- Name: TABLE play_events; Type: COMMENT; Schema: mlb; Owner: -
+--
+
+COMMENT ON TABLE mlb.play_events IS 'MLB API play events (1.3 GB). Play-level data from MLB API.';
+
+
+--
+-- Name: team_name_resolution; Type: VIEW; Schema: mlb; Owner: -
+--
+
+CREATE VIEW mlb.team_name_resolution AS
+ WITH mlb_team_names AS (
+         SELECT 'New York Mets'::text AS mlb_team_name,
+            'NYN'::text AS retrosheet_team_id
+        UNION ALL
+         SELECT 'New York Mets'::text,
+            'NYN'::text
+        UNION ALL
+         SELECT 'NY Mets'::text,
+            'NYN'::text
+        UNION ALL
+         SELECT 'Mets'::text,
+            'NYN'::text
+        UNION ALL
+         SELECT 'Chicago Cubs'::text,
+            'CHN'::text
+        UNION ALL
+         SELECT 'Chicago Cubs'::text,
+            'CHN'::text
+        UNION ALL
+         SELECT 'Cubs'::text,
+            'CHN'::text
+        UNION ALL
+         SELECT 'Anaheim Angels'::text,
+            'ANA'::text
+        UNION ALL
+         SELECT 'Los Angeles Angels'::text,
+            'ANA'::text
+        UNION ALL
+         SELECT 'Los Angeles Angels of Anaheim'::text,
+            'ANA'::text
+        UNION ALL
+         SELECT 'California Angels'::text,
+            'CAL'::text
+        UNION ALL
+         SELECT 'Angels'::text,
+            'ANA'::text
+        UNION ALL
+         SELECT 'Montreal Expos'::text,
+            'MON'::text
+        UNION ALL
+         SELECT 'Washington Nationals'::text,
+            'WAS'::text
+        UNION ALL
+         SELECT 'Nationals'::text,
+            'WAS'::text
+        UNION ALL
+         SELECT 'Florida Marlins'::text,
+            'FLO'::text
+        UNION ALL
+         SELECT 'Miami Marlins'::text,
+            'MIA'::text
+        UNION ALL
+         SELECT 'Marlins'::text,
+            'MIA'::text
+        UNION ALL
+         SELECT 'Tampa Bay Devil Rays'::text,
+            'TBD'::text
+        UNION ALL
+         SELECT 'Tampa Bay Rays'::text,
+            'TBA'::text
+        UNION ALL
+         SELECT 'Rays'::text,
+            'TBA'::text
+        UNION ALL
+         SELECT 'Arizona Diamondbacks'::text,
+            'ARI'::text
+        UNION ALL
+         SELECT 'Diamondbacks'::text,
+            'ARI'::text
+        UNION ALL
+         SELECT 'Colorado Rockies'::text,
+            'COL'::text
+        UNION ALL
+         SELECT 'Rockies'::text,
+            'COL'::text
+        UNION ALL
+         SELECT 'Atlanta Braves'::text,
+            'ATL'::text
+        UNION ALL
+         SELECT 'Milwaukee Braves'::text,
+            'ML1'::text
+        UNION ALL
+         SELECT 'Boston Braves'::text,
+            'BOS'::text
+        UNION ALL
+         SELECT 'Braves'::text,
+            'ATL'::text
+        UNION ALL
+         SELECT 'St. Louis Cardinals'::text,
+            'SLN'::text
+        UNION ALL
+         SELECT 'St Louis Cardinals'::text,
+            'SLN'::text
+        UNION ALL
+         SELECT 'Cardinals'::text,
+            'SLN'::text
+        UNION ALL
+         SELECT 'Philadelphia Phillies'::text,
+            'PHI'::text
+        UNION ALL
+         SELECT 'Phillies'::text,
+            'PHI'::text
+        UNION ALL
+         SELECT 'San Francisco Giants'::text,
+            'SFN'::text
+        UNION ALL
+         SELECT 'New York Giants'::text,
+            'NY1'::text
+        UNION ALL
+         SELECT 'Giants'::text,
+            'SFN'::text
+        UNION ALL
+         SELECT 'Los Angeles Dodgers'::text,
+            'LAN'::text
+        UNION ALL
+         SELECT 'Brooklyn Dodgers'::text,
+            'BR1'::text
+        UNION ALL
+         SELECT 'Dodgers'::text,
+            'LAN'::text
+        UNION ALL
+         SELECT 'San Diego Padres'::text,
+            'SDN'::text
+        UNION ALL
+         SELECT 'Padres'::text,
+            'SDN'::text
+        UNION ALL
+         SELECT 'Colorado Rockies'::text,
+            'COL'::text
+        UNION ALL
+         SELECT 'Rockies'::text,
+            'COL'::text
+        UNION ALL
+         SELECT 'Pittsburgh Pirates'::text,
+            'PIT'::text
+        UNION ALL
+         SELECT 'Pirates'::text,
+            'PIT'::text
+        UNION ALL
+         SELECT 'Cincinnati Reds'::text,
+            'CIN'::text
+        UNION ALL
+         SELECT 'Reds'::text,
+            'CIN'::text
+        UNION ALL
+         SELECT 'Chicago White Sox'::text,
+            'CHA'::text
+        UNION ALL
+         SELECT 'White Sox'::text,
+            'CHA'::text
+        UNION ALL
+         SELECT 'Oakland Athletics'::text,
+            'OAK'::text
+        UNION ALL
+         SELECT 'Kansas City Athletics'::text,
+            'KC1'::text
+        UNION ALL
+         SELECT 'Philadelphia Athletics'::text,
+            'PHA'::text
+        UNION ALL
+         SELECT 'Athletics'::text,
+            'OAK'::text
+        UNION ALL
+         SELECT 'Baltimore Orioles'::text,
+            'BAL'::text
+        UNION ALL
+         SELECT 'St. Louis Browns'::text,
+            'SLA'::text
+        UNION ALL
+         SELECT 'Orioles'::text,
+            'BAL'::text
+        UNION ALL
+         SELECT 'Boston Red Sox'::text,
+            'BOS'::text
+        UNION ALL
+         SELECT 'Red Sox'::text,
+            'BOS'::text
+        UNION ALL
+         SELECT 'Toronto Blue Jays'::text,
+            'TOR'::text
+        UNION ALL
+         SELECT 'Blue Jays'::text,
+            'TOR'::text
+        UNION ALL
+         SELECT 'Seattle Mariners'::text,
+            'SEA'::text
+        UNION ALL
+         SELECT 'Mariners'::text,
+            'SEA'::text
+        UNION ALL
+         SELECT 'Kansas City Royals'::text,
+            'KCA'::text
+        UNION ALL
+         SELECT 'Royals'::text,
+            'KCA'::text
+        UNION ALL
+         SELECT 'Minnesota Twins'::text,
+            'MIN'::text
+        UNION ALL
+         SELECT 'Washington Senators'::text,
+            'WS1'::text
+        UNION ALL
+         SELECT 'Twins'::text,
+            'MIN'::text
+        UNION ALL
+         SELECT 'Cleveland Indians'::text,
+            'CLE'::text
+        UNION ALL
+         SELECT 'Cleveland Guardians'::text,
+            'CLE'::text
+        UNION ALL
+         SELECT 'Indians'::text,
+            'CLE'::text
+        UNION ALL
+         SELECT 'Guardians'::text,
+            'CLE'::text
+        UNION ALL
+         SELECT 'Detroit Tigers'::text,
+            'DET'::text
+        UNION ALL
+         SELECT 'Tigers'::text,
+            'DET'::text
+        UNION ALL
+         SELECT 'Houston Astros'::text,
+            'HOU'::text
+        UNION ALL
+         SELECT 'Houston Colt .45s'::text,
+            'HOU'::text
+        UNION ALL
+         SELECT 'Astros'::text,
+            'HOU'::text
+        UNION ALL
+         SELECT 'Milwaukee Brewers'::text,
+            'MIL'::text
+        UNION ALL
+         SELECT 'Seattle Pilots'::text,
+            'SE1'::text
+        UNION ALL
+         SELECT 'Brewers'::text,
+            'MIL'::text
+        UNION ALL
+         SELECT 'Texas Rangers'::text,
+            'TEX'::text
+        UNION ALL
+         SELECT 'Washington Senators'::text,
+            'WS2'::text
+        UNION ALL
+         SELECT 'Rangers'::text,
+            'TEX'::text
+        )
+ SELECT m.mlb_team_name,
+    m.retrosheet_team_id,
+    t.first_season,
+    t.last_season,
+    t.city,
+    t.nickname,
+    t.team_name
+   FROM (mlb_team_names m
+     JOIN core.teams t ON ((m.retrosheet_team_id = t.retrosheet_team_id)));
+
+
+--
+-- Name: VIEW team_name_resolution; Type: COMMENT; Schema: mlb; Owner: -
+--
+
+COMMENT ON VIEW mlb.team_name_resolution IS 'Maps MLB API team names to Retrosheet team IDs with temporal support from core.teams';
+
+
+--
+-- Name: teams; Type: TABLE; Schema: mlb; Owner: -
+--
+
+CREATE TABLE mlb.teams (
+    mlb_id integer NOT NULL,
+    retrosheet_id text,
+    team_name text NOT NULL,
+    team_code text,
+    location_name text,
+    league_id integer,
+    league_name text,
+    division_id integer,
+    division_name text,
+    venue_id integer,
+    venue_name text,
+    active boolean DEFAULT true,
+    first_year integer,
+    last_year integer,
+    api_source text DEFAULT 'mlb_api'::text,
+    last_updated timestamp with time zone DEFAULT now(),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE teams; Type: COMMENT; Schema: mlb; Owner: -
+--
+
+COMMENT ON TABLE mlb.teams IS 'MLB API team records (72 kB). Team data from MLB API.';
+
+
+--
+-- Name: batter_pitcher_history; Type: TABLE; Schema: mlb_enhanced; Owner: -
+--
+
+CREATE TABLE mlb_enhanced.batter_pitcher_history (
+    batter_id text NOT NULL,
+    pitcher_id text NOT NULL,
+    season integer NOT NULL,
+    total_pa integer DEFAULT 0,
+    hits integer DEFAULT 0,
+    home_runs integer DEFAULT 0,
+    walks integer DEFAULT 0,
+    strikeouts integer DEFAULT 0,
+    avg numeric(4,3),
+    slg numeric(4,3),
+    obp numeric(4,3),
+    ops numeric(4,3),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE batter_pitcher_history; Type: COMMENT; Schema: mlb_enhanced; Owner: -
+--
+
+COMMENT ON TABLE mlb_enhanced.batter_pitcher_history IS 'Historical matchup data (8.3 MB). Comprehensive batter-pitcher history for matchup models.';
+
+
+--
+-- Name: betting_features; Type: TABLE; Schema: mlb_enhanced; Owner: -
+--
+
+CREATE TABLE mlb_enhanced.betting_features (
+    game_id text,
+    event_sequence integer,
+    season integer,
+    inning integer,
+    is_bottom_inning boolean,
+    outs_before integer,
+    balls integer,
+    strikes integer,
+    score_diff integer,
+    runners_on_base integer,
+    target boolean,
+    batter_avg numeric,
+    pitcher_era numeric,
+    team_win_pct numeric,
+    pitch_velocity numeric,
+    pitch_spin_rate integer,
+    pitch_distance_from_zone numeric,
+    matchup_experience integer,
+    matchup_avg_vs_pitcher numeric,
+    matchup_slg_vs_pitcher numeric,
+    high_leverage integer,
+    close_game integer,
+    runners_on integer
+);
+
+
+--
+-- Name: TABLE betting_features; Type: COMMENT; Schema: mlb_enhanced; Owner: -
+--
+
+COMMENT ON TABLE mlb_enhanced.betting_features IS 'Features for betting models (55 MB). Features specifically engineered for prediction market models.';
+
+
+--
+-- Name: player_advanced_stats; Type: TABLE; Schema: mlb_enhanced; Owner: -
+--
+
+CREATE TABLE mlb_enhanced.player_advanced_stats (
+    player_id text NOT NULL,
+    season integer NOT NULL,
+    is_batter boolean NOT NULL,
+    avg_exit_velocity numeric(5,1),
+    avg_launch_angle numeric(4,1),
+    max_exit_velocity numeric(5,1),
+    sprint_speed numeric(4,2),
+    arm_strength text,
+    k_per_9 numeric(5,2),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE player_advanced_stats; Type: COMMENT; Schema: mlb_enhanced; Owner: -
+--
+
+COMMENT ON TABLE mlb_enhanced.player_advanced_stats IS 'Advanced player metrics (16 kB). Calculated advanced statistics beyond standard stats.';
+
+
+--
+-- Name: statcast_pitches; Type: TABLE; Schema: mlb_enhanced; Owner: -
+--
+
+CREATE TABLE mlb_enhanced.statcast_pitches (
+    game_pk bigint NOT NULL,
+    event_sequence integer NOT NULL,
+    pitch_number integer NOT NULL,
+    pitch_type_code text,
+    pitch_type_description text,
+    pitch_call_code text,
+    plate_x numeric(6,2),
+    plate_z numeric(6,2),
+    start_speed numeric(5,1),
+    spin_rate integer,
+    break_horizontal numeric(5,2),
+    break_vertical numeric(5,2),
+    extension numeric(5,3),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE statcast_pitches; Type: COMMENT; Schema: mlb_enhanced; Owner: -
+--
+
+COMMENT ON TABLE mlb_enhanced.statcast_pitches IS 'Enhanced Statcast data (633 MB). Statcast with derived metrics and classifications.';
+
+
+--
+-- Name: batter_pitcher_matchups; Type: TABLE; Schema: mlb_features; Owner: -
+--
+
+CREATE TABLE mlb_features.batter_pitcher_matchups (
+    batter_id text NOT NULL,
+    pitcher_id text NOT NULL,
+    season integer NOT NULL,
+    plate_appearances integer,
+    hits integer,
+    home_runs integer,
+    walks integer,
+    strikeouts integer,
+    avg numeric(4,3),
+    slg numeric(4,3),
+    avg_exit_velocity_vs numeric(5,1),
+    avg_launch_angle_vs numeric(4,1),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE batter_pitcher_matchups; Type: COMMENT; Schema: mlb_features; Owner: -
+--
+
+COMMENT ON TABLE mlb_features.batter_pitcher_matchups IS 'Batter-pitcher matchup stats (16 kB). Historical PA outcomes for specific matchups.';
+
+
+--
+-- Name: game_state_features; Type: TABLE; Schema: mlb_features; Owner: -
+--
+
+CREATE TABLE mlb_features.game_state_features (
+    game_id text NOT NULL,
+    event_sequence integer NOT NULL,
+    season integer NOT NULL,
+    inning integer NOT NULL,
+    is_bottom_inning boolean NOT NULL,
+    outs_before integer NOT NULL,
+    balls integer DEFAULT 0 NOT NULL,
+    strikes integer DEFAULT 0 NOT NULL,
+    score_diff integer NOT NULL,
+    runners_on_base integer DEFAULT 0 NOT NULL,
+    batter_id text,
+    pitcher_id text,
+    batting_team_id text,
+    fielding_team_id text,
+    home_team_id text,
+    away_team_id text,
+    park_id text,
+    is_home_game boolean,
+    pitch_type_code text,
+    pitch_velocity numeric(5,1),
+    pitch_spin_rate integer,
+    pitch_plate_x numeric(6,2),
+    pitch_plate_z numeric(6,2),
+    pitch_zone integer,
+    batting_team_wins boolean NOT NULL,
+    data_source text NOT NULL,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE game_state_features; Type: COMMENT; Schema: mlb_features; Owner: -
+--
+
+COMMENT ON TABLE mlb_features.game_state_features IS 'Game situation features for modeling (125 MB). Features derived from game state: inning, score, bases, outs.';
+
+
+--
+-- Name: park_factors; Type: TABLE; Schema: mlb_features; Owner: -
+--
+
+CREATE TABLE mlb_features.park_factors (
+    park_id text NOT NULL,
+    season integer NOT NULL,
+    park_factor_runs numeric(4,3),
+    park_factor_hr numeric(4,3),
+    left_field_distance integer,
+    center_field_distance integer,
+    right_field_distance integer,
+    turf_type text,
+    roof_type text,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE park_factors; Type: COMMENT; Schema: mlb_features; Owner: -
+--
+
+COMMENT ON TABLE mlb_features.park_factors IS 'Park effect factors (16 kB). Calculated park effects for run scoring and other outcomes.';
+
+
+--
+-- Name: player_season_stats; Type: TABLE; Schema: mlb_features; Owner: -
+--
+
+CREATE TABLE mlb_features.player_season_stats (
+    player_id text NOT NULL,
+    season integer NOT NULL,
+    is_batter boolean NOT NULL,
+    games_played integer,
+    plate_appearances integer,
+    at_bats integer,
+    hits integer,
+    doubles integer,
+    triples integer,
+    home_runs integer,
+    rbi integer,
+    walks integer,
+    strikeouts integer,
+    batting_avg numeric(4,3),
+    on_base_pct numeric(4,3),
+    slugging_pct numeric(4,3),
+    ops numeric(4,3),
+    games_started integer,
+    innings_pitched numeric(6,1),
+    earned_runs integer,
+    pitcher_hits_allowed integer,
+    pitcher_walks integer,
+    pitcher_strikeouts integer,
+    pitcher_home_runs integer,
+    era numeric(5,2),
+    whip numeric(4,2),
+    k_per_9 numeric(5,2),
+    avg_exit_velocity numeric(5,1),
+    avg_launch_angle numeric(4,1),
+    sprint_speed numeric(4,2),
+    arm_strength text,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE player_season_stats; Type: COMMENT; Schema: mlb_features; Owner: -
+--
+
+COMMENT ON TABLE mlb_features.player_season_stats IS 'Player season statistics (7.1 MB). Aggregated season-level stats for feature generation.';
+
+
+--
+-- Name: team_season_stats; Type: TABLE; Schema: mlb_features; Owner: -
+--
+
+CREATE TABLE mlb_features.team_season_stats (
+    team_id text NOT NULL,
+    season integer NOT NULL,
+    games_played integer,
+    wins integer,
+    losses integer,
+    win_pct numeric(4,3),
+    runs_scored integer,
+    runs_allowed integer,
+    run_differential integer,
+    recent_games integer,
+    recent_wins integer,
+    recent_win_pct numeric(4,3),
+    home_games integer,
+    home_wins integer,
+    away_games integer,
+    away_wins integer,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE team_season_stats; Type: COMMENT; Schema: mlb_features; Owner: -
+--
+
+COMMENT ON TABLE mlb_features.team_season_stats IS 'Team season statistics (16 kB). Aggregated team-level stats for feature generation.';
+
+
+--
+-- Name: win_probability_training; Type: TABLE; Schema: mlb_features; Owner: -
+--
+
+CREATE TABLE mlb_features.win_probability_training (
+    game_id text,
+    event_sequence integer,
+    season integer,
+    inning integer,
+    is_bottom_inning boolean,
+    outs_before integer,
+    balls integer,
+    strikes integer,
+    score_diff integer,
+    runners_on_base integer,
+    batter_id text,
+    pitcher_id text,
+    batting_team_id text,
+    fielding_team_id text,
+    home_team_id text,
+    away_team_id text,
+    park_id text,
+    is_home_game boolean,
+    pitch_type_code text,
+    pitch_velocity numeric(5,1),
+    pitch_spin_rate integer,
+    pitch_plate_x numeric(6,2),
+    pitch_plate_z numeric(6,2),
+    pitch_zone integer,
+    batting_team_wins boolean,
+    data_source text,
+    created_at timestamp with time zone,
+    batter_season_avg numeric(4,3),
+    pitcher_season_era numeric(5,2),
+    batting_team_win_pct numeric(4,3),
+    park_factor_runs numeric(4,3),
+    batter_vs_pitcher_avg numeric(4,3),
+    win_probability numeric(4,3)
+);
+
+
+--
+-- Name: TABLE win_probability_training; Type: COMMENT; Schema: mlb_features; Owner: -
+--
+
+COMMENT ON TABLE mlb_features.win_probability_training IS 'Win probability model training data (200 MB). Historical game states with WP labels for training.';
+
+
+--
+-- Name: win_probability_training; Type: TABLE; Schema: mlb_models; Owner: -
+--
+
+CREATE TABLE mlb_models.win_probability_training (
+    game_id text,
+    event_sequence integer,
+    season integer,
+    inning integer,
+    is_bottom_inning boolean,
+    outs_before integer,
+    balls integer,
+    strikes integer,
+    score_diff integer,
+    runners_on_base integer,
+    batting_team_wins boolean,
+    batter_avg numeric,
+    pitcher_era numeric,
+    team_win_pct numeric
+);
+
+
+--
+-- Name: TABLE win_probability_training; Type: COMMENT; Schema: mlb_models; Owner: -
+--
+
+COMMENT ON TABLE mlb_models.win_probability_training IS 'WP model training dataset (40 MB). Curated training data for win probability models.';
+
+
+--
+-- Name: win_probability_training_enhanced; Type: TABLE; Schema: mlb_models; Owner: -
+--
+
+CREATE TABLE mlb_models.win_probability_training_enhanced (
+    game_id text,
+    event_sequence integer,
+    season integer,
+    inning integer,
+    is_bottom_inning boolean,
+    outs_before integer,
+    balls integer,
+    strikes integer,
+    score_diff integer,
+    runners_on_base integer,
+    batting_team_wins boolean,
+    batter_avg numeric,
+    pitcher_era numeric,
+    team_win_pct numeric,
+    pitch_velocity numeric,
+    pitch_spin_rate integer,
+    pitch_distance_from_center numeric,
+    matchup_pa integer,
+    matchup_avg numeric,
+    matchup_slg numeric,
+    batter_exit_velocity numeric,
+    batter_launch_angle numeric,
+    batter_sprint_speed numeric,
+    pitcher_k_per_9 numeric,
+    pitcher_exit_velocity_allowed numeric
+);
+
+
+--
+-- Name: TABLE win_probability_training_enhanced; Type: COMMENT; Schema: mlb_models; Owner: -
+--
+
+COMMENT ON TABLE mlb_models.win_probability_training_enhanced IS 'Enhanced WP training dataset (61 MB). WP training data with additional engineered features.';
+
+
+--
+-- Name: model_registry_model_id_seq; Type: SEQUENCE; Schema: models; Owner: -
+--
+
+CREATE SEQUENCE models.model_registry_model_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: model_registry_model_id_seq; Type: SEQUENCE OWNED BY; Schema: models; Owner: -
+--
+
+ALTER SEQUENCE models.model_registry_model_id_seq OWNED BY models.model_registry.model_id;
+
+
+--
+-- Name: api_prediction_requests; Type: TABLE; Schema: predictions; Owner: -
+--
+
+CREATE TABLE predictions.api_prediction_requests (
+    api_request_id bigint NOT NULL,
+    request_id text NOT NULL,
+    target_id text NOT NULL,
+    model_id bigint,
+    request_params jsonb DEFAULT '{}'::jsonb NOT NULL,
+    request_context jsonb DEFAULT '{}'::jsonb NOT NULL,
+    response_status text NOT NULL,
+    response_data jsonb DEFAULT '{}'::jsonb NOT NULL,
+    error_message text,
+    request_timestamp timestamp with time zone DEFAULT now() NOT NULL,
+    response_timestamp timestamp with time zone,
+    latency_ms numeric,
+    client_ip text,
+    user_agent text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE api_prediction_requests; Type: COMMENT; Schema: predictions; Owner: -
+--
+
+COMMENT ON TABLE predictions.api_prediction_requests IS 'API prediction log (64 kB). Log of all API prediction requests.';
+
+
+--
+-- Name: api_prediction_requests_api_request_id_seq; Type: SEQUENCE; Schema: predictions; Owner: -
+--
+
+CREATE SEQUENCE predictions.api_prediction_requests_api_request_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: api_prediction_requests_api_request_id_seq; Type: SEQUENCE OWNED BY; Schema: predictions; Owner: -
+--
+
+ALTER SEQUENCE predictions.api_prediction_requests_api_request_id_seq OWNED BY predictions.api_prediction_requests.api_request_id;
+
+
+--
+-- Name: bootstrap_reports; Type: TABLE; Schema: predictions; Owner: -
+--
+
+CREATE TABLE predictions.bootstrap_reports (
+    bootstrap_report_id bigint NOT NULL,
+    target_id text NOT NULL,
+    model_id bigint NOT NULL,
+    prediction_run_id bigint,
+    report_name text NOT NULL,
+    resampling_method text NOT NULL,
+    replicates integer NOT NULL,
+    seed integer,
+    evaluation_window daterange,
+    summary jsonb DEFAULT '{}'::jsonb NOT NULL,
+    notes text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE bootstrap_reports; Type: COMMENT; Schema: predictions; Owner: -
+--
+
+COMMENT ON TABLE predictions.bootstrap_reports IS 'Bootstrap confidence intervals (88 kB). Uncertainty estimates from bootstrap sampling.';
+
+
+--
+-- Name: bootstrap_reports_bootstrap_report_id_seq; Type: SEQUENCE; Schema: predictions; Owner: -
+--
+
+CREATE SEQUENCE predictions.bootstrap_reports_bootstrap_report_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: bootstrap_reports_bootstrap_report_id_seq; Type: SEQUENCE OWNED BY; Schema: predictions; Owner: -
+--
+
+ALTER SEQUENCE predictions.bootstrap_reports_bootstrap_report_id_seq OWNED BY predictions.bootstrap_reports.bootstrap_report_id;
+
+
+--
+-- Name: calibration_reports; Type: TABLE; Schema: predictions; Owner: -
+--
+
+CREATE TABLE predictions.calibration_reports (
+    calibration_report_id bigint NOT NULL,
+    target_id text NOT NULL,
+    model_id bigint NOT NULL,
+    prediction_run_id bigint,
+    report_name text NOT NULL,
+    report_scope text NOT NULL,
+    calibration_method text NOT NULL,
+    calibration_window daterange,
+    evaluation_window daterange,
+    summary jsonb DEFAULT '{}'::jsonb NOT NULL,
+    per_class_summary jsonb DEFAULT '[]'::jsonb NOT NULL,
+    subgroup_summary jsonb DEFAULT '[]'::jsonb NOT NULL,
+    notes text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    artifact_uri text
+);
+
+
+--
+-- Name: TABLE calibration_reports; Type: COMMENT; Schema: predictions; Owner: -
+--
+
+COMMENT ON TABLE predictions.calibration_reports IS 'Model calibration data (152 kB). Calibration curves and metrics.';
+
+
+--
+-- Name: calibration_reports_calibration_report_id_seq; Type: SEQUENCE; Schema: predictions; Owner: -
+--
+
+CREATE SEQUENCE predictions.calibration_reports_calibration_report_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: calibration_reports_calibration_report_id_seq; Type: SEQUENCE OWNED BY; Schema: predictions; Owner: -
+--
+
+ALTER SEQUENCE predictions.calibration_reports_calibration_report_id_seq OWNED BY predictions.calibration_reports.calibration_report_id;
+
+
+--
+-- Name: live_pa_predictions_live_pa_prediction_id_seq; Type: SEQUENCE; Schema: predictions; Owner: -
+--
+
+CREATE SEQUENCE predictions.live_pa_predictions_live_pa_prediction_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: live_pa_predictions_live_pa_prediction_id_seq; Type: SEQUENCE OWNED BY; Schema: predictions; Owner: -
+--
+
+ALTER SEQUENCE predictions.live_pa_predictions_live_pa_prediction_id_seq OWNED BY predictions.live_pa_predictions.live_pa_prediction_id;
+
+
+--
+-- Name: pa_predictions; Type: TABLE; Schema: predictions; Owner: -
+--
+
+CREATE TABLE predictions.pa_predictions (
+    pa_prediction_id bigint NOT NULL,
+    game_id text NOT NULL,
+    plate_appearance_id integer NOT NULL,
+    target_id text NOT NULL,
+    model_id bigint NOT NULL,
+    prediction_run_id bigint,
+    feature_snapshot jsonb DEFAULT '{}'::jsonb NOT NULL,
+    state_snapshot jsonb DEFAULT '{}'::jsonb NOT NULL,
+    missing_features text[] DEFAULT '{}'::text[] NOT NULL,
+    predicted_outcome text NOT NULL,
+    predicted_probabilities jsonb DEFAULT '{}'::jsonb NOT NULL,
+    aggregated_metrics jsonb DEFAULT '{}'::jsonb NOT NULL,
+    prediction_timestamp timestamp with time zone DEFAULT now() NOT NULL,
+    is_calibrated boolean DEFAULT false NOT NULL,
+    calibration_artifact_uri text,
+    actual_outcome text,
+    outcome_timestamp timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE pa_predictions; Type: COMMENT; Schema: predictions; Owner: -
+--
+
+COMMENT ON TABLE predictions.pa_predictions IS 'Plate appearance predictions. Outcome probabilities for each PA scored by models.';
+
+
+--
+-- Name: pa_predictions_pa_prediction_id_seq; Type: SEQUENCE; Schema: predictions; Owner: -
+--
+
+CREATE SEQUENCE predictions.pa_predictions_pa_prediction_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pa_predictions_pa_prediction_id_seq; Type: SEQUENCE OWNED BY; Schema: predictions; Owner: -
+--
+
+ALTER SEQUENCE predictions.pa_predictions_pa_prediction_id_seq OWNED BY predictions.pa_predictions.pa_prediction_id;
+
+
+--
+-- Name: prediction_runs; Type: TABLE; Schema: predictions; Owner: -
+--
+
+CREATE TABLE predictions.prediction_runs (
+    prediction_run_id bigint NOT NULL,
+    target_id text NOT NULL,
+    model_id bigint,
+    run_context text NOT NULL,
+    started_at timestamp with time zone DEFAULT now() NOT NULL,
+    finished_at timestamp with time zone,
+    status text DEFAULT 'running'::text NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+--
+-- Name: TABLE prediction_runs; Type: COMMENT; Schema: predictions; Owner: -
+--
+
+COMMENT ON TABLE predictions.prediction_runs IS 'Prediction batch runs. Metadata for each prediction batch execution.';
+
+
+--
+-- Name: prediction_runs_prediction_run_id_seq; Type: SEQUENCE; Schema: predictions; Owner: -
+--
+
+CREATE SEQUENCE predictions.prediction_runs_prediction_run_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: prediction_runs_prediction_run_id_seq; Type: SEQUENCE OWNED BY; Schema: predictions; Owner: -
+--
+
+ALTER SEQUENCE predictions.prediction_runs_prediction_run_id_seq OWNED BY predictions.prediction_runs.prediction_run_id;
+
+
+--
+-- Name: prediction_targets; Type: TABLE; Schema: predictions; Owner: -
+--
+
+CREATE TABLE predictions.prediction_targets (
+    target_id text NOT NULL,
+    target_name text NOT NULL,
+    target_family text NOT NULL,
+    description text NOT NULL,
+    question_template text,
+    required_context jsonb DEFAULT '[]'::jsonb NOT NULL,
+    training_label_sql text,
+    live_resolution_rule text,
+    default_model_family text DEFAULT 'baseline'::text NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE prediction_targets; Type: COMMENT; Schema: predictions; Owner: -
+--
+
+COMMENT ON TABLE predictions.prediction_targets IS 'Prediction target definitions (72 kB). Configuration for prediction targets.';
+
+
+--
+-- Name: recent_bootstrap_reports; Type: VIEW; Schema: predictions; Owner: -
+--
+
+CREATE VIEW predictions.recent_bootstrap_reports AS
+ SELECT bootstrap_report_id,
+    created_at,
+    target_id,
+    model_id,
+    prediction_run_id,
+    report_name,
+    resampling_method,
+    replicates,
+    seed,
+    evaluation_window,
+    summary
+   FROM predictions.bootstrap_reports
+  ORDER BY created_at DESC;
+
+
+--
+-- Name: recent_calibration_reports; Type: VIEW; Schema: predictions; Owner: -
+--
+
+CREATE VIEW predictions.recent_calibration_reports AS
+ SELECT calibration_report_id,
+    created_at,
+    target_id,
+    model_id,
+    prediction_run_id,
+    report_name,
+    report_scope,
+    calibration_method,
+    calibration_window,
+    evaluation_window,
+    artifact_uri,
+    summary
+   FROM predictions.calibration_reports
+  ORDER BY created_at DESC;
+
+
+--
+-- Name: simulation_runs; Type: TABLE; Schema: predictions; Owner: -
+--
+
+CREATE TABLE predictions.simulation_runs (
+    simulation_run_id bigint NOT NULL,
+    run_name text,
+    run_mode text NOT NULL,
+    requested_at timestamp with time zone DEFAULT now() NOT NULL,
+    requested_by text,
+    filters jsonb DEFAULT '{}'::jsonb NOT NULL,
+    summary jsonb DEFAULT '{}'::jsonb NOT NULL,
+    run_distribution jsonb DEFAULT '[]'::jsonb NOT NULL,
+    sample_size integer,
+    notes text
+);
+
+
+--
+-- Name: TABLE simulation_runs; Type: COMMENT; Schema: predictions; Owner: -
+--
+
+COMMENT ON TABLE predictions.simulation_runs IS 'Monte Carlo simulation runs (88 kB). MC simulation metadata and results.';
+
+
+--
+-- Name: recent_simulation_runs; Type: VIEW; Schema: predictions; Owner: -
+--
+
+CREATE VIEW predictions.recent_simulation_runs AS
+ SELECT simulation_run_id,
+    requested_at,
+    run_name,
+    run_mode,
+    filters,
+    ((summary ->> 'historical_half_innings'::text))::integer AS historical_half_innings,
+    ((summary ->> 'expected_runs'::text))::numeric AS expected_runs,
+    ((summary ->> 'run_probability'::text))::numeric AS run_probability,
+    ((summary ->> 'all_left_handed_batters_hit_probability'::text))::numeric AS all_left_handed_batters_hit_probability,
+    sample_size,
+    notes
+   FROM predictions.simulation_runs
+  ORDER BY requested_at DESC;
+
+
+--
+-- Name: simulation_runs_simulation_run_id_seq; Type: SEQUENCE; Schema: predictions; Owner: -
+--
+
+CREATE SEQUENCE predictions.simulation_runs_simulation_run_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: simulation_runs_simulation_run_id_seq; Type: SEQUENCE OWNED BY; Schema: predictions; Owner: -
+--
+
+ALTER SEQUENCE predictions.simulation_runs_simulation_run_id_seq OWNED BY predictions.simulation_runs.simulation_run_id;
+
+
+--
+-- Name: target_probabilities; Type: TABLE; Schema: predictions; Owner: -
+--
+
+CREATE TABLE predictions.target_probabilities (
+    prediction_id bigint NOT NULL,
+    prediction_run_id bigint,
+    target_id text NOT NULL,
+    model_id bigint,
+    game_id text,
+    event_id integer,
+    predicted_at timestamp with time zone DEFAULT now() NOT NULL,
+    probability numeric(8,7) NOT NULL,
+    input_features jsonb DEFAULT '{}'::jsonb NOT NULL,
+    explanation jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT target_probabilities_probability_check CHECK (((probability >= (0)::numeric) AND (probability <= (1)::numeric)))
+);
+
+
+--
+-- Name: TABLE target_probabilities; Type: COMMENT; Schema: predictions; Owner: -
+--
+
+COMMENT ON TABLE predictions.target_probabilities IS 'Target variable probabilities. Probabilities for specific prediction targets.';
+
+
+--
+-- Name: target_probabilities_prediction_id_seq; Type: SEQUENCE; Schema: predictions; Owner: -
+--
+
+CREATE SEQUENCE predictions.target_probabilities_prediction_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: target_probabilities_prediction_id_seq; Type: SEQUENCE OWNED BY; Schema: predictions; Owner: -
+--
+
+ALTER SEQUENCE predictions.target_probabilities_prediction_id_seq OWNED BY predictions.target_probabilities.prediction_id;
+
+
+--
+-- Name: win_probabilities; Type: TABLE; Schema: predictions; Owner: -
+--
+
+CREATE TABLE predictions.win_probabilities (
+    game_id bigint NOT NULL,
+    predicted_home_win_prob double precision
+);
+
+
+--
+-- Name: TABLE win_probabilities; Type: COMMENT; Schema: predictions; Owner: -
+--
+
+COMMENT ON TABLE predictions.win_probabilities IS 'Win probability estimates. WP for each game state scored by models.';
+
+
+--
+-- Name: game_logs; Type: TABLE; Schema: raw_baseball_reference; Owner: -
+--
+
+CREATE TABLE raw_baseball_reference.game_logs (
+    game_id text NOT NULL,
+    player_id text NOT NULL,
+    team_id text,
+    game_date date,
+    age integer,
+    team text,
+    league text,
+    wins integer,
+    losses integer,
+    games integer,
+    games_started integer,
+    minutes_played numeric,
+    at_bats integer,
+    runs integer,
+    hits integer,
+    doubles integer,
+    triples integer,
+    home_runs integer,
+    rbi integer,
+    stolen_bases integer,
+    caught_stealing integer,
+    walks integer,
+    strikeouts integer,
+    batting_avg numeric,
+    on_base_pct numeric,
+    slugging_pct numeric,
+    ops numeric,
+    iso numeric,
+    hit_by_pitch integer,
+    sacrifice_hits integer,
+    sacrifice_flies integer,
+    gidp integer
+);
+
+
+--
+-- Name: TABLE game_logs; Type: COMMENT; Schema: raw_baseball_reference; Owner: -
+--
+
+COMMENT ON TABLE raw_baseball_reference.game_logs IS 'Baseball Reference game logs (16 kB). Historical game records.';
+
+
+--
+-- Name: stg_game_logs; Type: TABLE; Schema: raw_baseball_reference; Owner: -
+--
+
+CREATE TABLE raw_baseball_reference.stg_game_logs (
+    game_id text,
+    player_id text,
+    team_id text,
+    gmdate text,
+    age text,
+    tm text,
+    lg text,
+    w text,
+    l text,
+    g text,
+    gs text,
+    mp text,
+    ab text,
+    r text,
+    h text,
+    _2b text,
+    _3b text,
+    hr text,
+    rbi text,
+    sb text,
+    cs text,
+    bb text,
+    so text,
+    ba text,
+    obp text,
+    slg text,
+    ops text,
+    iso text,
+    hbp text,
+    sh text,
+    sf text,
+    gidp text
+);
+
+
+--
+-- Name: TABLE stg_game_logs; Type: COMMENT; Schema: raw_baseball_reference; Owner: -
+--
+
+COMMENT ON TABLE raw_baseball_reference.stg_game_logs IS 'BRef game logs staging. Temporary holding during ingestion.';
+
+
+--
+-- Name: batting_stats; Type: TABLE; Schema: raw_bref; Owner: -
+--
+
+CREATE TABLE raw_bref.batting_stats (
+    season integer,
+    player_id text,
+    player_name text,
+    age integer,
+    team text,
+    league text,
+    games integer,
+    at_bats integer,
+    runs integer,
+    hits integer,
+    doubles integer,
+    triples integer,
+    home_runs integer,
+    rbi integer,
+    stolen_bases integer,
+    caught_stealing integer,
+    walks integer,
+    strikeouts integer,
+    batting_avg real,
+    on_base_pct real,
+    slugging_pct real,
+    ops real
+);
+
+
+--
+-- Name: TABLE batting_stats; Type: COMMENT; Schema: raw_bref; Owner: -
+--
+
+COMMENT ON TABLE raw_bref.batting_stats IS 'Baseball Reference batting statistics (16 MB). Bref batting data.';
+
+
+--
+-- Name: pitching_stats; Type: TABLE; Schema: raw_bref; Owner: -
+--
+
+CREATE TABLE raw_bref.pitching_stats (
+    season text,
+    player_id text,
+    player_name text,
+    age text,
+    team text,
+    league text,
+    games text,
+    games_started text,
+    wins text,
+    losses text,
+    saves text,
+    innings_pitched text,
+    hits text,
+    runs text,
+    earned_runs text,
+    home_runs text,
+    walks text,
+    strikeouts text,
+    era text,
+    whip text
+);
+
+
+--
+-- Name: TABLE pitching_stats; Type: COMMENT; Schema: raw_bref; Owner: -
+--
+
+COMMENT ON TABLE raw_bref.pitching_stats IS 'Baseball Reference pitching statistics (3.2 MB). Bref pitching data.';
+
+
+--
+-- Name: game_snapshots; Type: TABLE; Schema: raw_espn; Owner: -
+--
+
+CREATE TABLE raw_espn.game_snapshots (
+    snapshot_id bigint NOT NULL,
+    game_id text NOT NULL,
+    endpoint text NOT NULL,
+    http_status integer,
+    fetched_at timestamp with time zone DEFAULT now(),
+    response_time_ms numeric,
+    raw_payload jsonb,
+    checksum text,
+    game_date date,
+    season integer
+);
+
+
+--
+-- Name: TABLE game_snapshots; Type: COMMENT; Schema: raw_espn; Owner: -
+--
+
+COMMENT ON TABLE raw_espn.game_snapshots IS 'ESPN API game data JSON (9.8 GB). Game summaries and box scores from ESPN.';
+
+
+--
+-- Name: game_snapshots_snapshot_id_seq; Type: SEQUENCE; Schema: raw_espn; Owner: -
+--
+
+CREATE SEQUENCE raw_espn.game_snapshots_snapshot_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: game_snapshots_snapshot_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_espn; Owner: -
+--
+
+ALTER SEQUENCE raw_espn.game_snapshots_snapshot_id_seq OWNED BY raw_espn.game_snapshots.snapshot_id;
+
+
+--
+-- Name: player_stats_snapshots; Type: TABLE; Schema: raw_espn; Owner: -
+--
+
+CREATE TABLE raw_espn.player_stats_snapshots (
+    snapshot_id bigint NOT NULL,
+    player_id text NOT NULL,
+    season integer NOT NULL,
+    stat_type text NOT NULL,
+    endpoint text NOT NULL,
+    http_status integer,
+    fetched_at timestamp with time zone DEFAULT now(),
+    response_time_ms numeric,
+    raw_payload jsonb,
+    checksum text
+);
+
+
+--
+-- Name: TABLE player_stats_snapshots; Type: COMMENT; Schema: raw_espn; Owner: -
+--
+
+COMMENT ON TABLE raw_espn.player_stats_snapshots IS 'ESPN API player statistics JSON (40 kB). Player-level stats.';
+
+
+--
+-- Name: player_stats_snapshots_snapshot_id_seq; Type: SEQUENCE; Schema: raw_espn; Owner: -
+--
+
+CREATE SEQUENCE raw_espn.player_stats_snapshots_snapshot_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: player_stats_snapshots_snapshot_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_espn; Owner: -
+--
+
+ALTER SEQUENCE raw_espn.player_stats_snapshots_snapshot_id_seq OWNED BY raw_espn.player_stats_snapshots.snapshot_id;
+
+
+--
+-- Name: plays_snapshots; Type: TABLE; Schema: raw_espn; Owner: -
+--
+
+CREATE TABLE raw_espn.plays_snapshots (
+    snapshot_id bigint NOT NULL,
+    game_id text NOT NULL,
+    endpoint text NOT NULL,
+    http_status integer,
+    fetched_at timestamp with time zone DEFAULT now(),
+    response_time_ms numeric,
+    raw_payload jsonb,
+    checksum text,
+    game_date date,
+    season integer
+);
+
+
+--
+-- Name: TABLE plays_snapshots; Type: COMMENT; Schema: raw_espn; Owner: -
+--
+
+COMMENT ON TABLE raw_espn.plays_snapshots IS 'ESPN API play-by-play JSON (103 MB). Structured PBP from ESPN.';
+
+
+--
+-- Name: plays_snapshots_snapshot_id_seq; Type: SEQUENCE; Schema: raw_espn; Owner: -
+--
+
+CREATE SEQUENCE raw_espn.plays_snapshots_snapshot_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: plays_snapshots_snapshot_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_espn; Owner: -
+--
+
+ALTER SEQUENCE raw_espn.plays_snapshots_snapshot_id_seq OWNED BY raw_espn.plays_snapshots.snapshot_id;
+
+
+--
+-- Name: schedule_snapshots; Type: TABLE; Schema: raw_espn; Owner: -
+--
+
+CREATE TABLE raw_espn.schedule_snapshots (
+    snapshot_id bigint NOT NULL,
+    date date NOT NULL,
+    endpoint text NOT NULL,
+    http_status integer,
+    fetched_at timestamp with time zone DEFAULT now(),
+    response_time_ms numeric,
+    raw_payload jsonb,
+    checksum text,
+    season integer
+);
+
+
+--
+-- Name: TABLE schedule_snapshots; Type: COMMENT; Schema: raw_espn; Owner: -
+--
+
+COMMENT ON TABLE raw_espn.schedule_snapshots IS 'ESPN API schedule JSON (341 MB). Game schedules with TV broadcast info.';
+
+
+--
+-- Name: schedule_snapshots_snapshot_id_seq; Type: SEQUENCE; Schema: raw_espn; Owner: -
+--
+
+CREATE SEQUENCE raw_espn.schedule_snapshots_snapshot_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: schedule_snapshots_snapshot_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_espn; Owner: -
+--
+
+ALTER SEQUENCE raw_espn.schedule_snapshots_snapshot_id_seq OWNED BY raw_espn.schedule_snapshots.snapshot_id;
+
+
+--
+-- Name: team_stats_snapshots; Type: TABLE; Schema: raw_espn; Owner: -
+--
+
+CREATE TABLE raw_espn.team_stats_snapshots (
+    snapshot_id bigint NOT NULL,
+    team_id text NOT NULL,
+    season integer NOT NULL,
+    stat_type text NOT NULL,
+    endpoint text NOT NULL,
+    http_status integer,
+    fetched_at timestamp with time zone DEFAULT now(),
+    response_time_ms numeric,
+    raw_payload jsonb,
+    checksum text
+);
+
+
+--
+-- Name: TABLE team_stats_snapshots; Type: COMMENT; Schema: raw_espn; Owner: -
+--
+
+COMMENT ON TABLE raw_espn.team_stats_snapshots IS 'ESPN API team statistics JSON (40 kB). Team-level stats.';
+
+
+--
+-- Name: team_stats_snapshots_snapshot_id_seq; Type: SEQUENCE; Schema: raw_espn; Owner: -
+--
+
+CREATE SEQUENCE raw_espn.team_stats_snapshots_snapshot_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: team_stats_snapshots_snapshot_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_espn; Owner: -
+--
+
+ALTER SEQUENCE raw_espn.team_stats_snapshots_snapshot_id_seq OWNED BY raw_espn.team_stats_snapshots.snapshot_id;
+
+
+--
+-- Name: baseball_data_com; Type: TABLE; Schema: raw_external; Owner: -
+--
+
+CREATE TABLE raw_external.baseball_data_com (
+    event_id bigint NOT NULL,
+    game_id bigint,
+    inning integer,
+    half text,
+    batter_id integer,
+    pitcher_id integer,
+    event_type text,
+    description text
+);
+
+
+--
+-- Name: TABLE baseball_data_com; Type: COMMENT; Schema: raw_external; Owner: -
+--
+
+COMMENT ON TABLE raw_external.baseball_data_com IS 'Baseball-data.com external data (16 kB). Third party data source.';
+
+
+--
+-- Name: all_star_full; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.all_star_full (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    gamenum integer NOT NULL,
+    gameid text NOT NULL,
+    teamid text,
+    lgid text,
+    gp integer,
+    startingpos integer
+);
+
+
+--
+-- Name: TABLE all_star_full; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.all_star_full IS 'Lahman All-Star data (8 fields) - ALL columns preserved';
+
+
+--
+-- Name: appearances; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.appearances (
+    yearid integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    playerid text NOT NULL,
+    g_all integer,
+    gs integer,
+    g_batting integer,
+    g_defense integer,
+    g_p integer,
+    g_c integer,
+    g_1b integer,
+    g_2b integer,
+    g_3b integer,
+    g_ss integer,
+    g_lf integer,
+    g_cf integer,
+    g_rf integer,
+    g_of integer,
+    g_dh integer,
+    g_ph integer,
+    g_pr integer
+);
+
+
+--
+-- Name: TABLE appearances; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.appearances IS 'Lahman position appearances (21 fields) - ALL columns preserved';
+
+
+--
+-- Name: awards_managers; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.awards_managers (
+    playerid text NOT NULL,
+    awardid text NOT NULL,
+    yearid integer NOT NULL,
+    lgid text NOT NULL,
+    tie text,
+    notes text
+);
+
+
+--
+-- Name: TABLE awards_managers; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.awards_managers IS 'Lahman manager awards (6 fields) - ALL columns preserved';
+
+
+--
+-- Name: awards_players; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.awards_players (
+    playerid text NOT NULL,
+    awardid text NOT NULL,
+    yearid integer NOT NULL,
+    lgid text NOT NULL,
+    tie text,
+    notes text
+);
+
+
+--
+-- Name: TABLE awards_players; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.awards_players IS 'Lahman player awards MVP/Cy Young/etc (6 fields) - ALL columns preserved';
+
+
+--
+-- Name: awards_share_managers; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.awards_share_managers (
+    awardid text NOT NULL,
+    yearid integer NOT NULL,
+    lgid text NOT NULL,
+    playerid text NOT NULL,
+    pointswon integer,
+    pointsmax integer,
+    votesfirst integer
+);
+
+
+--
+-- Name: TABLE awards_share_managers; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.awards_share_managers IS 'Lahman manager award voting (7 fields) - ALL columns preserved';
+
+
+--
+-- Name: awards_share_players; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.awards_share_players (
+    awardid text NOT NULL,
+    yearid integer NOT NULL,
+    lgid text NOT NULL,
+    playerid text NOT NULL,
+    pointswon integer,
+    pointsmax integer,
+    votesfirst integer
+);
+
+
+--
+-- Name: TABLE awards_share_players; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.awards_share_players IS 'Lahman player award voting (7 fields) - ALL columns preserved';
+
+
+--
+-- Name: batting; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.batting (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    stint integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    g integer,
+    ab integer,
+    r integer,
+    h integer,
+    _2b integer,
+    _3b integer,
+    hr integer,
+    rbi integer,
+    sb integer,
+    cs integer,
+    bb integer,
+    so integer,
+    ibb integer,
+    hbp integer,
+    sh integer,
+    sf integer,
+    gidp integer
+);
+
+
+--
+-- Name: TABLE batting; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.batting IS 'Complete Lahman batting stats (22 fields) - ALL columns preserved';
+
+
+--
+-- Name: batting_post; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.batting_post (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    round text NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    g integer,
+    ab integer,
+    r integer,
+    h integer,
+    _2b integer,
+    _3b integer,
+    hr integer,
+    rbi integer,
+    sb integer,
+    cs integer,
+    bb integer,
+    so integer,
+    ibb integer,
+    hbp integer,
+    sh integer,
+    sf integer,
+    gidp integer
+);
+
+
+--
+-- Name: TABLE batting_post; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.batting_post IS 'Lahman postseason batting (21 fields) - ALL columns preserved';
+
+
+--
+-- Name: college_playing; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.college_playing (
+    playerid text NOT NULL,
+    schoolid text NOT NULL,
+    yearid integer NOT NULL
+);
+
+
+--
+-- Name: TABLE college_playing; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.college_playing IS 'Lahman college playing (3 fields) - ALL columns preserved';
+
+
+--
+-- Name: fielding; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.fielding (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    stint integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    pos text NOT NULL,
+    g integer,
+    gs integer,
+    innouts integer,
+    po integer,
+    a integer,
+    e integer,
+    dp integer,
+    pb integer,
+    wp integer,
+    sb integer,
+    cs integer,
+    zr numeric
+);
+
+
+--
+-- Name: TABLE fielding; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.fielding IS 'Lahman fielding stats (18 fields) - ALL columns preserved';
+
+
+--
+-- Name: fielding_of; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.fielding_of (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    stint integer NOT NULL,
+    glf integer,
+    gcf integer,
+    grf integer
+);
+
+
+--
+-- Name: TABLE fielding_of; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.fielding_of IS 'Lahman OF fielding breakdown (5 fields) - ALL columns preserved';
+
+
+--
+-- Name: fielding_of_split; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.fielding_of_split (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    stint integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    pos text NOT NULL,
+    g integer,
+    gs integer,
+    innouts integer,
+    po integer,
+    a integer,
+    e integer,
+    dp integer
+);
+
+
+--
+-- Name: TABLE fielding_of_split; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.fielding_of_split IS 'Lahman OF detailed splits (12 fields) - ALL columns preserved';
+
+
+--
+-- Name: fielding_post; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.fielding_post (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    round text NOT NULL,
+    pos text NOT NULL,
+    g integer,
+    gs integer,
+    innouts integer,
+    po integer,
+    a integer,
+    e integer,
+    dp integer,
+    tp integer,
+    pb integer,
+    sb integer,
+    cs integer
+);
+
+
+--
+-- Name: TABLE fielding_post; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.fielding_post IS 'Lahman postseason fielding (17 fields) - ALL columns preserved';
+
+
+--
+-- Name: hall_of_fame; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.hall_of_fame (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    votedby text NOT NULL,
+    ballots integer,
+    needed integer,
+    votes integer,
+    inducted text,
+    category text,
+    note text
+);
+
+
+--
+-- Name: TABLE hall_of_fame; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.hall_of_fame IS 'Lahman Hall of Fame (9 fields) - ALL columns preserved';
+
+
+--
+-- Name: home_games; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.home_games (
+    yearid integer NOT NULL,
+    teamid text NOT NULL,
+    parkid text NOT NULL,
+    span_first text,
+    span_last text,
+    games integer,
+    openings integer,
+    attendance integer
+);
+
+
+--
+-- Name: TABLE home_games; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.home_games IS 'Lahman home game data (8 fields) - ALL columns preserved';
+
+
+--
+-- Name: managers; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.managers (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    inseason integer NOT NULL,
+    g integer,
+    w integer,
+    l integer,
+    rank integer,
+    plyrmgr text
+);
+
+
+--
+-- Name: TABLE managers; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.managers IS 'Lahman manager records (10 fields) - ALL columns preserved';
+
+
+--
+-- Name: managers_half; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.managers_half (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    inseason integer NOT NULL,
+    half integer NOT NULL,
+    g integer,
+    w integer,
+    l integer,
+    rank integer
+);
+
+
+--
+-- Name: TABLE managers_half; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.managers_half IS 'Lahman half-season managers (10 fields) - ALL columns preserved';
+
+
+--
+-- Name: parks; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.parks (
+    parkid text NOT NULL,
+    parkname text,
+    parkalias text,
+    city text,
+    state text,
+    country text
+);
+
+
+--
+-- Name: TABLE parks; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.parks IS 'Lahman park info (6 fields) - ALL columns preserved - CRITICAL for park context MV';
+
+
+--
+-- Name: people; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.people (
+    playerid text NOT NULL,
+    birthyear integer,
+    birthmonth integer,
+    birthday integer,
+    birthcountry text,
+    birthstate text,
+    birthcity text,
+    deathyear integer,
+    deathmonth integer,
+    deathday integer,
+    deathcountry text,
+    deathstate text,
+    deathcity text,
+    namefirst text,
+    namelast text,
+    namegiven text,
+    weight integer,
+    height integer,
+    bats text,
+    throws text,
+    debut date,
+    finalgame date,
+    retroid text,
+    bbrefid text
+);
+
+
+--
+-- Name: TABLE people; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.people IS 'Complete Lahman player master (24 fields) - ALL columns preserved';
+
+
+--
+-- Name: pitching; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.pitching (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    stint integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    w integer,
+    l integer,
+    g integer,
+    gs integer,
+    cg integer,
+    sho integer,
+    sv integer,
+    ipouts integer,
+    h integer,
+    er integer,
+    hr integer,
+    bb integer,
+    so integer,
+    baopp numeric,
+    era numeric,
+    ibb integer,
+    wp integer,
+    hbp integer,
+    bk integer,
+    bfp integer,
+    gf integer,
+    r integer,
+    sh integer,
+    sf integer,
+    gidp integer
+);
+
+
+--
+-- Name: TABLE pitching; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.pitching IS 'Complete Lahman pitching stats (30 fields) - ALL columns preserved';
+
+
+--
+-- Name: pitching_post; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.pitching_post (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    round text NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    w integer,
+    l integer,
+    g integer,
+    gs integer,
+    cg integer,
+    sho integer,
+    sv integer,
+    ipouts integer,
+    h integer,
+    er integer,
+    hr integer,
+    bb integer,
+    so integer,
+    baopp numeric,
+    era numeric,
+    ibb integer,
+    wp integer,
+    hbp integer,
+    bk integer,
+    bfp integer,
+    gf integer,
+    r integer,
+    sh integer,
+    sf integer,
+    gidp integer
+);
+
+
+--
+-- Name: TABLE pitching_post; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.pitching_post IS 'Lahman postseason pitching (30 fields) - ALL columns preserved';
+
+
+--
+-- Name: salaries; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.salaries (
+    yearid integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    playerid text NOT NULL,
+    salary integer
+);
+
+
+--
+-- Name: TABLE salaries; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.salaries IS 'Complete Lahman salaries (5 fields) - ALL columns preserved';
+
+
+--
+-- Name: schools; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.schools (
+    schoolid text NOT NULL,
+    name_full text,
+    city text,
+    state text,
+    country text
+);
+
+
+--
+-- Name: TABLE schools; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.schools IS 'Lahman schools data (5 fields) - ALL columns preserved';
+
+
+--
+-- Name: series_post; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.series_post (
+    yearid integer NOT NULL,
+    round text NOT NULL,
+    teamidwinner text NOT NULL,
+    lgidwinner text,
+    teamidloser text NOT NULL,
+    lgidloser text,
+    wins integer,
+    losses integer,
+    ties integer
+);
+
+
+--
+-- Name: TABLE series_post; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.series_post IS 'Lahman postseason series results (9 fields) - ALL columns preserved';
+
+
+--
+-- Name: stg_all_star_full; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_all_star_full (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    gamenum integer NOT NULL,
+    gameid text NOT NULL,
+    teamid text,
+    lgid text,
+    gp integer,
+    startingpos integer
+);
+
+
+--
+-- Name: stg_appearances; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_appearances (
+    yearid integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    playerid text NOT NULL,
+    g_all integer,
+    gs integer,
+    g_batting integer,
+    g_defense integer,
+    g_p integer,
+    g_c integer,
+    g_1b integer,
+    g_2b integer,
+    g_3b integer,
+    g_ss integer,
+    g_lf integer,
+    g_cf integer,
+    g_rf integer,
+    g_of integer,
+    g_dh integer,
+    g_ph integer,
+    g_pr integer
+);
+
+
+--
+-- Name: stg_awards_managers; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_awards_managers (
+    playerid text NOT NULL,
+    awardid text NOT NULL,
+    yearid integer NOT NULL,
+    lgid text NOT NULL,
+    tie text,
+    notes text
+);
+
+
+--
+-- Name: stg_awards_players; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_awards_players (
+    playerid text NOT NULL,
+    awardid text NOT NULL,
+    yearid integer NOT NULL,
+    lgid text NOT NULL,
+    tie text,
+    notes text
+);
+
+
+--
+-- Name: stg_awards_share_managers; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_awards_share_managers (
+    awardid text NOT NULL,
+    yearid integer NOT NULL,
+    lgid text NOT NULL,
+    playerid text NOT NULL,
+    pointswon integer,
+    pointsmax integer,
+    votesfirst integer
+);
+
+
+--
+-- Name: stg_awards_share_players; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_awards_share_players (
+    awardid text NOT NULL,
+    yearid integer NOT NULL,
+    lgid text NOT NULL,
+    playerid text NOT NULL,
+    pointswon integer,
+    pointsmax integer,
+    votesfirst integer
+);
+
+
+--
+-- Name: stg_batting; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_batting (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    stint integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    g integer,
+    ab integer,
+    r integer,
+    h integer,
+    _2b integer,
+    _3b integer,
+    hr integer,
+    rbi integer,
+    sb integer,
+    cs integer,
+    bb integer,
+    so integer,
+    ibb integer,
+    hbp integer,
+    sh integer,
+    sf integer,
+    gidp integer
+);
+
+
+--
+-- Name: stg_batting_post; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_batting_post (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    round text NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    g integer,
+    ab integer,
+    r integer,
+    h integer,
+    _2b integer,
+    _3b integer,
+    hr integer,
+    rbi integer,
+    sb integer,
+    cs integer,
+    bb integer,
+    so integer,
+    ibb integer,
+    hbp integer,
+    sh integer,
+    sf integer,
+    gidp integer
+);
+
+
+--
+-- Name: stg_college_playing; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_college_playing (
+    playerid text NOT NULL,
+    schoolid text NOT NULL,
+    yearid integer NOT NULL
+);
+
+
+--
+-- Name: stg_fielding; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_fielding (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    stint integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    pos text NOT NULL,
+    g integer,
+    gs integer,
+    innouts integer,
+    po integer,
+    a integer,
+    e integer,
+    dp integer,
+    pb integer,
+    wp integer,
+    sb integer,
+    cs integer,
+    zr numeric
+);
+
+
+--
+-- Name: stg_fielding_of; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_fielding_of (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    stint integer NOT NULL,
+    glf integer,
+    gcf integer,
+    grf integer
+);
+
+
+--
+-- Name: stg_fielding_of_split; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_fielding_of_split (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    stint integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    pos text NOT NULL,
+    g integer,
+    gs integer,
+    innouts integer,
+    po integer,
+    a integer,
+    e integer,
+    dp integer
+);
+
+
+--
+-- Name: stg_fielding_post; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_fielding_post (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    round text NOT NULL,
+    pos text NOT NULL,
+    g integer,
+    gs integer,
+    innouts integer,
+    po integer,
+    a integer,
+    e integer,
+    dp integer,
+    tp integer,
+    pb integer,
+    sb integer,
+    cs integer
+);
+
+
+--
+-- Name: stg_hall_of_fame; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_hall_of_fame (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    votedby text NOT NULL,
+    ballots integer,
+    needed integer,
+    votes integer,
+    inducted text,
+    category text,
+    note text
+);
+
+
+--
+-- Name: stg_home_games; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_home_games (
+    yearid integer NOT NULL,
+    teamid text NOT NULL,
+    parkid text NOT NULL,
+    span_first text,
+    span_last text,
+    games integer,
+    openings integer,
+    attendance integer
+);
+
+
+--
+-- Name: stg_managers; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_managers (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    inseason integer NOT NULL,
+    g integer,
+    w integer,
+    l integer,
+    rank integer,
+    plyrmgr text
+);
+
+
+--
+-- Name: stg_managers_half; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_managers_half (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    inseason integer NOT NULL,
+    half integer NOT NULL,
+    g integer,
+    w integer,
+    l integer,
+    rank integer
+);
+
+
+--
+-- Name: stg_parks; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_parks (
+    parkid text NOT NULL,
+    parkname text,
+    parkalias text,
+    city text,
+    state text,
+    country text
+);
+
+
+--
+-- Name: stg_people; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_people (
+    playerid text NOT NULL,
+    birthyear integer,
+    birthmonth integer,
+    birthday integer,
+    birthcountry text,
+    birthstate text,
+    birthcity text,
+    deathyear integer,
+    deathmonth integer,
+    deathday integer,
+    deathcountry text,
+    deathstate text,
+    deathcity text,
+    namefirst text,
+    namelast text,
+    namegiven text,
+    weight integer,
+    height integer,
+    bats text,
+    throws text,
+    debut date,
+    finalgame date,
+    retroid text,
+    bbrefid text
+);
+
+
+--
+-- Name: stg_pitching; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_pitching (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    stint integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    w integer,
+    l integer,
+    g integer,
+    gs integer,
+    cg integer,
+    sho integer,
+    sv integer,
+    ipouts integer,
+    h integer,
+    er integer,
+    hr integer,
+    bb integer,
+    so integer,
+    baopp numeric,
+    era numeric,
+    ibb integer,
+    wp integer,
+    hbp integer,
+    bk integer,
+    bfp integer,
+    gf integer,
+    r integer,
+    sh integer,
+    sf integer,
+    gidp integer
+);
+
+
+--
+-- Name: stg_pitching_post; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_pitching_post (
+    playerid text NOT NULL,
+    yearid integer NOT NULL,
+    round text NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    w integer,
+    l integer,
+    g integer,
+    gs integer,
+    cg integer,
+    sho integer,
+    sv integer,
+    ipouts integer,
+    h integer,
+    er integer,
+    hr integer,
+    bb integer,
+    so integer,
+    baopp numeric,
+    era numeric,
+    ibb integer,
+    wp integer,
+    hbp integer,
+    bk integer,
+    bfp integer,
+    gf integer,
+    r integer,
+    sh integer,
+    sf integer,
+    gidp integer
+);
+
+
+--
+-- Name: stg_salaries; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_salaries (
+    yearid integer NOT NULL,
+    teamid text NOT NULL,
+    lgid text,
+    playerid text NOT NULL,
+    salary integer
+);
+
+
+--
+-- Name: stg_schools; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_schools (
+    schoolid text NOT NULL,
+    name_full text,
+    city text,
+    state text,
+    country text
+);
+
+
+--
+-- Name: stg_series_post; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_series_post (
+    yearid integer NOT NULL,
+    round text NOT NULL,
+    teamidwinner text NOT NULL,
+    lgidwinner text,
+    teamidloser text NOT NULL,
+    lgidloser text,
+    wins integer,
+    losses integer,
+    ties integer
+);
+
+
+--
+-- Name: stg_teams; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_teams (
+    yearid integer NOT NULL,
+    lgid text,
+    teamid text NOT NULL,
+    franchid text,
+    divid text,
+    rank integer,
+    g integer,
+    ghome integer,
+    w integer,
+    l integer,
+    divwin text,
+    wcwin text,
+    lgwin text,
+    wswin text,
+    r integer,
+    ab integer,
+    h integer,
+    _2b integer,
+    _3b integer,
+    hr integer,
+    bb integer,
+    so integer,
+    sb integer,
+    cs integer,
+    hbp integer,
+    sf integer,
+    ra integer,
+    er integer,
+    era numeric,
+    cg integer,
+    sho integer,
+    sv integer,
+    ipouts integer,
+    ha integer,
+    hra integer,
+    bba integer,
+    soa integer,
+    e integer,
+    dp integer,
+    fp numeric,
+    name text,
+    park text,
+    attendance integer,
+    bpf integer,
+    ppf integer,
+    teamidbr text,
+    teamidlahman45 text,
+    teamidretro text
+);
+
+
+--
+-- Name: stg_teams_franchises; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_teams_franchises (
+    franchid text NOT NULL,
+    franchname text,
+    active text,
+    naassoc text
+);
+
+
+--
+-- Name: stg_teams_half; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.stg_teams_half (
+    yearid integer NOT NULL,
+    lgid text,
+    teamid text NOT NULL,
+    half integer NOT NULL,
+    divid text,
+    rank integer,
+    g integer,
+    w integer,
+    l integer
+);
+
+
+--
+-- Name: teams; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.teams (
+    yearid integer NOT NULL,
+    lgid text,
+    teamid text NOT NULL,
+    franchid text,
+    divid text,
+    rank integer,
+    g integer,
+    ghome integer,
+    w integer,
+    l integer,
+    divwin text,
+    wcwin text,
+    lgwin text,
+    wswin text,
+    r integer,
+    ab integer,
+    h integer,
+    _2b integer,
+    _3b integer,
+    hr integer,
+    bb integer,
+    so integer,
+    sb integer,
+    cs integer,
+    hbp integer,
+    sf integer,
+    ra integer,
+    er integer,
+    era numeric,
+    cg integer,
+    sho integer,
+    sv integer,
+    ipouts integer,
+    ha integer,
+    hra integer,
+    bba integer,
+    soa integer,
+    e integer,
+    dp integer,
+    fp numeric,
+    name text,
+    park text,
+    attendance integer,
+    bpf integer,
+    ppf integer,
+    teamidbr text,
+    teamidlahman45 text,
+    teamidretro text
+);
+
+
+--
+-- Name: TABLE teams; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.teams IS 'Complete Lahman team seasons (48 fields) - ALL columns preserved including BPF, PPF, BR/retro IDs';
+
+
+--
+-- Name: teams_franchises; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.teams_franchises (
+    franchid text NOT NULL,
+    franchname text,
+    active text,
+    naassoc text
+);
+
+
+--
+-- Name: TABLE teams_franchises; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.teams_franchises IS 'Lahman franchise data (4 fields) - ALL columns preserved';
+
+
+--
+-- Name: teams_half; Type: TABLE; Schema: raw_lahman; Owner: -
+--
+
+CREATE TABLE raw_lahman.teams_half (
+    yearid integer NOT NULL,
+    lgid text,
+    teamid text NOT NULL,
+    half integer NOT NULL,
+    divid text,
+    rank integer,
+    g integer,
+    w integer,
+    l integer
+);
+
+
+--
+-- Name: TABLE teams_half; Type: COMMENT; Schema: raw_lahman; Owner: -
+--
+
+COMMENT ON TABLE raw_lahman.teams_half IS 'Lahman half-season records (9 fields) - ALL columns preserved';
+
+
+--
+-- Name: market_snapshots; Type: TABLE; Schema: raw_markets; Owner: -
+--
+
+CREATE TABLE raw_markets.market_snapshots (
+    market_snapshot_id bigint NOT NULL,
+    venue text NOT NULL,
+    market_id text NOT NULL,
+    fetched_at timestamp with time zone DEFAULT now() NOT NULL,
+    payload jsonb NOT NULL
+);
+
+
+--
+-- Name: TABLE market_snapshots; Type: COMMENT; Schema: raw_markets; Owner: -
+--
+
+COMMENT ON TABLE raw_markets.market_snapshots IS 'Market data snapshots (24 kB). Historical market prices.';
+
+
+--
+-- Name: market_snapshots_market_snapshot_id_seq; Type: SEQUENCE; Schema: raw_markets; Owner: -
+--
+
+CREATE SEQUENCE raw_markets.market_snapshots_market_snapshot_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: market_snapshots_market_snapshot_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_markets; Owner: -
+--
+
+ALTER SEQUENCE raw_markets.market_snapshots_market_snapshot_id_seq OWNED BY raw_markets.market_snapshots.market_snapshot_id;
+
+
+--
+-- Name: player_stats_snapshots; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.player_stats_snapshots (
+    id integer NOT NULL,
+    season integer NOT NULL,
+    player_id bigint,
+    team_id bigint,
+    stat_type text,
+    fetched_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    http_status integer,
+    response_time_ms integer,
+    request_params jsonb,
+    payload jsonb,
+    checksum text GENERATED ALWAYS AS (md5((payload)::text)) STORED
+);
+
+
+--
+-- Name: TABLE player_stats_snapshots; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.player_stats_snapshots IS 'MLB Stats API player statistics - source-preserved JSON - ALL fields captured';
+
+
+--
+-- Name: roster_snapshots; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.roster_snapshots (
+    id integer NOT NULL,
+    team_id bigint NOT NULL,
+    season integer NOT NULL,
+    roster_type text,
+    fetched_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    http_status integer,
+    response_time_ms integer,
+    payload jsonb,
+    checksum text GENERATED ALWAYS AS (md5((payload)::text)) STORED
+);
+
+
+--
+-- Name: TABLE roster_snapshots; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.roster_snapshots IS 'MLB Stats API team rosters - source-preserved JSON - ALL fields captured';
+
+
+--
+-- Name: standings_snapshots; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.standings_snapshots (
+    id integer NOT NULL,
+    season integer NOT NULL,
+    date date,
+    league_id text,
+    division_id text,
+    fetched_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    http_status integer,
+    response_time_ms integer,
+    payload jsonb,
+    checksum text GENERATED ALWAYS AS (md5((payload)::text)) STORED
+);
+
+
+--
+-- Name: TABLE standings_snapshots; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.standings_snapshots IS 'MLB Stats API standings - source-preserved JSON - ALL fields captured';
+
+
+--
+-- Name: team_stats_snapshots; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.team_stats_snapshots (
+    id integer NOT NULL,
+    season integer NOT NULL,
+    team_id bigint,
+    stat_type text,
+    fetched_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    http_status integer,
+    response_time_ms integer,
+    request_params jsonb,
+    payload jsonb,
+    checksum text GENERATED ALWAYS AS (md5((payload)::text)) STORED
+);
+
+
+--
+-- Name: TABLE team_stats_snapshots; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.team_stats_snapshots IS 'MLB Stats API team statistics - source-preserved JSON - ALL fields captured';
+
+
+--
+-- Name: api_ref_coverage_summary; Type: VIEW; Schema: raw_mlb; Owner: -
+--
+
+CREATE VIEW raw_mlb.api_ref_coverage_summary AS
+ SELECT 'player_stats'::text AS endpoint,
+    count(*) AS snapshots,
+    count(DISTINCT player_stats_snapshots.player_id) AS unique_players,
+    max(player_stats_snapshots.fetched_at) AS last_fetch
+   FROM raw_mlb.player_stats_snapshots
+  WHERE (player_stats_snapshots.http_status = 200)
+UNION ALL
+ SELECT 'team_stats'::text AS endpoint,
+    count(*) AS snapshots,
+    count(DISTINCT team_stats_snapshots.team_id) AS unique_players,
+    max(team_stats_snapshots.fetched_at) AS last_fetch
+   FROM raw_mlb.team_stats_snapshots
+  WHERE (team_stats_snapshots.http_status = 200)
+UNION ALL
+ SELECT 'standings'::text AS endpoint,
+    count(*) AS snapshots,
+    NULL::bigint AS unique_players,
+    max(standings_snapshots.fetched_at) AS last_fetch
+   FROM raw_mlb.standings_snapshots
+  WHERE (standings_snapshots.http_status = 200)
+UNION ALL
+ SELECT 'rosters'::text AS endpoint,
+    count(*) AS snapshots,
+    count(DISTINCT roster_snapshots.team_id) AS unique_players,
+    max(roster_snapshots.fetched_at) AS last_fetch
+   FROM raw_mlb.roster_snapshots
+  WHERE (roster_snapshots.http_status = 200);
+
+
+--
+-- Name: VIEW api_ref_coverage_summary; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON VIEW raw_mlb.api_ref_coverage_summary IS 'Monitoring view for reference data MLB API endpoints';
+
+
+--
+-- Name: boxscore_snapshots; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.boxscore_snapshots (
+    id integer NOT NULL,
+    mlb_game_pk bigint NOT NULL,
+    game_date date,
+    fetched_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    http_status integer,
+    response_time_ms integer,
+    payload jsonb,
+    checksum text GENERATED ALWAYS AS (md5((payload)::text)) STORED
+);
+
+
+--
+-- Name: TABLE boxscore_snapshots; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.boxscore_snapshots IS 'MLB Stats API boxscore data - source-preserved JSON - ALL fields captured';
+
+
+--
+-- Name: boxscore_snapshots_id_seq; Type: SEQUENCE; Schema: raw_mlb; Owner: -
+--
+
+CREATE SEQUENCE raw_mlb.boxscore_snapshots_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: boxscore_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_mlb; Owner: -
+--
+
+ALTER SEQUENCE raw_mlb.boxscore_snapshots_id_seq OWNED BY raw_mlb.boxscore_snapshots.id;
+
+
+--
+-- Name: gameday_xml; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.gameday_xml (
+    game_date date NOT NULL,
+    game_pk bigint NOT NULL,
+    xml_payload text,
+    fetched_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: TABLE gameday_xml; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.gameday_xml IS 'Gameday XML data from MLB (16 kB). Legacy XML format feeds.';
+
+
+--
+-- Name: gameday_xml_snapshots; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.gameday_xml_snapshots (
+    id integer NOT NULL,
+    mlb_game_pk bigint NOT NULL,
+    game_date date,
+    xml_type text NOT NULL,
+    fetched_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    http_status integer,
+    response_time_ms integer,
+    payload xml,
+    checksum text
+);
+
+
+--
+-- Name: TABLE gameday_xml_snapshots; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.gameday_xml_snapshots IS 'MLB Gameday XML data - source-preserved - ALL XML captured';
+
+
+--
+-- Name: gameday_xml_snapshots_id_seq; Type: SEQUENCE; Schema: raw_mlb; Owner: -
+--
+
+CREATE SEQUENCE raw_mlb.gameday_xml_snapshots_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: gameday_xml_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_mlb; Owner: -
+--
+
+ALTER SEQUENCE raw_mlb.gameday_xml_snapshots_id_seq OWNED BY raw_mlb.gameday_xml_snapshots.id;
+
+
+--
+-- Name: live_feed_snapshots; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.live_feed_snapshots (
+    snapshot_id bigint NOT NULL,
+    game_pk bigint NOT NULL,
+    fetched_at timestamp with time zone DEFAULT now() NOT NULL,
+    endpoint text NOT NULL,
+    payload jsonb NOT NULL,
+    request_params jsonb,
+    http_status integer,
+    error_text text,
+    payload_checksum text,
+    game_date date,
+    season integer,
+    response_time_ms integer
+);
+
+
+--
+-- Name: TABLE live_feed_snapshots; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.live_feed_snapshots IS 'Live game feed JSON snapshots from MLB Stats API (16 GB). Captured during games for real-time analysis.';
+
+
+--
+-- Name: COLUMN live_feed_snapshots.game_pk; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.live_feed_snapshots.game_pk IS 'MLB game primary key';
+
+
+--
+-- Name: COLUMN live_feed_snapshots.endpoint; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.live_feed_snapshots.endpoint IS 'API endpoint used to fetch data';
+
+
+--
+-- Name: COLUMN live_feed_snapshots.payload; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.live_feed_snapshots.payload IS 'Full JSON response from MLB API';
+
+
+--
+-- Name: COLUMN live_feed_snapshots.request_params; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.live_feed_snapshots.request_params IS 'Normalized request parameters used for the fetch';
+
+
+--
+-- Name: COLUMN live_feed_snapshots.http_status; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.live_feed_snapshots.http_status IS 'HTTP status code returned by the MLB API';
+
+
+--
+-- Name: COLUMN live_feed_snapshots.error_text; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.live_feed_snapshots.error_text IS 'Error captured during fetch when a request fails or returns unexpected content';
+
+
+--
+-- Name: COLUMN live_feed_snapshots.payload_checksum; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.live_feed_snapshots.payload_checksum IS 'Checksum for payload-level deduping and replay audit';
+
+
+--
+-- Name: COLUMN live_feed_snapshots.game_date; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.live_feed_snapshots.game_date IS 'Game date parsed from the MLB payload when available';
+
+
+--
+-- Name: COLUMN live_feed_snapshots.season; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.live_feed_snapshots.season IS 'Season parsed from the MLB payload when available';
+
+
+--
+-- Name: latest_live_feed_snapshot; Type: VIEW; Schema: raw_mlb; Owner: -
+--
+
+CREATE VIEW raw_mlb.latest_live_feed_snapshot AS
+ SELECT DISTINCT ON (game_pk) snapshot_id,
+    game_pk,
+    fetched_at,
+    endpoint,
+    payload
+   FROM raw_mlb.live_feed_snapshots
+  ORDER BY game_pk, fetched_at DESC;
+
+
+--
+-- Name: live_feed_snapshots_snapshot_id_seq; Type: SEQUENCE; Schema: raw_mlb; Owner: -
+--
+
+CREATE SEQUENCE raw_mlb.live_feed_snapshots_snapshot_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: live_feed_snapshots_snapshot_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_mlb; Owner: -
+--
+
+ALTER SEQUENCE raw_mlb.live_feed_snapshots_snapshot_id_seq OWNED BY raw_mlb.live_feed_snapshots.snapshot_id;
+
+
+--
+-- Name: pitch_metrics_snapshots; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.pitch_metrics_snapshots (
+    id integer NOT NULL,
+    mlb_game_pk bigint NOT NULL,
+    game_date date,
+    fetched_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    http_status integer,
+    response_time_ms integer,
+    payload jsonb,
+    checksum text GENERATED ALWAYS AS (md5((payload)::text)) STORED
+);
+
+
+--
+-- Name: TABLE pitch_metrics_snapshots; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.pitch_metrics_snapshots IS 'MLB Stats API pitch metrics - source-preserved JSON - ALL fields captured';
+
+
+--
+-- Name: pitch_metrics_snapshots_id_seq; Type: SEQUENCE; Schema: raw_mlb; Owner: -
+--
+
+CREATE SEQUENCE raw_mlb.pitch_metrics_snapshots_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pitch_metrics_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_mlb; Owner: -
+--
+
+ALTER SEQUENCE raw_mlb.pitch_metrics_snapshots_id_seq OWNED BY raw_mlb.pitch_metrics_snapshots.id;
+
+
+--
+-- Name: play_by_play_snapshots; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.play_by_play_snapshots (
+    id integer NOT NULL,
+    mlb_game_pk bigint NOT NULL,
+    game_date date,
+    fetched_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    http_status integer,
+    response_time_ms integer,
+    payload jsonb,
+    checksum text GENERATED ALWAYS AS (md5((payload)::text)) STORED
+);
+
+
+--
+-- Name: TABLE play_by_play_snapshots; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.play_by_play_snapshots IS 'MLB Stats API play-by-play - source-preserved JSON - ALL fields captured';
+
+
+--
+-- Name: play_by_play_snapshots_id_seq; Type: SEQUENCE; Schema: raw_mlb; Owner: -
+--
+
+CREATE SEQUENCE raw_mlb.play_by_play_snapshots_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: play_by_play_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_mlb; Owner: -
+--
+
+ALTER SEQUENCE raw_mlb.play_by_play_snapshots_id_seq OWNED BY raw_mlb.play_by_play_snapshots.id;
+
+
+--
+-- Name: player_stats_snapshots_id_seq; Type: SEQUENCE; Schema: raw_mlb; Owner: -
+--
+
+CREATE SEQUENCE raw_mlb.player_stats_snapshots_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: player_stats_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_mlb; Owner: -
+--
+
+ALTER SEQUENCE raw_mlb.player_stats_snapshots_id_seq OWNED BY raw_mlb.player_stats_snapshots.id;
+
+
+--
+-- Name: reference_snapshots_snapshot_id_seq; Type: SEQUENCE; Schema: raw_mlb; Owner: -
+--
+
+CREATE SEQUENCE raw_mlb.reference_snapshots_snapshot_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: reference_snapshots_snapshot_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_mlb; Owner: -
+--
+
+ALTER SEQUENCE raw_mlb.reference_snapshots_snapshot_id_seq OWNED BY raw_mlb.reference_snapshots.snapshot_id;
+
+
+--
+-- Name: roster_snapshots_id_seq; Type: SEQUENCE; Schema: raw_mlb; Owner: -
+--
+
+CREATE SEQUENCE raw_mlb.roster_snapshots_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: roster_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_mlb; Owner: -
+--
+
+ALTER SEQUENCE raw_mlb.roster_snapshots_id_seq OWNED BY raw_mlb.roster_snapshots.id;
+
+
+--
+-- Name: schedule_snapshots; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.schedule_snapshots (
+    snapshot_id bigint NOT NULL,
+    snapshot_date date NOT NULL,
+    fetched_at timestamp with time zone DEFAULT now() NOT NULL,
+    endpoint text NOT NULL,
+    payload jsonb NOT NULL,
+    request_params jsonb,
+    http_status integer,
+    response_time_ms integer,
+    error_text text
+);
+
+
+--
+-- Name: TABLE schedule_snapshots; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.schedule_snapshots IS 'Game schedule JSON from MLB API (36 MB). Daily schedule with game times and matchups.';
+
+
+--
+-- Name: COLUMN schedule_snapshots.snapshot_date; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.schedule_snapshots.snapshot_date IS 'Date covered by the schedule payload';
+
+
+--
+-- Name: COLUMN schedule_snapshots.endpoint; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.schedule_snapshots.endpoint IS 'API endpoint used to fetch the schedule payload';
+
+
+--
+-- Name: COLUMN schedule_snapshots.payload; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.schedule_snapshots.payload IS 'Full JSON response from MLB schedule API';
+
+
+--
+-- Name: COLUMN schedule_snapshots.request_params; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.schedule_snapshots.request_params IS 'Normalized request parameters used for the fetch';
+
+
+--
+-- Name: COLUMN schedule_snapshots.http_status; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.schedule_snapshots.http_status IS 'HTTP status code returned by the MLB API';
+
+
+--
+-- Name: COLUMN schedule_snapshots.error_text; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON COLUMN raw_mlb.schedule_snapshots.error_text IS 'Error captured during fetch when a request fails or returns unexpected content';
+
+
+--
+-- Name: schedule_snapshots_snapshot_id_seq; Type: SEQUENCE; Schema: raw_mlb; Owner: -
+--
+
+CREATE SEQUENCE raw_mlb.schedule_snapshots_snapshot_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: schedule_snapshots_snapshot_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_mlb; Owner: -
+--
+
+ALTER SEQUENCE raw_mlb.schedule_snapshots_snapshot_id_seq OWNED BY raw_mlb.schedule_snapshots.snapshot_id;
+
+
+--
+-- Name: standings_snapshots_id_seq; Type: SEQUENCE; Schema: raw_mlb; Owner: -
+--
+
+CREATE SEQUENCE raw_mlb.standings_snapshots_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: standings_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_mlb; Owner: -
+--
+
+ALTER SEQUENCE raw_mlb.standings_snapshots_id_seq OWNED BY raw_mlb.standings_snapshots.id;
+
+
+--
+-- Name: stg_statcast; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.stg_statcast (
+    pitch_type text,
+    game_date text,
+    release_speed text,
+    release_pos_x text,
+    release_pos_z text,
+    player_name text,
+    batter text,
+    pitcher text,
+    events text,
+    description text,
+    spin_dir text,
+    spin_rate_deprecated text,
+    break_angle_deprecated text,
+    break_length_deprecated text,
+    zone text,
+    des text,
+    game_type text,
+    stand text,
+    p_throws text,
+    home_team text,
+    away_team text,
+    type text,
+    hit_location text,
+    bb_type text,
+    balls text,
+    strikes text,
+    game_year text,
+    pfx_x text,
+    pfx_z text,
+    plate_x text,
+    plate_z text,
+    on_3b text,
+    on_2b text,
+    on_1b text,
+    outs_when_up text,
+    inning text,
+    inning_topbot text,
+    hc_x text,
+    hc_y text,
+    tfs_deprecated text,
+    tfs_zulu_deprecated text,
+    umpire text,
+    sv_id text,
+    vx0 text,
+    vy0 text,
+    vz0 text,
+    ax text,
+    ay text,
+    az text,
+    sz_top text,
+    sz_bot text,
+    hit_distance_sc text,
+    launch_speed text,
+    launch_angle text,
+    effective_speed text,
+    release_spin_rate text,
+    release_extension text,
+    game_pk text,
+    fielder_2 text,
+    fielder_3 text,
+    fielder_4 text,
+    fielder_5 text,
+    fielder_6 text,
+    fielder_7 text,
+    fielder_8 text,
+    fielder_9 text,
+    release_pos_y text,
+    estimated_ba_using_speedangle text,
+    estimated_woba_using_speedangle text,
+    woba_value text,
+    woba_denom text,
+    babip_value text,
+    iso_value text,
+    launch_speed_angle text,
+    at_bat_number text,
+    pitch_number text,
+    pitch_name text,
+    home_score text,
+    away_score text,
+    bat_score text,
+    fld_score text,
+    post_away_score text,
+    post_home_score text,
+    post_bat_score text,
+    post_fld_score text,
+    if_fielding_alignment text,
+    of_fielding_alignment text,
+    spin_axis text,
+    delta_home_win_exp text,
+    delta_run_exp text,
+    bat_speed text,
+    swing_length text,
+    estimated_slg_using_speedangle text,
+    delta_pitcher_run_exp text,
+    hyper_speed text,
+    home_score_diff text,
+    bat_score_diff text,
+    home_win_exp text,
+    bat_win_exp text,
+    age_pit_legacy text,
+    age_bat_legacy text,
+    age_pit text,
+    age_bat text,
+    n_thruorder_pitcher text,
+    n_priorpa_thisgame_player_at_bat text,
+    pitcher_days_since_prev_game text,
+    batter_days_since_prev_game text,
+    pitcher_days_until_next_game text,
+    batter_days_until_next_game text,
+    api_break_z_with_gravity text,
+    api_break_x_arm text,
+    api_break_x_batter_in text,
+    arm_angle text,
+    attack_angle text,
+    attack_direction text,
+    swing_path_tilt text,
+    intercept_ball_minus_batter_pos_x_inches text,
+    intercept_ball_minus_batter_pos_y_inches text
+);
+
+
+--
+-- Name: TABLE stg_statcast; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.stg_statcast IS 'Staging table for Statcast data ingestion (510 MB). Temporary holding before validation.';
+
+
+--
+-- Name: team_stats_snapshots_id_seq; Type: SEQUENCE; Schema: raw_mlb; Owner: -
+--
+
+CREATE SEQUENCE raw_mlb.team_stats_snapshots_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: team_stats_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_mlb; Owner: -
+--
+
+ALTER SEQUENCE raw_mlb.team_stats_snapshots_id_seq OWNED BY raw_mlb.team_stats_snapshots.id;
+
+
+--
+-- Name: win_probability_snapshots; Type: TABLE; Schema: raw_mlb; Owner: -
+--
+
+CREATE TABLE raw_mlb.win_probability_snapshots (
+    id integer NOT NULL,
+    mlb_game_pk bigint NOT NULL,
+    game_date date,
+    fetched_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    http_status integer,
+    response_time_ms integer,
+    payload jsonb,
+    checksum text GENERATED ALWAYS AS (md5((payload)::text)) STORED
+);
+
+
+--
+-- Name: TABLE win_probability_snapshots; Type: COMMENT; Schema: raw_mlb; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb.win_probability_snapshots IS 'MLB Stats API win probability - source-preserved JSON - ALL fields captured';
+
+
+--
+-- Name: win_probability_snapshots_id_seq; Type: SEQUENCE; Schema: raw_mlb; Owner: -
+--
+
+CREATE SEQUENCE raw_mlb.win_probability_snapshots_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: win_probability_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_mlb; Owner: -
+--
+
+ALTER SEQUENCE raw_mlb.win_probability_snapshots_id_seq OWNED BY raw_mlb.win_probability_snapshots.id;
+
+
+--
+-- Name: roster_snapshots; Type: TABLE; Schema: raw_mlb_rosters; Owner: -
+--
+
+CREATE TABLE raw_mlb_rosters.roster_snapshots (
+    snapshot_date date NOT NULL,
+    team_id text NOT NULL,
+    json_payload jsonb
+);
+
+
+--
+-- Name: TABLE roster_snapshots; Type: COMMENT; Schema: raw_mlb_rosters; Owner: -
+--
+
+COMMENT ON TABLE raw_mlb_rosters.roster_snapshots IS 'MLB roster snapshots (208 kB). Team roster data by date.';
+
+
+--
+-- Name: factors; Type: TABLE; Schema: raw_park_factors; Owner: -
+--
+
+CREATE TABLE raw_park_factors.factors (
+    season integer NOT NULL,
+    park_id text NOT NULL,
+    park_name text,
+    runs_factor real,
+    home_runs_factor real,
+    slugging_factor real
+);
+
+
+--
+-- Name: TABLE factors; Type: COMMENT; Schema: raw_park_factors; Owner: -
+--
+
+COMMENT ON TABLE raw_park_factors.factors IS 'Park factors data (32 kB). Calculated park effect factors.';
+
+
+--
+-- Name: ballparks_reference; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.ballparks_reference (
+    retrosheet_park_id text NOT NULL,
+    name text,
+    aka text,
+    city text,
+    state text,
+    start_date text,
+    end_date text,
+    league text,
+    notes text,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE ballparks_reference; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.ballparks_reference IS 'Ballpark reference data from Retrosheet (104 kB). Stadium IDs and basic info.';
+
+
+--
+-- Name: biofile; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.biofile (
+    player_id text NOT NULL,
+    last_name text,
+    first_name text,
+    nickname text,
+    birthdate text,
+    birth_city text,
+    birth_state text,
+    birth_country text,
+    play_debut text,
+    play_lastgame text,
+    mgr_debut text,
+    mgr_lastgame text,
+    coach_debut text,
+    coach_lastgame text,
+    ump_debut text,
+    ump_lastgame text,
+    deathdate text,
+    death_city text,
+    death_state text,
+    death_country text,
+    bats text,
+    throws text,
+    height text,
+    weight text,
+    cemetery text,
+    cemetery_city text,
+    cemetery_state text,
+    cemetery_country text,
+    cemetery_note text,
+    birth_name text,
+    name_change text,
+    bat_change text,
+    hall_of_fame text,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE biofile; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.biofile IS 'Player biographical information from Retrosheet (5.7 MB). Contains birth date, birthplace, bats/throws.';
+
+
+--
+-- Name: chadwick_comments; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.chadwick_comments (
+    season integer NOT NULL,
+    source_type text NOT NULL,
+    row_number integer NOT NULL,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL,
+    game_id text,
+    event_id text,
+    comment_tx text,
+    eject_person_id text,
+    eject_person_role_cd text,
+    eject_umpire_id text,
+    eject_reason_tx text,
+    umpchange_inn_ct text,
+    umpchange_pos_cd text,
+    umpchange_person_id text
+);
+
+
+--
+-- Name: TABLE chadwick_comments; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.chadwick_comments IS 'Event comments and annotations from Retrosheet (27 MB). Contains additional context for plays.';
+
+
+--
+-- Name: chadwick_daily; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.chadwick_daily (
+    season integer NOT NULL,
+    source_type text NOT NULL,
+    row_number integer NOT NULL,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL,
+    game_id text,
+    game_dt text,
+    game_ct text,
+    appear_dt text,
+    team_id text,
+    player_id text,
+    slot_ct text,
+    seq_ct text,
+    home_fl text,
+    opponent_id text,
+    park_id text,
+    b_g text,
+    b_pa text,
+    b_ab text,
+    b_r text,
+    b_h text,
+    b_tb text,
+    b_2b text,
+    b_3b text,
+    b_hr text,
+    b_hr4 text,
+    b_rbi text,
+    b_gw text,
+    b_bb text,
+    b_ibb text,
+    b_so text,
+    b_gdp text,
+    b_hp text,
+    b_sh text,
+    b_sf text,
+    b_sb text,
+    b_cs text,
+    b_xi text,
+    b_g_dh text,
+    b_g_ph text,
+    b_g_pr text,
+    p_g text,
+    p_gs text,
+    p_cg text,
+    p_sho text,
+    p_gf text,
+    p_w text,
+    p_l text,
+    p_sv text,
+    p_out text,
+    p_tbf text,
+    p_ab text,
+    p_r text,
+    p_er text,
+    p_h text,
+    p_tb text,
+    p_2b text,
+    p_3b text,
+    p_hr text,
+    p_hr4 text,
+    p_bb text,
+    p_ibb text,
+    p_so text,
+    p_gdp text,
+    p_hp text,
+    p_sh text,
+    p_sf text,
+    p_xi text,
+    p_wp text,
+    p_bk text,
+    p_ir text,
+    p_irs text,
+    p_go text,
+    p_ao text,
+    p_pitch text,
+    p_strike text,
+    f_p_g text,
+    f_p_gs text,
+    f_p_out text,
+    f_p_tc text,
+    f_p_po text,
+    f_p_a text,
+    f_p_e text,
+    f_p_dp text,
+    f_p_tp text,
+    f_c_g text,
+    f_c_gs text,
+    f_c_out text,
+    f_c_tc text,
+    f_c_po text,
+    f_c_a text,
+    f_c_e text,
+    f_c_dp text,
+    f_c_tp text,
+    f_c_pb text,
+    f_c_xi text,
+    f_1b_g text,
+    f_1b_gs text,
+    f_1b_out text,
+    f_1b_tc text,
+    f_1b_po text,
+    f_1b_a text,
+    f_1b_e text,
+    f_1b_dp text,
+    f_1b_tp text,
+    f_2b_g text,
+    f_2b_gs text,
+    f_2b_out text,
+    f_2b_tc text,
+    f_2b_po text,
+    f_2b_a text,
+    f_2b_e text,
+    f_2b_dp text,
+    f_2b_tp text,
+    f_3b_g text,
+    f_3b_gs text,
+    f_3b_out text,
+    f_3b_tc text,
+    f_3b_po text,
+    f_3b_a text,
+    f_3b_e text,
+    f_3b_dp text,
+    f_3b_tp text,
+    f_ss_g text,
+    f_ss_gs text,
+    f_ss_out text,
+    f_ss_tc text,
+    f_ss_po text,
+    f_ss_a text,
+    f_ss_e text,
+    f_ss_dp text,
+    f_ss_tp text,
+    f_lf_g text,
+    f_lf_gs text,
+    f_lf_out text,
+    f_lf_tc text,
+    f_lf_po text,
+    f_lf_a text,
+    f_lf_e text,
+    f_lf_dp text,
+    f_lf_tp text,
+    f_cf_g text,
+    f_cf_gs text,
+    f_cf_out text,
+    f_cf_tc text,
+    f_cf_po text,
+    f_cf_a text,
+    f_cf_e text,
+    f_cf_dp text,
+    f_cf_tp text,
+    f_rf_g text,
+    f_rf_gs text,
+    f_rf_out text,
+    f_rf_tc text,
+    f_rf_po text,
+    f_rf_a text,
+    f_rf_e text,
+    f_rf_dp text,
+    f_rf_tp text
+);
+
+
+--
+-- Name: TABLE chadwick_daily; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.chadwick_daily IS 'Daily player statistics from Retrosheet (946 MB). Aggregated by player-date for quick lookups.';
+
+
+--
+-- Name: chadwick_event_raw; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.chadwick_event_raw (
+    season integer NOT NULL,
+    source_type text NOT NULL,
+    row_number integer NOT NULL,
+    game_id text,
+    event_id integer,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL,
+    c001 text,
+    c002 text,
+    c003 text,
+    c004 text,
+    c005 text,
+    c006 text,
+    c007 text,
+    c008 text,
+    c009 text,
+    c010 text,
+    c011 text,
+    c012 text,
+    c013 text,
+    c014 text,
+    c015 text,
+    c016 text,
+    c017 text,
+    c018 text,
+    c019 text,
+    c020 text,
+    c021 text,
+    c022 text,
+    c023 text,
+    c024 text,
+    c025 text,
+    c026 text,
+    c027 text,
+    c028 text,
+    c029 text,
+    c030 text,
+    c031 text,
+    c032 text,
+    c033 text,
+    c034 text,
+    c035 text,
+    c036 text,
+    c037 text,
+    c038 text,
+    c039 text,
+    c040 text,
+    c041 text,
+    c042 text,
+    c043 text,
+    c044 text,
+    c045 text,
+    c046 text,
+    c047 text,
+    c048 text,
+    c049 text,
+    c050 text,
+    c051 text,
+    c052 text,
+    c053 text,
+    c054 text,
+    c055 text,
+    c056 text,
+    c057 text,
+    c058 text,
+    c059 text,
+    c060 text,
+    c061 text,
+    c062 text,
+    c063 text,
+    c064 text,
+    c065 text,
+    c066 text,
+    c067 text,
+    c068 text,
+    c069 text,
+    c070 text,
+    c071 text,
+    c072 text,
+    c073 text,
+    c074 text,
+    c075 text,
+    c076 text,
+    c077 text,
+    c078 text,
+    c079 text,
+    c080 text,
+    c081 text,
+    c082 text,
+    c083 text,
+    c084 text,
+    c085 text,
+    c086 text,
+    c087 text,
+    c088 text,
+    c089 text,
+    c090 text,
+    c091 text,
+    c092 text,
+    c093 text,
+    c094 text,
+    c095 text,
+    c096 text,
+    c097 text,
+    c098 text,
+    c099 text,
+    c100 text,
+    c101 text,
+    c102 text,
+    c103 text,
+    c104 text,
+    c105 text,
+    c106 text,
+    c107 text,
+    c108 text,
+    c109 text,
+    c110 text,
+    c111 text,
+    c112 text,
+    c113 text,
+    c114 text,
+    c115 text,
+    c116 text,
+    c117 text,
+    c118 text,
+    c119 text,
+    c120 text,
+    c121 text,
+    c122 text,
+    c123 text,
+    c124 text,
+    c125 text,
+    c126 text,
+    c127 text,
+    c128 text,
+    c129 text,
+    c130 text,
+    c131 text,
+    c132 text,
+    c133 text,
+    c134 text,
+    c135 text,
+    c136 text,
+    c137 text,
+    c138 text,
+    c139 text,
+    c140 text,
+    c141 text,
+    c142 text,
+    c143 text,
+    c144 text,
+    c145 text,
+    c146 text,
+    c147 text,
+    c148 text,
+    c149 text,
+    c150 text,
+    c151 text,
+    c152 text,
+    c153 text,
+    c154 text,
+    c155 text,
+    c156 text,
+    c157 text,
+    c158 text,
+    c159 text,
+    c160 text
+);
+
+
+--
+-- Name: TABLE chadwick_event_raw; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.chadwick_event_raw IS 'Raw event strings from Chadwick output before parsing (3.2 GB). Preserved for re-parsing if needed.';
+
+
+--
+-- Name: chadwick_games; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.chadwick_games (
+    season integer NOT NULL,
+    source_type text NOT NULL,
+    row_number integer NOT NULL,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL,
+    game_id text,
+    game_dt text,
+    game_ct text,
+    game_dy text,
+    start_game_tm text,
+    dh_fl text,
+    daynight_park_cd text,
+    away_team_id text,
+    home_team_id text,
+    park_id text,
+    away_start_pit_id text,
+    home_start_pit_id text,
+    base4_ump_id text,
+    base1_ump_id text,
+    base2_ump_id text,
+    base3_ump_id text,
+    lf_ump_id text,
+    rf_ump_id text,
+    attend_park_ct text,
+    scorer_record_id text,
+    translator_record_id text,
+    inputter_record_id text,
+    input_record_ts text,
+    edit_record_ts text,
+    method_record_cd text,
+    pitches_record_cd text,
+    temp_park_ct text,
+    wind_direction_park_cd text,
+    wind_speed_park_ct text,
+    field_park_cd text,
+    precip_park_cd text,
+    sky_park_cd text,
+    minutes_game_ct text,
+    inn_ct text,
+    away_score_ct text,
+    home_score_ct text,
+    away_hits_ct text,
+    home_hits_ct text,
+    away_err_ct text,
+    home_err_ct text,
+    away_lob_ct text,
+    home_lob_ct text,
+    win_pit_id text,
+    lose_pit_id text,
+    save_pit_id text,
+    gwrbi_bat_id text,
+    away_lineup1_bat_id text,
+    away_lineup1_fld_cd text,
+    away_lineup2_bat_id text,
+    away_lineup2_fld_cd text,
+    away_lineup3_bat_id text,
+    away_lineup3_fld_cd text,
+    away_lineup4_bat_id text,
+    away_lineup4_fld_cd text,
+    away_lineup5_bat_id text,
+    away_lineup5_fld_cd text,
+    away_lineup6_bat_id text,
+    away_lineup6_fld_cd text,
+    away_lineup7_bat_id text,
+    away_lineup7_fld_cd text,
+    away_lineup8_bat_id text,
+    away_lineup8_fld_cd text,
+    away_lineup9_bat_id text,
+    away_lineup9_fld_cd text,
+    home_lineup1_bat_id text,
+    home_lineup1_fld_cd text,
+    home_lineup2_bat_id text,
+    home_lineup2_fld_cd text,
+    home_lineup3_bat_id text,
+    home_lineup3_fld_cd text,
+    home_lineup4_bat_id text,
+    home_lineup4_fld_cd text,
+    home_lineup5_bat_id text,
+    home_lineup5_fld_cd text,
+    home_lineup6_bat_id text,
+    home_lineup6_fld_cd text,
+    home_lineup7_bat_id text,
+    home_lineup7_fld_cd text,
+    home_lineup8_bat_id text,
+    home_lineup8_fld_cd text,
+    home_lineup9_bat_id text,
+    home_lineup9_fld_cd text,
+    away_finish_pit_id text,
+    home_finish_pit_id text,
+    away_team_league_id text,
+    home_team_league_id text,
+    away_team_game_ct text,
+    home_team_game_ct text,
+    outs_ct text,
+    completion_tx text,
+    forfeit_tx text,
+    protest_tx text,
+    away_line_tx text,
+    home_line_tx text,
+    away_ab_ct text,
+    away_2b_ct text,
+    away_3b_ct text,
+    away_hr_ct text,
+    away_bi_ct text,
+    away_sh_ct text,
+    away_sf_ct text,
+    away_hp_ct text,
+    away_bb_ct text,
+    away_ibb_ct text,
+    away_so_ct text,
+    away_sb_ct text,
+    away_cs_ct text,
+    away_gdp_ct text,
+    away_xi_ct text,
+    away_pitcher_ct text,
+    away_er_ct text,
+    away_ter_ct text,
+    away_wp_ct text,
+    away_bk_ct text,
+    away_po_ct text,
+    away_a_ct text,
+    away_pb_ct text,
+    away_dp_ct text,
+    away_tp_ct text,
+    home_ab_ct text,
+    home_2b_ct text,
+    home_3b_ct text,
+    home_hr_ct text,
+    home_bi_ct text,
+    home_sh_ct text,
+    home_sf_ct text,
+    home_hp_ct text,
+    home_bb_ct text,
+    home_ibb_ct text,
+    home_so_ct text,
+    home_sb_ct text,
+    home_cs_ct text,
+    home_gdp_ct text,
+    home_xi_ct text,
+    home_pitcher_ct text,
+    home_er_ct text,
+    home_ter_ct text,
+    home_wp_ct text,
+    home_bk_ct text,
+    home_po_ct text,
+    home_a_ct text,
+    home_pb_ct text,
+    home_dp_ct text,
+    home_tp_ct text,
+    ump_home_name_tx text,
+    ump_1b_name_tx text,
+    ump_2b_name_tx text,
+    ump_3b_name_tx text,
+    ump_lf_name_tx text,
+    ump_rf_name_tx text,
+    away_manager_id text,
+    away_manager_name_tx text,
+    home_manager_id text,
+    home_manager_name_tx text,
+    win_pit_name_tx text,
+    lose_pit_name_tx text,
+    save_pit_name_tx text,
+    goahead_rbi_id text,
+    goahead_rbi_name_tx text,
+    away_lineup1_bat_name_tx text,
+    away_lineup2_bat_name_tx text,
+    away_lineup3_bat_name_tx text,
+    away_lineup4_bat_name_tx text,
+    away_lineup5_bat_name_tx text,
+    away_lineup6_bat_name_tx text,
+    away_lineup7_bat_name_tx text,
+    away_lineup8_bat_name_tx text,
+    away_lineup9_bat_name_tx text,
+    home_lineup1_bat_name_tx text,
+    home_lineup2_bat_name_tx text,
+    home_lineup3_bat_name_tx text,
+    home_lineup4_bat_name_tx text,
+    home_lineup5_bat_name_tx text,
+    home_lineup6_bat_name_tx text,
+    home_lineup7_bat_name_tx text,
+    home_lineup8_bat_name_tx text,
+    home_lineup9_bat_name_tx text,
+    add_info_tx text,
+    acq_info_tx text
+);
+
+
+--
+-- Name: TABLE chadwick_games; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.chadwick_games IS 'Parsed Retrosheet game records (124 MB). One row per game with metadata including date, teams, umps, and weather.';
+
+
+--
+-- Name: chadwick_substitutions; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.chadwick_substitutions (
+    season integer NOT NULL,
+    source_type text NOT NULL,
+    row_number integer NOT NULL,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL,
+    game_id text,
+    inn_ct text,
+    bat_home_id text,
+    sub_id text,
+    sub_home_id text,
+    sub_lineup_id text,
+    sub_fld_cd text,
+    removed_id text,
+    removed_fld_cd text,
+    event_id text,
+    balls_ct text,
+    strikes_ct text,
+    pitch_seq_tx text,
+    pa_ball_ct text,
+    pa_called_ball_ct text,
+    pa_intent_ball_ct text,
+    pa_pitchout_ball_ct text,
+    pa_hitbatter_ball_ct text,
+    pa_other_ball_ct text,
+    pa_strike_ct text,
+    pa_called_strike_ct text,
+    pa_swingmiss_strike_ct text,
+    pa_foul_strike_ct text,
+    pa_inplay_strike_ct text,
+    pa_other_strike_ct text
+);
+
+
+--
+-- Name: TABLE chadwick_substitutions; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.chadwick_substitutions IS 'Substitution records from Retrosheet (206 MB). Tracks player replacements during games.';
+
+
+--
+-- Name: ingest_runs; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.ingest_runs (
+    ingest_run_id bigint NOT NULL,
+    source_name text NOT NULL,
+    source_version text,
+    started_at timestamp with time zone DEFAULT now() NOT NULL,
+    finished_at timestamp with time zone,
+    status text DEFAULT 'running'::text NOT NULL,
+    details jsonb DEFAULT '{}'::jsonb NOT NULL,
+    script_name text,
+    script_version text,
+    git_commit text,
+    command_args jsonb,
+    records_downloaded integer DEFAULT 0,
+    records_ingested integer DEFAULT 0,
+    records_failed integer DEFAULT 0,
+    error_message text,
+    user_name text DEFAULT CURRENT_USER,
+    hostname text DEFAULT inet_server_addr()
+);
+
+
+--
+-- Name: TABLE ingest_runs; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.ingest_runs IS 'Ingestion run tracking with git commit hashes, timestamps, and record counts. Supports reproducibility tracking.';
+
+
+--
+-- Name: ingest_run_stats_by_script; Type: VIEW; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE VIEW raw_retrosheet.ingest_run_stats_by_script AS
+ SELECT script_name,
+    count(*) AS total_runs,
+    count(*) FILTER (WHERE (status = 'completed'::text)) AS successful_runs,
+    count(*) FILTER (WHERE (status = 'failed'::text)) AS failed_runs,
+    sum(records_downloaded) AS total_records_downloaded,
+    sum(records_ingested) AS total_records_ingested,
+    avg(EXTRACT(epoch FROM (COALESCE(finished_at, now()) - started_at))) FILTER (WHERE (finished_at IS NOT NULL)) AS avg_duration_seconds
+   FROM raw_retrosheet.ingest_runs
+  WHERE (script_name IS NOT NULL)
+  GROUP BY script_name
+  ORDER BY (count(*)) DESC;
+
+
+--
+-- Name: VIEW ingest_run_stats_by_script; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON VIEW raw_retrosheet.ingest_run_stats_by_script IS 'Statistics grouped by script name';
+
+
+--
+-- Name: ingest_runs_ingest_run_id_seq; Type: SEQUENCE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE SEQUENCE raw_retrosheet.ingest_runs_ingest_run_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: ingest_runs_ingest_run_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER SEQUENCE raw_retrosheet.ingest_runs_ingest_run_id_seq OWNED BY raw_retrosheet.ingest_runs.ingest_run_id;
+
+
+--
+-- Name: recent_ingest_runs; Type: VIEW; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE VIEW raw_retrosheet.recent_ingest_runs AS
+ SELECT ingest_run_id,
+    source_name,
+    script_name,
+    status,
+    started_at,
+    finished_at,
+    EXTRACT(epoch FROM (COALESCE(finished_at, now()) - started_at)) AS duration_seconds,
+    records_downloaded,
+    records_ingested,
+    records_failed,
+    error_message
+   FROM raw_retrosheet.ingest_runs
+  ORDER BY started_at DESC
+ LIMIT 100;
+
+
+--
+-- Name: VIEW recent_ingest_runs; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON VIEW raw_retrosheet.recent_ingest_runs IS 'Summary of recent 100 ingest runs';
+
+
+--
+-- Name: teams_reference; Type: TABLE; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE TABLE raw_retrosheet.teams_reference (
+    retrosheet_team_id text NOT NULL,
+    league text,
+    city text,
+    nickname text,
+    first_season integer,
+    last_season integer,
+    loaded_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE teams_reference; Type: COMMENT; Schema: raw_retrosheet; Owner: -
+--
+
+COMMENT ON TABLE raw_retrosheet.teams_reference IS 'Team reference data from Retrosheet (48 kB). Team IDs and franchise info.';
+
+
+--
+-- Name: game_snapshots; Type: TABLE; Schema: raw_sportradar; Owner: -
+--
+
+CREATE TABLE raw_sportradar.game_snapshots (
+    id bigint NOT NULL,
+    game_pk text NOT NULL,
+    raw_payload jsonb NOT NULL,
+    fetched_at timestamp with time zone DEFAULT now() NOT NULL,
+    status_code text NOT NULL,
+    sha256_checksum text NOT NULL
+);
+
+
+--
+-- Name: TABLE game_snapshots; Type: COMMENT; Schema: raw_sportradar; Owner: -
+--
+
+COMMENT ON TABLE raw_sportradar.game_snapshots IS 'SportRadar game snapshots (40 kB). SportRadar API game data.';
+
+
+--
+-- Name: game_snapshots_id_seq; Type: SEQUENCE; Schema: raw_sportradar; Owner: -
+--
+
+CREATE SEQUENCE raw_sportradar.game_snapshots_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: game_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_sportradar; Owner: -
+--
+
+ALTER SEQUENCE raw_sportradar.game_snapshots_id_seq OWNED BY raw_sportradar.game_snapshots.id;
+
+
+--
+-- Name: push_events; Type: TABLE; Schema: raw_sportradar; Owner: -
+--
+
+CREATE TABLE raw_sportradar.push_events (
+    id bigint NOT NULL,
+    event_id text NOT NULL,
+    game_pk text NOT NULL,
+    raw_payload jsonb NOT NULL,
+    fetched_at timestamp with time zone DEFAULT now() NOT NULL,
+    sequence_number integer NOT NULL,
+    event_type text NOT NULL,
+    sha256_checksum text NOT NULL,
+    response_code integer DEFAULT 200,
+    ingest_run_id bigint
+);
+
+
+--
+-- Name: TABLE push_events; Type: COMMENT; Schema: raw_sportradar; Owner: -
+--
+
+COMMENT ON TABLE raw_sportradar.push_events IS 'SportRadar push events (56 kB). Real-time push events from SportRadar.';
+
+
+--
+-- Name: push_events_id_seq; Type: SEQUENCE; Schema: raw_sportradar; Owner: -
+--
+
+CREATE SEQUENCE raw_sportradar.push_events_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: push_events_id_seq; Type: SEQUENCE OWNED BY; Schema: raw_sportradar; Owner: -
+--
+
+ALTER SEQUENCE raw_sportradar.push_events_id_seq OWNED BY raw_sportradar.push_events.id;
+
+
+--
+-- Name: events; Type: TABLE; Schema: raw_statcast; Owner: -
+--
+
+CREATE TABLE raw_statcast.events (
+    game_pk bigint NOT NULL,
+    at_bat_number integer NOT NULL,
+    pitch_number integer NOT NULL,
+    pitcher_mlb_id integer,
+    batter_mlb_id integer,
+    release_speed real,
+    release_spin_rate real,
+    launch_angle real,
+    launch_speed real,
+    hit_distance real,
+    events text,
+    pitch_type text
+);
+
+
+--
+-- Name: TABLE events; Type: COMMENT; Schema: raw_statcast; Owner: -
+--
+
+COMMENT ON TABLE raw_statcast.events IS 'Statcast events (1 MB). Parsed Statcast events.';
+
+
+--
+-- Name: stg_events; Type: TABLE; Schema: raw_statcast; Owner: -
+--
+
+CREATE TABLE raw_statcast.stg_events (
+    pitch_type text,
+    game_date text,
+    release_speed text,
+    release_pos_x text,
+    release_pos_z text,
+    player_name text,
+    batter text,
+    pitcher text,
+    events text,
+    description text,
+    spin_dir text,
+    spin_rate_deprecated text,
+    break_angle_deprecated text,
+    break_length_deprecated text,
+    zone text,
+    des text,
+    game_type text,
+    stand text,
+    p_throws text,
+    home_team text,
+    away_team text,
+    type text,
+    hit_location text,
+    bb_type text,
+    balls text,
+    strikes text,
+    game_year text,
+    pfx_x text,
+    pfx_z text,
+    plate_x text,
+    plate_z text,
+    on_3b text,
+    on_2b text,
+    on_1b text,
+    outs_when_up text,
+    inning text,
+    inning_topbot text,
+    hc_x text,
+    hc_y text,
+    tfs_deprecated text,
+    tfs_zulu_deprecated text,
+    umpire text,
+    sv_id text,
+    vx0 text,
+    vy0 text,
+    vz0 text,
+    ax text,
+    ay text,
+    az text,
+    sz_top text,
+    sz_bot text,
+    hit_distance_sc text,
+    launch_speed text,
+    launch_angle text,
+    effective_speed text,
+    release_spin_rate text,
+    release_extension text,
+    game_pk text,
+    fielder_2 text,
+    fielder_3 text,
+    fielder_4 text,
+    fielder_5 text,
+    fielder_6 text,
+    fielder_7 text,
+    fielder_8 text,
+    fielder_9 text,
+    release_pos_y text,
+    estimated_ba_using_speedangle text,
+    estimated_woba_using_speedangle text,
+    woba_value text,
+    woba_denom text,
+    babip_value text,
+    iso_value text,
+    launch_speed_angle text,
+    at_bat_number text,
+    pitch_number text,
+    pitch_name text,
+    home_score text,
+    away_score text,
+    bat_score text,
+    fld_score text,
+    post_away_score text,
+    post_home_score text,
+    post_bat_score text,
+    post_fld_score text,
+    if_fielding_alignment text,
+    of_fielding_alignment text,
+    spin_axis text,
+    delta_home_win_exp text,
+    delta_run_exp text,
+    bat_speed text,
+    swing_length text,
+    estimated_slg_using_speedangle text,
+    delta_pitcher_run_exp text,
+    hyper_speed text,
+    home_score_diff text,
+    bat_score_diff text,
+    home_win_exp text,
+    bat_win_exp text,
+    age_pit_legacy text,
+    age_bat_legacy text,
+    age_pit text,
+    age_bat text,
+    n_thruorder_pitcher text,
+    n_priorpa_thisgame_player_at_bat text,
+    pitcher_days_since_prev_game text,
+    batter_days_since_prev_game text,
+    pitcher_days_until_next_game text,
+    batter_days_until_next_game text,
+    api_break_z_with_gravity text,
+    api_break_x_arm text,
+    api_break_x_batter_in text,
+    arm_angle text,
+    attack_angle text,
+    attack_direction text,
+    swing_path_tilt text,
+    intercept_ball_minus_batter_pos_x_inches text,
+    intercept_ball_minus_batter_pos_y_inches text
+);
+
+
+--
+-- Name: TABLE stg_events; Type: COMMENT; Schema: raw_statcast; Owner: -
+--
+
+COMMENT ON TABLE raw_statcast.stg_events IS 'Statcast events staging (4.8 MB). Temporary holding during Statcast ingestion.';
+
+
+--
+-- Name: runs; Type: TABLE; Schema: test; Owner: -
+--
+
+CREATE TABLE test.runs (
+    run_id integer NOT NULL,
+    test_name character varying(255) NOT NULL,
+    started_at timestamp without time zone DEFAULT now(),
+    completed_at timestamp without time zone,
+    status character varying(20) DEFAULT 'running'::character varying,
+    error_message text,
+    row_counts jsonb
+);
+
+
+--
+-- Name: TABLE runs; Type: COMMENT; Schema: test; Owner: -
+--
+
+COMMENT ON TABLE test.runs IS 'Test schema table. Used for testing database operations.';
+
+
+--
+-- Name: COLUMN runs.run_id; Type: COMMENT; Schema: test; Owner: -
+--
+
+COMMENT ON COLUMN test.runs.run_id IS 'Unique test run identifier';
+
+
+--
+-- Name: COLUMN runs.test_name; Type: COMMENT; Schema: test; Owner: -
+--
+
+COMMENT ON COLUMN test.runs.test_name IS 'Name of the test being run';
+
+
+--
+-- Name: COLUMN runs.status; Type: COMMENT; Schema: test; Owner: -
+--
+
+COMMENT ON COLUMN test.runs.status IS 'Test status: running, completed, failed';
+
+
+--
+-- Name: COLUMN runs.row_counts; Type: COMMENT; Schema: test; Owner: -
+--
+
+COMMENT ON COLUMN test.runs.row_counts IS 'JSONB of table row counts for validation';
+
+
+--
+-- Name: runs_run_id_seq; Type: SEQUENCE; Schema: test; Owner: -
+--
+
+CREATE SEQUENCE test.runs_run_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: runs_run_id_seq; Type: SEQUENCE OWNED BY; Schema: test; Owner: -
+--
+
+ALTER SEQUENCE test.runs_run_id_seq OWNED BY test.runs.run_id;
+
+
+--
+-- Name: column_null_analysis; Type: VIEW; Schema: validation; Owner: -
+--
+
+CREATE VIEW validation.column_null_analysis AS
+ SELECT schemaname,
+    tablename,
+    attname AS column_name,
+    n_distinct AS distinct_values,
+    null_frac AS null_fraction,
+    avg_width AS average_width
+   FROM pg_stats
+  WHERE (schemaname = ANY (ARRAY['raw_retrosheet'::name, 'raw_espn'::name, 'raw_mlb'::name, 'raw_statcast'::name, 'bridge'::name, 'core'::name, 'features'::name, 'models'::name, 'predictions'::name]))
+  ORDER BY schemaname, tablename, null_frac DESC;
+
+
+--
+-- Name: VIEW column_null_analysis; Type: COMMENT; Schema: validation; Owner: -
+--
+
+COMMENT ON VIEW validation.column_null_analysis IS 'Null fraction analysis for all columns across warehouse tables';
+
+
+--
+-- Name: data_quality_report; Type: VIEW; Schema: validation; Owner: -
+--
+
+CREATE VIEW validation.data_quality_report AS
+ SELECT 'ESPN Game Snapshots'::text AS data_source,
+    'raw_espn.game_snapshots'::text AS table_name,
+    ( SELECT count(*) AS count
+           FROM raw_espn.game_snapshots) AS total_rows,
+    ( SELECT count(DISTINCT game_snapshots.game_id) AS count
+           FROM raw_espn.game_snapshots) AS unique_records,
+    ( SELECT (min(game_snapshots.game_date))::text AS min
+           FROM raw_espn.game_snapshots) AS date_range_start,
+    ( SELECT (max(game_snapshots.game_date))::text AS max
+           FROM raw_espn.game_snapshots) AS date_range_end,
+    ( SELECT count(DISTINCT game_snapshots.season) AS count
+           FROM raw_espn.game_snapshots) AS seasons_covered,
+    ( SELECT round((((count(game_snapshots.game_date))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS round
+           FROM raw_espn.game_snapshots) AS completeness_pct,
+    ( SELECT (count(*) - count(DISTINCT game_snapshots.game_id))
+           FROM raw_espn.game_snapshots) AS duplicate_count,
+    ( SELECT sum(ingest_runs.records_failed) AS sum
+           FROM raw_retrosheet.ingest_runs
+          WHERE (ingest_runs.source_name = 'espn_api'::text)) AS ingest_failures
+UNION ALL
+ SELECT 'ESPN Plays Snapshots'::text AS data_source,
+    'raw_espn.plays_snapshots'::text AS table_name,
+    ( SELECT count(*) AS count
+           FROM raw_espn.plays_snapshots) AS total_rows,
+    ( SELECT count(DISTINCT plays_snapshots.game_id) AS count
+           FROM raw_espn.plays_snapshots) AS unique_records,
+    ( SELECT (min(plays_snapshots.game_date))::text AS min
+           FROM raw_espn.plays_snapshots) AS date_range_start,
+    ( SELECT (max(plays_snapshots.game_date))::text AS max
+           FROM raw_espn.plays_snapshots) AS date_range_end,
+    ( SELECT count(DISTINCT plays_snapshots.season) AS count
+           FROM raw_espn.plays_snapshots) AS seasons_covered,
+    ( SELECT round((((count(plays_snapshots.game_date))::numeric / (NULLIF(count(*), 0))::numeric) * (100)::numeric), 2) AS round
+           FROM raw_espn.plays_snapshots) AS completeness_pct,
+    ( SELECT (count(*) - count(DISTINCT plays_snapshots.game_id))
+           FROM raw_espn.plays_snapshots) AS duplicate_count,
+    NULL::bigint AS ingest_failures
+UNION ALL
+ SELECT 'Statcast Pitch-Level'::text AS data_source,
+    'raw_mlb.statcast'::text AS table_name,
+    ( SELECT count(*) AS count
+           FROM raw_mlb.statcast) AS total_rows,
+    ( SELECT count(DISTINCT statcast.game_pk) AS count
+           FROM raw_mlb.statcast) AS unique_records,
+    ( SELECT min(statcast.game_date) AS min
+           FROM raw_mlb.statcast) AS date_range_start,
+    ( SELECT max(statcast.game_date) AS max
+           FROM raw_mlb.statcast) AS date_range_end,
+    ( SELECT count(DISTINCT statcast.game_year) AS count
+           FROM raw_mlb.statcast) AS seasons_covered,
+    100.00 AS completeness_pct,
+    0 AS duplicate_count,
+    ( SELECT sum(ingest_runs.records_failed) AS sum
+           FROM raw_retrosheet.ingest_runs
+          WHERE (ingest_runs.source_name = 'statcast'::text)) AS ingest_failures;
+
+
+--
+-- Name: VIEW data_quality_report; Type: COMMENT; Schema: validation; Owner: -
+--
+
+COMMENT ON VIEW validation.data_quality_report IS 'Comprehensive data quality report across all major data sources';
+
+
+--
+-- Name: data_quality_summary; Type: MATERIALIZED VIEW; Schema: validation; Owner: -
+--
+
+CREATE MATERIALIZED VIEW validation.data_quality_summary AS
+ SELECT 'ESPN Game Data'::text AS source,
+    ( SELECT count(*) AS count
+           FROM raw_espn.game_snapshots) AS games,
+    ( SELECT count(DISTINCT game_snapshots.season) AS count
+           FROM raw_espn.game_snapshots) AS seasons,
+    ( SELECT (min(game_snapshots.game_date))::text AS min
+           FROM raw_espn.game_snapshots) AS start_date,
+    ( SELECT (max(game_snapshots.game_date))::text AS max
+           FROM raw_espn.game_snapshots) AS end_date,
+    ( SELECT round((((count(game_snapshots.game_date))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS round
+           FROM raw_espn.game_snapshots) AS completeness_pct
+UNION ALL
+ SELECT 'Statcast Pitch-Level'::text AS source,
+    ( SELECT count(DISTINCT statcast.game_pk) AS count
+           FROM raw_mlb.statcast) AS games,
+    ( SELECT count(DISTINCT statcast.game_year) AS count
+           FROM raw_mlb.statcast) AS seasons,
+    ( SELECT min(statcast.game_date) AS min
+           FROM raw_mlb.statcast) AS start_date,
+    ( SELECT max(statcast.game_date) AS max
+           FROM raw_mlb.statcast) AS end_date,
+    100.00 AS completeness_pct
+  WITH NO DATA;
+
+
+--
+-- Name: MATERIALIZED VIEW data_quality_summary; Type: COMMENT; Schema: validation; Owner: -
+--
+
+COMMENT ON MATERIALIZED VIEW validation.data_quality_summary IS 'Materialized summary of data quality metrics for quick access';
+
+
+--
+-- Name: duplicate_analysis; Type: VIEW; Schema: validation; Owner: -
+--
+
+CREATE VIEW validation.duplicate_analysis AS
+ WITH duplicate_counts AS (
+         SELECT 'raw_espn.game_snapshots'::text AS table_name,
+            game_snapshots.game_id AS key_value,
+            count(*) AS row_count
+           FROM raw_espn.game_snapshots
+          GROUP BY game_snapshots.game_id
+         HAVING (count(*) > 1)
+        UNION ALL
+         SELECT 'raw_espn.plays_snapshots'::text,
+            plays_snapshots.game_id,
+            count(*) AS count
+           FROM raw_espn.plays_snapshots
+          GROUP BY plays_snapshots.game_id
+         HAVING (count(*) > 1)
+        UNION ALL
+         SELECT 'raw_espn.schedule_snapshots'::text,
+            (schedule_snapshots.date)::text AS date,
+            count(*) AS count
+           FROM raw_espn.schedule_snapshots
+          GROUP BY schedule_snapshots.date
+         HAVING (count(*) > 1)
+        )
+ SELECT table_name,
+    count(*) AS duplicate_groups,
+    sum(row_count) AS total_duplicate_rows
+   FROM duplicate_counts
+  GROUP BY table_name;
+
+
+--
+-- Name: VIEW duplicate_analysis; Type: COMMENT; Schema: validation; Owner: -
+--
+
+COMMENT ON VIEW validation.duplicate_analysis IS 'Duplicate row analysis for key tables';
+
+
+--
+-- Name: espn_data_quality; Type: VIEW; Schema: validation; Owner: -
+--
+
+CREATE VIEW validation.espn_data_quality AS
+ SELECT 'game_snapshots'::text AS table_name,
+    count(*) AS total_rows,
+    count(DISTINCT game_snapshots.game_id) AS unique_games,
+    count(game_snapshots.game_date) AS rows_with_date,
+    count(game_snapshots.season) AS rows_with_season,
+    min(game_snapshots.game_date) AS earliest_date,
+    max(game_snapshots.game_date) AS latest_date,
+    count(DISTINCT game_snapshots.season) AS unique_seasons,
+    round((((count(game_snapshots.game_date))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS date_completeness_pct,
+    round((((count(game_snapshots.season))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS season_completeness_pct
+   FROM raw_espn.game_snapshots
+UNION ALL
+ SELECT 'plays_snapshots'::text AS table_name,
+    count(*) AS total_rows,
+    count(DISTINCT plays_snapshots.game_id) AS unique_games,
+    count(plays_snapshots.game_date) AS rows_with_date,
+    count(plays_snapshots.season) AS rows_with_season,
+    min(plays_snapshots.game_date) AS earliest_date,
+    max(plays_snapshots.game_date) AS latest_date,
+    count(DISTINCT plays_snapshots.season) AS unique_seasons,
+    round((((count(plays_snapshots.game_date))::numeric / (NULLIF(count(*), 0))::numeric) * (100)::numeric), 2) AS date_completeness_pct,
+    round((((count(plays_snapshots.season))::numeric / (NULLIF(count(*), 0))::numeric) * (100)::numeric), 2) AS season_completeness_pct
+   FROM raw_espn.plays_snapshots
+UNION ALL
+ SELECT 'schedule_snapshots'::text AS table_name,
+    count(*) AS total_rows,
+    count(DISTINCT schedule_snapshots.date) AS unique_games,
+    count(schedule_snapshots.date) AS rows_with_date,
+    count(schedule_snapshots.season) AS rows_with_season,
+    min(schedule_snapshots.date) AS earliest_date,
+    max(schedule_snapshots.date) AS latest_date,
+    count(DISTINCT schedule_snapshots.season) AS unique_seasons,
+    round((((count(schedule_snapshots.date))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS date_completeness_pct,
+    round((((count(schedule_snapshots.season))::numeric / (count(*))::numeric) * (100)::numeric), 2) AS season_completeness_pct
+   FROM raw_espn.schedule_snapshots;
+
+
+--
+-- Name: VIEW espn_data_quality; Type: COMMENT; Schema: validation; Owner: -
+--
+
+COMMENT ON VIEW validation.espn_data_quality IS 'Data quality metrics for ESPN tables including completeness and date ranges';
+
+
+--
+-- Name: espn_season_coverage; Type: VIEW; Schema: validation; Owner: -
+--
+
+CREATE VIEW validation.espn_season_coverage AS
+ SELECT season,
+    count(*) AS games,
+    min(game_date) AS season_start,
+    max(game_date) AS season_end
+   FROM raw_espn.game_snapshots
+  WHERE (season IS NOT NULL)
+  GROUP BY season
+  ORDER BY season;
+
+
+--
+-- Name: VIEW espn_season_coverage; Type: COMMENT; Schema: validation; Owner: -
+--
+
+COMMENT ON VIEW validation.espn_season_coverage IS 'Season-by-season game count and date range for ESPN data';
+
+
+--
+-- Name: game_id_overlap; Type: VIEW; Schema: validation; Owner: -
+--
+
+CREATE VIEW validation.game_id_overlap AS
+ SELECT 'espn_statcast'::text AS overlap_type,
+    count(*) AS overlapping_games
+   FROM (raw_espn.game_snapshots e
+     JOIN raw_mlb.statcast s ON ((e.game_id = (s.game_pk)::text)));
+
+
+--
+-- Name: VIEW game_id_overlap; Type: COMMENT; Schema: validation; Owner: -
+--
+
+COMMENT ON VIEW validation.game_id_overlap IS 'Game ID overlap analysis between ESPN and Statcast';
+
+
+--
+-- Name: ingest_run_summary; Type: VIEW; Schema: validation; Owner: -
+--
+
+CREATE VIEW validation.ingest_run_summary AS
+ SELECT source_name,
+    count(*) AS total_runs,
+    count(*) FILTER (WHERE (status = 'completed'::text)) AS completed_runs,
+    count(*) FILTER (WHERE (status = 'failed'::text)) AS failed_runs,
+    sum(records_downloaded) AS total_downloaded,
+    sum(records_ingested) AS total_ingested,
+    sum(records_failed) AS total_failed,
+    min(started_at) AS first_run,
+    max(started_at) AS last_run,
+    round((((sum(records_failed))::numeric / (NULLIF(sum(records_downloaded), 0))::numeric) * (100)::numeric), 2) AS failure_rate_pct
+   FROM raw_retrosheet.ingest_runs
+  GROUP BY source_name
+  ORDER BY source_name;
+
+
+--
+-- Name: VIEW ingest_run_summary; Type: COMMENT; Schema: validation; Owner: -
+--
+
+COMMENT ON VIEW validation.ingest_run_summary IS 'Summary of ingest runs by data source including failure rates';
+
+
+--
+-- Name: retrosheet_data_quality; Type: VIEW; Schema: validation; Owner: -
+--
+
+CREATE VIEW validation.retrosheet_data_quality AS
+ SELECT 'biofile'::text AS data_type,
+    count(*) AS rows
+   FROM raw_retrosheet.biofile
+UNION ALL
+ SELECT 'ballparks'::text AS data_type,
+    count(*) AS rows
+   FROM raw_retrosheet.ballparks_reference
+UNION ALL
+ SELECT 'teams'::text AS data_type,
+    count(*) AS rows
+   FROM raw_retrosheet.teams_reference;
+
+
+--
+-- Name: VIEW retrosheet_data_quality; Type: COMMENT; Schema: validation; Owner: -
+--
+
+COMMENT ON VIEW validation.retrosheet_data_quality IS 'Data quality metrics for Retrosheet reference tables';
+
+
+--
+-- Name: statcast_data_quality; Type: VIEW; Schema: validation; Owner: -
+--
+
+CREATE VIEW validation.statcast_data_quality AS
+ SELECT 'statcast'::text AS table_name,
+    count(*) AS total_rows,
+    count(DISTINCT game_pk) AS unique_games,
+    count(DISTINCT batter) AS unique_batters,
+    count(DISTINCT pitcher) AS unique_pitchers,
+    min(game_date) AS earliest_date,
+    max(game_date) AS latest_date,
+    count(DISTINCT game_year) AS unique_seasons
+   FROM raw_mlb.statcast;
+
+
+--
+-- Name: VIEW statcast_data_quality; Type: COMMENT; Schema: validation; Owner: -
+--
+
+COMMENT ON VIEW validation.statcast_data_quality IS 'Data quality metrics for Statcast pitch-level data';
+
+
+--
+-- Name: table_row_counts; Type: VIEW; Schema: validation; Owner: -
+--
+
+CREATE VIEW validation.table_row_counts AS
+ SELECT schemaname,
+    relname AS tablename,
+    n_tup_ins AS total_inserts,
+    n_tup_upd AS total_updates,
+    n_tup_del AS total_deletes,
+    n_live_tup AS live_rows,
+    n_dead_tup AS dead_rows,
+    last_vacuum,
+    last_autovacuum,
+    last_analyze,
+    last_autoanalyze
+   FROM pg_stat_user_tables
+  WHERE (schemaname = ANY (ARRAY['raw_retrosheet'::name, 'raw_espn'::name, 'raw_mlb'::name, 'raw_statcast'::name, 'bridge'::name, 'core'::name, 'features'::name, 'models'::name, 'predictions'::name]))
+  ORDER BY schemaname, relname;
+
+
+--
+-- Name: VIEW table_row_counts; Type: COMMENT; Schema: validation; Owner: -
+--
+
+COMMENT ON VIEW validation.table_row_counts IS 'Basic row count and maintenance statistics for all warehouse tables';
+
+
+--
+-- Name: batch_operations; Type: TABLE; Schema: warehouse; Owner: -
+--
+
+CREATE TABLE warehouse.batch_operations (
+    batch_id bigint NOT NULL,
+    batch_name text NOT NULL,
+    operation_type text NOT NULL,
+    target_schema text NOT NULL,
+    target_table text NOT NULL,
+    last_processed_id bigint,
+    total_rows bigint,
+    processed_rows bigint DEFAULT 0,
+    status text DEFAULT 'running'::text NOT NULL,
+    started_at timestamp with time zone DEFAULT now(),
+    completed_at timestamp with time zone,
+    error_message text,
+    retry_count integer DEFAULT 0,
+    run_id bigint,
+    batch_params jsonb DEFAULT '{}'::jsonb,
+    validation_checksum text,
+    CONSTRAINT batch_operations_operation_type_check CHECK ((operation_type = ANY (ARRAY['feature_engineering'::text, 'data_loading'::text, 'model_training'::text, 'inference'::text, 'analysis'::text]))),
+    CONSTRAINT batch_operations_status_check CHECK ((status = ANY (ARRAY['running'::text, 'completed'::text, 'failed'::text, 'paused'::text])))
+);
+
+
+--
+-- Name: TABLE batch_operations; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON TABLE warehouse.batch_operations IS 'Batch progress tracking. Tracks batch operations for resumable feature population.';
+
+
+--
+-- Name: COLUMN batch_operations.last_processed_id; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON COLUMN warehouse.batch_operations.last_processed_id IS 'Primary key of last processed row - used for resume after failure';
+
+
+--
+-- Name: COLUMN batch_operations.validation_checksum; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON COLUMN warehouse.batch_operations.validation_checksum IS 'MD5 or SHA-256 checksum of processed data for integrity validation';
+
+
+--
+-- Name: active_batches; Type: VIEW; Schema: warehouse; Owner: -
+--
+
+CREATE VIEW warehouse.active_batches AS
+ SELECT batch_id,
+    batch_name,
+    operation_type,
+    ((target_schema || '.'::text) || target_table) AS target_object,
+    status,
+    processed_rows,
+    total_rows,
+    round(((100.0 * (processed_rows)::numeric) / (NULLIF(total_rows, 0))::numeric), 2) AS pct_complete,
+    started_at,
+    (now() - started_at) AS elapsed_time,
+    retry_count
+   FROM warehouse.batch_operations
+  WHERE (status = ANY (ARRAY['running'::text, 'paused'::text]))
+  ORDER BY started_at;
+
+
+--
+-- Name: VIEW active_batches; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON VIEW warehouse.active_batches IS 'Currently running or paused batches with progress percentages';
+
+
+--
+-- Name: batch_operations_batch_id_seq; Type: SEQUENCE; Schema: warehouse; Owner: -
+--
+
+CREATE SEQUENCE warehouse.batch_operations_batch_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: batch_operations_batch_id_seq; Type: SEQUENCE OWNED BY; Schema: warehouse; Owner: -
+--
+
+ALTER SEQUENCE warehouse.batch_operations_batch_id_seq OWNED BY warehouse.batch_operations.batch_id;
+
+
+--
+-- Name: feature_population_summary; Type: VIEW; Schema: warehouse; Owner: -
+--
+
+CREATE VIEW warehouse.feature_population_summary AS
+ SELECT feature_category,
+    column_name,
+    populated_count,
+    total_count,
+    percent_complete,
+    status
+   FROM warehouse.verify_features_populated() verify_features_populated(feature_category, column_name, populated_count, total_count, percent_complete, status);
+
+
+--
+-- Name: VIEW feature_population_summary; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON VIEW warehouse.feature_population_summary IS 'Convenient view of feature population status';
+
+
+--
+-- Name: rebuild_log; Type: TABLE; Schema: warehouse; Owner: -
+--
+
+CREATE TABLE warehouse.rebuild_log (
+    log_id bigint NOT NULL,
+    run_id bigint NOT NULL,
+    phase character varying(50) NOT NULL,
+    phase_order integer NOT NULL,
+    status character varying(20) DEFAULT 'running'::character varying,
+    started_at timestamp with time zone DEFAULT now(),
+    completed_at timestamp with time zone,
+    rows_affected bigint,
+    execution_time_ms bigint,
+    error_message text,
+    phase_metadata jsonb DEFAULT '{}'::jsonb
+);
+
+
+--
+-- Name: TABLE rebuild_log; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON TABLE warehouse.rebuild_log IS 'Detailed phase logging. Logs each phase execution with timing and row counts.';
+
+
+--
+-- Name: COLUMN rebuild_log.phase; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON COLUMN warehouse.rebuild_log.phase IS 'Name of the rebuild phase';
+
+
+--
+-- Name: COLUMN rebuild_log.phase_order; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON COLUMN warehouse.rebuild_log.phase_order IS 'Execution order within the run (1, 2, 3, ...)';
+
+
+--
+-- Name: COLUMN rebuild_log.rows_affected; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON COLUMN warehouse.rebuild_log.rows_affected IS 'Number of rows inserted/updated in this phase';
+
+
+--
+-- Name: rebuild_log_log_id_seq; Type: SEQUENCE; Schema: warehouse; Owner: -
+--
+
+CREATE SEQUENCE warehouse.rebuild_log_log_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: rebuild_log_log_id_seq; Type: SEQUENCE OWNED BY; Schema: warehouse; Owner: -
+--
+
+ALTER SEQUENCE warehouse.rebuild_log_log_id_seq OWNED BY warehouse.rebuild_log.log_id;
+
+
+--
+-- Name: rebuild_runs; Type: TABLE; Schema: warehouse; Owner: -
+--
+
+CREATE TABLE warehouse.rebuild_runs (
+    run_id bigint NOT NULL,
+    run_mode character varying(20) DEFAULT 'full'::character varying NOT NULL,
+    started_at timestamp with time zone DEFAULT now(),
+    completed_at timestamp with time zone,
+    status character varying(20) DEFAULT 'running'::character varying,
+    target_seasons integer[],
+    error_message text,
+    run_metadata jsonb DEFAULT '{}'::jsonb,
+    created_by character varying(100) DEFAULT CURRENT_USER
+);
+
+
+--
+-- Name: TABLE rebuild_runs; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON TABLE warehouse.rebuild_runs IS 'Feature population run tracking. Orchestrates phased feature generation with status tracking.';
+
+
+--
+-- Name: COLUMN rebuild_runs.run_id; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON COLUMN warehouse.rebuild_runs.run_id IS 'Unique identifier for each rebuild run';
+
+
+--
+-- Name: COLUMN rebuild_runs.run_mode; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON COLUMN warehouse.rebuild_runs.run_mode IS 'full=all phases, resume=from last failure, quick=skip expensive ops';
+
+
+--
+-- Name: COLUMN rebuild_runs.status; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON COLUMN warehouse.rebuild_runs.status IS 'Current state of the rebuild run';
+
+
+--
+-- Name: COLUMN rebuild_runs.target_seasons; Type: COMMENT; Schema: warehouse; Owner: -
+--
+
+COMMENT ON COLUMN warehouse.rebuild_runs.target_seasons IS 'Optional array of specific seasons to rebuild';
+
+
+--
+-- Name: rebuild_runs_run_id_seq; Type: SEQUENCE; Schema: warehouse; Owner: -
+--
+
+CREATE SEQUENCE warehouse.rebuild_runs_run_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: rebuild_runs_run_id_seq; Type: SEQUENCE OWNED BY; Schema: warehouse; Owner: -
+--
+
+ALTER SEQUENCE warehouse.rebuild_runs_run_id_seq OWNED BY warehouse.rebuild_runs.run_id;
+
+
+--
+-- Name: park_xref park_xref_id; Type: DEFAULT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.park_xref ALTER COLUMN park_xref_id SET DEFAULT nextval('bridge.park_xref_park_xref_id_seq'::regclass);
+
+
+--
+-- Name: player_xref player_xref_id; Type: DEFAULT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.player_xref ALTER COLUMN player_xref_id SET DEFAULT nextval('bridge.player_xref_player_xref_id_seq'::regclass);
+
+
+--
+-- Name: team_xref team_xref_id; Type: DEFAULT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.team_xref ALTER COLUMN team_xref_id SET DEFAULT nextval('bridge.team_xref_team_xref_id_seq'::regclass);
+
+
+--
+-- Name: query_logs query_log_id; Type: DEFAULT; Schema: chat; Owner: -
+--
+
+ALTER TABLE ONLY chat.query_logs ALTER COLUMN query_log_id SET DEFAULT nextval('chat.query_logs_query_log_id_seq'::regclass);
+
+
+--
+-- Name: base_features pitch_id; Type: DEFAULT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.base_features ALTER COLUMN pitch_id SET DEFAULT nextval('features_pitch.base_features_pitch_id_seq'::regclass);
+
+
+--
+-- Name: feature_registry feature_id; Type: DEFAULT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.feature_registry ALTER COLUMN feature_id SET DEFAULT nextval('features_pitch.feature_registry_feature_id_seq'::regclass);
+
+
+--
+-- Name: locations id; Type: DEFAULT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.locations ALTER COLUMN id SET DEFAULT nextval('features_pitch.locations_id_seq'::regclass);
+
+
+--
+-- Name: model_training_set training_id; Type: DEFAULT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.model_training_set ALTER COLUMN training_id SET DEFAULT nextval('features_pitch.model_training_set_training_id_seq'::regclass);
+
+
+--
+-- Name: pitch_sequences sequence_id; Type: DEFAULT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.pitch_sequences ALTER COLUMN sequence_id SET DEFAULT nextval('features_pitch.pitch_sequences_sequence_id_seq'::regclass);
+
+
+--
+-- Name: sequential_features sequence_id; Type: DEFAULT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.sequential_features ALTER COLUMN sequence_id SET DEFAULT nextval('features_pitch.sequential_features_sequence_id_seq'::regclass);
+
+
+--
+-- Name: detected_edges detected_edge_id; Type: DEFAULT; Schema: market_edges; Owner: -
+--
+
+ALTER TABLE ONLY market_edges.detected_edges ALTER COLUMN detected_edge_id SET DEFAULT nextval('market_edges.detected_edges_detected_edge_id_seq'::regclass);
+
+
+--
+-- Name: market_prices market_price_id; Type: DEFAULT; Schema: market_edges; Owner: -
+--
+
+ALTER TABLE ONLY market_edges.market_prices ALTER COLUMN market_price_id SET DEFAULT nextval('market_edges.market_prices_market_price_id_seq'::regclass);
+
+
+--
+-- Name: column_dictionary column_id; Type: DEFAULT; Schema: metadata; Owner: -
+--
+
+ALTER TABLE ONLY metadata.column_dictionary ALTER COLUMN column_id SET DEFAULT nextval('metadata.column_dictionary_column_id_seq'::regclass);
+
+
+--
+-- Name: table_dictionary table_id; Type: DEFAULT; Schema: metadata; Owner: -
+--
+
+ALTER TABLE ONLY metadata.table_dictionary ALTER COLUMN table_id SET DEFAULT nextval('metadata.table_dictionary_table_id_seq'::regclass);
+
+
+--
+-- Name: model_registry model_id; Type: DEFAULT; Schema: models; Owner: -
+--
+
+ALTER TABLE ONLY models.model_registry ALTER COLUMN model_id SET DEFAULT nextval('models.model_registry_model_id_seq'::regclass);
+
+
+--
+-- Name: api_prediction_requests api_request_id; Type: DEFAULT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.api_prediction_requests ALTER COLUMN api_request_id SET DEFAULT nextval('predictions.api_prediction_requests_api_request_id_seq'::regclass);
+
+
+--
+-- Name: bootstrap_reports bootstrap_report_id; Type: DEFAULT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.bootstrap_reports ALTER COLUMN bootstrap_report_id SET DEFAULT nextval('predictions.bootstrap_reports_bootstrap_report_id_seq'::regclass);
+
+
+--
+-- Name: calibration_reports calibration_report_id; Type: DEFAULT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.calibration_reports ALTER COLUMN calibration_report_id SET DEFAULT nextval('predictions.calibration_reports_calibration_report_id_seq'::regclass);
+
+
+--
+-- Name: live_pa_predictions live_pa_prediction_id; Type: DEFAULT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.live_pa_predictions ALTER COLUMN live_pa_prediction_id SET DEFAULT nextval('predictions.live_pa_predictions_live_pa_prediction_id_seq'::regclass);
+
+
+--
+-- Name: pa_predictions pa_prediction_id; Type: DEFAULT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.pa_predictions ALTER COLUMN pa_prediction_id SET DEFAULT nextval('predictions.pa_predictions_pa_prediction_id_seq'::regclass);
+
+
+--
+-- Name: prediction_runs prediction_run_id; Type: DEFAULT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.prediction_runs ALTER COLUMN prediction_run_id SET DEFAULT nextval('predictions.prediction_runs_prediction_run_id_seq'::regclass);
+
+
+--
+-- Name: simulation_runs simulation_run_id; Type: DEFAULT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.simulation_runs ALTER COLUMN simulation_run_id SET DEFAULT nextval('predictions.simulation_runs_simulation_run_id_seq'::regclass);
+
+
+--
+-- Name: target_probabilities prediction_id; Type: DEFAULT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.target_probabilities ALTER COLUMN prediction_id SET DEFAULT nextval('predictions.target_probabilities_prediction_id_seq'::regclass);
+
+
+--
+-- Name: game_snapshots snapshot_id; Type: DEFAULT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.game_snapshots ALTER COLUMN snapshot_id SET DEFAULT nextval('raw_espn.game_snapshots_snapshot_id_seq'::regclass);
+
+
+--
+-- Name: player_stats_snapshots snapshot_id; Type: DEFAULT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.player_stats_snapshots ALTER COLUMN snapshot_id SET DEFAULT nextval('raw_espn.player_stats_snapshots_snapshot_id_seq'::regclass);
+
+
+--
+-- Name: plays_snapshots snapshot_id; Type: DEFAULT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.plays_snapshots ALTER COLUMN snapshot_id SET DEFAULT nextval('raw_espn.plays_snapshots_snapshot_id_seq'::regclass);
+
+
+--
+-- Name: schedule_snapshots snapshot_id; Type: DEFAULT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.schedule_snapshots ALTER COLUMN snapshot_id SET DEFAULT nextval('raw_espn.schedule_snapshots_snapshot_id_seq'::regclass);
+
+
+--
+-- Name: team_stats_snapshots snapshot_id; Type: DEFAULT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.team_stats_snapshots ALTER COLUMN snapshot_id SET DEFAULT nextval('raw_espn.team_stats_snapshots_snapshot_id_seq'::regclass);
+
+
+--
+-- Name: market_snapshots market_snapshot_id; Type: DEFAULT; Schema: raw_markets; Owner: -
+--
+
+ALTER TABLE ONLY raw_markets.market_snapshots ALTER COLUMN market_snapshot_id SET DEFAULT nextval('raw_markets.market_snapshots_market_snapshot_id_seq'::regclass);
+
+
+--
+-- Name: boxscore_snapshots id; Type: DEFAULT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.boxscore_snapshots ALTER COLUMN id SET DEFAULT nextval('raw_mlb.boxscore_snapshots_id_seq'::regclass);
+
+
+--
+-- Name: gameday_xml_snapshots id; Type: DEFAULT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.gameday_xml_snapshots ALTER COLUMN id SET DEFAULT nextval('raw_mlb.gameday_xml_snapshots_id_seq'::regclass);
+
+
+--
+-- Name: live_feed_snapshots snapshot_id; Type: DEFAULT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.live_feed_snapshots ALTER COLUMN snapshot_id SET DEFAULT nextval('raw_mlb.live_feed_snapshots_snapshot_id_seq'::regclass);
+
+
+--
+-- Name: pitch_metrics_snapshots id; Type: DEFAULT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.pitch_metrics_snapshots ALTER COLUMN id SET DEFAULT nextval('raw_mlb.pitch_metrics_snapshots_id_seq'::regclass);
+
+
+--
+-- Name: play_by_play_snapshots id; Type: DEFAULT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.play_by_play_snapshots ALTER COLUMN id SET DEFAULT nextval('raw_mlb.play_by_play_snapshots_id_seq'::regclass);
+
+
+--
+-- Name: player_stats_snapshots id; Type: DEFAULT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.player_stats_snapshots ALTER COLUMN id SET DEFAULT nextval('raw_mlb.player_stats_snapshots_id_seq'::regclass);
+
+
+--
+-- Name: reference_snapshots snapshot_id; Type: DEFAULT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.reference_snapshots ALTER COLUMN snapshot_id SET DEFAULT nextval('raw_mlb.reference_snapshots_snapshot_id_seq'::regclass);
+
+
+--
+-- Name: roster_snapshots id; Type: DEFAULT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.roster_snapshots ALTER COLUMN id SET DEFAULT nextval('raw_mlb.roster_snapshots_id_seq'::regclass);
+
+
+--
+-- Name: schedule_snapshots snapshot_id; Type: DEFAULT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.schedule_snapshots ALTER COLUMN snapshot_id SET DEFAULT nextval('raw_mlb.schedule_snapshots_snapshot_id_seq'::regclass);
+
+
+--
+-- Name: standings_snapshots id; Type: DEFAULT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.standings_snapshots ALTER COLUMN id SET DEFAULT nextval('raw_mlb.standings_snapshots_id_seq'::regclass);
+
+
+--
+-- Name: team_stats_snapshots id; Type: DEFAULT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.team_stats_snapshots ALTER COLUMN id SET DEFAULT nextval('raw_mlb.team_stats_snapshots_id_seq'::regclass);
+
+
+--
+-- Name: win_probability_snapshots id; Type: DEFAULT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.win_probability_snapshots ALTER COLUMN id SET DEFAULT nextval('raw_mlb.win_probability_snapshots_id_seq'::regclass);
+
+
+--
+-- Name: ingest_runs ingest_run_id; Type: DEFAULT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.ingest_runs ALTER COLUMN ingest_run_id SET DEFAULT nextval('raw_retrosheet.ingest_runs_ingest_run_id_seq'::regclass);
+
+
+--
+-- Name: game_snapshots id; Type: DEFAULT; Schema: raw_sportradar; Owner: -
+--
+
+ALTER TABLE ONLY raw_sportradar.game_snapshots ALTER COLUMN id SET DEFAULT nextval('raw_sportradar.game_snapshots_id_seq'::regclass);
+
+
+--
+-- Name: push_events id; Type: DEFAULT; Schema: raw_sportradar; Owner: -
+--
+
+ALTER TABLE ONLY raw_sportradar.push_events ALTER COLUMN id SET DEFAULT nextval('raw_sportradar.push_events_id_seq'::regclass);
+
+
+--
+-- Name: runs run_id; Type: DEFAULT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.runs ALTER COLUMN run_id SET DEFAULT nextval('test.runs_run_id_seq'::regclass);
+
+
+--
+-- Name: batch_operations batch_id; Type: DEFAULT; Schema: warehouse; Owner: -
+--
+
+ALTER TABLE ONLY warehouse.batch_operations ALTER COLUMN batch_id SET DEFAULT nextval('warehouse.batch_operations_batch_id_seq'::regclass);
+
+
+--
+-- Name: rebuild_log log_id; Type: DEFAULT; Schema: warehouse; Owner: -
+--
+
+ALTER TABLE ONLY warehouse.rebuild_log ALTER COLUMN log_id SET DEFAULT nextval('warehouse.rebuild_log_log_id_seq'::regclass);
+
+
+--
+-- Name: rebuild_runs run_id; Type: DEFAULT; Schema: warehouse; Owner: -
+--
+
+ALTER TABLE ONLY warehouse.rebuild_runs ALTER COLUMN run_id SET DEFAULT nextval('warehouse.rebuild_runs_run_id_seq'::regclass);
+
+
+--
+-- Name: _staging_chadwick_register _staging_chadwick_register_pkey; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge._staging_chadwick_register
+    ADD CONSTRAINT _staging_chadwick_register_pkey PRIMARY KEY (key_uuid);
+
+
+--
+-- Name: _staging_lahman_people _staging_lahman_people_pkey; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge._staging_lahman_people
+    ADD CONSTRAINT _staging_lahman_people_pkey PRIMARY KEY (lahman_id);
+
+
+--
+-- Name: external_player_xref external_player_xref_pkey; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.external_player_xref
+    ADD CONSTRAINT external_player_xref_pkey PRIMARY KEY (external_source, external_player_id);
+
+
+--
+-- Name: external_team_xref external_team_xref_pkey; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.external_team_xref
+    ADD CONSTRAINT external_team_xref_pkey PRIMARY KEY (external_source, external_team_id);
+
+
+--
+-- Name: game_xref game_xref_mlb_game_pk_key; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.game_xref
+    ADD CONSTRAINT game_xref_mlb_game_pk_key UNIQUE (mlb_game_pk);
+
+
+--
+-- Name: game_xref game_xref_pkey; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.game_xref
+    ADD CONSTRAINT game_xref_pkey PRIMARY KEY (retrosheet_game_id);
+
+
+--
+-- Name: park_xref park_xref_mlb_venue_id_key; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.park_xref
+    ADD CONSTRAINT park_xref_mlb_venue_id_key UNIQUE (mlb_venue_id);
+
+
+--
+-- Name: park_xref park_xref_pkey; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.park_xref
+    ADD CONSTRAINT park_xref_pkey PRIMARY KEY (park_xref_id);
+
+
+--
+-- Name: park_xref park_xref_retrosheet_park_id_key; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.park_xref
+    ADD CONSTRAINT park_xref_retrosheet_park_id_key UNIQUE (retrosheet_park_id);
+
+
+--
+-- Name: player_xref player_xref_mlb_id_key; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.player_xref
+    ADD CONSTRAINT player_xref_mlb_id_key UNIQUE (mlb_id);
+
+
+--
+-- Name: player_xref player_xref_pkey; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.player_xref
+    ADD CONSTRAINT player_xref_pkey PRIMARY KEY (player_xref_id);
+
+
+--
+-- Name: player_xref player_xref_retrosheet_id_key; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.player_xref
+    ADD CONSTRAINT player_xref_retrosheet_id_key UNIQUE (retrosheet_id);
+
+
+--
+-- Name: team_xref team_xref_pkey; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.team_xref
+    ADD CONSTRAINT team_xref_pkey PRIMARY KEY (team_xref_id);
+
+
+--
+-- Name: team_xref team_xref_retrosheet_team_id_key; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.team_xref
+    ADD CONSTRAINT team_xref_retrosheet_team_id_key UNIQUE (retrosheet_team_id);
+
+
+--
+-- Name: coach_xref uk_coach_xref_espn; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.coach_xref
+    ADD CONSTRAINT uk_coach_xref_espn UNIQUE (espn_coach_id);
+
+
+--
+-- Name: coach_xref uk_coach_xref_lahman; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.coach_xref
+    ADD CONSTRAINT uk_coach_xref_lahman UNIQUE (lahman_coach_id);
+
+
+--
+-- Name: coach_xref uk_coach_xref_mlb; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.coach_xref
+    ADD CONSTRAINT uk_coach_xref_mlb UNIQUE (mlb_coach_id);
+
+
+--
+-- Name: coach_xref uk_coach_xref_retrosheet; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.coach_xref
+    ADD CONSTRAINT uk_coach_xref_retrosheet UNIQUE (retrosheet_coach_id);
+
+
+--
+-- Name: umpire_xref uk_umpire_xref_espn; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.umpire_xref
+    ADD CONSTRAINT uk_umpire_xref_espn UNIQUE (espn_umpire_id);
+
+
+--
+-- Name: umpire_xref uk_umpire_xref_lahman; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.umpire_xref
+    ADD CONSTRAINT uk_umpire_xref_lahman UNIQUE (lahman_umpire_id);
+
+
+--
+-- Name: umpire_xref uk_umpire_xref_mlb; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.umpire_xref
+    ADD CONSTRAINT uk_umpire_xref_mlb UNIQUE (mlb_umpire_id);
+
+
+--
+-- Name: umpire_xref uk_umpire_xref_retrosheet; Type: CONSTRAINT; Schema: bridge; Owner: -
+--
+
+ALTER TABLE ONLY bridge.umpire_xref
+    ADD CONSTRAINT uk_umpire_xref_retrosheet UNIQUE (retrosheet_umpire_id);
+
+
+--
+-- Name: query_logs query_logs_pkey; Type: CONSTRAINT; Schema: chat; Owner: -
+--
+
+ALTER TABLE ONLY chat.query_logs
+    ADD CONSTRAINT query_logs_pkey PRIMARY KEY (query_log_id);
+
+
+--
+-- Name: events events_pk; Type: CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.events
+    ADD CONSTRAINT events_pk PRIMARY KEY (game_id, event_id);
+
+
+--
+-- Name: games games_pkey; Type: CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.games
+    ADD CONSTRAINT games_pkey PRIMARY KEY (game_id);
+
+
+--
+-- Name: live_plate_appearances live_plate_appearances_pkey; Type: CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.live_plate_appearances
+    ADD CONSTRAINT live_plate_appearances_pkey PRIMARY KEY (game_id, plate_appearance_id);
+
+
+--
+-- Name: parks parks_pkey; Type: CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.parks
+    ADD CONSTRAINT parks_pkey PRIMARY KEY (retrosheet_park_id);
+
+
+--
+-- Name: plate_appearances plate_appearances_pk; Type: CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.plate_appearances
+    ADD CONSTRAINT plate_appearances_pk PRIMARY KEY (game_id, plate_appearance_id);
+
+
+--
+-- Name: players players_pkey; Type: CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.players
+    ADD CONSTRAINT players_pkey PRIMARY KEY (retrosheet_player_id);
+
+
+--
+-- Name: teams teams_pkey; Type: CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.teams
+    ADD CONSTRAINT teams_pkey PRIMARY KEY (retrosheet_team_id);
+
+
+--
+-- Name: play_snapshot play_snapshot_pkey; Type: CONSTRAINT; Schema: features; Owner: -
+--
+
+ALTER TABLE ONLY features.play_snapshot
+    ADD CONSTRAINT play_snapshot_pkey PRIMARY KEY (game_pk, play_id);
+
+
+--
+-- Name: base_features base_features_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.base_features
+    ADD CONSTRAINT base_features_pkey PRIMARY KEY (pitch_id);
+
+
+--
+-- Name: batter_pitch_type_performance batter_pitch_type_performance_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.batter_pitch_type_performance
+    ADD CONSTRAINT batter_pitch_type_performance_pkey PRIMARY KEY (batter_id, game_year, pitch_type);
+
+
+--
+-- Name: batter_zone_profiles batter_zone_profiles_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.batter_zone_profiles
+    ADD CONSTRAINT batter_zone_profiles_pkey PRIMARY KEY (batter_id, game_year, zone);
+
+
+--
+-- Name: count_performance count_performance_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.count_performance
+    ADD CONSTRAINT count_performance_pkey PRIMARY KEY (player_id, player_type, game_year, balls, strikes);
+
+
+--
+-- Name: engineered_features engineered_features_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.engineered_features
+    ADD CONSTRAINT engineered_features_pkey PRIMARY KEY (pitch_id);
+
+
+--
+-- Name: feature_registry feature_registry_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.feature_registry
+    ADD CONSTRAINT feature_registry_pkey PRIMARY KEY (feature_id);
+
+
+--
+-- Name: feature_registry feature_registry_schema_name_table_name_column_name_key; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.feature_registry
+    ADD CONSTRAINT feature_registry_schema_name_table_name_column_name_key UNIQUE (schema_name, table_name, column_name);
+
+
+--
+-- Name: locations locations_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.locations
+    ADD CONSTRAINT locations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: matchup_history matchup_history_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.matchup_history
+    ADD CONSTRAINT matchup_history_pkey PRIMARY KEY (pitcher_id, batter_id, game_year);
+
+
+--
+-- Name: model_training_set model_training_set_model_name_model_version_pitch_id_key; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.model_training_set
+    ADD CONSTRAINT model_training_set_model_name_model_version_pitch_id_key UNIQUE (model_name, model_version, pitch_id);
+
+
+--
+-- Name: model_training_set model_training_set_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.model_training_set
+    ADD CONSTRAINT model_training_set_pkey PRIMARY KEY (training_id);
+
+
+--
+-- Name: pitch_sequences pitch_sequences_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.pitch_sequences
+    ADD CONSTRAINT pitch_sequences_pkey PRIMARY KEY (sequence_id);
+
+
+--
+-- Name: pitcher_arsenals pitcher_arsenals_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.pitcher_arsenals
+    ADD CONSTRAINT pitcher_arsenals_pkey PRIMARY KEY (pitcher_id, game_year, pitch_type);
+
+
+--
+-- Name: player_context player_context_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.player_context
+    ADD CONSTRAINT player_context_pkey PRIMARY KEY (player_id, season, game_date, role, window_type);
+
+
+--
+-- Name: sequential_features sequential_features_pkey; Type: CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.sequential_features
+    ADD CONSTRAINT sequential_features_pkey PRIMARY KEY (sequence_id);
+
+
+--
+-- Name: simulation_states simulation_states_pkey; Type: CONSTRAINT; Schema: inference; Owner: -
+--
+
+ALTER TABLE ONLY inference.simulation_states
+    ADD CONSTRAINT simulation_states_pkey PRIMARY KEY (simulation_id);
+
+
+--
+-- Name: detected_edges detected_edges_pkey; Type: CONSTRAINT; Schema: market_edges; Owner: -
+--
+
+ALTER TABLE ONLY market_edges.detected_edges
+    ADD CONSTRAINT detected_edges_pkey PRIMARY KEY (detected_edge_id);
+
+
+--
+-- Name: market_prices market_prices_pkey; Type: CONSTRAINT; Schema: market_edges; Owner: -
+--
+
+ALTER TABLE ONLY market_edges.market_prices
+    ADD CONSTRAINT market_prices_pkey PRIMARY KEY (market_price_id);
+
+
+--
+-- Name: column_dictionary column_dictionary_pkey; Type: CONSTRAINT; Schema: metadata; Owner: -
+--
+
+ALTER TABLE ONLY metadata.column_dictionary
+    ADD CONSTRAINT column_dictionary_pkey PRIMARY KEY (column_id);
+
+
+--
+-- Name: column_dictionary column_dictionary_table_id_column_name_key; Type: CONSTRAINT; Schema: metadata; Owner: -
+--
+
+ALTER TABLE ONLY metadata.column_dictionary
+    ADD CONSTRAINT column_dictionary_table_id_column_name_key UNIQUE (table_id, column_name);
+
+
+--
+-- Name: table_dictionary table_dictionary_pkey; Type: CONSTRAINT; Schema: metadata; Owner: -
+--
+
+ALTER TABLE ONLY metadata.table_dictionary
+    ADD CONSTRAINT table_dictionary_pkey PRIMARY KEY (table_id);
+
+
+--
+-- Name: table_dictionary table_dictionary_schemaname_tablename_key; Type: CONSTRAINT; Schema: metadata; Owner: -
+--
+
+ALTER TABLE ONLY metadata.table_dictionary
+    ADD CONSTRAINT table_dictionary_schemaname_tablename_key UNIQUE (schemaname, tablename);
+
+
+--
+-- Name: games games_pkey; Type: CONSTRAINT; Schema: mlb; Owner: -
+--
+
+ALTER TABLE ONLY mlb.games
+    ADD CONSTRAINT games_pkey PRIMARY KEY (game_pk);
+
+
+--
+-- Name: pitches pitches_pitch_uid_key; Type: CONSTRAINT; Schema: mlb; Owner: -
+--
+
+ALTER TABLE ONLY mlb.pitches
+    ADD CONSTRAINT pitches_pitch_uid_key UNIQUE (pitch_uid);
+
+
+--
+-- Name: pitches pitches_pkey; Type: CONSTRAINT; Schema: mlb; Owner: -
+--
+
+ALTER TABLE ONLY mlb.pitches
+    ADD CONSTRAINT pitches_pkey PRIMARY KEY (game_pk, event_index, pitch_index);
+
+
+--
+-- Name: play_events play_events_pkey; Type: CONSTRAINT; Schema: mlb; Owner: -
+--
+
+ALTER TABLE ONLY mlb.play_events
+    ADD CONSTRAINT play_events_pkey PRIMARY KEY (game_pk, event_index);
+
+
+--
+-- Name: players players_pkey; Type: CONSTRAINT; Schema: mlb; Owner: -
+--
+
+ALTER TABLE ONLY mlb.players
+    ADD CONSTRAINT players_pkey PRIMARY KEY (mlb_id);
+
+
+--
+-- Name: teams teams_pkey; Type: CONSTRAINT; Schema: mlb; Owner: -
+--
+
+ALTER TABLE ONLY mlb.teams
+    ADD CONSTRAINT teams_pkey PRIMARY KEY (mlb_id);
+
+
+--
+-- Name: venues venues_pkey; Type: CONSTRAINT; Schema: mlb; Owner: -
+--
+
+ALTER TABLE ONLY mlb.venues
+    ADD CONSTRAINT venues_pkey PRIMARY KEY (mlb_id);
+
+
+--
+-- Name: batter_pitcher_history batter_pitcher_history_pkey; Type: CONSTRAINT; Schema: mlb_enhanced; Owner: -
+--
+
+ALTER TABLE ONLY mlb_enhanced.batter_pitcher_history
+    ADD CONSTRAINT batter_pitcher_history_pkey PRIMARY KEY (batter_id, pitcher_id, season);
+
+
+--
+-- Name: player_advanced_stats player_advanced_stats_pkey; Type: CONSTRAINT; Schema: mlb_enhanced; Owner: -
+--
+
+ALTER TABLE ONLY mlb_enhanced.player_advanced_stats
+    ADD CONSTRAINT player_advanced_stats_pkey PRIMARY KEY (player_id, season, is_batter);
+
+
+--
+-- Name: statcast_pitches statcast_pitches_pkey; Type: CONSTRAINT; Schema: mlb_enhanced; Owner: -
+--
+
+ALTER TABLE ONLY mlb_enhanced.statcast_pitches
+    ADD CONSTRAINT statcast_pitches_pkey PRIMARY KEY (game_pk, event_sequence, pitch_number);
+
+
+--
+-- Name: batter_pitcher_matchups batter_pitcher_matchups_pkey; Type: CONSTRAINT; Schema: mlb_features; Owner: -
+--
+
+ALTER TABLE ONLY mlb_features.batter_pitcher_matchups
+    ADD CONSTRAINT batter_pitcher_matchups_pkey PRIMARY KEY (batter_id, pitcher_id, season);
+
+
+--
+-- Name: game_state_features game_state_features_pkey; Type: CONSTRAINT; Schema: mlb_features; Owner: -
+--
+
+ALTER TABLE ONLY mlb_features.game_state_features
+    ADD CONSTRAINT game_state_features_pkey PRIMARY KEY (game_id, event_sequence);
+
+
+--
+-- Name: park_factors park_factors_pkey; Type: CONSTRAINT; Schema: mlb_features; Owner: -
+--
+
+ALTER TABLE ONLY mlb_features.park_factors
+    ADD CONSTRAINT park_factors_pkey PRIMARY KEY (park_id, season);
+
+
+--
+-- Name: player_season_stats player_season_stats_pkey; Type: CONSTRAINT; Schema: mlb_features; Owner: -
+--
+
+ALTER TABLE ONLY mlb_features.player_season_stats
+    ADD CONSTRAINT player_season_stats_pkey PRIMARY KEY (player_id, season, is_batter);
+
+
+--
+-- Name: team_season_stats team_season_stats_pkey; Type: CONSTRAINT; Schema: mlb_features; Owner: -
+--
+
+ALTER TABLE ONLY mlb_features.team_season_stats
+    ADD CONSTRAINT team_season_stats_pkey PRIMARY KEY (team_id, season);
+
+
+--
+-- Name: model_registry model_registry_pkey; Type: CONSTRAINT; Schema: models; Owner: -
+--
+
+ALTER TABLE ONLY models.model_registry
+    ADD CONSTRAINT model_registry_pkey PRIMARY KEY (model_id);
+
+
+--
+-- Name: model_registry model_registry_target_id_model_name_model_version_key; Type: CONSTRAINT; Schema: models; Owner: -
+--
+
+ALTER TABLE ONLY models.model_registry
+    ADD CONSTRAINT model_registry_target_id_model_name_model_version_key UNIQUE (target_id, model_name, model_version);
+
+
+--
+-- Name: api_prediction_requests api_prediction_requests_pkey; Type: CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.api_prediction_requests
+    ADD CONSTRAINT api_prediction_requests_pkey PRIMARY KEY (api_request_id);
+
+
+--
+-- Name: api_prediction_requests api_prediction_requests_request_id_key; Type: CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.api_prediction_requests
+    ADD CONSTRAINT api_prediction_requests_request_id_key UNIQUE (request_id);
+
+
+--
+-- Name: bootstrap_reports bootstrap_reports_pkey; Type: CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.bootstrap_reports
+    ADD CONSTRAINT bootstrap_reports_pkey PRIMARY KEY (bootstrap_report_id);
+
+
+--
+-- Name: calibration_reports calibration_reports_pkey; Type: CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.calibration_reports
+    ADD CONSTRAINT calibration_reports_pkey PRIMARY KEY (calibration_report_id);
+
+
+--
+-- Name: live_pa_predictions live_pa_predictions_pkey; Type: CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.live_pa_predictions
+    ADD CONSTRAINT live_pa_predictions_pkey PRIMARY KEY (live_pa_prediction_id);
+
+
+--
+-- Name: pa_predictions pa_predictions_pkey; Type: CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.pa_predictions
+    ADD CONSTRAINT pa_predictions_pkey PRIMARY KEY (pa_prediction_id);
+
+
+--
+-- Name: prediction_runs prediction_runs_pkey; Type: CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.prediction_runs
+    ADD CONSTRAINT prediction_runs_pkey PRIMARY KEY (prediction_run_id);
+
+
+--
+-- Name: prediction_targets prediction_targets_pkey; Type: CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.prediction_targets
+    ADD CONSTRAINT prediction_targets_pkey PRIMARY KEY (target_id);
+
+
+--
+-- Name: simulation_runs simulation_runs_pkey; Type: CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.simulation_runs
+    ADD CONSTRAINT simulation_runs_pkey PRIMARY KEY (simulation_run_id);
+
+
+--
+-- Name: target_probabilities target_probabilities_pkey; Type: CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.target_probabilities
+    ADD CONSTRAINT target_probabilities_pkey PRIMARY KEY (prediction_id);
+
+
+--
+-- Name: win_probabilities win_probabilities_pkey; Type: CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.win_probabilities
+    ADD CONSTRAINT win_probabilities_pkey PRIMARY KEY (game_id);
+
+
+--
+-- Name: game_logs game_logs_pkey; Type: CONSTRAINT; Schema: raw_baseball_reference; Owner: -
+--
+
+ALTER TABLE ONLY raw_baseball_reference.game_logs
+    ADD CONSTRAINT game_logs_pkey PRIMARY KEY (game_id, player_id);
+
+
+--
+-- Name: batting_stats batting_stats_season_player_id_team_key; Type: CONSTRAINT; Schema: raw_bref; Owner: -
+--
+
+ALTER TABLE ONLY raw_bref.batting_stats
+    ADD CONSTRAINT batting_stats_season_player_id_team_key UNIQUE (season, player_id, team);
+
+
+--
+-- Name: pitching_stats pitching_stats_season_player_id_team_key; Type: CONSTRAINT; Schema: raw_bref; Owner: -
+--
+
+ALTER TABLE ONLY raw_bref.pitching_stats
+    ADD CONSTRAINT pitching_stats_season_player_id_team_key UNIQUE (season, player_id, team);
+
+
+--
+-- Name: game_snapshots game_snapshots_pkey; Type: CONSTRAINT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.game_snapshots
+    ADD CONSTRAINT game_snapshots_pkey PRIMARY KEY (snapshot_id);
+
+
+--
+-- Name: player_stats_snapshots player_stats_snapshots_pkey; Type: CONSTRAINT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.player_stats_snapshots
+    ADD CONSTRAINT player_stats_snapshots_pkey PRIMARY KEY (snapshot_id);
+
+
+--
+-- Name: plays_snapshots plays_snapshots_pkey; Type: CONSTRAINT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.plays_snapshots
+    ADD CONSTRAINT plays_snapshots_pkey PRIMARY KEY (snapshot_id);
+
+
+--
+-- Name: game_snapshots raw_espn_game_snapshots_unique; Type: CONSTRAINT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.game_snapshots
+    ADD CONSTRAINT raw_espn_game_snapshots_unique UNIQUE (game_id, fetched_at);
+
+
+--
+-- Name: player_stats_snapshots raw_espn_player_stats_snapshots_unique; Type: CONSTRAINT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.player_stats_snapshots
+    ADD CONSTRAINT raw_espn_player_stats_snapshots_unique UNIQUE (player_id, season, stat_type, fetched_at);
+
+
+--
+-- Name: plays_snapshots raw_espn_plays_snapshots_unique; Type: CONSTRAINT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.plays_snapshots
+    ADD CONSTRAINT raw_espn_plays_snapshots_unique UNIQUE (game_id, fetched_at);
+
+
+--
+-- Name: schedule_snapshots raw_espn_schedule_snapshots_unique; Type: CONSTRAINT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.schedule_snapshots
+    ADD CONSTRAINT raw_espn_schedule_snapshots_unique UNIQUE (date, fetched_at);
+
+
+--
+-- Name: team_stats_snapshots raw_espn_team_stats_snapshots_unique; Type: CONSTRAINT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.team_stats_snapshots
+    ADD CONSTRAINT raw_espn_team_stats_snapshots_unique UNIQUE (team_id, season, stat_type, fetched_at);
+
+
+--
+-- Name: schedule_snapshots schedule_snapshots_pkey; Type: CONSTRAINT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.schedule_snapshots
+    ADD CONSTRAINT schedule_snapshots_pkey PRIMARY KEY (snapshot_id);
+
+
+--
+-- Name: team_stats_snapshots team_stats_snapshots_pkey; Type: CONSTRAINT; Schema: raw_espn; Owner: -
+--
+
+ALTER TABLE ONLY raw_espn.team_stats_snapshots
+    ADD CONSTRAINT team_stats_snapshots_pkey PRIMARY KEY (snapshot_id);
+
+
+--
+-- Name: baseball_data_com baseball_data_com_pkey; Type: CONSTRAINT; Schema: raw_external; Owner: -
+--
+
+ALTER TABLE ONLY raw_external.baseball_data_com
+    ADD CONSTRAINT baseball_data_com_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: all_star_full all_star_full_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.all_star_full
+    ADD CONSTRAINT all_star_full_pkey PRIMARY KEY (playerid, yearid, gamenum, gameid);
+
+
+--
+-- Name: appearances appearances_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.appearances
+    ADD CONSTRAINT appearances_pkey PRIMARY KEY (yearid, teamid, playerid);
+
+
+--
+-- Name: awards_managers awards_managers_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.awards_managers
+    ADD CONSTRAINT awards_managers_pkey PRIMARY KEY (playerid, awardid, yearid, lgid);
+
+
+--
+-- Name: awards_players awards_players_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.awards_players
+    ADD CONSTRAINT awards_players_pkey PRIMARY KEY (playerid, awardid, yearid, lgid);
+
+
+--
+-- Name: awards_share_managers awards_share_managers_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.awards_share_managers
+    ADD CONSTRAINT awards_share_managers_pkey PRIMARY KEY (awardid, yearid, lgid, playerid);
+
+
+--
+-- Name: awards_share_players awards_share_players_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.awards_share_players
+    ADD CONSTRAINT awards_share_players_pkey PRIMARY KEY (awardid, yearid, lgid, playerid);
+
+
+--
+-- Name: batting batting_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.batting
+    ADD CONSTRAINT batting_pkey PRIMARY KEY (playerid, yearid, stint, teamid);
+
+
+--
+-- Name: batting_post batting_post_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.batting_post
+    ADD CONSTRAINT batting_post_pkey PRIMARY KEY (playerid, yearid, round, teamid);
+
+
+--
+-- Name: college_playing college_playing_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.college_playing
+    ADD CONSTRAINT college_playing_pkey PRIMARY KEY (playerid, schoolid, yearid);
+
+
+--
+-- Name: fielding_of fielding_of_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.fielding_of
+    ADD CONSTRAINT fielding_of_pkey PRIMARY KEY (playerid, yearid, stint);
+
+
+--
+-- Name: fielding_of_split fielding_of_split_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.fielding_of_split
+    ADD CONSTRAINT fielding_of_split_pkey PRIMARY KEY (playerid, yearid, stint, teamid, pos);
+
+
+--
+-- Name: fielding fielding_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.fielding
+    ADD CONSTRAINT fielding_pkey PRIMARY KEY (playerid, yearid, stint, teamid, pos);
+
+
+--
+-- Name: fielding_post fielding_post_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.fielding_post
+    ADD CONSTRAINT fielding_post_pkey PRIMARY KEY (playerid, yearid, teamid, round, pos);
+
+
+--
+-- Name: hall_of_fame hall_of_fame_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.hall_of_fame
+    ADD CONSTRAINT hall_of_fame_pkey PRIMARY KEY (playerid, yearid, votedby);
+
+
+--
+-- Name: home_games home_games_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.home_games
+    ADD CONSTRAINT home_games_pkey PRIMARY KEY (yearid, teamid, parkid);
+
+
+--
+-- Name: managers_half managers_half_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.managers_half
+    ADD CONSTRAINT managers_half_pkey PRIMARY KEY (playerid, yearid, teamid, inseason, half);
+
+
+--
+-- Name: managers managers_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.managers
+    ADD CONSTRAINT managers_pkey PRIMARY KEY (playerid, yearid, teamid, inseason);
+
+
+--
+-- Name: parks parks_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.parks
+    ADD CONSTRAINT parks_pkey PRIMARY KEY (parkid);
+
+
+--
+-- Name: people people_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.people
+    ADD CONSTRAINT people_pkey PRIMARY KEY (playerid);
+
+
+--
+-- Name: pitching pitching_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.pitching
+    ADD CONSTRAINT pitching_pkey PRIMARY KEY (playerid, yearid, stint, teamid);
+
+
+--
+-- Name: pitching_post pitching_post_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.pitching_post
+    ADD CONSTRAINT pitching_post_pkey PRIMARY KEY (playerid, yearid, round, teamid);
+
+
+--
+-- Name: salaries salaries_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.salaries
+    ADD CONSTRAINT salaries_pkey PRIMARY KEY (yearid, teamid, playerid);
+
+
+--
+-- Name: schools schools_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.schools
+    ADD CONSTRAINT schools_pkey PRIMARY KEY (schoolid);
+
+
+--
+-- Name: series_post series_post_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.series_post
+    ADD CONSTRAINT series_post_pkey PRIMARY KEY (yearid, round, teamidwinner, teamidloser);
+
+
+--
+-- Name: stg_all_star_full stg_all_star_full_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_all_star_full
+    ADD CONSTRAINT stg_all_star_full_pkey PRIMARY KEY (playerid, yearid, gamenum, gameid);
+
+
+--
+-- Name: stg_appearances stg_appearances_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_appearances
+    ADD CONSTRAINT stg_appearances_pkey PRIMARY KEY (yearid, teamid, playerid);
+
+
+--
+-- Name: stg_awards_managers stg_awards_managers_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_awards_managers
+    ADD CONSTRAINT stg_awards_managers_pkey PRIMARY KEY (playerid, awardid, yearid, lgid);
+
+
+--
+-- Name: stg_awards_players stg_awards_players_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_awards_players
+    ADD CONSTRAINT stg_awards_players_pkey PRIMARY KEY (playerid, awardid, yearid, lgid);
+
+
+--
+-- Name: stg_awards_share_managers stg_awards_share_managers_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_awards_share_managers
+    ADD CONSTRAINT stg_awards_share_managers_pkey PRIMARY KEY (awardid, yearid, lgid, playerid);
+
+
+--
+-- Name: stg_awards_share_players stg_awards_share_players_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_awards_share_players
+    ADD CONSTRAINT stg_awards_share_players_pkey PRIMARY KEY (awardid, yearid, lgid, playerid);
+
+
+--
+-- Name: stg_batting stg_batting_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_batting
+    ADD CONSTRAINT stg_batting_pkey PRIMARY KEY (playerid, yearid, stint, teamid);
+
+
+--
+-- Name: stg_batting_post stg_batting_post_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_batting_post
+    ADD CONSTRAINT stg_batting_post_pkey PRIMARY KEY (playerid, yearid, round, teamid);
+
+
+--
+-- Name: stg_college_playing stg_college_playing_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_college_playing
+    ADD CONSTRAINT stg_college_playing_pkey PRIMARY KEY (playerid, schoolid, yearid);
+
+
+--
+-- Name: stg_fielding_of stg_fielding_of_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_fielding_of
+    ADD CONSTRAINT stg_fielding_of_pkey PRIMARY KEY (playerid, yearid, stint);
+
+
+--
+-- Name: stg_fielding_of_split stg_fielding_of_split_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_fielding_of_split
+    ADD CONSTRAINT stg_fielding_of_split_pkey PRIMARY KEY (playerid, yearid, stint, teamid, pos);
+
+
+--
+-- Name: stg_fielding stg_fielding_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_fielding
+    ADD CONSTRAINT stg_fielding_pkey PRIMARY KEY (playerid, yearid, stint, teamid, pos);
+
+
+--
+-- Name: stg_fielding_post stg_fielding_post_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_fielding_post
+    ADD CONSTRAINT stg_fielding_post_pkey PRIMARY KEY (playerid, yearid, teamid, round, pos);
+
+
+--
+-- Name: stg_hall_of_fame stg_hall_of_fame_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_hall_of_fame
+    ADD CONSTRAINT stg_hall_of_fame_pkey PRIMARY KEY (playerid, yearid, votedby);
+
+
+--
+-- Name: stg_home_games stg_home_games_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_home_games
+    ADD CONSTRAINT stg_home_games_pkey PRIMARY KEY (yearid, teamid, parkid);
+
+
+--
+-- Name: stg_managers_half stg_managers_half_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_managers_half
+    ADD CONSTRAINT stg_managers_half_pkey PRIMARY KEY (playerid, yearid, teamid, inseason, half);
+
+
+--
+-- Name: stg_managers stg_managers_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_managers
+    ADD CONSTRAINT stg_managers_pkey PRIMARY KEY (playerid, yearid, teamid, inseason);
+
+
+--
+-- Name: stg_parks stg_parks_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_parks
+    ADD CONSTRAINT stg_parks_pkey PRIMARY KEY (parkid);
+
+
+--
+-- Name: stg_people stg_people_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_people
+    ADD CONSTRAINT stg_people_pkey PRIMARY KEY (playerid);
+
+
+--
+-- Name: stg_pitching stg_pitching_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_pitching
+    ADD CONSTRAINT stg_pitching_pkey PRIMARY KEY (playerid, yearid, stint, teamid);
+
+
+--
+-- Name: stg_pitching_post stg_pitching_post_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_pitching_post
+    ADD CONSTRAINT stg_pitching_post_pkey PRIMARY KEY (playerid, yearid, round, teamid);
+
+
+--
+-- Name: stg_salaries stg_salaries_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_salaries
+    ADD CONSTRAINT stg_salaries_pkey PRIMARY KEY (yearid, teamid, playerid);
+
+
+--
+-- Name: stg_schools stg_schools_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_schools
+    ADD CONSTRAINT stg_schools_pkey PRIMARY KEY (schoolid);
+
+
+--
+-- Name: stg_series_post stg_series_post_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_series_post
+    ADD CONSTRAINT stg_series_post_pkey PRIMARY KEY (yearid, round, teamidwinner, teamidloser);
+
+
+--
+-- Name: stg_teams_franchises stg_teams_franchises_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_teams_franchises
+    ADD CONSTRAINT stg_teams_franchises_pkey PRIMARY KEY (franchid);
+
+
+--
+-- Name: stg_teams_half stg_teams_half_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_teams_half
+    ADD CONSTRAINT stg_teams_half_pkey PRIMARY KEY (yearid, teamid, half);
+
+
+--
+-- Name: stg_teams stg_teams_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.stg_teams
+    ADD CONSTRAINT stg_teams_pkey PRIMARY KEY (yearid, teamid);
+
+
+--
+-- Name: teams_franchises teams_franchises_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.teams_franchises
+    ADD CONSTRAINT teams_franchises_pkey PRIMARY KEY (franchid);
+
+
+--
+-- Name: teams_half teams_half_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.teams_half
+    ADD CONSTRAINT teams_half_pkey PRIMARY KEY (yearid, teamid, half);
+
+
+--
+-- Name: teams teams_pkey; Type: CONSTRAINT; Schema: raw_lahman; Owner: -
+--
+
+ALTER TABLE ONLY raw_lahman.teams
+    ADD CONSTRAINT teams_pkey PRIMARY KEY (yearid, teamid);
+
+
+--
+-- Name: market_snapshots market_snapshots_pkey; Type: CONSTRAINT; Schema: raw_markets; Owner: -
+--
+
+ALTER TABLE ONLY raw_markets.market_snapshots
+    ADD CONSTRAINT market_snapshots_pkey PRIMARY KEY (market_snapshot_id);
+
+
+--
+-- Name: market_snapshots market_snapshots_venue_market_id_fetched_at_key; Type: CONSTRAINT; Schema: raw_markets; Owner: -
+--
+
+ALTER TABLE ONLY raw_markets.market_snapshots
+    ADD CONSTRAINT market_snapshots_venue_market_id_fetched_at_key UNIQUE (venue, market_id, fetched_at);
+
+
+--
+-- Name: boxscore_snapshots boxscore_snapshots_mlb_game_pk_checksum_key; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.boxscore_snapshots
+    ADD CONSTRAINT boxscore_snapshots_mlb_game_pk_checksum_key UNIQUE (mlb_game_pk, checksum);
+
+
+--
+-- Name: boxscore_snapshots boxscore_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.boxscore_snapshots
+    ADD CONSTRAINT boxscore_snapshots_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: gameday_xml gameday_xml_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.gameday_xml
+    ADD CONSTRAINT gameday_xml_pkey PRIMARY KEY (game_date, game_pk);
+
+
+--
+-- Name: gameday_xml_snapshots gameday_xml_snapshots_mlb_game_pk_xml_type_checksum_key; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.gameday_xml_snapshots
+    ADD CONSTRAINT gameday_xml_snapshots_mlb_game_pk_xml_type_checksum_key UNIQUE (mlb_game_pk, xml_type, checksum);
+
+
+--
+-- Name: gameday_xml_snapshots gameday_xml_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.gameday_xml_snapshots
+    ADD CONSTRAINT gameday_xml_snapshots_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: live_feed_snapshots live_feed_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.live_feed_snapshots
+    ADD CONSTRAINT live_feed_snapshots_pkey PRIMARY KEY (snapshot_id);
+
+
+--
+-- Name: pitch_metrics_snapshots pitch_metrics_snapshots_mlb_game_pk_checksum_key; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.pitch_metrics_snapshots
+    ADD CONSTRAINT pitch_metrics_snapshots_mlb_game_pk_checksum_key UNIQUE (mlb_game_pk, checksum);
+
+
+--
+-- Name: pitch_metrics_snapshots pitch_metrics_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.pitch_metrics_snapshots
+    ADD CONSTRAINT pitch_metrics_snapshots_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: play_by_play_snapshots play_by_play_snapshots_mlb_game_pk_checksum_key; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.play_by_play_snapshots
+    ADD CONSTRAINT play_by_play_snapshots_mlb_game_pk_checksum_key UNIQUE (mlb_game_pk, checksum);
+
+
+--
+-- Name: play_by_play_snapshots play_by_play_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.play_by_play_snapshots
+    ADD CONSTRAINT play_by_play_snapshots_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: player_stats_snapshots player_stats_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.player_stats_snapshots
+    ADD CONSTRAINT player_stats_snapshots_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: player_stats_snapshots player_stats_snapshots_season_player_id_team_id_stat_type_c_key; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.player_stats_snapshots
+    ADD CONSTRAINT player_stats_snapshots_season_player_id_team_id_stat_type_c_key UNIQUE (season, player_id, team_id, stat_type, checksum);
+
+
+--
+-- Name: reference_snapshots reference_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.reference_snapshots
+    ADD CONSTRAINT reference_snapshots_pkey PRIMARY KEY (snapshot_id);
+
+
+--
+-- Name: roster_snapshots roster_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.roster_snapshots
+    ADD CONSTRAINT roster_snapshots_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: roster_snapshots roster_snapshots_team_id_season_roster_type_checksum_key; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.roster_snapshots
+    ADD CONSTRAINT roster_snapshots_team_id_season_roster_type_checksum_key UNIQUE (team_id, season, roster_type, checksum);
+
+
+--
+-- Name: schedule_snapshots schedule_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.schedule_snapshots
+    ADD CONSTRAINT schedule_snapshots_pkey PRIMARY KEY (snapshot_id);
+
+
+--
+-- Name: schedule_snapshots schedule_snapshots_snapshot_date_fetched_at_key; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.schedule_snapshots
+    ADD CONSTRAINT schedule_snapshots_snapshot_date_fetched_at_key UNIQUE (snapshot_date, fetched_at);
+
+
+--
+-- Name: standings_snapshots standings_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.standings_snapshots
+    ADD CONSTRAINT standings_snapshots_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: standings_snapshots standings_snapshots_season_date_league_id_division_id_check_key; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.standings_snapshots
+    ADD CONSTRAINT standings_snapshots_season_date_league_id_division_id_check_key UNIQUE (season, date, league_id, division_id, checksum);
+
+
+--
+-- Name: statcast statcast_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.statcast
+    ADD CONSTRAINT statcast_pkey PRIMARY KEY (game_pk, at_bat_number, pitch_number);
+
+
+--
+-- Name: team_stats_snapshots team_stats_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.team_stats_snapshots
+    ADD CONSTRAINT team_stats_snapshots_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: team_stats_snapshots team_stats_snapshots_season_team_id_stat_type_checksum_key; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.team_stats_snapshots
+    ADD CONSTRAINT team_stats_snapshots_season_team_id_stat_type_checksum_key UNIQUE (season, team_id, stat_type, checksum);
+
+
+--
+-- Name: win_probability_snapshots win_probability_snapshots_mlb_game_pk_checksum_key; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.win_probability_snapshots
+    ADD CONSTRAINT win_probability_snapshots_mlb_game_pk_checksum_key UNIQUE (mlb_game_pk, checksum);
+
+
+--
+-- Name: win_probability_snapshots win_probability_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb.win_probability_snapshots
+    ADD CONSTRAINT win_probability_snapshots_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: roster_snapshots roster_snapshots_pkey; Type: CONSTRAINT; Schema: raw_mlb_rosters; Owner: -
+--
+
+ALTER TABLE ONLY raw_mlb_rosters.roster_snapshots
+    ADD CONSTRAINT roster_snapshots_pkey PRIMARY KEY (snapshot_date, team_id);
+
+
+--
+-- Name: factors factors_pkey; Type: CONSTRAINT; Schema: raw_park_factors; Owner: -
+--
+
+ALTER TABLE ONLY raw_park_factors.factors
+    ADD CONSTRAINT factors_pkey PRIMARY KEY (season, park_id);
+
+
+--
+-- Name: ballparks_reference ballparks_reference_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.ballparks_reference
+    ADD CONSTRAINT ballparks_reference_pkey PRIMARY KEY (retrosheet_park_id);
+
+
+--
+-- Name: biofile_legacy biofile_legacy_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.biofile_legacy
+    ADD CONSTRAINT biofile_legacy_pkey PRIMARY KEY (player_id);
+
+
+--
+-- Name: biofile biofile_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.biofile
+    ADD CONSTRAINT biofile_pkey PRIMARY KEY (player_id);
+
+
+--
+-- Name: chadwick_comments chadwick_comments_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.chadwick_comments
+    ADD CONSTRAINT chadwick_comments_pkey PRIMARY KEY (season, source_type, row_number);
+
+
+--
+-- Name: chadwick_daily chadwick_daily_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.chadwick_daily
+    ADD CONSTRAINT chadwick_daily_pkey PRIMARY KEY (season, source_type, row_number);
+
+
+--
+-- Name: chadwick_event_raw chadwick_event_raw_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.chadwick_event_raw
+    ADD CONSTRAINT chadwick_event_raw_pkey PRIMARY KEY (season, source_type, row_number);
+
+
+--
+-- Name: chadwick_events chadwick_events_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.chadwick_events
+    ADD CONSTRAINT chadwick_events_pkey PRIMARY KEY (season, source_type, row_number);
+
+
+--
+-- Name: chadwick_games chadwick_games_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.chadwick_games
+    ADD CONSTRAINT chadwick_games_pkey PRIMARY KEY (season, source_type, row_number);
+
+
+--
+-- Name: chadwick_substitutions chadwick_substitutions_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.chadwick_substitutions
+    ADD CONSTRAINT chadwick_substitutions_pkey PRIMARY KEY (season, source_type, row_number);
+
+
+--
+-- Name: coaches coaches_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.coaches
+    ADD CONSTRAINT coaches_pkey PRIMARY KEY (source_row_number);
+
+
+--
+-- Name: ejections ejections_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.ejections
+    ADD CONSTRAINT ejections_pkey PRIMARY KEY (source_row_number);
+
+
+--
+-- Name: ingest_runs ingest_runs_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.ingest_runs
+    ADD CONSTRAINT ingest_runs_pkey PRIMARY KEY (ingest_run_id);
+
+
+--
+-- Name: relatives relatives_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.relatives
+    ADD CONSTRAINT relatives_pkey PRIMARY KEY (source_row_number);
+
+
+--
+-- Name: season_rosters season_rosters_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.season_rosters
+    ADD CONSTRAINT season_rosters_pkey PRIMARY KEY (source_file, source_row_number);
+
+
+--
+-- Name: season_schedules season_schedules_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.season_schedules
+    ADD CONSTRAINT season_schedules_pkey PRIMARY KEY (source_file, source_row_number);
+
+
+--
+-- Name: season_teams season_teams_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.season_teams
+    ADD CONSTRAINT season_teams_pkey PRIMARY KEY (source_file, source_row_number);
+
+
+--
+-- Name: season_umpires season_umpires_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.season_umpires
+    ADD CONSTRAINT season_umpires_pkey PRIMARY KEY (source_file, source_row_number);
+
+
+--
+-- Name: special_gamelog_lines special_gamelog_lines_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.special_gamelog_lines
+    ADD CONSTRAINT special_gamelog_lines_pkey PRIMARY KEY (source_file, source_row_number);
+
+
+--
+-- Name: teams_reference teams_reference_pkey; Type: CONSTRAINT; Schema: raw_retrosheet; Owner: -
+--
+
+ALTER TABLE ONLY raw_retrosheet.teams_reference
+    ADD CONSTRAINT teams_reference_pkey PRIMARY KEY (retrosheet_team_id);
+
+
+--
+-- Name: game_snapshots game_snapshots_game_pk_key; Type: CONSTRAINT; Schema: raw_sportradar; Owner: -
+--
+
+ALTER TABLE ONLY raw_sportradar.game_snapshots
+    ADD CONSTRAINT game_snapshots_game_pk_key UNIQUE (game_pk);
+
+
+--
+-- Name: game_snapshots game_snapshots_pkey; Type: CONSTRAINT; Schema: raw_sportradar; Owner: -
+--
+
+ALTER TABLE ONLY raw_sportradar.game_snapshots
+    ADD CONSTRAINT game_snapshots_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: push_events push_events_event_id_key; Type: CONSTRAINT; Schema: raw_sportradar; Owner: -
+--
+
+ALTER TABLE ONLY raw_sportradar.push_events
+    ADD CONSTRAINT push_events_event_id_key UNIQUE (event_id);
+
+
+--
+-- Name: push_events push_events_pkey; Type: CONSTRAINT; Schema: raw_sportradar; Owner: -
+--
+
+ALTER TABLE ONLY raw_sportradar.push_events
+    ADD CONSTRAINT push_events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: events events_pkey; Type: CONSTRAINT; Schema: raw_statcast; Owner: -
+--
+
+ALTER TABLE ONLY raw_statcast.events
+    ADD CONSTRAINT events_pkey PRIMARY KEY (game_pk, at_bat_number, pitch_number);
+
+
+--
+-- Name: runs runs_pkey; Type: CONSTRAINT; Schema: test; Owner: -
+--
+
+ALTER TABLE ONLY test.runs
+    ADD CONSTRAINT runs_pkey PRIMARY KEY (run_id);
+
+
+--
+-- Name: batch_operations batch_operations_pkey; Type: CONSTRAINT; Schema: warehouse; Owner: -
+--
+
+ALTER TABLE ONLY warehouse.batch_operations
+    ADD CONSTRAINT batch_operations_pkey PRIMARY KEY (batch_id);
+
+
+--
+-- Name: rebuild_log rebuild_log_pkey; Type: CONSTRAINT; Schema: warehouse; Owner: -
+--
+
+ALTER TABLE ONLY warehouse.rebuild_log
+    ADD CONSTRAINT rebuild_log_pkey PRIMARY KEY (log_id);
+
+
+--
+-- Name: rebuild_runs rebuild_runs_pkey; Type: CONSTRAINT; Schema: warehouse; Owner: -
+--
+
+ALTER TABLE ONLY warehouse.rebuild_runs
+    ADD CONSTRAINT rebuild_runs_pkey PRIMARY KEY (run_id);
+
+
+--
+-- Name: idx_mlb_batting_leaders_player; Type: INDEX; Schema: analysis; Owner: -
+--
+
+CREATE INDEX idx_mlb_batting_leaders_player ON analysis.mlb_season_batting_leaders USING btree (batter_id);
+
+
+--
+-- Name: idx_mlb_batting_leaders_season; Type: INDEX; Schema: analysis; Owner: -
+--
+
+CREATE INDEX idx_mlb_batting_leaders_season ON analysis.mlb_season_batting_leaders USING btree (season);
+
+
+--
+-- Name: idx_mlb_pitching_leaders_player; Type: INDEX; Schema: analysis; Owner: -
+--
+
+CREATE INDEX idx_mlb_pitching_leaders_player ON analysis.mlb_season_pitching_leaders USING btree (pitcher_id);
+
+
+--
+-- Name: idx_mlb_pitching_leaders_season; Type: INDEX; Schema: analysis; Owner: -
+--
+
+CREATE INDEX idx_mlb_pitching_leaders_season ON analysis.mlb_season_pitching_leaders USING btree (season);
+
+
+--
+-- Name: idx_mlb_team_stats_season; Type: INDEX; Schema: analysis; Owner: -
+--
+
+CREATE INDEX idx_mlb_team_stats_season ON analysis.mlb_team_season_stats USING btree (season);
+
+
+--
+-- Name: game_xref_date_idx; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX game_xref_date_idx ON bridge.game_xref USING btree (game_date);
+
+
+--
+-- Name: game_xref_mlb_pk_idx; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX game_xref_mlb_pk_idx ON bridge.game_xref USING btree (mlb_game_pk);
+
+
+--
+-- Name: idx_coach_xref_confidence; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_coach_xref_confidence ON bridge.coach_xref USING btree (confidence_score);
+
+
+--
+-- Name: idx_coach_xref_espn; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_coach_xref_espn ON bridge.coach_xref USING btree (espn_coach_id);
+
+
+--
+-- Name: idx_coach_xref_lahman; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_coach_xref_lahman ON bridge.coach_xref USING btree (lahman_coach_id);
+
+
+--
+-- Name: idx_coach_xref_mlb; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_coach_xref_mlb ON bridge.coach_xref USING btree (mlb_coach_id);
+
+
+--
+-- Name: idx_coach_xref_name; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_coach_xref_name ON bridge.coach_xref USING btree (coach_name);
+
+
+--
+-- Name: idx_coach_xref_retrosheet; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_coach_xref_retrosheet ON bridge.coach_xref USING btree (retrosheet_coach_id);
+
+
+--
+-- Name: idx_coach_xref_source; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_coach_xref_source ON bridge.coach_xref USING btree (source_system);
+
+
+--
+-- Name: idx_external_player_xref_confidence; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_external_player_xref_confidence ON bridge.external_player_xref USING btree (confidence_score);
+
+
+--
+-- Name: idx_external_team_xref_confidence; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_external_team_xref_confidence ON bridge.external_team_xref USING btree (confidence_score);
+
+
+--
+-- Name: idx_game_xref_confidence; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_game_xref_confidence ON bridge.game_xref USING btree (confidence_score);
+
+
+--
+-- Name: idx_park_xref_confidence; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_park_xref_confidence ON bridge.park_xref USING btree (confidence_score);
+
+
+--
+-- Name: idx_player_xref_confidence; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_player_xref_confidence ON bridge.player_xref USING btree (confidence_score);
+
+
+--
+-- Name: idx_staging_lahman_bbref; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_staging_lahman_bbref ON bridge._staging_lahman_people USING btree (baseball_reference_id);
+
+
+--
+-- Name: idx_staging_lahman_retro; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_staging_lahman_retro ON bridge._staging_lahman_people USING btree (retrosheet_id);
+
+
+--
+-- Name: idx_team_xref_confidence; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_team_xref_confidence ON bridge.team_xref USING btree (confidence_score);
+
+
+--
+-- Name: idx_team_xref_mlb_id; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_team_xref_mlb_id ON bridge.team_xref USING btree (mlb_team_id);
+
+
+--
+-- Name: idx_umpire_xref_confidence; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_umpire_xref_confidence ON bridge.umpire_xref USING btree (confidence_score);
+
+
+--
+-- Name: idx_umpire_xref_espn; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_umpire_xref_espn ON bridge.umpire_xref USING btree (espn_umpire_id);
+
+
+--
+-- Name: idx_umpire_xref_lahman; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_umpire_xref_lahman ON bridge.umpire_xref USING btree (lahman_umpire_id);
+
+
+--
+-- Name: idx_umpire_xref_mlb; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_umpire_xref_mlb ON bridge.umpire_xref USING btree (mlb_umpire_id);
+
+
+--
+-- Name: idx_umpire_xref_name; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_umpire_xref_name ON bridge.umpire_xref USING btree (umpire_name);
+
+
+--
+-- Name: idx_umpire_xref_retrosheet; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_umpire_xref_retrosheet ON bridge.umpire_xref USING btree (retrosheet_umpire_id);
+
+
+--
+-- Name: idx_umpire_xref_source; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX idx_umpire_xref_source ON bridge.umpire_xref USING btree (source_system);
+
+
+--
+-- Name: team_xref_mlb_id_idx; Type: INDEX; Schema: bridge; Owner: -
+--
+
+CREATE INDEX team_xref_mlb_id_idx ON bridge.team_xref USING btree (mlb_team_id);
+
+
+--
+-- Name: query_logs_asked_at_idx; Type: INDEX; Schema: chat; Owner: -
+--
+
+CREATE INDEX query_logs_asked_at_idx ON chat.query_logs USING btree (asked_at DESC);
+
+
+--
+-- Name: query_logs_intent_gin_idx; Type: INDEX; Schema: chat; Owner: -
+--
+
+CREATE INDEX query_logs_intent_gin_idx ON chat.query_logs USING gin (parsed_intent);
+
+
+--
+-- Name: events_batter_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX events_batter_idx ON core.events USING btree (batter_id, season) WHERE (batter_id IS NOT NULL);
+
+
+--
+-- Name: events_game_sequence_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX events_game_sequence_idx ON core.events USING btree (game_id, event_sequence);
+
+
+--
+-- Name: events_pa_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX events_pa_idx ON core.events USING btree (season, is_plate_appearance, batter_id, pitcher_id) WHERE is_plate_appearance;
+
+
+--
+-- Name: events_pitcher_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX events_pitcher_idx ON core.events USING btree (pitcher_id, season) WHERE (pitcher_id IS NOT NULL);
+
+
+--
+-- Name: events_season_game_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX events_season_game_idx ON core.events USING btree (season, game_id);
+
+
+--
+-- Name: events_state_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX events_state_idx ON core.events USING btree (inning, is_bottom_inning, outs_before, start_bases);
+
+
+--
+-- Name: games_away_team_date_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX games_away_team_date_idx ON core.games USING btree (away_team_id, game_date);
+
+
+--
+-- Name: games_home_team_date_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX games_home_team_date_idx ON core.games USING btree (home_team_id, game_date);
+
+
+--
+-- Name: games_park_date_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX games_park_date_idx ON core.games USING btree (park_id, game_date);
+
+
+--
+-- Name: games_season_date_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX games_season_date_idx ON core.games USING btree (season, game_date);
+
+
+--
+-- Name: live_events_batter_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_events_batter_idx ON core.live_events USING btree (batter_id);
+
+
+--
+-- Name: live_events_game_event_uidx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE UNIQUE INDEX live_events_game_event_uidx ON core.live_events USING btree (game_id, event_id);
+
+
+--
+-- Name: live_events_game_id_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_events_game_id_idx ON core.live_events USING btree (game_id);
+
+
+--
+-- Name: live_events_game_inning_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_events_game_inning_idx ON core.live_events USING btree (game_id, inning, is_bottom_inning);
+
+
+--
+-- Name: live_events_mlb_game_pk_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_events_mlb_game_pk_idx ON core.live_events USING btree (mlb_game_pk);
+
+
+--
+-- Name: live_events_pitcher_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_events_pitcher_idx ON core.live_events USING btree (pitcher_id);
+
+
+--
+-- Name: live_events_snapshot_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_events_snapshot_idx ON core.live_events USING btree (snapshot_id);
+
+
+--
+-- Name: live_games_date_parsed_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_games_date_parsed_idx ON core.live_games USING btree (game_date_parsed);
+
+
+--
+-- Name: live_games_game_id_uidx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE UNIQUE INDEX live_games_game_id_uidx ON core.live_games USING btree (game_id);
+
+
+--
+-- Name: live_games_mlb_game_pk_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_games_mlb_game_pk_idx ON core.live_games USING btree (mlb_game_pk);
+
+
+--
+-- Name: live_games_season_int_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_games_season_int_idx ON core.live_games USING btree (season_int);
+
+
+--
+-- Name: live_games_snapshot_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_games_snapshot_idx ON core.live_games USING btree (snapshot_id);
+
+
+--
+-- Name: live_pa_batter_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_pa_batter_idx ON core.live_plate_appearances USING btree (batter_id);
+
+
+--
+-- Name: live_pa_game_id_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_pa_game_id_idx ON core.live_plate_appearances USING btree (game_id);
+
+
+--
+-- Name: live_pa_game_pa_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_pa_game_pa_idx ON core.live_plate_appearances USING btree (game_id, game_pa_number);
+
+
+--
+-- Name: live_pa_mlb_game_pk_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_pa_mlb_game_pk_idx ON core.live_plate_appearances USING btree (mlb_game_pk);
+
+
+--
+-- Name: live_pa_pitcher_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_pa_pitcher_idx ON core.live_plate_appearances USING btree (pitcher_id);
+
+
+--
+-- Name: live_pa_season_batter_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_pa_season_batter_idx ON core.live_plate_appearances USING btree (season, batter_id);
+
+
+--
+-- Name: live_pa_season_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_pa_season_idx ON core.live_plate_appearances USING btree (season);
+
+
+--
+-- Name: live_pa_season_pitcher_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_pa_season_pitcher_idx ON core.live_plate_appearances USING btree (season, pitcher_id);
+
+
+--
+-- Name: live_pa_snapshot_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX live_pa_snapshot_idx ON core.live_plate_appearances USING btree (snapshot_id);
+
+
+--
+-- Name: mlb_pbp_date_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX mlb_pbp_date_idx ON core.mlb_pbp USING btree (game_date);
+
+
+--
+-- Name: mlb_pbp_game_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX mlb_pbp_game_idx ON core.mlb_pbp USING btree (game_pk, inning, inning_half);
+
+
+--
+-- Name: mlb_pbp_player_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX mlb_pbp_player_idx ON core.mlb_pbp USING btree (batter_id, pitcher_id);
+
+
+--
+-- Name: plate_appearances_batter_season_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX plate_appearances_batter_season_idx ON core.plate_appearances USING btree (batter_id, season) WHERE (batter_id IS NOT NULL);
+
+
+--
+-- Name: plate_appearances_game_order_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX plate_appearances_game_order_idx ON core.plate_appearances USING btree (game_id, game_pa_number);
+
+
+--
+-- Name: plate_appearances_half_inning_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX plate_appearances_half_inning_idx ON core.plate_appearances USING btree (game_id, inning, is_bottom_inning, half_inning_pa_number);
+
+
+--
+-- Name: plate_appearances_matchup_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX plate_appearances_matchup_idx ON core.plate_appearances USING btree (season, batter_hand, pitcher_hand, outs_before, start_bases);
+
+
+--
+-- Name: plate_appearances_pitcher_season_idx; Type: INDEX; Schema: core; Owner: -
+--
+
+CREATE INDEX plate_appearances_pitcher_season_idx ON core.plate_appearances USING btree (pitcher_id, season) WHERE (pitcher_id IS NOT NULL);
+
+
+--
+-- Name: batter_career_prior_pa_summary_pa_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX batter_career_prior_pa_summary_pa_idx ON features.batter_career_prior_pa_summary USING btree (career_prior_pa DESC);
+
+
+--
+-- Name: batter_career_prior_pa_summary_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX batter_career_prior_pa_summary_pk ON features.batter_career_prior_pa_summary USING btree (feature_season, batter_id);
+
+
+--
+-- Name: batter_count_state_prior_pa_summary_pa_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX batter_count_state_prior_pa_summary_pa_idx ON features.batter_count_state_prior_pa_summary USING btree (feature_season, balls, strikes, prior_pa DESC);
+
+
+--
+-- Name: batter_count_state_prior_pa_summary_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX batter_count_state_prior_pa_summary_pk ON features.batter_count_state_prior_pa_summary USING btree (feature_season, batter_id, balls, strikes);
+
+
+--
+-- Name: batter_pitcher_prior_matchup_summary_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX batter_pitcher_prior_matchup_summary_pk ON features.batter_pitcher_prior_matchup_summary USING btree (feature_season, batter_id, pitcher_id);
+
+
+--
+-- Name: batter_pitcher_prior_matchup_summary_volume_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX batter_pitcher_prior_matchup_summary_volume_idx ON features.batter_pitcher_prior_matchup_summary USING btree (feature_season, prior_matchup_pa DESC);
+
+
+--
+-- Name: batter_prior_season_pa_summary_pa_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX batter_prior_season_pa_summary_pa_idx ON features.batter_prior_season_pa_summary USING btree (prior_pa DESC);
+
+
+--
+-- Name: batter_prior_season_pa_summary_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX batter_prior_season_pa_summary_pk ON features.batter_prior_season_pa_summary USING btree (feature_season, batter_id);
+
+
+--
+-- Name: game_outcome_examples_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX game_outcome_examples_pk ON features.game_outcome_examples USING btree (game_id, event_id);
+
+
+--
+-- Name: game_outcome_examples_state_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX game_outcome_examples_state_idx ON features.game_outcome_examples USING btree (season, inning, is_bottom_inning, outs_before, start_bases, home_score_diff);
+
+
+--
+-- Name: half_inning_outcome_summary_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX half_inning_outcome_summary_pk ON features.half_inning_outcome_summary USING btree (game_id, inning, is_bottom_inning);
+
+
+--
+-- Name: half_inning_outcome_summary_scenario_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX half_inning_outcome_summary_scenario_idx ON features.half_inning_outcome_summary USING btree (season, batting_team_id, fielding_team_id, all_left_handed_batters_hit);
+
+
+--
+-- Name: idx_features_play_snapshot_game; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX idx_features_play_snapshot_game ON features.play_snapshot USING btree (game_pk);
+
+
+--
+-- Name: idx_game_attendance_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_game_attendance_pk ON features.game_attendance_features USING btree (game_pk);
+
+
+--
+-- Name: idx_game_attendance_season; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX idx_game_attendance_season ON features.game_attendance_features USING btree (season);
+
+
+--
+-- Name: idx_matchup_batter_pitcher_season; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_matchup_batter_pitcher_season ON features.batter_pitcher_matchup_features USING btree (batter_id, pitcher_id, feature_season);
+
+
+--
+-- Name: idx_matchup_batter_season; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX idx_matchup_batter_season ON features.batter_pitcher_matchup_features USING btree (batter_id, feature_season);
+
+
+--
+-- Name: idx_matchup_pitcher_season; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX idx_matchup_pitcher_season ON features.batter_pitcher_matchup_features USING btree (pitcher_id, feature_season);
+
+
+--
+-- Name: idx_pitcher_arsenal_season; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_pitcher_arsenal_season ON features.pitcher_arsenal_features USING btree (pitcher_id, feature_season);
+
+
+--
+-- Name: idx_pitcher_arsenal_season_feature; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX idx_pitcher_arsenal_season_feature ON features.pitcher_arsenal_features USING btree (feature_season);
+
+
+--
+-- Name: idx_postseason_game; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_postseason_game ON features.postseason_clutch_features USING btree (game_id);
+
+
+--
+-- Name: idx_stadium_park_season; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_stadium_park_season ON features.stadium_physics_features USING btree (park_id, feature_season);
+
+
+--
+-- Name: idx_stadium_season; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX idx_stadium_season ON features.stadium_physics_features USING btree (feature_season);
+
+
+--
+-- Name: idx_team_momentum_game; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX idx_team_momentum_game ON features.team_momentum_features USING btree (game_id);
+
+
+--
+-- Name: idx_team_momentum_game_team; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_team_momentum_game_team ON features.team_momentum_features USING btree (game_id, team_id);
+
+
+--
+-- Name: idx_umpire_features_season; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_umpire_features_season ON features.umpire_strike_zone_features USING btree (umpire_id, feature_season);
+
+
+--
+-- Name: pa_context_coarse_prior_season_rates_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX pa_context_coarse_prior_season_rates_pk ON features.pa_context_coarse_prior_season_rates USING btree (feature_season, batter_hand, pitcher_hand, outs_before, start_bases);
+
+
+--
+-- Name: pa_context_coarse_prior_season_rates_volume_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX pa_context_coarse_prior_season_rates_volume_idx ON features.pa_context_coarse_prior_season_rates USING btree (feature_season, prior_pa DESC);
+
+
+--
+-- Name: pa_context_prior_season_rates_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX pa_context_prior_season_rates_pk ON features.pa_context_prior_season_rates USING btree (feature_season, batter_hand, pitcher_hand, inning, is_bottom_inning, outs_before, start_bases, balls, strikes);
+
+
+--
+-- Name: pa_context_prior_season_rates_volume_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX pa_context_prior_season_rates_volume_idx ON features.pa_context_prior_season_rates USING btree (feature_season, prior_pa DESC);
+
+
+--
+-- Name: pa_count_state_context_prior_season_rates_pa_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX pa_count_state_context_prior_season_rates_pa_idx ON features.pa_count_state_context_prior_season_rates USING btree (feature_season, balls, strikes, prior_pa DESC);
+
+
+--
+-- Name: pa_count_state_context_prior_season_rates_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX pa_count_state_context_prior_season_rates_pk ON features.pa_count_state_context_prior_season_rates USING btree (feature_season, batter_hand, pitcher_hand, outs_before, start_bases, balls, strikes);
+
+
+--
+-- Name: park_prior_season_run_environment_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX park_prior_season_run_environment_pk ON features.park_prior_season_run_environment USING btree (feature_season, park_id);
+
+
+--
+-- Name: park_prior_season_run_environment_runs_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX park_prior_season_run_environment_runs_idx ON features.park_prior_season_run_environment USING btree (feature_season, prior_total_runs_per_game DESC);
+
+
+--
+-- Name: pitcher_career_prior_pa_summary_bf_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX pitcher_career_prior_pa_summary_bf_idx ON features.pitcher_career_prior_pa_summary USING btree (career_prior_batters_faced DESC);
+
+
+--
+-- Name: pitcher_career_prior_pa_summary_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX pitcher_career_prior_pa_summary_pk ON features.pitcher_career_prior_pa_summary USING btree (feature_season, pitcher_id);
+
+
+--
+-- Name: pitcher_count_state_prior_pa_summary_bf_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX pitcher_count_state_prior_pa_summary_bf_idx ON features.pitcher_count_state_prior_pa_summary USING btree (feature_season, balls, strikes, prior_batters_faced DESC);
+
+
+--
+-- Name: pitcher_count_state_prior_pa_summary_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX pitcher_count_state_prior_pa_summary_pk ON features.pitcher_count_state_prior_pa_summary USING btree (feature_season, pitcher_id, balls, strikes);
+
+
+--
+-- Name: pitcher_prior_season_pa_summary_bf_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX pitcher_prior_season_pa_summary_bf_idx ON features.pitcher_prior_season_pa_summary USING btree (prior_batters_faced DESC);
+
+
+--
+-- Name: pitcher_prior_season_pa_summary_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX pitcher_prior_season_pa_summary_pk ON features.pitcher_prior_season_pa_summary USING btree (feature_season, pitcher_id);
+
+
+--
+-- Name: pitcher_production_season_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX pitcher_production_season_pk ON features.pitcher_production_season USING btree (season, player_id);
+
+
+--
+-- Name: pitcher_production_season_power_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX pitcher_production_season_power_idx ON features.pitcher_production_season USING btree (season, command_power_score_proxy DESC);
+
+
+--
+-- Name: plate_appearance_examples_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX plate_appearance_examples_pk ON features.plate_appearance_examples USING btree (game_id, plate_appearance_id);
+
+
+--
+-- Name: plate_appearance_examples_target_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX plate_appearance_examples_target_idx ON features.plate_appearance_examples USING btree (season, batter_hand, pitcher_hand, outs_before, start_bases);
+
+
+--
+-- Name: plate_appearance_outcome_examples_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX plate_appearance_outcome_examples_pk ON features.plate_appearance_outcome_examples USING btree (game_id, plate_appearance_id);
+
+
+--
+-- Name: plate_appearance_outcome_examples_player_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX plate_appearance_outcome_examples_player_idx ON features.plate_appearance_outcome_examples USING btree (season, batter_id, pitcher_id) WHERE ((batter_id IS NOT NULL) AND (pitcher_id IS NOT NULL));
+
+
+--
+-- Name: plate_appearance_outcome_examples_target_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX plate_appearance_outcome_examples_target_idx ON features.plate_appearance_outcome_examples USING btree (season, outcome_class, batter_hand, pitcher_hand, outs_before, start_bases, balls, strikes);
+
+
+--
+-- Name: plate_appearance_outcome_grouped_examples_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX plate_appearance_outcome_grouped_examples_pk ON features.plate_appearance_outcome_grouped_examples USING btree (game_id, plate_appearance_id);
+
+
+--
+-- Name: plate_appearance_outcome_grouped_examples_player_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX plate_appearance_outcome_grouped_examples_player_idx ON features.plate_appearance_outcome_grouped_examples USING btree (season, batter_id, pitcher_id) WHERE ((batter_id IS NOT NULL) AND (pitcher_id IS NOT NULL));
+
+
+--
+-- Name: plate_appearance_outcome_grouped_examples_target_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX plate_appearance_outcome_grouped_examples_target_idx ON features.plate_appearance_outcome_grouped_examples USING btree (season, grouped_outcome_class, batter_hand, pitcher_hand, outs_before, start_bases, balls, strikes);
+
+
+--
+-- Name: player_production_season_ops_proxy_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX player_production_season_ops_proxy_idx ON features.player_production_season USING btree (season, ((COALESCE(on_base_percentage_proxy, (0)::numeric) + COALESCE(slugging_percentage, (0)::numeric))) DESC);
+
+
+--
+-- Name: player_production_season_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX player_production_season_pk ON features.player_production_season USING btree (season, player_id);
+
+
+--
+-- Name: team_game_context_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX team_game_context_pk ON features.team_game_context USING btree (game_id, team_id);
+
+
+--
+-- Name: team_game_context_rest_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX team_game_context_rest_idx ON features.team_game_context USING btree (season, days_since_previous_game, is_home_team);
+
+
+--
+-- Name: team_game_context_team_date_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX team_game_context_team_date_idx ON features.team_game_context USING btree (team_id, game_date);
+
+
+--
+-- Name: team_prior_season_summary_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX team_prior_season_summary_pk ON features.team_prior_season_summary USING btree (feature_season, team_id);
+
+
+--
+-- Name: team_rolling_30_game_summary_pk; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE UNIQUE INDEX team_rolling_30_game_summary_pk ON features.team_rolling_30_game_summary USING btree (game_id, team_id);
+
+
+--
+-- Name: team_rolling_30_game_summary_team_date_idx; Type: INDEX; Schema: features; Owner: -
+--
+
+CREATE INDEX team_rolling_30_game_summary_team_date_idx ON features.team_rolling_30_game_summary USING btree (team_id, game_date);
+
+
+--
+-- Name: idx_base_features_batter; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_base_features_batter ON features_pitch.base_features USING btree (batter_id);
+
+
+--
+-- Name: idx_base_features_game_atbat; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_base_features_game_atbat ON features_pitch.base_features USING btree (game_pk, at_bat_number);
+
+
+--
+-- Name: idx_base_features_game_year; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_base_features_game_year ON features_pitch.base_features USING btree (game_year);
+
+
+--
+-- Name: idx_base_features_location; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_base_features_location ON features_pitch.base_features USING gist (location);
+
+
+--
+-- Name: idx_base_features_pitch_type; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_base_features_pitch_type ON features_pitch.base_features USING btree (pitch_type);
+
+
+--
+-- Name: idx_base_features_pitcher; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_base_features_pitcher ON features_pitch.base_features USING btree (pitcher_id);
+
+
+--
+-- Name: idx_base_features_quality; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_base_features_quality ON features_pitch.base_features USING btree (quality_flag) WHERE ((quality_flag)::text = 'normal'::text);
+
+
+--
+-- Name: idx_batter_pitch_type_batter; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_batter_pitch_type_batter ON features_pitch.batter_pitch_type_performance USING btree (batter_id);
+
+
+--
+-- Name: idx_batter_zone_batter; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_batter_zone_batter ON features_pitch.batter_zone_profiles USING btree (batter_id);
+
+
+--
+-- Name: idx_eng_feat_tier1; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_eng_feat_tier1 ON features_pitch.engineered_features USING btree (outcome_tier1);
+
+
+--
+-- Name: idx_feature_registry_default; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_feature_registry_default ON features_pitch.feature_registry USING btree (is_default) WHERE (is_default = true);
+
+
+--
+-- Name: idx_feature_registry_model; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_feature_registry_model ON features_pitch.feature_registry USING gin (model_usage);
+
+
+--
+-- Name: idx_matchup_batter; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_matchup_batter ON features_pitch.matchup_history USING btree (batter_id);
+
+
+--
+-- Name: idx_matchup_pair; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_matchup_pair ON features_pitch.matchup_history USING btree (pitcher_id, batter_id);
+
+
+--
+-- Name: idx_matchup_pitcher; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_matchup_pitcher ON features_pitch.matchup_history USING btree (pitcher_id);
+
+
+--
+-- Name: idx_mv_fatigue_game; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_mv_fatigue_game ON features_pitch.mv_pitcher_fatigue USING btree (game_pk);
+
+
+--
+-- Name: idx_mv_fatigue_pitcher; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_mv_fatigue_pitcher ON features_pitch.mv_pitcher_fatigue USING btree (pitcher_id, game_date);
+
+
+--
+-- Name: idx_mv_game_context_date; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_mv_game_context_date ON features_pitch.mv_game_context USING btree (game_date);
+
+
+--
+-- Name: idx_mv_game_context_park; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_mv_game_context_park ON features_pitch.mv_game_context USING btree (park_id);
+
+
+--
+-- Name: idx_mv_game_context_pk; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_mv_game_context_pk ON features_pitch.mv_game_context USING btree (game_pk);
+
+
+--
+-- Name: idx_mv_momentum_game; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_mv_momentum_game ON features_pitch.mv_team_momentum USING btree (game_id);
+
+
+--
+-- Name: idx_mv_momentum_team; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_mv_momentum_team ON features_pitch.mv_team_momentum USING btree (team_id, game_date);
+
+
+--
+-- Name: idx_mv_park_context_id; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_mv_park_context_id ON features_pitch.mv_park_context USING btree (park_id);
+
+
+--
+-- Name: idx_pitch_batter; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_pitch_batter ON features_pitch.locations USING btree (batter_id);
+
+
+--
+-- Name: idx_pitch_locations_effective_speed; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_pitch_locations_effective_speed ON features_pitch.locations USING btree (effective_speed) WHERE (effective_speed IS NOT NULL);
+
+
+--
+-- Name: idx_pitch_locations_game_date; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_pitch_locations_game_date ON features_pitch.locations USING btree (game_date);
+
+
+--
+-- Name: idx_pitch_locations_spin_axis; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_pitch_locations_spin_axis ON features_pitch.locations USING btree (spin_axis) WHERE (spin_axis IS NOT NULL);
+
+
+--
+-- Name: idx_pitch_locations_sv_id; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_pitch_locations_sv_id ON features_pitch.locations USING btree (sv_id) WHERE (sv_id IS NOT NULL);
+
+
+--
+-- Name: idx_pitch_pitcher; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_pitch_pitcher ON features_pitch.locations USING btree (pitcher_id);
+
+
+--
+-- Name: idx_pitch_quality_flag; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_pitch_quality_flag ON features_pitch.locations USING btree (quality_flag);
+
+
+--
+-- Name: idx_pitch_year; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_pitch_year ON features_pitch.locations USING btree (game_year);
+
+
+--
+-- Name: idx_pitcher_arsenals_pitcher; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_pitcher_arsenals_pitcher ON features_pitch.pitcher_arsenals USING btree (pitcher_id);
+
+
+--
+-- Name: idx_player_context_date; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_player_context_date ON features_pitch.player_context USING btree (game_date);
+
+
+--
+-- Name: idx_player_context_lookup; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_player_context_lookup ON features_pitch.player_context USING btree (player_id, season, role, window_type);
+
+
+--
+-- Name: idx_player_context_season; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_player_context_season ON features_pitch.player_context USING btree (season, role);
+
+
+--
+-- Name: idx_sequences_game_atbat; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_sequences_game_atbat ON features_pitch.pitch_sequences USING btree (game_pk, at_bat_number);
+
+
+--
+-- Name: idx_sequences_outcome; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_sequences_outcome ON features_pitch.pitch_sequences USING btree (sequence_outcome);
+
+
+--
+-- Name: idx_sequences_pitcher; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_sequences_pitcher ON features_pitch.pitch_sequences USING btree (pitcher_id);
+
+
+--
+-- Name: idx_sequential_game_atbat; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_sequential_game_atbat ON features_pitch.sequential_features USING btree (game_pk, at_bat_number);
+
+
+--
+-- Name: idx_sequential_pitch; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_sequential_pitch ON features_pitch.sequential_features USING btree (pitch_id);
+
+
+--
+-- Name: idx_sequential_position; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_sequential_position ON features_pitch.sequential_features USING btree (sequence_position);
+
+
+--
+-- Name: idx_sequential_type_seq; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_sequential_type_seq ON features_pitch.sequential_features USING gin (pitch_type_sequence);
+
+
+--
+-- Name: idx_training_game_year; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_training_game_year ON features_pitch.model_training_set USING btree (game_year);
+
+
+--
+-- Name: idx_training_model; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_training_model ON features_pitch.model_training_set USING btree (model_name, model_version, split_set);
+
+
+--
+-- Name: idx_training_pitch; Type: INDEX; Schema: features_pitch; Owner: -
+--
+
+CREATE INDEX idx_training_pitch ON features_pitch.model_training_set USING btree (pitch_id);
+
+
+--
+-- Name: simulation_states_game_idx; Type: INDEX; Schema: inference; Owner: -
+--
+
+CREATE INDEX simulation_states_game_idx ON inference.simulation_states USING btree (game_id);
+
+
+--
+-- Name: market_prices_target_time_idx; Type: INDEX; Schema: market_edges; Owner: -
+--
+
+CREATE INDEX market_prices_target_time_idx ON market_edges.market_prices USING btree (target_id, observed_at DESC);
+
+
+--
+-- Name: api_prediction_requests_model_created_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX api_prediction_requests_model_created_idx ON predictions.api_prediction_requests USING btree (model_id, request_timestamp DESC);
+
+
+--
+-- Name: api_prediction_requests_request_id_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX api_prediction_requests_request_id_idx ON predictions.api_prediction_requests USING btree (request_id);
+
+
+--
+-- Name: api_prediction_requests_status_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX api_prediction_requests_status_idx ON predictions.api_prediction_requests USING btree (response_status);
+
+
+--
+-- Name: api_prediction_requests_target_created_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX api_prediction_requests_target_created_idx ON predictions.api_prediction_requests USING btree (target_id, request_timestamp DESC);
+
+
+--
+-- Name: api_prediction_requests_timestamp_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX api_prediction_requests_timestamp_idx ON predictions.api_prediction_requests USING btree (request_timestamp DESC);
+
+
+--
+-- Name: bootstrap_reports_model_created_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX bootstrap_reports_model_created_idx ON predictions.bootstrap_reports USING btree (model_id, created_at DESC);
+
+
+--
+-- Name: bootstrap_reports_summary_gin_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX bootstrap_reports_summary_gin_idx ON predictions.bootstrap_reports USING gin (summary);
+
+
+--
+-- Name: bootstrap_reports_target_created_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX bootstrap_reports_target_created_idx ON predictions.bootstrap_reports USING btree (target_id, created_at DESC);
+
+
+--
+-- Name: calibration_reports_artifact_created_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX calibration_reports_artifact_created_idx ON predictions.calibration_reports USING btree (model_id, created_at DESC) WHERE (artifact_uri IS NOT NULL);
+
+
+--
+-- Name: calibration_reports_model_created_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX calibration_reports_model_created_idx ON predictions.calibration_reports USING btree (model_id, created_at DESC);
+
+
+--
+-- Name: calibration_reports_summary_gin_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX calibration_reports_summary_gin_idx ON predictions.calibration_reports USING gin (summary);
+
+
+--
+-- Name: calibration_reports_target_created_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX calibration_reports_target_created_idx ON predictions.calibration_reports USING btree (target_id, created_at DESC);
+
+
+--
+-- Name: idx_pa_predictions_actual_outcome; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX idx_pa_predictions_actual_outcome ON predictions.pa_predictions USING btree (actual_outcome) WHERE (actual_outcome IS NOT NULL);
+
+
+--
+-- Name: idx_pa_predictions_game_id; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX idx_pa_predictions_game_id ON predictions.pa_predictions USING btree (game_id);
+
+
+--
+-- Name: idx_pa_predictions_model_id; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX idx_pa_predictions_model_id ON predictions.pa_predictions USING btree (model_id);
+
+
+--
+-- Name: idx_pa_predictions_plate_appearance_id; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX idx_pa_predictions_plate_appearance_id ON predictions.pa_predictions USING btree (plate_appearance_id);
+
+
+--
+-- Name: idx_pa_predictions_prediction_run_id; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX idx_pa_predictions_prediction_run_id ON predictions.pa_predictions USING btree (prediction_run_id);
+
+
+--
+-- Name: idx_pa_predictions_prediction_timestamp; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX idx_pa_predictions_prediction_timestamp ON predictions.pa_predictions USING btree (prediction_timestamp);
+
+
+--
+-- Name: live_pa_predictions_feature_snapshot_gin_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX live_pa_predictions_feature_snapshot_gin_idx ON predictions.live_pa_predictions USING gin (feature_snapshot);
+
+
+--
+-- Name: live_pa_predictions_game_pa_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX live_pa_predictions_game_pa_idx ON predictions.live_pa_predictions USING btree (game_id, plate_appearance_id);
+
+
+--
+-- Name: live_pa_predictions_model_created_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX live_pa_predictions_model_created_idx ON predictions.live_pa_predictions USING btree (model_id, prediction_timestamp DESC);
+
+
+--
+-- Name: live_pa_predictions_state_snapshot_gin_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX live_pa_predictions_state_snapshot_gin_idx ON predictions.live_pa_predictions USING gin (state_snapshot);
+
+
+--
+-- Name: live_pa_predictions_target_created_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX live_pa_predictions_target_created_idx ON predictions.live_pa_predictions USING btree (target_id, prediction_timestamp DESC);
+
+
+--
+-- Name: live_pa_predictions_timestamp_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX live_pa_predictions_timestamp_idx ON predictions.live_pa_predictions USING btree (prediction_timestamp DESC);
+
+
+--
+-- Name: simulation_runs_filters_gin_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX simulation_runs_filters_gin_idx ON predictions.simulation_runs USING gin (filters);
+
+
+--
+-- Name: simulation_runs_mode_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX simulation_runs_mode_idx ON predictions.simulation_runs USING btree (run_mode, requested_at DESC);
+
+
+--
+-- Name: simulation_runs_requested_at_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX simulation_runs_requested_at_idx ON predictions.simulation_runs USING btree (requested_at DESC);
+
+
+--
+-- Name: target_probabilities_game_event_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX target_probabilities_game_event_idx ON predictions.target_probabilities USING btree (game_id, event_id);
+
+
+--
+-- Name: target_probabilities_target_time_idx; Type: INDEX; Schema: predictions; Owner: -
+--
+
+CREATE INDEX target_probabilities_target_time_idx ON predictions.target_probabilities USING btree (target_id, predicted_at DESC);
+
+
+--
+-- Name: idx_raw_espn_game_snapshots_game_date; Type: INDEX; Schema: raw_espn; Owner: -
+--
+
+CREATE INDEX idx_raw_espn_game_snapshots_game_date ON raw_espn.game_snapshots USING btree (game_date);
+
+
+--
+-- Name: idx_raw_espn_game_snapshots_game_id; Type: INDEX; Schema: raw_espn; Owner: -
+--
+
+CREATE INDEX idx_raw_espn_game_snapshots_game_id ON raw_espn.game_snapshots USING btree (game_id);
+
+
+--
+-- Name: idx_raw_espn_game_snapshots_season; Type: INDEX; Schema: raw_espn; Owner: -
+--
+
+CREATE INDEX idx_raw_espn_game_snapshots_season ON raw_espn.game_snapshots USING btree (season);
+
+
+--
+-- Name: idx_raw_espn_player_stats_snapshots_player_id; Type: INDEX; Schema: raw_espn; Owner: -
+--
+
+CREATE INDEX idx_raw_espn_player_stats_snapshots_player_id ON raw_espn.player_stats_snapshots USING btree (player_id);
+
+
+--
+-- Name: idx_raw_espn_player_stats_snapshots_season; Type: INDEX; Schema: raw_espn; Owner: -
+--
+
+CREATE INDEX idx_raw_espn_player_stats_snapshots_season ON raw_espn.player_stats_snapshots USING btree (season);
+
+
+--
+-- Name: idx_raw_espn_plays_snapshots_game_date; Type: INDEX; Schema: raw_espn; Owner: -
+--
+
+CREATE INDEX idx_raw_espn_plays_snapshots_game_date ON raw_espn.plays_snapshots USING btree (game_date);
+
+
+--
+-- Name: idx_raw_espn_plays_snapshots_game_id; Type: INDEX; Schema: raw_espn; Owner: -
+--
+
+CREATE INDEX idx_raw_espn_plays_snapshots_game_id ON raw_espn.plays_snapshots USING btree (game_id);
+
+
+--
+-- Name: idx_raw_espn_plays_snapshots_season; Type: INDEX; Schema: raw_espn; Owner: -
+--
+
+CREATE INDEX idx_raw_espn_plays_snapshots_season ON raw_espn.plays_snapshots USING btree (season);
+
+
+--
+-- Name: idx_raw_espn_schedule_snapshots_date; Type: INDEX; Schema: raw_espn; Owner: -
+--
+
+CREATE INDEX idx_raw_espn_schedule_snapshots_date ON raw_espn.schedule_snapshots USING btree (date);
+
+
+--
+-- Name: idx_raw_espn_schedule_snapshots_season; Type: INDEX; Schema: raw_espn; Owner: -
+--
+
+CREATE INDEX idx_raw_espn_schedule_snapshots_season ON raw_espn.schedule_snapshots USING btree (season);
+
+
+--
+-- Name: idx_raw_espn_team_stats_snapshots_season; Type: INDEX; Schema: raw_espn; Owner: -
+--
+
+CREATE INDEX idx_raw_espn_team_stats_snapshots_season ON raw_espn.team_stats_snapshots USING btree (season);
+
+
+--
+-- Name: idx_raw_espn_team_stats_snapshots_team_id; Type: INDEX; Schema: raw_espn; Owner: -
+--
+
+CREATE INDEX idx_raw_espn_team_stats_snapshots_team_id ON raw_espn.team_stats_snapshots USING btree (team_id);
+
+
+--
+-- Name: idx_boxscore_checksum; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_boxscore_checksum ON raw_mlb.boxscore_snapshots USING btree (checksum);
+
+
+--
+-- Name: idx_boxscore_fetched; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_boxscore_fetched ON raw_mlb.boxscore_snapshots USING btree (fetched_at);
+
+
+--
+-- Name: idx_boxscore_game_pk; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_boxscore_game_pk ON raw_mlb.boxscore_snapshots USING btree (mlb_game_pk);
+
+
+--
+-- Name: idx_gameday_xml_fetched; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_gameday_xml_fetched ON raw_mlb.gameday_xml_snapshots USING btree (fetched_at);
+
+
+--
+-- Name: idx_gameday_xml_game_pk; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_gameday_xml_game_pk ON raw_mlb.gameday_xml_snapshots USING btree (mlb_game_pk);
+
+
+--
+-- Name: idx_gameday_xml_type; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_gameday_xml_type ON raw_mlb.gameday_xml_snapshots USING btree (xml_type);
+
+
+--
+-- Name: idx_pitch_metrics_checksum; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_pitch_metrics_checksum ON raw_mlb.pitch_metrics_snapshots USING btree (checksum);
+
+
+--
+-- Name: idx_pitch_metrics_fetched; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_pitch_metrics_fetched ON raw_mlb.pitch_metrics_snapshots USING btree (fetched_at);
+
+
+--
+-- Name: idx_pitch_metrics_game_pk; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_pitch_metrics_game_pk ON raw_mlb.pitch_metrics_snapshots USING btree (mlb_game_pk);
+
+
+--
+-- Name: idx_play_by_play_checksum; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_play_by_play_checksum ON raw_mlb.play_by_play_snapshots USING btree (checksum);
+
+
+--
+-- Name: idx_play_by_play_fetched; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_play_by_play_fetched ON raw_mlb.play_by_play_snapshots USING btree (fetched_at);
+
+
+--
+-- Name: idx_play_by_play_game_pk; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_play_by_play_game_pk ON raw_mlb.play_by_play_snapshots USING btree (mlb_game_pk);
+
+
+--
+-- Name: idx_player_stats_fetched; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_player_stats_fetched ON raw_mlb.player_stats_snapshots USING btree (fetched_at);
+
+
+--
+-- Name: idx_player_stats_player; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_player_stats_player ON raw_mlb.player_stats_snapshots USING btree (player_id);
+
+
+--
+-- Name: idx_player_stats_season; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_player_stats_season ON raw_mlb.player_stats_snapshots USING btree (season);
+
+
+--
+-- Name: idx_rosters_season; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_rosters_season ON raw_mlb.roster_snapshots USING btree (season);
+
+
+--
+-- Name: idx_rosters_team; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_rosters_team ON raw_mlb.roster_snapshots USING btree (team_id);
+
+
+--
+-- Name: idx_standings_date; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_standings_date ON raw_mlb.standings_snapshots USING btree (date);
+
+
+--
+-- Name: idx_standings_fetched; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_standings_fetched ON raw_mlb.standings_snapshots USING btree (fetched_at);
+
+
+--
+-- Name: idx_standings_season; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_standings_season ON raw_mlb.standings_snapshots USING btree (season);
+
+
+--
+-- Name: idx_team_stats_fetched; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_team_stats_fetched ON raw_mlb.team_stats_snapshots USING btree (fetched_at);
+
+
+--
+-- Name: idx_team_stats_season; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_team_stats_season ON raw_mlb.team_stats_snapshots USING btree (season);
+
+
+--
+-- Name: idx_team_stats_team; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_team_stats_team ON raw_mlb.team_stats_snapshots USING btree (team_id);
+
+
+--
+-- Name: idx_win_prob_checksum; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_win_prob_checksum ON raw_mlb.win_probability_snapshots USING btree (checksum);
+
+
+--
+-- Name: idx_win_prob_fetched; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_win_prob_fetched ON raw_mlb.win_probability_snapshots USING btree (fetched_at);
+
+
+--
+-- Name: idx_win_prob_game_pk; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX idx_win_prob_game_pk ON raw_mlb.win_probability_snapshots USING btree (mlb_game_pk);
+
+
+--
+-- Name: live_feed_snapshots_checksum_idx; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX live_feed_snapshots_checksum_idx ON raw_mlb.live_feed_snapshots USING btree (payload_checksum);
+
+
+--
+-- Name: live_feed_snapshots_fetched_at_idx; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX live_feed_snapshots_fetched_at_idx ON raw_mlb.live_feed_snapshots USING btree (fetched_at);
+
+
+--
+-- Name: live_feed_snapshots_game_date_idx; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX live_feed_snapshots_game_date_idx ON raw_mlb.live_feed_snapshots USING btree (game_date);
+
+
+--
+-- Name: live_feed_snapshots_game_idx; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX live_feed_snapshots_game_idx ON raw_mlb.live_feed_snapshots USING btree (game_pk, fetched_at DESC);
+
+
+--
+-- Name: live_feed_snapshots_game_pk_idx; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX live_feed_snapshots_game_pk_idx ON raw_mlb.live_feed_snapshots USING btree (game_pk);
+
+
+--
+-- Name: reference_snapshots_checksum_idx; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX reference_snapshots_checksum_idx ON raw_mlb.reference_snapshots USING btree (payload_checksum);
+
+
+--
+-- Name: reference_snapshots_family_idx; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX reference_snapshots_family_idx ON raw_mlb.reference_snapshots USING btree (endpoint_family);
+
+
+--
+-- Name: reference_snapshots_fetched_at_idx; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX reference_snapshots_fetched_at_idx ON raw_mlb.reference_snapshots USING btree (fetched_at);
+
+
+--
+-- Name: reference_snapshots_resource_idx; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX reference_snapshots_resource_idx ON raw_mlb.reference_snapshots USING btree (resource_key);
+
+
+--
+-- Name: reference_snapshots_season_idx; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX reference_snapshots_season_idx ON raw_mlb.reference_snapshots USING btree (season);
+
+
+--
+-- Name: schedule_snapshots_date_idx; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX schedule_snapshots_date_idx ON raw_mlb.schedule_snapshots USING btree (snapshot_date);
+
+
+--
+-- Name: schedule_snapshots_fetched_at_idx; Type: INDEX; Schema: raw_mlb; Owner: -
+--
+
+CREATE INDEX schedule_snapshots_fetched_at_idx ON raw_mlb.schedule_snapshots USING btree (fetched_at DESC);
+
+
+--
+-- Name: chadwick_comments_game_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX chadwick_comments_game_idx ON raw_retrosheet.chadwick_comments USING btree (game_id);
+
+
+--
+-- Name: chadwick_daily_game_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX chadwick_daily_game_idx ON raw_retrosheet.chadwick_daily USING btree (game_id);
+
+
+--
+-- Name: chadwick_daily_player_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX chadwick_daily_player_idx ON raw_retrosheet.chadwick_daily USING btree (player_id);
+
+
+--
+-- Name: chadwick_event_raw_event_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX chadwick_event_raw_event_idx ON raw_retrosheet.chadwick_event_raw USING btree (season, game_id, event_id);
+
+
+--
+-- Name: chadwick_event_raw_game_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX chadwick_event_raw_game_idx ON raw_retrosheet.chadwick_event_raw USING btree (game_id);
+
+
+--
+-- Name: chadwick_events_event_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX chadwick_events_event_idx ON raw_retrosheet.chadwick_events USING btree (season, game_id, event_id);
+
+
+--
+-- Name: chadwick_events_game_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX chadwick_events_game_idx ON raw_retrosheet.chadwick_events USING btree (game_id);
+
+
+--
+-- Name: chadwick_games_game_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX chadwick_games_game_idx ON raw_retrosheet.chadwick_games USING btree (game_id);
+
+
+--
+-- Name: chadwick_substitutions_game_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX chadwick_substitutions_game_idx ON raw_retrosheet.chadwick_substitutions USING btree (game_id);
+
+
+--
+-- Name: coaches_coach_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX coaches_coach_idx ON raw_retrosheet.coaches USING btree (coach_id, season);
+
+
+--
+-- Name: ejections_ejectee_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX ejections_ejectee_idx ON raw_retrosheet.ejections USING btree (ejectee_id) WHERE (ejectee_id IS NOT NULL);
+
+
+--
+-- Name: ejections_game_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX ejections_game_idx ON raw_retrosheet.ejections USING btree (game_id);
+
+
+--
+-- Name: ejections_umpire_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX ejections_umpire_idx ON raw_retrosheet.ejections USING btree (umpire_id) WHERE (umpire_id IS NOT NULL);
+
+
+--
+-- Name: idx_ingest_runs_script_name; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX idx_ingest_runs_script_name ON raw_retrosheet.ingest_runs USING btree (script_name);
+
+
+--
+-- Name: idx_ingest_runs_started_at; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX idx_ingest_runs_started_at ON raw_retrosheet.ingest_runs USING btree (started_at DESC);
+
+
+--
+-- Name: idx_ingest_runs_status; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX idx_ingest_runs_status ON raw_retrosheet.ingest_runs USING btree (status);
+
+
+--
+-- Name: season_rosters_allstar_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX season_rosters_allstar_idx ON raw_retrosheet.season_rosters USING btree (season, is_allstar);
+
+
+--
+-- Name: season_rosters_player_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX season_rosters_player_idx ON raw_retrosheet.season_rosters USING btree (player_id, season);
+
+
+--
+-- Name: season_rosters_team_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX season_rosters_team_idx ON raw_retrosheet.season_rosters USING btree (roster_team_id, season);
+
+
+--
+-- Name: season_schedules_date_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX season_schedules_date_idx ON raw_retrosheet.season_schedules USING btree (season, game_date);
+
+
+--
+-- Name: season_schedules_matchup_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX season_schedules_matchup_idx ON raw_retrosheet.season_schedules USING btree (season, visitor_team_id, home_team_id);
+
+
+--
+-- Name: season_schedules_park_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX season_schedules_park_idx ON raw_retrosheet.season_schedules USING btree (park_id, season) WHERE (park_id IS NOT NULL);
+
+
+--
+-- Name: season_teams_team_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX season_teams_team_idx ON raw_retrosheet.season_teams USING btree (team_id, season);
+
+
+--
+-- Name: season_umpires_umpire_idx; Type: INDEX; Schema: raw_retrosheet; Owner: -
+--
+
+CREATE INDEX season_umpires_umpire_idx ON raw_retrosheet.season_umpires USING btree (umpire_id, season);
+
+
+--
+-- Name: idx_sportradar_game_fetched_at; Type: INDEX; Schema: raw_sportradar; Owner: -
+--
+
+CREATE INDEX idx_sportradar_game_fetched_at ON raw_sportradar.game_snapshots USING btree (fetched_at);
+
+
+--
+-- Name: idx_sportradar_game_pk; Type: INDEX; Schema: raw_sportradar; Owner: -
+--
+
+CREATE INDEX idx_sportradar_game_pk ON raw_sportradar.game_snapshots USING btree (game_pk);
+
+
+--
+-- Name: idx_sportradar_push_event_id; Type: INDEX; Schema: raw_sportradar; Owner: -
+--
+
+CREATE INDEX idx_sportradar_push_event_id ON raw_sportradar.push_events USING btree (event_id);
+
+
+--
+-- Name: idx_sportradar_push_event_type; Type: INDEX; Schema: raw_sportradar; Owner: -
+--
+
+CREATE INDEX idx_sportradar_push_event_type ON raw_sportradar.push_events USING btree (event_type);
+
+
+--
+-- Name: idx_sportradar_push_fetched_at; Type: INDEX; Schema: raw_sportradar; Owner: -
+--
+
+CREATE INDEX idx_sportradar_push_fetched_at ON raw_sportradar.push_events USING btree (fetched_at);
+
+
+--
+-- Name: idx_sportradar_push_game_sequence; Type: INDEX; Schema: raw_sportradar; Owner: -
+--
+
+CREATE INDEX idx_sportradar_push_game_sequence ON raw_sportradar.push_events USING btree (game_pk, sequence_number);
+
+
+--
+-- Name: idx_batch_operations_resume; Type: INDEX; Schema: warehouse; Owner: -
+--
+
+CREATE INDEX idx_batch_operations_resume ON warehouse.batch_operations USING btree (batch_name, status) WHERE (status = ANY (ARRAY['running'::text, 'failed'::text, 'paused'::text]));
+
+
+--
+-- Name: idx_batch_operations_status; Type: INDEX; Schema: warehouse; Owner: -
+--
+
+CREATE INDEX idx_batch_operations_status ON warehouse.batch_operations USING btree (status, started_at DESC);
+
+
+--
+-- Name: idx_batch_operations_target; Type: INDEX; Schema: warehouse; Owner: -
+--
+
+CREATE INDEX idx_batch_operations_target ON warehouse.batch_operations USING btree (target_schema, target_table, status);
+
+
+--
+-- Name: idx_rebuild_log_phase; Type: INDEX; Schema: warehouse; Owner: -
+--
+
+CREATE INDEX idx_rebuild_log_phase ON warehouse.rebuild_log USING btree (phase);
+
+
+--
+-- Name: idx_rebuild_log_run_id; Type: INDEX; Schema: warehouse; Owner: -
+--
+
+CREATE INDEX idx_rebuild_log_run_id ON warehouse.rebuild_log USING btree (run_id);
+
+
+--
+-- Name: idx_rebuild_runs_status; Type: INDEX; Schema: warehouse; Owner: -
+--
+
+CREATE INDEX idx_rebuild_runs_status ON warehouse.rebuild_runs USING btree (status);
+
+
+--
+-- Name: park_xref bridge_park_xref_updated_at; Type: TRIGGER; Schema: bridge; Owner: -
+--
+
+CREATE TRIGGER bridge_park_xref_updated_at BEFORE UPDATE ON bridge.park_xref FOR EACH ROW EXECUTE FUNCTION raw_retrosheet.update_updated_at();
+
+
+--
+-- Name: player_xref bridge_player_xref_updated_at; Type: TRIGGER; Schema: bridge; Owner: -
+--
+
+CREATE TRIGGER bridge_player_xref_updated_at BEFORE UPDATE ON bridge.player_xref FOR EACH ROW EXECUTE FUNCTION raw_retrosheet.update_updated_at();
+
+
+--
+-- Name: team_xref bridge_team_xref_updated_at; Type: TRIGGER; Schema: bridge; Owner: -
+--
+
+CREATE TRIGGER bridge_team_xref_updated_at BEFORE UPDATE ON bridge.team_xref FOR EACH ROW EXECUTE FUNCTION raw_retrosheet.update_updated_at();
+
+
+--
+-- Name: coach_xref update_coach_xref_updated_at; Type: TRIGGER; Schema: bridge; Owner: -
+--
+
+CREATE TRIGGER update_coach_xref_updated_at BEFORE UPDATE ON bridge.coach_xref FOR EACH ROW EXECUTE FUNCTION bridge.update_updated_at_column();
+
+
+--
+-- Name: umpire_xref update_umpire_xref_updated_at; Type: TRIGGER; Schema: bridge; Owner: -
+--
+
+CREATE TRIGGER update_umpire_xref_updated_at BEFORE UPDATE ON bridge.umpire_xref FOR EACH ROW EXECUTE FUNCTION bridge.update_updated_at_column();
+
+
+--
+-- Name: live_pa_predictions update_live_pa_predictions_updated_at; Type: TRIGGER; Schema: predictions; Owner: -
+--
+
+CREATE TRIGGER update_live_pa_predictions_updated_at BEFORE UPDATE ON predictions.live_pa_predictions FOR EACH ROW EXECUTE FUNCTION predictions.update_updated_at_column();
+
+
+--
+-- Name: events events_batter_fk; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.events
+    ADD CONSTRAINT events_batter_fk FOREIGN KEY (batter_id) REFERENCES core.players(retrosheet_player_id) NOT VALID;
+
+
+--
+-- Name: events events_batting_team_fk; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.events
+    ADD CONSTRAINT events_batting_team_fk FOREIGN KEY (batting_team_id) REFERENCES core.teams(retrosheet_team_id) NOT VALID;
+
+
+--
+-- Name: events events_fielding_team_fk; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.events
+    ADD CONSTRAINT events_fielding_team_fk FOREIGN KEY (fielding_team_id) REFERENCES core.teams(retrosheet_team_id) NOT VALID;
+
+
+--
+-- Name: events events_game_fk; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.events
+    ADD CONSTRAINT events_game_fk FOREIGN KEY (game_id) REFERENCES core.games(game_id) ON DELETE CASCADE NOT VALID;
+
+
+--
+-- Name: events events_pitcher_fk; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.events
+    ADD CONSTRAINT events_pitcher_fk FOREIGN KEY (pitcher_id) REFERENCES core.players(retrosheet_player_id) NOT VALID;
+
+
+--
+-- Name: games games_away_starting_pitcher_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.games
+    ADD CONSTRAINT games_away_starting_pitcher_id_fkey FOREIGN KEY (away_starting_pitcher_id) REFERENCES core.players(retrosheet_player_id);
+
+
+--
+-- Name: games games_away_team_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.games
+    ADD CONSTRAINT games_away_team_id_fkey FOREIGN KEY (away_team_id) REFERENCES core.teams(retrosheet_team_id);
+
+
+--
+-- Name: games games_home_starting_pitcher_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.games
+    ADD CONSTRAINT games_home_starting_pitcher_id_fkey FOREIGN KEY (home_starting_pitcher_id) REFERENCES core.players(retrosheet_player_id);
+
+
+--
+-- Name: games games_home_team_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.games
+    ADD CONSTRAINT games_home_team_id_fkey FOREIGN KEY (home_team_id) REFERENCES core.teams(retrosheet_team_id);
+
+
+--
+-- Name: games games_loss_pitcher_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.games
+    ADD CONSTRAINT games_loss_pitcher_id_fkey FOREIGN KEY (loss_pitcher_id) REFERENCES core.players(retrosheet_player_id);
+
+
+--
+-- Name: games games_park_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.games
+    ADD CONSTRAINT games_park_id_fkey FOREIGN KEY (park_id) REFERENCES core.parks(retrosheet_park_id);
+
+
+--
+-- Name: games games_save_pitcher_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.games
+    ADD CONSTRAINT games_save_pitcher_id_fkey FOREIGN KEY (save_pitcher_id) REFERENCES core.players(retrosheet_player_id);
+
+
+--
+-- Name: games games_win_pitcher_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.games
+    ADD CONSTRAINT games_win_pitcher_id_fkey FOREIGN KEY (win_pitcher_id) REFERENCES core.players(retrosheet_player_id);
+
+
+--
+-- Name: games games_winning_team_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.games
+    ADD CONSTRAINT games_winning_team_id_fkey FOREIGN KEY (winning_team_id) REFERENCES core.teams(retrosheet_team_id);
+
+
+--
+-- Name: plate_appearances plate_appearances_batter_fk; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.plate_appearances
+    ADD CONSTRAINT plate_appearances_batter_fk FOREIGN KEY (batter_id) REFERENCES core.players(retrosheet_player_id);
+
+
+--
+-- Name: plate_appearances plate_appearances_batting_team_fk; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.plate_appearances
+    ADD CONSTRAINT plate_appearances_batting_team_fk FOREIGN KEY (batting_team_id) REFERENCES core.teams(retrosheet_team_id);
+
+
+--
+-- Name: plate_appearances plate_appearances_event_fk; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.plate_appearances
+    ADD CONSTRAINT plate_appearances_event_fk FOREIGN KEY (game_id, plate_appearance_id) REFERENCES core.events(game_id, event_id) ON DELETE CASCADE;
+
+
+--
+-- Name: plate_appearances plate_appearances_fielding_team_fk; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.plate_appearances
+    ADD CONSTRAINT plate_appearances_fielding_team_fk FOREIGN KEY (fielding_team_id) REFERENCES core.teams(retrosheet_team_id);
+
+
+--
+-- Name: plate_appearances plate_appearances_game_fk; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.plate_appearances
+    ADD CONSTRAINT plate_appearances_game_fk FOREIGN KEY (game_id) REFERENCES core.games(game_id) ON DELETE CASCADE;
+
+
+--
+-- Name: plate_appearances plate_appearances_pitcher_fk; Type: FK CONSTRAINT; Schema: core; Owner: -
+--
+
+ALTER TABLE ONLY core.plate_appearances
+    ADD CONSTRAINT plate_appearances_pitcher_fk FOREIGN KEY (pitcher_id) REFERENCES core.players(retrosheet_player_id);
+
+
+--
+-- Name: engineered_features engineered_features_pitch_id_fkey; Type: FK CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.engineered_features
+    ADD CONSTRAINT engineered_features_pitch_id_fkey FOREIGN KEY (pitch_id) REFERENCES features_pitch.base_features(pitch_id);
+
+
+--
+-- Name: model_training_set model_training_set_pitch_id_fkey; Type: FK CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.model_training_set
+    ADD CONSTRAINT model_training_set_pitch_id_fkey FOREIGN KEY (pitch_id) REFERENCES features_pitch.base_features(pitch_id);
+
+
+--
+-- Name: sequential_features sequential_features_pitch_id_fkey; Type: FK CONSTRAINT; Schema: features_pitch; Owner: -
+--
+
+ALTER TABLE ONLY features_pitch.sequential_features
+    ADD CONSTRAINT sequential_features_pitch_id_fkey FOREIGN KEY (pitch_id) REFERENCES features_pitch.base_features(pitch_id);
+
+
+--
+-- Name: detected_edges detected_edges_market_price_id_fkey; Type: FK CONSTRAINT; Schema: market_edges; Owner: -
+--
+
+ALTER TABLE ONLY market_edges.detected_edges
+    ADD CONSTRAINT detected_edges_market_price_id_fkey FOREIGN KEY (market_price_id) REFERENCES market_edges.market_prices(market_price_id);
+
+
+--
+-- Name: detected_edges detected_edges_prediction_id_fkey; Type: FK CONSTRAINT; Schema: market_edges; Owner: -
+--
+
+ALTER TABLE ONLY market_edges.detected_edges
+    ADD CONSTRAINT detected_edges_prediction_id_fkey FOREIGN KEY (prediction_id) REFERENCES predictions.target_probabilities(prediction_id);
+
+
+--
+-- Name: market_prices market_prices_raw_snapshot_id_fkey; Type: FK CONSTRAINT; Schema: market_edges; Owner: -
+--
+
+ALTER TABLE ONLY market_edges.market_prices
+    ADD CONSTRAINT market_prices_raw_snapshot_id_fkey FOREIGN KEY (raw_snapshot_id) REFERENCES raw_markets.market_snapshots(market_snapshot_id);
+
+
+--
+-- Name: market_prices market_prices_target_id_fkey; Type: FK CONSTRAINT; Schema: market_edges; Owner: -
+--
+
+ALTER TABLE ONLY market_edges.market_prices
+    ADD CONSTRAINT market_prices_target_id_fkey FOREIGN KEY (target_id) REFERENCES predictions.prediction_targets(target_id);
+
+
+--
+-- Name: column_dictionary column_dictionary_table_id_fkey; Type: FK CONSTRAINT; Schema: metadata; Owner: -
+--
+
+ALTER TABLE ONLY metadata.column_dictionary
+    ADD CONSTRAINT column_dictionary_table_id_fkey FOREIGN KEY (table_id) REFERENCES metadata.table_dictionary(table_id) ON DELETE CASCADE;
+
+
+--
+-- Name: pitches pitches_game_pk_event_index_fkey; Type: FK CONSTRAINT; Schema: mlb; Owner: -
+--
+
+ALTER TABLE ONLY mlb.pitches
+    ADD CONSTRAINT pitches_game_pk_event_index_fkey FOREIGN KEY (game_pk, event_index) REFERENCES mlb.play_events(game_pk, event_index);
+
+
+--
+-- Name: pitches pitches_game_pk_fkey; Type: FK CONSTRAINT; Schema: mlb; Owner: -
+--
+
+ALTER TABLE ONLY mlb.pitches
+    ADD CONSTRAINT pitches_game_pk_fkey FOREIGN KEY (game_pk) REFERENCES mlb.games(game_pk);
+
+
+--
+-- Name: play_events play_events_game_pk_fkey; Type: FK CONSTRAINT; Schema: mlb; Owner: -
+--
+
+ALTER TABLE ONLY mlb.play_events
+    ADD CONSTRAINT play_events_game_pk_fkey FOREIGN KEY (game_pk) REFERENCES mlb.games(game_pk);
+
+
+--
+-- Name: players players_current_team_id_fkey; Type: FK CONSTRAINT; Schema: mlb; Owner: -
+--
+
+ALTER TABLE ONLY mlb.players
+    ADD CONSTRAINT players_current_team_id_fkey FOREIGN KEY (current_team_id) REFERENCES mlb.teams(mlb_id);
+
+
+--
+-- Name: model_registry model_registry_target_id_fkey; Type: FK CONSTRAINT; Schema: models; Owner: -
+--
+
+ALTER TABLE ONLY models.model_registry
+    ADD CONSTRAINT model_registry_target_id_fkey FOREIGN KEY (target_id) REFERENCES predictions.prediction_targets(target_id);
+
+
+--
+-- Name: api_prediction_requests api_prediction_requests_model_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.api_prediction_requests
+    ADD CONSTRAINT api_prediction_requests_model_id_fkey FOREIGN KEY (model_id) REFERENCES models.model_registry(model_id);
+
+
+--
+-- Name: api_prediction_requests api_prediction_requests_target_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.api_prediction_requests
+    ADD CONSTRAINT api_prediction_requests_target_id_fkey FOREIGN KEY (target_id) REFERENCES predictions.prediction_targets(target_id);
+
+
+--
+-- Name: bootstrap_reports bootstrap_reports_model_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.bootstrap_reports
+    ADD CONSTRAINT bootstrap_reports_model_id_fkey FOREIGN KEY (model_id) REFERENCES models.model_registry(model_id);
+
+
+--
+-- Name: bootstrap_reports bootstrap_reports_prediction_run_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.bootstrap_reports
+    ADD CONSTRAINT bootstrap_reports_prediction_run_id_fkey FOREIGN KEY (prediction_run_id) REFERENCES predictions.prediction_runs(prediction_run_id);
+
+
+--
+-- Name: bootstrap_reports bootstrap_reports_target_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.bootstrap_reports
+    ADD CONSTRAINT bootstrap_reports_target_id_fkey FOREIGN KEY (target_id) REFERENCES predictions.prediction_targets(target_id);
+
+
+--
+-- Name: calibration_reports calibration_reports_model_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.calibration_reports
+    ADD CONSTRAINT calibration_reports_model_id_fkey FOREIGN KEY (model_id) REFERENCES models.model_registry(model_id);
+
+
+--
+-- Name: calibration_reports calibration_reports_prediction_run_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.calibration_reports
+    ADD CONSTRAINT calibration_reports_prediction_run_id_fkey FOREIGN KEY (prediction_run_id) REFERENCES predictions.prediction_runs(prediction_run_id);
+
+
+--
+-- Name: calibration_reports calibration_reports_target_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.calibration_reports
+    ADD CONSTRAINT calibration_reports_target_id_fkey FOREIGN KEY (target_id) REFERENCES predictions.prediction_targets(target_id);
+
+
+--
+-- Name: live_pa_predictions live_pa_predictions_model_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.live_pa_predictions
+    ADD CONSTRAINT live_pa_predictions_model_id_fkey FOREIGN KEY (model_id) REFERENCES models.model_registry(model_id);
+
+
+--
+-- Name: live_pa_predictions live_pa_predictions_prediction_run_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.live_pa_predictions
+    ADD CONSTRAINT live_pa_predictions_prediction_run_id_fkey FOREIGN KEY (prediction_run_id) REFERENCES predictions.prediction_runs(prediction_run_id);
+
+
+--
+-- Name: live_pa_predictions live_pa_predictions_target_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.live_pa_predictions
+    ADD CONSTRAINT live_pa_predictions_target_id_fkey FOREIGN KEY (target_id) REFERENCES predictions.prediction_targets(target_id);
+
+
+--
+-- Name: prediction_runs prediction_runs_model_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.prediction_runs
+    ADD CONSTRAINT prediction_runs_model_id_fkey FOREIGN KEY (model_id) REFERENCES models.model_registry(model_id);
+
+
+--
+-- Name: prediction_runs prediction_runs_target_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.prediction_runs
+    ADD CONSTRAINT prediction_runs_target_id_fkey FOREIGN KEY (target_id) REFERENCES predictions.prediction_targets(target_id);
+
+
+--
+-- Name: target_probabilities target_probabilities_model_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.target_probabilities
+    ADD CONSTRAINT target_probabilities_model_id_fkey FOREIGN KEY (model_id) REFERENCES models.model_registry(model_id);
+
+
+--
+-- Name: target_probabilities target_probabilities_prediction_run_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.target_probabilities
+    ADD CONSTRAINT target_probabilities_prediction_run_id_fkey FOREIGN KEY (prediction_run_id) REFERENCES predictions.prediction_runs(prediction_run_id);
+
+
+--
+-- Name: target_probabilities target_probabilities_target_id_fkey; Type: FK CONSTRAINT; Schema: predictions; Owner: -
+--
+
+ALTER TABLE ONLY predictions.target_probabilities
+    ADD CONSTRAINT target_probabilities_target_id_fkey FOREIGN KEY (target_id) REFERENCES predictions.prediction_targets(target_id);
+
+
+--
+-- Name: batch_operations batch_operations_run_id_fkey; Type: FK CONSTRAINT; Schema: warehouse; Owner: -
+--
+
+ALTER TABLE ONLY warehouse.batch_operations
+    ADD CONSTRAINT batch_operations_run_id_fkey FOREIGN KEY (run_id) REFERENCES warehouse.rebuild_runs(run_id) ON DELETE SET NULL;
+
+
+--
+-- Name: rebuild_log rebuild_log_run_id_fkey; Type: FK CONSTRAINT; Schema: warehouse; Owner: -
+--
+
+ALTER TABLE ONLY warehouse.rebuild_log
+    ADD CONSTRAINT rebuild_log_run_id_fkey FOREIGN KEY (run_id) REFERENCES warehouse.rebuild_runs(run_id);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict eZEBcIFKwrh9eyHCQdYFjDymxgCk51z3jeJAzXzZzfkAEsx4PlvUSB8t07fn0k6
+
