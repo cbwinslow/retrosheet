@@ -484,3 +484,4 @@ Cloud Infrastructure
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-04-26 | Migration Agent | Initial architecture specification |
+| 1.1 | 2026-04-28 | Migration Agent | Added Features (50), Models (60), Predictions (70) schemas |

@@ -44,7 +44,9 @@
 - `baseball mlb download --date 2026-04-26`
 - `baseball mlb ingest --date 2026-04-26`
 - `baseball mlb validate --date 2026-04-26`
-- `baseball mlb today`  # Download today's games
+- `baseball mlb today`                           # Today's schedule
+- `baseball mlb stream --game 716190 --interval 15`  # Live streaming
+- `baseball mlb stream --duration 60 --no-save`      # Stream all games
 
 ---
 
@@ -107,6 +109,31 @@
 - `baseball lahman download --tables all`
 - `baseball lahman ingest --tables all`
 - `baseball lahman validate --tables all`
+
+---
+
+---
+
+## Live Data Infrastructure
+
+**Purpose**: Real-time game state tracking and prediction
+
+**Components**:
+- **Live Feed Poller**: `baseball/services/live_feed.py` - Continuous polling
+- **WebSocket Server**: `baseball/live_server.py` - Real-time client updates
+- **Live Dashboard**: `static/live_dashboard.html` - Web monitoring UI
+
+**Database Tables**:
+- `raw_mlb.live_feed_snapshots` - Deduplicated live feed JSON
+- `core.live_games` - Canonical live game state
+- `core.live_events` - Live play-by-play events
+- `features.live_game_state_features` - Pre-calculated model features
+
+**CLI Commands**:
+- `baseball live games`      # List active games
+- `baseball live watch 716190`  # Watch specific game
+- `baseball live server`     # Start WebSocket server
+- `baseball live dashboard`  # Launch web dashboard
 
 ---
 
