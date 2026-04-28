@@ -146,21 +146,21 @@
 
 | ID | Task | Priority | Status | AC | Effort |
 |----|------|----------|--------|-----|--------|
-| 3.2.1 | Create `sql/10_raw/101_raw_mlb_live_feed.sql` | High | 🔄 Pending | Table definition | 1h |
-| 3.2.2 | Define `raw_mlb.live_feed_snapshots` | High | 🔄 Pending | With JSONB payload | 1h |
-| 3.2.3 | Add deduplication logic | High | 🔄 Pending | Checksum-based | 1h |
-| 3.2.4 | Add indexes on raw table | Medium | 🔄 Pending | Performance | 30m |
+| 3.2.1 | Create `sql/10_raw/101_raw_mlb_live_feed.sql` | High | ✅ Done | Table definition | 1h |
+| 3.2.2 | Define `raw_mlb.live_feed_snapshots` | High | ✅ Done | With JSONB payload | 1h |
+| 3.2.3 | Add deduplication logic | High | ✅ Done | Checksum-based | 1h |
+| 3.2.4 | Add indexes on raw table | Medium | ✅ Done | Performance | 30m |
 | 3.2.5 | Implement raw persistence in adapter | High | 🔄 Pending | `save_raw()` method | 2h |
 
 ### Phase 3.3: Canonical Live Tables
 
 | ID | Task | Priority | Status | AC | Effort |
 |----|------|----------|--------|-----|--------|
-| 3.3.1 | Create `sql/30_core/310_core_live_games.sql` | High | 🔄 Pending | Live games table | 2h |
-| 3.3.2 | Create `sql/30_core/311_core_live_events.sql` | High | 🔄 Pending | Live events table | 2h |
-| 3.3.3 | Define event-state snapshot schema | High | 🔄 Pending | Base-out, score, inning | 2h |
-| 3.3.4 | Add foreign keys to core tables | Medium | 🔄 Pending | Referential integrity | 1h |
-| 3.3.5 | Create live game state view | Medium | 🔄 Pending | Unified view | 2h |
+| 3.3.1 | Create `sql/30_core/310_core_live_games.sql` | High | ✅ Done | Live games table | 2h |
+| 3.3.2 | Create `sql/30_core/311_core_live_events.sql` | High | ✅ Done | Live events table | 2h |
+| 3.3.3 | Define event-state snapshot schema | High | ✅ Done | Base-out, score, inning | 2h |
+| 3.3.4 | Add foreign keys to core tables | Medium | ✅ Done | Referential integrity | 1h |
+| 3.3.5 | Create live game state view | Medium | ✅ Done | Unified view | 2h |
 
 ### Phase 3.4: CLI Commands
 

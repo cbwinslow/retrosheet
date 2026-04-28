@@ -354,6 +354,8 @@ These files may be present as active development work. Treat them as live-bridge
 | `sql/092_live_odds_views.sql` | Live odds/market-adjacent views. | Market/live candidate. |
 | `sql/100_bridge_tables.sql` | Player/team/park/game crosswalks. | Live bridge and metadata reconciliation. |
 | `sql/110_live_core_tables.sql` | `core.live_games` and `core.live_events` canonical live tables with snapshot/raw-play provenance. | Live bridge. |
+| `sql/30_core/310_core_live_games.sql` | **CANONICAL LIVE GAMES** - `core.live_games` table for real-time game state. Views: `v_live_games_current`, `v_live_games_in_progress`, `v_todays_games`. Function: `get_game_state_for_prediction()`. | Live data persistence. |
+| `sql/30_core/311_core_live_events.sql` | **CANONICAL LIVE EVENTS** - `core.live_events` table for plate appearances and game events. Views: `v_live_events_current`, `v_live_plate_appearances`, `v_live_game_state_sequence`. Function: `extract_live_training_examples()`. | Win probability training data. |
 | `sql/120_inference_optimization.sql` | Precomputed inference feature layer. | Performance candidate. |
 | `sql/121_inference_functions.sql` | Fast DB functions and simulation state tables. | Performance/simulation candidate. |
 | `sql/130_analysis_views.sql` | Combined analysis views for historical + live data queries. | Live bridge and analysis. |
