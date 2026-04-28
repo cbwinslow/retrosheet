@@ -162,6 +162,7 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `sql/200_external_data.sql` | Defines schemas and tables for supplemental free data sources (Statcast, Baseball‑Data.com, Gameday XML) and bridge tables. | External data marts. |
 | `sql/220_espn_schema.sql` | Defines `raw_espn` schema and tables for ESPN API data (game snapshots, schedule snapshots, player stats, team stats). | ESPN external data ingestion. |
 | `sql/225_ingest_run_tracking.sql` | Expands `raw_retrosheet.ingest_runs` table with script metadata, adds helper functions for run logging, triggers for auto-timestamps, and monitoring views. | Ingest run tracking and reproducibility. |
+| `sql/10_raw/1020_raw_mlb_live_feed.sql` | **RAW MLB LIVE FEED** - `raw_mlb.live_feed_snapshots` table for MLB Stats API responses. Checksum-based deduplication, JSONB payload, `upsert_live_feed_snapshot()` function. Views: `v_live_feed_dedup`, `v_snapshot_frequency`. | Live data persistence. |
 
 ## Staging Layer SQL
 
