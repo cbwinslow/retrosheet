@@ -51,14 +51,14 @@
 | ID | Task | Priority | Status | AC | Effort |
 |----|------|----------|--------|-----|--------|
 | 1.2.1 | Create `baseball/core/types.py` | High | ✅ Done | Type definitions | 1h |
-| 1.2.2 | Create `baseball/core/settings.py` | High | 🔄 Pending | Pydantic settings | 2h |
+| 1.2.2 | Create `baseball/core/settings.py` | High | ✅ Done | Pydantic settings | 2h |
 | 1.2.3 | Create `baseball/core/db.py` | High | ✅ Done | Database manager | 2h |
 | 1.2.4 | Create `baseball/core/sql_runner.py` | High | ✅ Done | SQL execution utility | 2h |
 | 1.2.5 | Create `baseball/core/checkpoints.py` | High | ✅ Done | Pipeline checkpoints | 2h |
 | 1.2.6 | Create `baseball/core/filesystem.py` | Medium | ✅ Done | File I/O utilities | 1h |
 | 1.2.7 | Create `baseball/core/http.py` | Medium | ✅ Done | HTTP client | 1h |
 | 1.2.8 | Create `baseball/core/registry.py` | Medium | ✅ Done | Source/model registry | 2h |
-| 1.2.9 | Create `baseball/logging.py` | High | 🔄 Pending | Structured logging | 1h |
+| 1.2.9 | Create `baseball/logging.py` | High | ✅ Done | Structured logging | 1h |
 
 ### Phase 1.3: CLI Shell
 
@@ -67,8 +67,8 @@
 | 1.3.1 | Add `typer` to dependencies | High | ✅ Done | In `pyproject.toml` | 15m |
 | 1.3.2 | Create `baseball/cli.py` entry point | High | ✅ Done | CLI imports without error | 1h |
 | 1.3.3 | Add `[project.scripts]` entry in `pyproject.toml` | High | ✅ Done | `baseball` command works | 15m |
-| 1.3.4 | Implement `baseball doctor` command stub | High | 🔄 Pending | Returns status | 1h |
-| 1.3.5 | Implement `baseball status` command stub | High | 🔄 Pending | Returns status | 1h |
+| 1.3.4 | Implement `baseball doctor` command stub | High | ✅ Done | Returns status | 1h |
+| 1.3.5 | Implement `baseball status` command stub | High | ✅ Done | Returns status | 1h |
 | 1.3.6 | Create CLI command groups structure | Medium | ✅ Done | `retrosheet`, `mlb`, etc. groups | 1h |
 
 ### Phase 1.4: Admin SQL
@@ -104,7 +104,7 @@
 | 2.2.3 | Wrap `retrosheet/archive.py` download | High | ✅ Done | `download()` method | 2h |
 | 2.2.4 | Wrap `retrosheet/event.py` parsing | High | ✅ Done | `ingest()` method | 2h |
 | 2.2.5 | Implement `validate()` method | High | ✅ Done | Row counts, checksums | 2h |
-| 2.2.6 | Add checkpoint integration | Medium | 🔄 Pending | Resume capability | 2h |
+| 2.2.6 | Add checkpoint integration | Medium | ✅ Done | Resume capability | 2h |
 
 ### Phase 2.3: CLI Commands
 
@@ -120,12 +120,11 @@
 
 | ID | Task | Priority | Status | AC | Effort |
 |----|------|----------|--------|-----|--------|
-| 2.4.1 | Create `sql/10_raw/` directory | High | 🔄 Pending | For raw Retrosheet | 15m |
-| 2.4.2 | Create `sql/20_staging/` directory | High | 🔄 Pending | For staging | 15m |
-| 2.4.3 | Move core Retrosheet SQL to `sql/30_core/` | High | 🔄 Pending | Renumber files | 2h |
-| 2.4.4 | Create raw landing table SQL | High | 🔄 Pending | `raw_retrosheet.*` | 2h |
-| 2.4.5 | Create staging table SQL | Medium | 🔄 Pending | `stg_retrosheet.*` | 2h |
-| 2.4.6 | Update foreign key references | Medium | 🔄 Pending | Consistency | 1h |
+| 2.4.1 | Create `sql/10_raw/` directory | High | ✅ Done | For raw data | 15m |
+| 2.4.2 | Create `sql/20_staging/` directory | High | ✅ Done | For staging | 15m |
+| 2.4.3 | Move core SQL to `sql/30_core/` | High | ✅ Done | Core tables | 2h |
+| 2.4.4 | Create staging schema/tables | High | ✅ Done | Staging layer | 2h |
+| 2.4.5 | Create checkpoint SQL | Medium | ✅ Done | Resume capability | 2h |
 
 ---
 
