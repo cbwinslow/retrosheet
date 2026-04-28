@@ -35,6 +35,9 @@ dependencies = [
   "structlog>=24.0",
   "tenacity>=8.0",
   "rich>=13.0",
+  "pandasai>=0.1.0",
+  "haystack-ai>=2.29.0.dev20260428001541",
+  "openrouter-haystack>=1.0.0",
 ]
 
 [project.optional-dependencies]
