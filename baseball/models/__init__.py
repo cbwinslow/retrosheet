@@ -18,6 +18,7 @@ from .base import (
 )
 from .next_run_model import NextRunProbabilityModel
 from .pa_outcome_model import PAOutcomeModel
+from .win_probability_model import WinProbabilityModel
 
 
 __all__ = [
@@ -31,4 +32,5 @@ __all__ = [
     # Model implementations
     'NextRunProbabilityModel',
     'PAOutcomeModel',
+    'WinProbabilityModel',
 ]

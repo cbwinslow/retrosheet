@@ -790,13 +790,14 @@ def models_train(
         NextRunProbabilityModel,
         PAOutcomeModel,
         TrainingConfig,
+        WinProbabilityModel,
     )
 
     # Map model type strings to classes
     model_map = {
         'next_run': (NextRunProbabilityModel, ModelType.NEXT_RUN_PROBABILITY),
         'pa_outcome': (PAOutcomeModel, ModelType.PA_OUTCOME),
-        'win_probability': (None, ModelType.WIN_PROBABILITY),  # TODO: Implement
+        'win_probability': (WinProbabilityModel, ModelType.WIN_PROBABILITY),
     }
 
     if model_type not in model_map:
@@ -805,10 +806,6 @@ def models_train(
         raise typer.Exit(code=1)
 
     model_class, model_enum = model_map[model_type]
-
-    if model_class is None:
-        console.print(f'[yellow]{model_type} model not yet implemented[/yellow]')
-        raise typer.Exit(code=1)
 
     if dry_run:
         console.print(f'[yellow]Dry run: Would train {model_type} model[/yellow]')

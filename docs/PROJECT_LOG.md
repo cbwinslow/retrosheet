@@ -18,9 +18,14 @@ Implementing Phase 1 audit findings. Completed RunExpectancyCalculator and Bridg
   - `baseball bridge lookup --id <canonical_id>` - Shows all source mappings
   - Uses existing BridgeService methods
 
+- ✅ **WinProbabilityModel** - XGBoost binary classifier
+  - `baseball/models/win_probability_model.py`
+  - Predicts home team win probability from game state
+  - Features: inning, score diff, base state, RE, LI, etc.
+  - Wired to CLI `baseball models train win_probability`
+
 ### Next
 
-- WinProbabilityModel implementation
 - Predict CLI commands (today/live/batch)
 - Models CLI completion
 
