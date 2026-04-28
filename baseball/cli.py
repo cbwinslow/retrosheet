@@ -1076,9 +1076,25 @@ def bridge_resolve(
     ),
 ):
     """Resolve a source ID to canonical ID using bridge tables."""
+    from baseball.services.bridge import BridgeService
+    
     console.print(f'[dim]Resolving {entity_type} ID {source_id} from {source}...[/dim]')
-    # TODO: Query bridge tables for ID resolution
-    raise NotImplementedError('Bridge resolution not yet implemented')
+    
+    try:
+        bridge = BridgeService()
+        result = bridge.resolve_id(source, source_id, entity_type)
+        
+        if result:
+            console.print(f'[green]✓ Found:[/green]')
+            console.print(f'  Canonical ID: {result["canonical_id"]}')
+            console.print(f'  Entity: {result["first_name"]} {result["last_name"]}' if 'first_name' in result else f'  Entity: {result.get("name", "N/A")}')
+        else:
+            console.print(f'[yellow]⚠ No match found for {source} ID: {source_id}[/yellow]')
+            raise typer.Exit(code=1)
+            
+    except Exception as e:
+        console.print(f'[red]✗ Error: {e}[/red]')
+        raise typer.Exit(code=1)
 
 
 @bridge_app.command(name='match')
@@ -1103,9 +1119,36 @@ def bridge_lookup(
     ),
 ):
     """Lookup all source IDs for a canonical ID."""
+    from baseball.services.bridge import BridgeService
+    
     console.print(f'[dim]Looking up {entity_type} canonical ID {canonical_id}...[/dim]')
-    # TODO: Query bridge tables for all source IDs
-    raise NotImplementedError('Bridge lookup not yet implemented')
+    
+    try:
+        bridge = BridgeService()
+        result = bridge.lookup_canonical(entity_type, canonical_id)
+        
+        if result and result.get('sources'):
+            console.print(f'[green]✓ Found {len(result["sources"])} source mappings:[/green]')
+            
+            table = Table(title=f'Source IDs for {entity_type} {canonical_id}')
+            table.add_column('Source')
+            table.add_column('Source ID')
+            table.add_column('Name/Info')
+            
+            for source, info in result['sources'].items():
+                table.add_row(
+                    source,
+                    info.get('id', 'N/A'),
+                    info.get('name', info.get('first_name', '') + ' ' + info.get('last_name', ''))
+                )
+            console.print(table)
+        else:
+            console.print(f'[yellow]⚠ No source mappings found for {entity_type} ID: {canonical_id}[/yellow]')
+            raise typer.Exit(code=1)
+            
+    except Exception as e:
+        console.print(f'[red]✗ Error: {e}[/red]')
+        raise typer.Exit(code=1)
 
 
 # Pipeline command group

@@ -1,5 +1,31 @@
 # Project Log
 
+## 2026-04-28 (Phase 2 Implementation - IN PROGRESS)
+
+### Summary
+
+Implementing Phase 1 audit findings. Completed RunExpectancyCalculator and Bridge CLI commands.
+
+### Completed
+
+- ✅ **RunExpectancyCalculator** - Full implementation with SQL table
+  - `baseball/features/run_expectancy.py` - 24 base-out state calculator
+  - `sql/50_features/5037_features_run_expectancy.sql` - RE matrix table
+  - Wired to CLI features compute/list commands
+  
+- ✅ **Bridge CLI commands** - Wired resolve and lookup to BridgeService
+  - `baseball bridge resolve --source <source> --id <id>` - Maps source ID to canonical
+  - `baseball bridge lookup --id <canonical_id>` - Shows all source mappings
+  - Uses existing BridgeService methods
+
+### Next
+
+- WinProbabilityModel implementation
+- Predict CLI commands (today/live/batch)
+- Models CLI completion
+
+---
+
 ## 2026-04-28 (Phase 1 Audit - COMPLETE)
 
 ### Summary

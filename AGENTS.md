@@ -18,8 +18,8 @@ The repository is undergoing a **phased migration** to a unified `baseball` CLI 
 
 Phase 0-7, 7a, 8, 9 are complete. **Now implementing Phase 1 findings**:
 - RunExpectancyCalculator ✅ Implemented
+- Bridge CLI commands ✅ Implemented (resolve, lookup wired)
 - WinProbabilityModel 🔄 In Progress
-- Bridge CLI commands 🔄 In Progress
 - Predict CLI commands ⏳ Planned
 - Models CLI commands ⏳ Planned
 
