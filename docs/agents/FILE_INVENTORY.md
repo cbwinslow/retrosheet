@@ -338,6 +338,8 @@ uv run python tests/run_tests.py --all --verbose
 | `sql/079_probability_evaluation_reports.sql` | Adds durable calibration and bootstrap report tables plus recent-report views in `predictions`. | Probability evaluation persistence. |
 | `sql/081_probability_calibration_artifacts.sql` | Extends calibration reports with persisted artifact support for reusable calibrated scoring. | Calibrated inference infrastructure. |
 | `sql/082_count_state_feature_marts.sql` | Adds batter/pitcher/context prior-rate marts split by ball-strike count and a count-state-enhanced advanced PA view. | Targeted feature improvement for PA reliability defects. |
+| `sql/50_features/500_features_run_expectancy.sql` | **RUN EXPECTANCY** - `features.run_expectancy_matrix` (24 base-out states), `features.re24_values` (per-play RE24). Functions: `get_run_expectancy()`, `calculate_re24()`. Views: `v_re_matrix_pivot`, `v_re24_leaderboard`. Includes 2024 sample RE data. | Win probability foundation. |
+| `sql/50_features/501_features_live_game_state.sql` | **LIVE GAME STATE** - `features.live_game_state_features`, `features.win_probability_inputs`, `mv_current_game_states`. Functions: `extract_live_game_state()`, `prepare_wp_training_data()`. Real-time feature extraction for win probability. | Live prediction features. |
 
 ## Live And Inference SQL
 

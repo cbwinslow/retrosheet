@@ -178,9 +178,9 @@
 
 | ID | Task | Priority | Status | AC | Effort |
 |----|------|----------|--------|-----|--------|
-| 3.5.1 | Create `sql/50_features/500_features_run_expectancy.sql` | High | 🔄 Pending | RE table | 2h |
-| 3.5.2 | Create `sql/50_features/501_features_live_game_state.sql` | High | 🔄 Pending | Live state table | 2h |
-| 3.5.3 | Create `baseball/features/base.py` | High | 🔄 Pending | Base feature class | 2h |
+| 3.5.1 | Create `sql/50_features/500_features_run_expectancy.sql` | High | ✅ Done | RE table | 2h |
+| 3.5.2 | Create `sql/50_features/501_features_live_game_state.sql` | High | ✅ Done | Live state table | 2h |
+| 3.5.3 | Create `baseball/features/base.py` | High | ✅ Done | Base feature class | 2h |
 | 3.5.4 | Create `baseball/features/run_expectancy.py` | High | 🔄 Pending | RE calculation | 2h |
 | 3.5.5 | Create `baseball/features/live_state.py` | High | 🔄 Pending | Live state features | 2h |
 | 3.5.6 | Implement `baseball features build` | High | 🔄 Pending | CLI command | 1h |
