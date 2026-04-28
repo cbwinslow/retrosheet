@@ -402,6 +402,29 @@ Consolidation effort following major_update.md principles: preserve working logi
 
 ---
 
+### Feature and Model SQL Files Created
+
+| SQL File | Creates | Purpose |
+|----------|---------|---------|
+| `sql/50_features/500_features_run_expectancy.sql` | `features.run_expectancy_matrix`, `features.re24_values` | 24 base-out states for RE24 calculation |
+| `sql/50_features/501_features_live_game_state.sql` | `features.live_game_state_features`, `features.win_probability_inputs` | Real-time game state features |
+| `sql/60_models/600_models_registry.sql` | `models.registry`, `models.training_runs` | Model versioning and lifecycle |
+| `sql/70_serving/700_serving_predictions.sql` | `predictions.inference_results` | Prediction storage and evaluation |
+| `sql/10_raw/1020_raw_mlb_live_feed.sql` | `raw_mlb.live_feed_snapshots` | Live MLB feed deduplication |
+| `sql/30_core/310_core_live_games.sql` | `core.live_games`, `core.v_live_games_current` | Canonical live game state |
+| `sql/30_core/311_core_live_events.sql` | `core.live_events`, `core.v_live_events_current` | Canonical live events |
+
+### Live Data Infrastructure
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `MlbLiveSource` | `baseball/sources/mlb_live.py` | Real-time feed ingestion |
+| `LiveFeedPoller` | `baseball/services/live_feed.py` | Continuous polling service |
+| WebSocket Server | `baseball/live_server.py` | Real-time client updates |
+| Live Dashboard | `static/live_dashboard.html` | Web-based game monitoring |
+
+---
+
 ## Document Control
 
 | Version | Date | Author | Changes |
@@ -409,3 +432,4 @@ Consolidation effort following major_update.md principles: preserve working logi
 | 1.0 | 2026-04-26 | Migration Agent | Initial file inventory and mapping |
 | 1.1 | 2026-04-26 | Migration Agent | Added Script Consolidation section |
 | 1.2 | 2026-04-27 | Migration Agent | Added Milestone 9 Scripts Legacy Archive section |
+| 1.3 | 2026-04-28 | Migration Agent | Added Feature/Model SQL and Live Data sections |
