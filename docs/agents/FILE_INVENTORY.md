@@ -1050,6 +1050,7 @@ game = manager.games.lookup_by_retro('202604040NYY01')
 | `baseball/features/matchup.py` | **MATCHUP CALCULATOR** - `MatchupCalculator`, `MatchupHistory`, `PlatoonSplit`. Head-to-head history, platoon advantage, matchup scores. | 350+ lines |
 | `baseball/features/rolling_form.py` | **FORM CALCULATOR** - `RollingFormCalculator`, `BatterForm`, `PitcherForm`. 7/14/30 day windows, hot/cold detection, trends. | 400+ lines |
 | `baseball/features/bullpen.py` | **BULLPEN CALCULATOR** - `BullpenCalculator`, `TeamBullpenStatus`, `RelieverFatigue`. Fatigue scoring, availability, bullpen advantage. | 450+ lines |
+| `baseball/features/run_expectancy.py` | **RUN EXPECTANCY CALCULATOR** - `RunExpectancyCalculator`. 24 base-out states, RE24 matrix, expected runs by game state. | 200+ lines |
 
 ### Key Features
 
@@ -1081,10 +1082,16 @@ game = manager.games.lookup_by_retro('202604040NYY01')
 - Fatigue and depth scores (0-1)
 - Comparative bullpen advantage
 
+**Run Expectancy (RE)**:
+- Expected runs for remainder of inning from any base-out state
+- 24 base states (3 outs × 8 runner combinations)
+- RE24 value: run expectancy change from play
+- Built from historical data, stored in `features.run_expectancy_matrix`
+
 **Usage**:
 ```python
 from baseball.features import (
-    WinExpectancyCalculator, LeverageIndexCalculator,
+    WinExpectancyCalculator, LeverageIndexCalculator, RunExpectancyCalculator,
     MatchupCalculator, RollingFormCalculator, BullpenCalculator,
     GameState
 )
@@ -1122,6 +1129,8 @@ print(advantage['narrative'])
 |---|---|---|
 | `sql/601_models_next_run.sql` | **NEXT-RUN MODEL** - Binary classification (will a run score?). Tables: `next_run_training_data`, `next_run_features`, `next_run_predictions`. Functions: `populate_next_run_training()`, `compute_next_run_features()`. Views: `next_run_calibration`, `next_run_performance`. | SQL |
 | `sql/602_models_pa_outcome.sql` | **PA OUTCOME MODEL** - Multi-class classification (out/walk/single/double/triple/HR). Tables: `pa_outcome_training_data`, `pa_outcome_features`, `pa_outcome_predictions`. Type: `pa_outcome_category`. Views: `pa_outcome_accuracy`, `batter_prediction_summary`. | SQL |
+| `sql/6001_models_registry.sql` | **MODEL REGISTRY** - `models.registry`, `models.versions` tables. Model metadata, versioning, deployment tracking. | SQL |
+| `sql/601_run_expectancy.sql` | **RUN EXPECTANCY** - `features.run_expectancy_matrix` table. 24 base-out states, expected runs calculation. | SQL |
 
 ### Model Python Classes
 
@@ -1131,6 +1140,7 @@ print(advantage['narrative'])
 | `baseball/models/base.py` | **BASE CLASSES** - `BaseModel` (abstract), `SklearnBaseModel`, `ModelConfig`, `TrainingConfig`, `ModelResult`, `ModelVersion`. Enums: `ModelType`, `ModelStatus`. | 400+ lines |
 | `baseball/models/next_run_model.py` | **NEXT-RUN MODEL** - `NextRunProbabilityModel`. Binary classifier (XGBoost/RF/LogReg) predicting P(run scores). Features: game state, WE, LI, matchup, form. | 350+ lines |
 | `baseball/models/pa_outcome_model.py` | **PA OUTCOME MODEL** - `PAOutcomeModel`. Multi-class classifier for 6 outcome categories. Class probabilities, expected bases, expected runs. | 400+ lines |
+| `baseball/models/win_probability_model.py` | **WIN PROBABILITY MODEL** - `WinProbabilityModel`. XGBoost binary classifier predicting home team win probability from game state. | 300+ lines |
 
 ### Key Model Features
 
@@ -1148,7 +1158,13 @@ print(advantage['narrative'])
 
 **Usage**:
 ```python
-from baseball.models import NextRunProbabilityModel, PAOutcomeModel
+from baseball.models import NextRunProbabilityModel, PAOutcomeModel, WinProbabilityModel
+
+# Win Probability Model
+model = WinProbabilityModel(db_connection=conn)
+config = TrainingConfig(train_seasons=[2024, 2025], test_seasons=[2026])
+result = model.train(config)
+print(f"Training accuracy: {result.metrics['val_accuracy']:.3f}")
 
 # Next-Run Model
 model = NextRunProbabilityModel(db_connection=conn)

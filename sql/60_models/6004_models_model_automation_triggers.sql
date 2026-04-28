@@ -1,7 +1,8 @@
-"""
-Database Triggers for Model Automation
-
-Phase 3.2: Database Triggers
+/*
+File: sql/60_models/6004_models_model_automation_triggers.sql
+Purpose: Database triggers for model automation
+Author: Agent Cascade
+Date: 2026-04-24
 
 Provides PostgreSQL triggers and functions for:
 - Auto-updating model registry on training completion
@@ -9,9 +10,13 @@ Provides PostgreSQL triggers and functions for:
 - Triggering retraining workflows
 - Tracking model performance degradation
 
-Author: Agent Cascade
-Date: April 24, 2026
-"""
+Called By: n/a (triggers auto-execute)
+Depends On: models.registry, models.versions
+
+Tables Modified:
+- models.registry (status updates)
+- models.versions (auto-logging)
+*/
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS pg_cron;
