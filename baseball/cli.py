@@ -354,6 +354,73 @@ def mlb_today(
     console.print("[green]Today's MLB data ready[/green]")
 
 
+@mlb_app.command(name='stream')
+def mlb_stream(
+    game_pk: int = typer.Option(None, '--game', '-g', help='Specific game PK to stream'),
+    interval: int = typer.Option(30, '--interval', '-i', help='Polling interval in seconds'),
+    duration: int = typer.Option(0, '--duration', '-d', help='Duration in minutes (0 = indefinite)'),
+    save_raw: bool = typer.Option(True, '--save/--no-save', help='Save raw snapshots to database'),
+):
+    """Stream live MLB game updates with continuous polling.
+
+    Polls the MLB Stats API for live game updates and displays changes.
+    Optionally saves raw snapshots to raw_mlb.live_feed_snapshots.
+    """
+    import time
+    from datetime import datetime, timedelta
+
+    from baseball.core.types import SourceRequest
+    from baseball.sources.mlb import MlbSource
+
+    source = MlbSource()
+
+    console.print(f'[dim]Starting MLB stream (interval: {interval}s)...[/dim]')
+
+    start_time = datetime.now()
+    poll_count = 0
+    last_state = None
+
+    try:
+        while True:
+            # Check duration limit
+            if duration > 0:
+                elapsed = (datetime.now() - start_time).total_seconds() / 60
+                if elapsed >= duration:
+                    console.print('[dim]Duration limit reached, stopping stream[/dim]')
+                    break
+
+            # Fetch current games
+            config = SourceRequest(
+                source_type='mlb',
+                game_pk=game_pk,
+                save_raw=save_raw
+            )
+            result = source.fetch_live(config)
+
+            if result.success:
+                poll_count += 1
+                current_state = result.data.get('game_pk') if result.data else None
+
+                # Display changes
+                if current_state != last_state:
+                    console.print(f'[green]Update #{poll_count}:[/green] Game state changed')
+                    if result.data:
+                        console.print(f'  Inning: {result.data.get("inning", "N/A")}')
+                        console.print(f'  Score: {result.data.get("away_score", 0)} - {result.data.get("home_score", 0)}')
+                else:
+                    console.print(f'[dim]Poll #{poll_count}: No changes[/dim]')
+
+                last_state = current_state
+            else:
+                console.print(f'[red]Poll failed: {result.error_message}[/red]')
+
+            # Sleep until next poll
+            time.sleep(interval)
+
+    except KeyboardInterrupt:
+        console.print(f'\n[dim]Stream stopped after {poll_count} polls[/dim]')
+
+
 # Retrosheet data ingestion commands
 @retrosheet_app.command(name='download')
 def retrosheet_download(
