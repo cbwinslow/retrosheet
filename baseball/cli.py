@@ -581,7 +581,7 @@ def features_list():
         ('matchup', 'Batter vs Pitcher matchup features', '✅ Ready'),
         ('rolling_form', 'Recent player performance (10/30/90 day)', '✅ Ready'),
         ('bullpen', 'Bullpen fatigue and availability', '✅ Ready'),
-        ('run_expectancy', 'Run Expectancy by base-out state', '⏳ Planned'),
+        ('run_expectancy', 'Run Expectancy by base-out state', '✅ Ready'),
     ]
 
     for name, desc, status in features:
@@ -603,6 +603,7 @@ def features_compute(
         LeverageIndexCalculator,
         MatchupCalculator,
         RollingFormCalculator,
+        RunExpectancyCalculator,
         WinExpectancyCalculator,
     )
 
@@ -623,6 +624,7 @@ def features_compute(
         'matchup': MatchupCalculator,
         'rolling_form': RollingFormCalculator,
         'bullpen': BullpenCalculator,
+        'run_expectancy': RunExpectancyCalculator,
     }
 
     if feature not in calculators:

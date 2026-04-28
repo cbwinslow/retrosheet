@@ -14,9 +14,14 @@ The repository is undergoing a **phased migration** to a unified `baseball` CLI 
 | `docs/architecture.md` | Target architecture specification |
 | `docs/keys_and_grains.md` | Entity keys and table grains |
 
-### Current Phase: Phase 8 Complete
+### Current Phase: Phase 1 Implementation (In Progress)
 
-Phase 0-7, 7a are complete. Phase 8 (Pipeline Orchestration) is now **complete** with 7 pipeline configurations, checkpointing, resume support, and step handlers wired to source adapters. Milestone 9 (Cleanup + Validation) is also complete.
+Phase 0-7, 7a, 8, 9 are complete. **Now implementing Phase 1 findings**:
+- RunExpectancyCalculator ✅ Implemented
+- WinProbabilityModel 🔄 In Progress
+- Bridge CLI commands 🔄 In Progress
+- Predict CLI commands ⏳ Planned
+- Models CLI commands ⏳ Planned
 
 **Completed Work**:
 - ✅ Phase 0: Migration planning documents

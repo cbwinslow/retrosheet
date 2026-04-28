@@ -1,5 +1,48 @@
 # Project Log
 
+## 2026-04-28 (Phase 1 Audit - COMPLETE)
+
+### Summary
+
+Completed comprehensive audit of the baseball prediction warehouse codebase. Repository is 75-80% complete with solid foundations.
+
+### Audit Results
+
+| Component | Status | Coverage |
+|-----------|--------|----------|
+| Source Adapters | ✅ Complete | 5/5 working |
+| Pipelines | ✅ Complete | 7/7 configured |
+| Feature Calculators | ⚠️ Partial | 5/6 working |
+| CLI Commands | ⚠️ Partial | Core working, stubs identified |
+| Models | ⚠️ Partial | 2/3 working |
+| SQL Schema | ✅ Complete | All layers present |
+
+### Critical Gaps Identified
+
+1. **RunExpectancyCalculator** - Documented but not implemented
+2. **WinProbabilityModel** - Referenced in CLI but no file exists
+3. **Bridge CLI commands** - 3 stubs (resolve, match, lookup)
+4. **Predict CLI commands** - 3 stubs (today, live, batch)
+5. **Models CLI commands** - 6 stubs (info, download, archive, compare, export, partial train)
+
+### 12 Critical Questions Answered
+
+See `docs/audit_report.md` for full details. Key decisions:
+- **Q1**: Implement Run Expectancy (Approach A: compute from data)
+- **Q3**: Model storage = Hybrid (DB metadata + filesystem artifacts)
+- **Q6**: Skip WebSocket for now, focus on batch predictions
+- **Q11**: Win Probability model = highest priority
+
+### Revised Implementation Plan
+
+- **Phase 2**: Foundation (RunExpectancy, Bridge CLI)
+- **Phase 3**: Win Probability Model
+- **Phase 4**: CLI Completion
+- **Phase 5**: Serving Layer
+- **Phase 6**: Documentation
+
+---
+
 ## 2026-04-27 (System Discovery Tool - COMPLETE)
 
 ### Summary

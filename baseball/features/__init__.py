@@ -17,6 +17,7 @@ from .bullpen import AvailabilityStatus, BullpenCalculator, RelieverFatigue, Tea
 from .leverage_index import LeverageIndexCalculator
 from .matchup import MatchupCalculator, MatchupHistory, PlatoonSplit
 from .rolling_form import BatterForm, PitcherForm, RollingFormCalculator, TrendDirection
+from .run_expectancy import RunExpectancyCalculator
 from .win_expectancy import WinExpectancyCalculator
 
 
@@ -35,6 +36,7 @@ __all__ = [
     'PlatoonSplit',
     'RelieverFatigue',
     'RollingFormCalculator',
+    'RunExpectancyCalculator',
     'TeamBullpenStatus',
     'TrendDirection',
     'WinExpectancyCalculator',
