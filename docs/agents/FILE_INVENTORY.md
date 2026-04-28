@@ -340,6 +340,8 @@ uv run python tests/run_tests.py --all --verbose
 | `sql/082_count_state_feature_marts.sql` | Adds batter/pitcher/context prior-rate marts split by ball-strike count and a count-state-enhanced advanced PA view. | Targeted feature improvement for PA reliability defects. |
 | `sql/50_features/500_features_run_expectancy.sql` | **RUN EXPECTANCY** - `features.run_expectancy_matrix` (24 base-out states), `features.re24_values` (per-play RE24). Functions: `get_run_expectancy()`, `calculate_re24()`. Views: `v_re_matrix_pivot`, `v_re24_leaderboard`. Includes 2024 sample RE data. | Win probability foundation. |
 | `sql/50_features/501_features_live_game_state.sql` | **LIVE GAME STATE** - `features.live_game_state_features`, `features.win_probability_inputs`, `mv_current_game_states`. Functions: `extract_live_game_state()`, `prepare_wp_training_data()`. Real-time feature extraction for win probability. | Live prediction features. |
+| `sql/60_models/600_models_registry.sql` | **MODEL REGISTRY** - `models.registry` table for model versioning, `models.training_runs` for lineage. Functions: `register_model()`, `promote_model()`, `get_production_model()`. Views: `v_production_models`, `v_model_history`, `v_active_training_runs`. | Model lifecycle management. |
+| `sql/70_serving/700_serving_predictions.sql` | **PREDICTIONS** - `predictions.inference_results` table with confidence intervals and evaluation. Functions: `store_prediction()`, `evaluate_predictions()`, `get_game_predictions()`. Views: `v_latest_predictions`, `v_wp_timeline`, `v_model_performance`, `v_calibration_analysis`. | Prediction storage and evaluation. |
 
 ## Live And Inference SQL
 

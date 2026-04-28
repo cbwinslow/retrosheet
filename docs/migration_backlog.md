@@ -190,9 +190,9 @@
 
 | ID | Task | Priority | Status | AC | Effort |
 |----|------|----------|--------|-----|--------|
-| 3.6.1 | Create `sql/60_models/600_models_registry.sql` | High | 🔄 Pending | Model registry table | 1h |
-| 3.6.2 | Create `sql/70_serving/700_serving_predictions.sql` | High | 🔄 Pending | Predictions table | 1h |
-| 3.6.3 | Create `baseball/models/base.py` | High | 🔄 Pending | Base model class | 2h |
+| 3.6.1 | Create `sql/60_models/600_models_registry.sql` | High | ✅ Done | Model registry table | 1h |
+| 3.6.2 | Create `sql/70_serving/700_serving_predictions.sql` | High | ✅ Done | Predictions table | 1h |
+| 3.6.3 | Create `baseball/models/base.py` | High | ✅ Done | Base model class | 2h |
 | 3.6.4 | Create `baseball/models/registry.py` | High | 🔄 Pending | Model registry | 2h |
 | 3.6.5 | Create `baseball/models/training.py` | High | 🔄 Pending | Training pipeline | 3h |
 | 3.6.6 | Create `baseball/models/inference.py` | High | 🔄 Pending | Inference pipeline | 3h |
