@@ -163,6 +163,16 @@ Monitoring records stored in `raw_retrosheet.ingest_runs` with run IDs 27-34.
 | `sql/220_espn_schema.sql` | Defines `raw_espn` schema and tables for ESPN API data (game snapshots, schedule snapshots, player stats, team stats). | ESPN external data ingestion. |
 | `sql/225_ingest_run_tracking.sql` | Expands `raw_retrosheet.ingest_runs` table with script metadata, adds helper functions for run logging, triggers for auto-timestamps, and monitoring views. | Ingest run tracking and reproducibility. |
 
+## Staging Layer SQL
+
+**Data transformation between raw and core schemas (Phase 2.4).**
+
+| File | Purpose | Components |
+|---|---|---|
+| `sql/20_staging/2000_staging_schema.sql` | **STAGING SCHEMA** - Creates `staging` schema with tables for cleaned/validated data: `stg_retrosheet_events`, `stg_retrosheet_games`, `stg_retrosheet_player_appearances`. | SQL |
+| `sql/20_staging/2001_stg_retrosheet_transform.sql` | **TRANSFORM FUNCTIONS** - `staging.transform_chadwick_event()`, `staging.load_events_for_season()`, validation trigger, and `v_event_validation_summary` view. | SQL |
+| `sql/20_staging/2002_staging_checkpoints.sql` | **CHECKPOINT TABLE** - `staging.source_checkpoints` for resumable downloads. Functions: `start_checkpoint()`, `complete_checkpoint()`, `fail_checkpoint()`, `get_resumable_checkpoints()`. View: `v_checkpoint_summary`. | SQL |
+
 ## Maintenance SQL
 
 | File | Purpose | Canonical Position |
