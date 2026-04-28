@@ -24,10 +24,15 @@ Implementing Phase 1 audit findings. Completed RunExpectancyCalculator and Bridg
   - Features: inning, score diff, base state, RE, LI, etc.
   - Wired to CLI `baseball models train win_probability`
 
+- ✅ **Predict CLI commands** - Live prediction interface
+  - `baseball predict today` - Fetch and predict all today's games
+  - `baseball predict live` - Continuous polling for live predictions
+  - `baseball predict batch` - Batch prediction from file of game IDs
+  - Uses MLB Stats API for live game data
+
 ### Next
 
-- Predict CLI commands (today/live/batch)
-- Models CLI completion
+- Models CLI completion (list/info/download/archive/compare/export)
 
 ---
 

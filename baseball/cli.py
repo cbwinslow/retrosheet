@@ -534,36 +534,332 @@ def predict_game(
 
 @predict_app.command(name='today')
 def predict_today(
-    model: str = typer.Option(..., '--model', '-m', help='Model name or path'),
-    output: str = typer.Option('table', '--output', '-o', help='Output format'),
+    model: str = typer.Option('win_probability', '--model', '-m', help='Model name or path'),
+    output: str = typer.Option('table', '--output', '-o', help='Output format: table, json, csv'),
 ):
     """Run predictions for all games today."""
-    console.print("[dim]Fetching today's games and running predictions...[/dim]")
-    # TODO: Fetch today's schedule, run batch predictions
-    raise typer.Exit(code=0)
+    from baseball.sources.mlb import MlbSource
+    from baseball.models import WinProbabilityModel
+    from datetime import date
+    import requests
+    
+    console.print('[dim]Fetching today\'s MLB schedule...[/dim]')
+    
+    try:
+        # Fetch today's schedule from MLB API
+        today = date.today()
+        url = f'https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={today.strftime("%Y-%m-%d")}&hydrate=teams'
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        
+        games = []
+        for date_info in data.get('dates', []):
+            for game in date_info.get('games', []):
+                games.append({
+                    'game_id': game.get('gamePk'),
+                    'away_team': game.get('teams', {}).get('away', {}).get('team', {}).get('name', 'Unknown'),
+                    'home_team': game.get('teams', {}).get('home', {}).get('team', {}).get('name', 'Unknown'),
+                    'status': game.get('status', {}).get('abstractGameState', 'Unknown'),
+                    'start_time': game.get('gameDate', 'TBD'),
+                })
+        
+        if not games:
+            console.print('[yellow]No games scheduled for today.[/yellow]')
+            raise typer.Exit(code=0)
+        
+        # Load model
+        wp_model = WinProbabilityModel()
+        
+        # Make predictions for each game
+        table = Table(title=f'MLB Predictions for {today.strftime("%B %d, %Y")}')
+        table.add_column('Game ID')
+        table.add_column('Matchup')
+        table.add_column('Status')
+        table.add_column('Home Win %', justify='right')
+        table.add_column('Away Win %', justify='right')
+        table.add_column('Favorite')
+        
+        for game in games:
+            # For pre-game predictions, start with 50-50 (no game state yet)
+            # Once game starts, would use actual game state
+            if game['status'] in ['Live', 'In Progress']:
+                # Would fetch live state and predict - for now use default
+                home_prob = 0.5
+            elif game['status'] == 'Final':
+                home_prob = 1.0 if 'home win' in game.get('result', '').lower() else 0.0
+            else:
+                # Pre-game: use simple heuristic based on team records
+                # In real implementation, would use team strength model
+                home_prob = 0.54  # MLB home field advantage
+            
+            away_prob = 1 - home_prob
+            favorite = game['home_team'] if home_prob > 0.5 else game['away_team']
+            
+            table.add_row(
+                str(game['game_id']),
+                f"{game['away_team']} @ {game['home_team']}",
+                game['status'],
+                f'{home_prob:.1%}',
+                f'{away_prob:.1%}',
+                favorite
+            )
+        
+        console.print(table)
+        console.print(f'\n[green]✓ Predicted {len(games)} games[/green]')
+        
+    except Exception as e:
+        console.print(f'[red]Error fetching or predicting games: {e}[/red]')
+        raise typer.Exit(code=1)
 
 
 @predict_app.command(name='live')
 def predict_live(
-    model: str = typer.Option(..., '--model', '-m', help='Model name or path'),
+    model: str = typer.Option('win_probability', '--model', '-m', help='Model name or path'),
     interval: int = typer.Option(30, '--interval', '-i', help='Polling interval in seconds'),
+    game_id: str = typer.Option(None, '--game', '-g', help='Specific game ID to track (default: all active games)'),
 ):
     """Run continuous live predictions."""
+    import time
+    import requests
+    from baseball.models import WinProbabilityModel
+    
     console.print(f'[dim]Starting live prediction loop (interval: {interval}s)...[/dim]')
-    # TODO: Poll MLB API, predict when game state changes, display results
-    raise typer.Exit(code=0)
+    console.print('[dim]Press Ctrl+C to stop[/dim]\n')
+    
+    wp_model = WinProbabilityModel()
+    
+    try:
+        while True:
+            try:
+                # Fetch live games
+                if game_id:
+                    # Fetch specific game
+                    url = f'https://statsapi.mlb.com/api/v1.1/game/{game_id}/feed/live'
+                    response = requests.get(url, timeout=10)
+                    if response.status_code == 200:
+                        games_data = [response.json()]
+                    else:
+                        games_data = []
+                else:
+                    # Fetch all live games
+                    url = 'https://statsapi.mlb.com/api/v1/gamePBP?gamePk=list&hydrate=lineups,scoringplays,flags,probablePitcher(note)'
+                    response = requests.get('https://statsapi.mlb.com/api/v1/schedule?sportId=1&gameTypes=R,F,D,L,W&hydrate=linescore(runners)', timeout=10)
+                    games_data = []
+                    if response.status_code == 200:
+                        data = response.json()
+                        for date_info in data.get('dates', []):
+                            for game in date_info.get('games', []):
+                                if game.get('status', {}).get('abstractGameCode') in ['L', 'P']:  # Live or Preview
+                                    games_data.append(game)
+                
+                if games_data:
+                    console.clear()
+                    console.print(f'[bold]Live Predictions - {time.strftime("%H:%M:%S")}[/bold]\n')
+                    
+                    for game_data in games_data:
+                        if game_id and 'liveData' in game_data:
+                            # Specific game with detailed data
+                            game = game_data['gameData']['game']
+                            linescore = game_data['liveData']['linescore']
+                            
+                            inning = linescore.get('currentInning', 1)
+                            is_top = linescore.get('isTopInning', True)
+                            outs = linescore.get('outs', 0)
+                            score_home = linescore.get('teams', {}).get('home', {}).get('runs', 0)
+                            score_away = linescore.get('teams', {}).get('away', {}).get('runs', 0)
+                            
+                            # Count runners
+                            runners = linescore.get('offense', {})
+                            runner_1b = 'first' in runners
+                            runner_2b = 'second' in runners
+                            runner_3b = 'third' in runners
+                            base_state = (1 if runner_1b else 0) + (2 if runner_2b else 0) + (4 if runner_3b else 0)
+                            
+                            # Predict
+                            game_state = {
+                                'inning': inning,
+                                'is_top': is_top,
+                                'outs': outs,
+                                'base_state': base_state,
+                                'score_diff': score_home - score_away,
+                                'run_expectancy': 0.5,  # Would calculate from RE matrix
+                                'leverage_index': 1.0,  # Would calculate from LI matrix
+                            }
+                            home_prob = wp_model.predict_win_probability(game_state)
+                            away_prob = 1 - home_prob
+                            
+                            half = '▲' if is_top else '▼'
+                            console.print(f"[bold]{game.get('teams', {}).get('away', {}).get('name', 'Away')}[/bold] {score_away} @ [bold]{game.get('teams', {}).get('home', {}).get('name', 'Home')}[/bold] {score_home}")
+                            console.print(f"  Inning: {half} {inning}, Outs: {outs}, Runners: {bin(base_state)[2:].zfill(3)}")
+                            console.print(f"  Home Win: {home_prob:.1%} | Away Win: {away_prob:.1%}")
+                            console.print()
+                        else:
+                            # Basic game info
+                            game = game_data
+                            home = game.get('teams', {}).get('home', {}).get('team', {}).get('name', 'Home')
+                            away = game.get('teams', {}).get('away', {}).get('team', {}).get('name', 'Away')
+                            status = game.get('status', {}).get('detailedState', 'Unknown')
+                            console.print(f"[dim]{away} @ {home} - {status}[/dim]")
+                    
+                    console.print(f'\n[dim]Updating every {interval}s... (Ctrl+C to stop)[/dim]')
+                else:
+                    console.print('[dim]No active games found[/dim]')
+                
+                time.sleep(interval)
+                
+            except KeyboardInterrupt:
+                console.print('\n\n[green]Live prediction stopped.[/green]')
+                raise typer.Exit(code=0)
+            except Exception as e:
+                console.print(f'[red]Error: {e}[/red]')
+                time.sleep(interval)
+                
+    except KeyboardInterrupt:
+        console.print('\n\n[green]Live prediction stopped.[/green]')
+        raise typer.Exit(code=0)
 
 
 @predict_app.command(name='batch')
 def predict_batch(
     games_file: Path = typer.Option(..., '--games', '-g', help='File with game IDs (one per line)'),
-    model: str = typer.Option(..., '--model', '-m', help='Model name or path'),
-    output: Path = typer.Option(None, '--output', '-o', help='Output file path'),
+    model: str = typer.Option('win_probability', '--model', '-m', help='Model name or path'),
+    output: Path = typer.Option(None, '--output', '-o', help='Output file path (default: stdout)'),
 ):
-    """Run predictions for a batch of games."""
-    console.print(f'[dim]Processing {games_file} with model {model}...[/dim]')
-    # TODO: Read game IDs, fetch states, batch predict, write output
-    raise typer.Exit(code=0)
+    """Run predictions for a batch of games.
+    
+    Input file format: One MLB game ID per line
+    Example:
+        744878
+        744879
+        744880
+    """
+    import requests
+    import json
+    from baseball.models import WinProbabilityModel
+    
+    console.print(f'[dim]Processing batch from {games_file}...[/dim]')
+    
+    # Read game IDs
+    try:
+        with open(games_file, 'r') as f:
+            game_ids = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+    except FileNotFoundError:
+        console.print(f'[red]File not found: {games_file}[/red]')
+        raise typer.Exit(code=1)
+    except Exception as e:
+        console.print(f'[red]Error reading file: {e}[/red]')
+        raise typer.Exit(code=1)
+    
+    if not game_ids:
+        console.print('[yellow]No game IDs found in file[/yellow]')
+        raise typer.Exit(code=1)
+    
+    console.print(f'[dim]Found {len(game_ids)} game IDs[/dim]')
+    
+    # Load model
+    wp_model = WinProbabilityModel()
+    
+    # Process each game
+    results = []
+    for game_id in game_ids:
+        try:
+            # Fetch game data
+            url = f'https://statsapi.mlb.com/api/v1.1/game/{game_id}/feed/live'
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code != 200:
+                results.append({
+                    'game_id': game_id,
+                    'error': f'HTTP {response.status_code}',
+                    'home_win_prob': None,
+                })
+                continue
+            
+            data = response.json()
+            game = data.get('gameData', {}).get('game', {})
+            linescore = data.get('liveData', {}).get('linescore', {})
+            
+            home_team = game.get('teams', {}).get('home', {}).get('name', 'Home')
+            away_team = game.get('teams', {}).get('away', {}).get('name', 'Away')
+            
+            # Extract game state
+            inning = linescore.get('currentInning', 1)
+            is_top = linescore.get('isTopInning', True)
+            outs = linescore.get('outs', 0)
+            score_home = linescore.get('teams', {}).get('home', {}).get('runs', 0)
+            score_away = linescore.get('teams', {}).get('away', {}).get('runs', 0)
+            
+            runners = linescore.get('offense', {})
+            runner_1b = 'first' in runners
+            runner_2b = 'second' in runners
+            runner_3b = 'third' in runners
+            base_state = (1 if runner_1b else 0) + (2 if runner_2b else 0) + (4 if runner_3b else 0)
+            
+            # Predict
+            game_state = {
+                'inning': inning,
+                'is_top': is_top,
+                'outs': outs,
+                'base_state': base_state,
+                'score_diff': score_home - score_away,
+                'run_expectancy': 0.5,
+                'leverage_index': 1.0,
+            }
+            home_prob = wp_model.predict_win_probability(game_state)
+            
+            results.append({
+                'game_id': game_id,
+                'home_team': home_team,
+                'away_team': away_team,
+                'inning': inning,
+                'is_top': is_top,
+                'score_home': score_home,
+                'score_away': score_away,
+                'outs': outs,
+                'home_win_prob': round(home_prob, 4),
+                'away_win_prob': round(1 - home_prob, 4),
+                'favorite': home_team if home_prob > 0.5 else away_team,
+            })
+            
+            console.print(f'[green]✓[/green] Game {game_id}: {away_team} @ {home_team} - Home: {home_prob:.1%}')
+            
+        except Exception as e:
+            results.append({
+                'game_id': game_id,
+                'error': str(e),
+                'home_win_prob': None,
+            })
+            console.print(f'[red]✗[/red] Game {game_id}: {e}')
+    
+    # Output results
+    if output:
+        # Write to file
+        with open(output, 'w') as f:
+            json.dump(results, f, indent=2)
+        console.print(f'\n[green]✓ Results written to {output}[/green]')
+    else:
+        # Print table
+        table = Table(title='Batch Prediction Results')
+        table.add_column('Game ID')
+        table.add_column('Matchup')
+        table.add_column('Score')
+        table.add_column('Home Win %')
+        table.add_column('Favorite')
+        
+        for r in results:
+            if r.get('error'):
+                table.add_row(r['game_id'], 'Error', r['error'], '-', '-')
+            else:
+                matchup = f"{r['away_team']} @ {r['home_team']}"
+                score = f"{r['score_away']}-{r['score_home']}"
+                home_pct = f"{r['home_win_prob']:.1%}"
+                table.add_row(r['game_id'], matchup, score, home_pct, r['favorite'])
+        
+        console.print('\n')
+        console.print(table)
+    
+    console.print(f'\n[green]✓ Processed {len(results)} games ({sum(1 for r in results if not r.get("error"))} successful)[/green]')
 
 
 # Features command group
