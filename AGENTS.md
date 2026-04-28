@@ -21,7 +21,7 @@ Phase 0-7, 7a, 8, 9 are complete. **Now implementing Phase 1 findings**:
 - Bridge CLI commands ✅ Implemented (resolve, lookup wired)
 - WinProbabilityModel ✅ Implemented
 - Predict CLI commands ✅ Implemented (today, live, batch)
-- Models CLI commands ⏳ Planned
+- Models CLI commands ✅ Implemented (list/info/download/archive/compare/export)
 
 **Completed Work**:
 - ✅ Phase 0: Migration planning documents

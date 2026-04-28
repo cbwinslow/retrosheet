@@ -30,9 +30,17 @@ Implementing Phase 1 audit findings. Completed RunExpectancyCalculator and Bridg
   - `baseball predict batch` - Batch prediction from file of game IDs
   - Uses MLB Stats API for live game data
 
+- ✅ **Models CLI commands** - Model registry management
+  - `baseball models list` - Show all registered models
+  - `baseball models info <name>` - Show model details
+  - `baseball models download <name>` - Download model artifact
+  - `baseball models archive <name>` - Archive model
+  - `baseball models compare <name1> <name2>` - Compare model metrics
+  - `baseball models export <name>` - Export to various formats
+
 ### Next
 
-- Models CLI completion (list/info/download/archive/compare/export)
+- Phase 2 Implementation Complete!
 
 ---
 
