@@ -421,6 +421,104 @@ def mlb_stream(
         console.print(f'\n[dim]Stream stopped after {poll_count} polls[/dim]')
 
 
+@mlb_app.command(name='games')
+def mlb_live_games():
+    """List currently live MLB games."""
+    from baseball.services.live_feed import LiveFeedPoller
+
+    poller = LiveFeedPoller(save_raw_snapshots=False)
+    games = poller.get_live_games()
+
+    if not games:
+        console.print('[yellow]No live games found.[/yellow]')
+        raise typer.Exit(code=0)
+
+    table = Table(title='Live MLB Games')
+    table.add_column('Game PK', style='cyan')
+    table.add_column('Away', style='green')
+    table.add_column('Home', style='green')
+    table.add_column('Score', style='bold')
+    table.add_column('Status', style='dim')
+
+    for g in games:
+        score = f"{g['score_away']}-{g['score_home']}"
+        inning = f", {g['inning']}" if g.get('inning') else ''
+        status = g['status'] + inning
+        table.add_row(
+            str(g['game_pk']),
+            g['away'][:20],
+            g['home'][:20],
+            score,
+            status
+        )
+
+    console.print(table)
+    console.print(f'\n[dim]Found {len(games)} live game(s)[/dim]')
+
+
+@mlb_app.command(name='watch')
+def mlb_live_watch(
+    game_pk: int = typer.Option(..., '--game', '-g', help='Game PK to watch'),
+    interval: int = typer.Option(10, '--interval', '-i', help='Poll interval in seconds'),
+    duration: int = typer.Option(0, '--duration', '-d', help='Duration in minutes'),
+    predict: bool = typer.Option(False, '--predict', '-p', help='Show win probability'),
+):
+    """Watch a live game with real-time updates."""
+    from baseball.services.live_feed import LiveFeedPoller, GameUpdate
+    from baseball.models.inference import InferencePipeline
+    from rich.live import Live
+    from rich.table import Table as RichTable
+    import time
+
+    poller = LiveFeedPoller(game_pk=game_pk, poll_interval=interval, save_raw_snapshots=True)
+    pipeline = InferencePipeline(model_name='win_probability') if predict else None
+
+    console.print(f'[bold green]Watching game {game_pk}...[/bold green]')
+    console.print(f'[dim]Interval: {interval}s | Duration: {"∞" if duration == 0 else f"{duration}m"}[/dim]')
+
+    if predict:
+        console.print('[dim]Win probability updates enabled[/dim]')
+
+    start_time = time.time()
+    poll_count = 0
+
+    try:
+        with Live(console=console, screen=False, refresh_per_second=1) as live:
+            while True:
+                elapsed = (time.time() - start_time) / 60
+                if duration > 0 and elapsed >= duration:
+                    break
+
+                updates = poller.poll()
+
+                if updates:
+                    poll_count += 1
+                    for update in updates:
+                        table = RichTable(title=f"Game {update['game_pk']} - {update['description']}")
+                        table.add_column('Field')
+                        table.add_column('Value')
+
+                        for key, val in update.items():
+                            if key != 'game_pk':
+                                table.add_row(str(key), str(val))
+
+                        live.update(table)
+
+                        # Run prediction if enabled
+                        if predict and pipeline:
+                            try:
+                                result = pipeline.predict_game(game_pk=update['game_pk'], store_result=False)
+                                if result.success:
+                                    console.print(f'  [blue]Win Prob: {result.predicted_value:.1%}[/blue]')
+                            except Exception as e:
+                                pass
+
+                time.sleep(interval)
+
+    except KeyboardInterrupt:
+        console.print(f'\n[dim]Stopped after {poll_count} updates[/dim]')
+
+
 # Retrosheet data ingestion commands
 @retrosheet_app.command(name='download')
 def retrosheet_download(

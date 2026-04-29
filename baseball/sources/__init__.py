@@ -12,11 +12,13 @@ Available sources:
 - StatcastSource: Baseball Savant Statcast
 - LahmanSource: Lahman Baseball Databank
 - RetrosheetSource: Retrosheet historical events
+- LiveMlbSource: Real-time MLB game data
 """
 
 from baseball.sources.base import BaseSource
 from baseball.sources.espn import EspnSource
 from baseball.sources.lahman import LahmanSource
+from baseball.sources.live_mlb import LiveMlbSource
 from baseball.sources.mlb import MlbSource
 from baseball.sources.retrosheet import RetrosheetSource
 from baseball.sources.statcast import StatcastSource
@@ -26,6 +28,7 @@ __all__ = [
     'BaseSource',
     'EspnSource',
     'LahmanSource',
+    'LiveMlbSource',
     'MlbSource',
     'RetrosheetSource',
     'StatcastSource',
