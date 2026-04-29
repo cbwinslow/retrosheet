@@ -133,8 +133,8 @@ class LiveFeedPoller:
                 cur.execute("""
                     SELECT EXISTS (
                         SELECT 1 FROM information_schema.tables
-                        WHERE table_schema = 'raw_mlb_live'
-                        AND table_name = 'game_snapshots'
+                        WHERE table_schema = 'raw_mlb'
+                        AND table_name = 'live_feed_snapshots'
                     )
                 """)
                 exists = cur.fetchone()[0] if cur.fetchone() else False
@@ -143,10 +143,10 @@ class LiveFeedPoller:
                     return  # Table doesn't exist yet
 
                 cur.execute("""
-                    INSERT INTO raw_mlb_live.game_snapshots
-                    (game_pk, snapshot_type, snapshot_data, content_hash, fetched_at)
+                    INSERT INTO raw_mlb.live_feed_snapshots
+                    (game_pk, endpoint, response_data, checksum, fetched_at)
                     VALUES (%s, %s, %s, %s, NOW())
-                    ON CONFLICT (game_pk, content_hash) DO NOTHING
+                    ON CONFLICT (game_pk, checksum) DO NOTHING
                 """, (game_pk, 'feed_live', json.dumps(data), content_hash))
                 conn.commit()
         except Exception as e:
