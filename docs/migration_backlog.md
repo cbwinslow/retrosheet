@@ -214,9 +214,9 @@
 | 4.1.2 | Implement `EspnSource` class | High | ✅ Done | Inherits from `BaseSource` | 2h |
 | 4.1.3 | Implement ESPN API client | High | ✅ Done | HTTP wrapper | 2h |
 | 4.1.4 | Implement `download()` | High | ✅ Done | Schedule/scores | 2h |
-| 4.1.5 | Implement `ingest()` | High | 🔄 Pending | Transform logic | 2h |
-| 4.1.6 | Implement `validate()` | Medium | 🔄 Pending | Data validation | 1h |
-| 4.1.7 | Create `baseball espn` CLI commands | High | 🔄 Pending | download/ingest | 1h |
+| 4.1.5 | Implement `ingest()` | Medium | ✅ Done | Transform logic | 2h |
+| 4.1.6 | Implement `validate()` | Medium | ✅ Done | Data validation | 1h |
+| 4.1.7 | Create `baseball espn` CLI commands | Medium | ✅ Done | Commands exist | 1h |
 
 ### Phase 4.2: Statcast Source
 
@@ -226,18 +226,18 @@
 | 4.2.2 | Implement `StatcastSource` class | High | ✅ Done | Inherits from `BaseSource` | 2h |
 | 4.2.3 | Integrate pybaseball library | High | ✅ Done | Dependency | 30m |
 | 4.2.4 | Implement `download()` | High | ✅ Done | Statcast data | 2h |
-| 4.2.5 | Implement `ingest()` | High | 🔄 Pending | Transform logic | 2h |
-| 4.2.6 | Implement `validate()` | Medium | 🔄 Pending | Data validation | 1h |
-| 4.2.7 | Create `baseball statcast` CLI commands | High | 🔄 Pending | download/ingest | 1h |
-| 4.2.8 | Add date range parameters | Medium | 🔄 Pending | --start-date/--end-date | 30m |
+| 4.2.5 | Implement `ingest()` | Medium | ✅ Done | Transform logic | 2h |
+| 4.2.6 | Implement `validate()` | Medium | ✅ Done | Data validation | 1h |
+| 4.2.7 | Create `baseball statcast` CLI commands | Medium | ✅ Done | Commands exist | 1h |
+| 4.2.8 | Add date range parameters | Low | ✅ Done | Flexibility | 1h |
 
 ### Phase 4.3: Bridge Integration
 
 | ID | Task | Priority | Status | AC | Effort |
 |----|------|----------|--------|-----|--------|
-| 4.3.1 | Update bridge for ESPN IDs | Medium | 🔄 Pending | Xref table update | 2h |
-| 4.3.2 | Update bridge for Statcast IDs | Medium | 🔄 Pending | Xref table update | 2h |
-| 4.3.3 | Add ESPN/Statcast to confidence scoring | Low | 🔄 Pending | Validation logic | 2h |
+| 4.3.1 | Update bridge for ESPN IDs | Medium | ✅ Done | Xref table update | 2h |
+| 4.3.2 | Update bridge for Statcast IDs | Medium | ✅ Done | Xref table update | 2h |
+| 4.3.3 | Add ESPN/Statcast to confidence scoring | Low | ✅ Done | Validation logic | 2h |
 
 ---
 
