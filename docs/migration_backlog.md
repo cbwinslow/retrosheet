@@ -171,8 +171,8 @@
 | 3.4.3 | Implement `baseball mlb stream` | High | ✅ Done | Continuous poll | 2h |
 | 3.4.4 | Implement `baseball mlb validate` | High | ✅ Done | Working validate | 1h |
 | 3.4.5 | Add `--date` parameter | High | ✅ Done | Date filtering | 30m |
-| 3.4.6 | Add `--team` parameter | Medium | 🔄 Pending | Team filtering | 30m |
-| 3.4.7 | Add `--game-pk` parameter | Medium | 🔄 Pending | Single game | 30m |
+| 3.4.6 | Add `--team` parameter | Medium | ✅ Done | Team filtering | 30m |
+| 3.4.7 | Add `--game-pk` parameter | Medium | ✅ Done | Single game | 30m |
 
 ### Phase 3.5: Feature Foundation
 
