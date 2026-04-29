@@ -1155,6 +1155,9 @@ print(advantage['narrative'])
 |---|---|---|
 | `baseball/models/__init__.py` | Module exports. | BaseModel, ModelConfig, NextRunProbabilityModel, PAOutcomeModel |
 | `baseball/models/base.py` | **BASE CLASSES** - `BaseModel` (abstract), `SklearnBaseModel`, `ModelConfig`, `TrainingConfig`, `ModelResult`, `ModelVersion`. Enums: `ModelType`, `ModelStatus`. | 400+ lines |
+| `baseball/models/registry.py` | **MODEL REGISTRY** - `ModelRegistry` class with versioning, artifact management, promotion lifecycle. `ModelRegistryEntry` dataclass. | 250+ lines |
+| `baseball/models/training.py` | **TRAINING PIPELINE** - `TrainingPipeline`, `WinProbabilityTrainingPipeline`. Cross-validation, metrics, artifact storage. `train_win_probability_model()`. | 300+ lines |
+| `baseball/models/inference.py` | **INFERENCE PIPELINE** - `InferencePipeline`, `PredictionResult`. Real-time prediction with confidence intervals. `predict_game_win_probability()`. | 250+ lines |
 | `baseball/models/next_run_model.py` | **NEXT-RUN MODEL** - `NextRunProbabilityModel`. Binary classifier (XGBoost/RF/LogReg) predicting P(run scores). Features: game state, WE, LI, matchup, form. | 350+ lines |
 | `baseball/models/pa_outcome_model.py` | **PA OUTCOME MODEL** - `PAOutcomeModel`. Multi-class classifier for 6 outcome categories. Class probabilities, expected bases, expected runs. | 400+ lines |
 | `baseball/models/win_probability_model.py` | **WIN PROBABILITY MODEL** - `WinProbabilityModel`. XGBoost binary classifier predicting home team win probability from game state. | 300+ lines |
