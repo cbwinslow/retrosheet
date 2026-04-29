@@ -1,5 +1,34 @@
 # Project Log
 
+## 2026-04-29 (Phase 3.4 Complete - MLB Live Infrastructure)
+
+### Summary
+
+Implemented MLB Live data infrastructure enabling real-time game monitoring and predictions.
+
+### Completed
+
+- ✅ **LiveMlbSource** - Real-time data source adapter
+  - `download()` - Fetches current live game state from MLB Stats API
+  - `ingest()` - Transforms API response to canonical game state format
+  - `validate()` - Validates game state completeness
+  - `poll()` - Change detection using content hashing
+  - `stream()` - Generator for continuous game updates
+
+- ✅ **LiveFeedPoller** - Polling service with database persistence
+  - `poll()` - Polls for game updates, returns only changed data
+  - `get_live_games()` - Lists all currently live MLB games
+  - Database snapshot storage with deduplication
+  - Callback support for real-time processing
+
+- ✅ **MLB Live CLI Commands**
+  - `baseball mlb games` - List all live games with scores
+  - `baseball mlb watch --game <pk>` - Real-time game monitoring
+  - `baseball mlb watch --predict` - Live win probability updates
+  - `baseball mlb stream` - Continuous polling with display
+
+---
+
 ## 2026-04-29 (Phase 3.6 Complete - Model Infrastructure)
 
 ### Summary
