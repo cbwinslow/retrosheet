@@ -1,0 +1,155 @@
+# Baseball Prediction Warehouse - Full Stack Deployment
+# Usage: docker compose up -d
+
+version: "3.8"
+
+services:
+  # Reverse proxy and load balancer
+  traefik:
+    image: traefik:v3.0
+    container_name: baseball-traefik
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websocket.address=:8080"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@localhost}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--log.level=${TRAEFIK_LOG_LEVEL:-INFO}"
+      - "--accesslog=true"
+      - "--metrics.prometheus=true"
+      - "--tracing.jaeger=false"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/letsencrypt:/letsencrypt
+    networks:
+      - baseball-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_DOMAIN:-traefik.localhost}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.middlewares=auth@file"
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:16-alpine
+    container_name: baseball-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-baseball}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-retrosheet}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./sql/init:/docker-entrypoint-initdb.d
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - baseball-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-baseball} -d ${POSTGRES_DB:-retrosheet}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MLB Live Server - WebSocket + API
+  mlb-live:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: baseball-live
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-baseball}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-retrosheet}
+      LIVE_SERVER_HOST: 0.0.0.0
+      LIVE_SERVER_PORT: 8000
+      LIVE_POLL_INTERVAL: ${LIVE_POLL_INTERVAL:-10}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - baseball-network
+    labels:
+      - "traefik.enable=true"
+      # HTTP API routing
+      - "traefik.http.routers.mlb-live.rule=Host(`${APP_DOMAIN:-localhost}`) && PathPrefix(`/api`, `/predictions`)"
+      - "traefik.http.routers.mlb-live.entrypoints=websecure"
+      - "traefik.http.routers.mlb-live.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mlb-live.loadbalancer.server.port=8000"
+      # WebSocket routing
+      - "traefik.http.routers.mlb-live-ws.rule=Host(`${APP_DOMAIN:-localhost}`) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.mlb-live-ws.entrypoints=websocket"
+      - "traefik.http.services.mlb-live-ws.loadbalancer.server.port=8000"
+      # Dashboard routing
+      - "traefik.http.routers.mlb-dashboard.rule=Host(`${APP_DOMAIN:-localhost}`) && PathPrefix(`/dashboard`)"
+      - "traefik.http.routers.mlb-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.mlb-dashboard.tls.certresolver=letsencrypt"
+    command: python -m baseball.live_server
+
+  # Redis for caching and pub/sub (optional but recommended)
+  redis:
+    image: redis:7-alpine
+    container_name: baseball-redis
+    restart: unless-stopped
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - baseball-network
+
+  # Prometheus for metrics (optional)
+  prometheus:
+    image: prom/prometheus:v2.50
+    container_name: baseball-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./data/prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - baseball-network
+    profiles:
+      - monitoring
+
+  # Grafana for dashboards (optional)
+  grafana:
+    image: grafana/grafana:10.3
+    container_name: baseball-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      - baseball-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.${APP_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+    profiles:
+      - monitoring
+
+networks:
+  baseball-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  letsencrypt-data:
+  redis-data:

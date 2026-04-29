@@ -1,0 +1,62 @@
+# Traefik Static Configuration
+# This is the main Traefik config file
+
+# API and Dashboard
+api:
+  dashboard: true
+  insecure: false
+
+# Entrypoints (ports to listen on)
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+
+  websecure:
+    address: ":443"
+    http:
+      tls:
+        certResolver: letsencrypt
+
+  websocket:
+    address: ":8080"
+
+# Providers (where to find routing config)
+providers:
+  docker:
+    exposedByDefault: false
+    network: baseball-network
+
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+# Certificate Resolver (Let's Encrypt)
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: ${ACME_EMAIL:-admin@localhost}
+      storage: /letsencrypt/acme.json
+      tlsChallenge: {}
+
+# Logging
+log:
+  level: ${TRAEFIK_LOG_LEVEL:-INFO}
+
+accessLog:
+  format: common
+
+# Metrics
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addServicesLabels: true
+    addRoutersLabels: true
+
+# Tracing (disabled by default)
+tracing: {}

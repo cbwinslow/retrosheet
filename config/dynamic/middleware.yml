@@ -1,0 +1,54 @@
+# Traefik Dynamic Configuration - Middleware
+
+http:
+  middlewares:
+    # Basic auth for dashboard (default: admin/admin - CHANGE THIS!)
+    auth:
+      basicAuth:
+        users:
+          - "admin:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/"
+
+    # Security headers
+    security-headers:
+      headers:
+        customFrameOptionsValue: "SAMEORIGIN"
+        contentTypeNosniff: true
+        browserXssFilter: true
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+
+    # Rate limiting
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
+
+    # CORS for API
+    cors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        accessControlAllowHeaders:
+          - Content-Type
+          - Authorization
+        accessControlAllowOriginList:
+          - "*"
+        accessControlMaxAge: 100
+        addVaryHeader: true
+
+    # Compress responses
+    compress:
+      compress:
+        excludedContentTypes:
+          - text/event-stream
+
+    # Chain for API endpoints
+    api-chain:
+      chain:
+        middlewares:
+          - security-headers
+          - rate-limit
+          - cors
+          - compress
