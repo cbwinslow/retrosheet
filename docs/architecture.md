@@ -1,6 +1,324 @@
-# Architecture
+# Baseball Prediction Warehouse - Architecture
 
-**Purpose**: This document defines the target architecture for the baseball data platform. It describes the data flow, component responsibilities, and integration patterns.
+## Overview
+
+This document defines the comprehensive architecture for the unified `baseball` CLI and PostgreSQL data warehouse. It establishes design principles, system layers, naming conventions, and implementation patterns.
+
+**Related Documents:**
+- `migration_plan.md` - Migration phases and timeline
+- `migration_backlog.md` - Task inventory and status  
+- `migration_map.md` - File-to-file mapping (old → new)
+- `keys_and_grains.md` - Entity keys and table grains
+- `AGENTS.md` - Agent operating guide and conventions
+
+---
+
+## 1. Design Principles
+
+### 1.1 SQL-First Development
+All business logic lives in PostgreSQL functions and procedures. Python serves as orchestration, not computation.
+
+### 1.2 Source-Preserved Raw Data
+Raw data from external sources is preserved immutably with checksums for deduplication.
+
+| Schema | Purpose | Retention |
+|--------|---------|-----------|
+| `raw_retrosheet` | Event files, roster files | Permanent |
+| `raw_mlb` | MLB Stats API responses | 90 days rolling |
+| `raw_espn` | ESPN API snapshots | 30 days rolling |
+| `raw_statcast` | Baseball Savant data | 90 days rolling |
+
+### 1.3 Reproducible Pipelines
+Every data transformation must be reproducible from a clean checkout with documented dependencies.
+
+### 1.4 Observable by Default
+All operations logged to `audit` schema for debugging, benchmarking, and lineage tracking.
+
+### 1.5 Pydantic for Type Safety
+All data structures use Pydantic models for validation and IDE support.
+
+---
+
+## 2. System Layers
+
+| Layer | Schema(s) | Purpose | Python Module |
+|-------|-----------|---------|---------------|
+| **Raw** | `raw_*` (per source) | Immutable landing, checksum dedup | `sources/` |
+| **Staging** | `staging_*` | Cleaned, typed data from raw | `sources/` |
+| **Core** | `core` | Canonical entities, SCD Type 2 | `core/` |
+| **Bridge** | `bridge` | Cross-reference IDs, confidence | `bridge/` |
+| **Features** | `features` | ML-ready features | `features/` |
+| **Models** | `models` | Registry, versions, artifacts | `models/` |
+| **Serving** | `serving` | Materialized views, low-latency | `services/serving.py` |
+| **Audit** | `audit` | Pipeline logs, performance, errors | SQL only |
+
+---
+
+## 3. Naming Conventions
+
+### 3.1 SQL Files
+```
+sql/{layer}/{layer_prefix}_{sequence}_{description}.sql
+
+Examples:
+sql/10_raw/1010_raw_retrosheet_events.sql
+sql/30_core/3010_core_games.sql
+sql/50_features/5010_features_run_expectancy.sql
+```
+
+### 3.2 SQL File Header (Required)
+```sql
+/*
+File: sql/features/5010_features_run_expectancy.sql
+Purpose: Build run expectancy lookup table
+Author: Agent [id]
+Date: 2026-04-29
+Depends On: core.events
+Called By: scripts/features/build_re.sh
+Tables Created: features.run_expectancy_by_state
+*/
+```
+
+### 3.3 Database Objects
+| Type | Pattern | Example |
+|------|---------|---------|
+| Tables | `{schema}.{entity}_{qualifier}` | `core.games` |
+| Primary Keys | `{entity}_pk` | `game_pk` |
+| Foreign Keys | `fk_{table}_{ref}` | `fk_events_games` |
+| Indexes | `idx_{table}_{cols}` | `idx_games_date` |
+| Functions | `{schema}.{action}_{entity}` | `features.calc_re` |
+
+### 3.4 Python Classes
+| Layer | Pattern | Example |
+|-------|---------|---------|
+| Sources | `{Name}Source` | `MlbSource` |
+| Extractors | `{Purpose}Extractor` | `LiveStateExtractor` |
+| Services | `{Purpose}Service` | `ServingService` |
+| Models | `{Type}Model` | `WinProbabilityModel` |
+
+---
+
+## 4. SQL Architecture
+
+### 4.1 Functions vs Application Logic
+**Rule:** If it can be done in SQL, it should be done in SQL.
+
+| Logic Type | Location | Example |
+|------------|----------|---------|
+| Aggregations | SQL | `AVG()`, `SUM()`, window functions |
+| Lookups | SQL | Run expectancy by base-out state |
+| Validation | SQL | `CHECK` constraints, triggers |
+| Feature computation | SQL | Rolling averages, matchup stats |
+| API orchestration | Python | HTTP requests, polling loops |
+| Model inference | Python | sklearn/xgboost prediction |
+| CLI interface | Python | Typer commands, user interaction |
+
+### 4.2 Index Strategy
+
+| Table Type | Primary Index | Secondary Indexes |
+|------------|---------------|-------------------|
+| Event tables | `(game_pk, event_seq)` | `player_id`, `inning` |
+| Game tables | `(game_pk)` | `(season, game_date)`, `status` |
+| Player tables | `(player_id)` | `last_name`, `team_id` |
+| Snapshot tables | `(fetched_at DESC)` | `game_pk`, `checksum` |
+| Feature tables | `(game_pk, inning, outs)` | `player_id`, `season` |
+
+### 4.3 Partitioning Strategy
+
+| Table Category | Partition Key | Retention |
+|----------------|---------------|-----------|
+| Raw snapshots | `fetched_at` (monthly) | 90 days rolling |
+| Events | `season` | Permanent |
+| Predictions | `predicted_at` (daily) | 1 year rolling |
+| Audit logs | `created_at` (daily) | 30 days rolling |
+
+### 4.4 Observability Schema (audit)
+
+```sql
+-- Pipeline execution tracking
+CREATE TABLE audit.pipeline_runs (
+    run_id BIGSERIAL PRIMARY KEY,
+    pipeline_name VARCHAR(100) NOT NULL,
+    source_adapter VARCHAR(50),
+    run_params JSONB,
+    started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    completed_at TIMESTAMPTZ,
+    status VARCHAR(20) NOT NULL,
+    rows_processed INTEGER,
+    checksum VARCHAR(32),
+    error_message TEXT
+);
+
+-- Query performance monitoring
+CREATE TABLE audit.query_performance (
+    query_id BIGSERIAL PRIMARY KEY,
+    query_hash VARCHAR(64),
+    query_text TEXT,
+    execution_time_ms INTEGER,
+    rows_returned INTEGER,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Structured error logging
+CREATE TABLE audit.error_log (
+    error_id BIGSERIAL PRIMARY KEY,
+    layer VARCHAR(20) NOT NULL,
+    component VARCHAR(50) NOT NULL,
+    error_type VARCHAR(50) NOT NULL,
+    error_message TEXT NOT NULL,
+    stack_trace TEXT,
+    context JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+---
+
+## 5. Python Architecture
+
+### 5.1 Pydantic Models
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class GameState(BaseModel):
+    """Canonical game state for ML features."""
+    game_pk: int = Field(..., description="MLB game identifier")
+    inning: int = Field(..., ge=1, le=30)
+    is_top: bool = Field(default=True)
+    outs: int = Field(..., ge=0, le=2)
+    home_score: int = Field(default=0, ge=0)
+    away_score: int = Field(default=0, ge=0)
+    runner_1b: bool = Field(default=False)
+    runner_2b: bool = Field(default=False)
+    runner_3b: bool = Field(default=False)
+```
+
+### 5.2 Source Adapter Interface
+
+```python
+from abc import ABC, abstractmethod
+from pydantic import BaseModel
+from typing import Dict, Any
+
+class SourceResult(BaseModel):
+    success: bool
+    records: int = 0
+    message: str = ""
+    error: str = ""
+    data: Dict[str, Any] = {}
+
+class BaseSource(ABC):
+    """Abstract base class for all data sources."""
+    
+    @abstractmethod
+    def download(self, **kwargs) -> SourceResult:
+        """Download raw data from external source."""
+        pass
+    
+    @abstractmethod
+    def ingest(self, **kwargs) -> SourceResult:
+        """Transform raw → staging → core."""
+        pass
+    
+    @abstractmethod
+    def validate(self, **kwargs) -> SourceResult:
+        """Validate data quality and completeness."""
+        pass
+```
+
+---
+
+## 6. Data Flow
+
+### 6.1 Historical Ingestion Flow
+```
+Retrosheet → Raw Archives → Staging Events → Core Canonical
+                │              │              │
+           [download]    [validate]    [upsert SCD2]
+           Chadwick        Type cast     Grain enforce
+```
+
+### 6.2 Live Ingestion Flow
+```
+MLB API → Raw Snapshots → Core Live State → Features Live
+             │               │               │
+        [save_raw()]    [extract]      [compute RE]
+        Diff detection  Real-time      WP features
+```
+
+### 6.3 Feature Computation Flow
+```
+Core Events → Bridge Xref → Features Computed → Models Training
+               │              │               │
+          Confidence      SQL window      Model registry
+          ID resolution   Historical RE   Artifact store
+```
+
+---
+
+## 7. Error Handling & Resilience
+
+| Error Type | Strategy | Implementation |
+|------------|----------|----------------|
+| Network (API) | Exponential backoff | 3 retries: 1s, 2s, 4s |
+| Database | Connection pooling | psycopg2 pool, max 20 |
+| Data quality | Validation layer | SQL CHECK + Python |
+| Pipeline failure | Checkpoint resume | audit.pipeline_runs |
+| Dead letters | Error queue table | audit.error_log |
+
+---
+
+## 8. Performance Guidelines
+
+| Operation | Target | Max |
+|-----------|--------|-----|
+| Single row lookup | 10ms | 50ms |
+| Batch insert (1K rows) | 100ms | 500ms |
+| Feature computation (game) | 50ms | 200ms |
+| Prediction inference | 20ms | 100ms |
+| API response (serving) | 100ms | 500ms |
+
+---
+
+## 9. Testing Strategy
+
+| Test Type | Tool | Coverage |
+|-----------|------|----------|
+| Unit tests | pytest | Python classes |
+| Integration tests | pytest + test schema | SQL functions |
+| E2E tests | Bash scripts | Full pipelines |
+| Performance tests | pytest-benchmark | Query timing |
+
+---
+
+## 10. Deployment Architecture
+
+```
+┌─────────────────────────────────────────┐
+│  Docker Compose Stack                   │
+│                                         │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐ │
+│  │  API    │  │  Web    │  │ Worker  │ │
+│  │ Server  │  │  UI     │  │ (Poll)  │ │
+│  └────┬────┘  └────┬────┘  └────┬────┘ │
+│       │            │            │     │
+│       └────────────┼────────────┘     │
+│                    │                   │
+│  ┌─────────────────┼───────────────┐  │
+│  │     Traefik     │ (Reverse Proxy)│  │
+│  │   (HTTPS/ACME)  │                │  │
+│  └─────────────────┼───────────────┘  │
+│                    │                   │
+│       ┌────────────┴───────────┐       │
+│       ▼                        ▼       │
+│  ┌─────────┐             ┌─────────┐    │
+│  │PostgreSQL│             │  Redis  │    │
+│  │(Primary) │             │ (Cache) │    │
+│  └─────────┘             └─────────┘    │
+└─────────────────────────────────────────┘
+```
 
 ---
 

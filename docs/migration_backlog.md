@@ -13,7 +13,7 @@
 | 0.1.1 | Create `docs/migration_plan.md` | High | ✅ Done | Document exists with all sections | 2h |
 | 0.1.2 | Create `docs/migration_map.md` | High | ✅ Done | File inventory complete | 3h |
 | 0.1.3 | Create `docs/migration_backlog.md` | High | ✅ Done | This document | 2h |
-| 0.1.4 | Create `docs/architecture.md` | High | 🔄 Pending | Target architecture documented | 4h |
+| 0.1.4 | Create `docs/architecture.md` | High | ✅ Done | Comprehensive architecture with 10 sections | 4h |
 | 0.1.5 | Create `docs/keys_and_grains.md` skeleton | High | 🔄 Pending | Entity keys documented | 3h |
 | 0.1.6 | Create `docs/sources.md` | Medium | 🔄 Pending | All sources documented | 3h |
 | 0.1.7 | Create `docs/models.md` | Medium | 🔄 Pending | Model strategy documented | 2h |
