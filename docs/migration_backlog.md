@@ -197,10 +197,10 @@
 | 3.6.5 | Create `baseball/models/training.py` | High | ✅ Done | Training pipeline | 3h |
 | 3.6.6 | Create `baseball/models/inference.py` | High | ✅ Done | Inference pipeline | 3h |
 | 3.6.7 | Implement `win_probability` model | High | 🔄 Pending | Working model | 4h |
-| 3.6.8 | Implement `baseball models train` | High | 🔄 Pending | CLI command | 1h |
-| 3.6.9 | Implement `baseball models predict` | High | 🔄 Pending | CLI command | 1h |
-| 3.6.10 | Add `--model` parameter | High | 🔄 Pending | Model selection | 30m |
-| 3.6.11 | Add `--game-pk` parameter | High | 🔄 Pending | Game prediction | 30m |
+| 3.6.8 | Implement `baseball models train` | High | ✅ Done | CLI command | 1h |
+| 3.6.9 | Implement `baseball models predict` | High | ✅ Done | CLI command | 1h |
+| 3.6.10 | Add `--model` parameter | High | ✅ Done | Model selection | 30m |
+| 3.6.11 | Add `--game-pk` parameter | High | ✅ Done | Game prediction | 30m |
 
 ---
 

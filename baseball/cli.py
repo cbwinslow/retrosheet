@@ -1459,6 +1459,111 @@ def models_train(
         raise typer.Exit(code=1)
 
 
+@models_app.command(name='predict')
+def models_predict(
+    game_pk: int = typer.Option(..., '--game-pk', '-g', help='MLB game ID to predict'),
+    model_name: str = typer.Option('win_probability', '--model', '-m', help='Model name'),
+    model_version: Optional[str] = typer.Option(None, '--version', '-v', help='Model version (default: production)'),
+    store_result: bool = typer.Option(True, '--store/--no-store', help='Store prediction in database'),
+    show_features: bool = typer.Option(False, '--features', help='Show feature vector used')
+):
+    """Run prediction for a specific game."""
+    from baseball.models.inference import InferencePipeline
+    
+    try:
+        console.print(f'[bold blue]Predicting {model_name} for game {game_pk}...[/bold blue]')
+        
+        pipeline = InferencePipeline(
+            model_name=model_name,
+            model_version=model_version
+        )
+        
+        result = pipeline.predict_game(
+            game_pk=game_pk,
+            store_result=store_result,
+            request_source='cli'
+        )
+        
+        if result.success:
+            console.print(f'\n[green]✓ Prediction successful[/green]')
+            console.print(f'  Model: {result.prediction_type} v{result.model_version}')
+            console.print(f'  Home win probability: {result.predicted_value:.1%}')
+            
+            if result.confidence_lower is not None and result.confidence_upper is not None:
+                console.print(f'  Confidence interval: [{result.confidence_lower:.1%}, {result.confidence_upper:.1%}]')
+            
+            console.print(f'  Inference time: {result.inference_time_ms:.1f}ms')
+            
+            if show_features and result.feature_vector:
+                console.print(f'\n[dim]Features used:[/dim]')
+                for name, value in result.feature_vector.items():
+                    console.print(f'  {name}: {value}')
+            
+            if result.prediction_id:
+                console.print(f'\n[dim]Stored as prediction_id: {result.prediction_id}[/dim]')
+        else:
+            console.print(f'[red]❌ Prediction failed: {result.error_message}[/red]')
+            raise typer.Exit(code=1)
+            
+    except Exception as e:
+        console.print(f'[red]Error during prediction: {e}[/red]')
+        raise typer.Exit(code=1)
+
+
+@models_app.command(name='batch-predict')
+def models_batch_predict(
+    game_pks: str = typer.Option(..., '--games', '-g', help='Comma-separated game IDs'),
+    model_name: str = typer.Option('win_probability', '--model', '-m', help='Model name'),
+    model_version: Optional[str] = typer.Option(None, '--version', '-v', help='Model version')
+):
+    """Run predictions for multiple games."""
+    from baseball.models.inference import InferencePipeline
+    
+    try:
+        game_list = [int(g.strip()) for g in game_pks.split(',')]
+        
+        console.print(f'[bold blue]Batch predicting {len(game_list)} games...[/bold blue]')
+        
+        pipeline = InferencePipeline(
+            model_name=model_name,
+            model_version=model_version
+        )
+        
+        results = pipeline.predict_batch(game_list, store_results=True)
+        
+        # Summary
+        successful = sum(1 for r in results if r.success)
+        
+        table = Table(title=f'Batch Predictions - {model_name}')
+        table.add_column('Game PK', style='cyan')
+        table.add_column('Home Win %', style='green')
+        table.add_column('Confidence', style='yellow')
+        table.add_column('Status', style='white')
+        
+        for game_pk, result in zip(game_list, results):
+            if result.success:
+                table.add_row(
+                    str(game_pk),
+                    f'{result.predicted_value:.1%}',
+                    f'{result.confidence_lower:.0%}-{result.confidence_upper:.0%}' if result.confidence_lower else 'N/A',
+                    '✓'
+                )
+            else:
+                table.add_row(
+                    str(game_pk),
+                    'N/A',
+                    'N/A',
+                    f'✗ {result.error_message[:30]}'
+                )
+        
+        console.print(table)
+        console.print(f'\n[green]✓ {successful}/{len(results)} predictions successful[/green]')
+        
+    except Exception as e:
+        console.print(f'[red]Error during batch prediction: {e}[/red]')
+        raise typer.Exit(code=1)
+
+
 # Statcast command group
 statcast_app = typer.Typer(help='Statcast/Baseball Savant data commands', no_args_is_help=True)
 
