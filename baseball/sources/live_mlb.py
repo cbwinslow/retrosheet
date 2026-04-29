@@ -130,6 +130,76 @@ class LiveMlbSource(BaseSource):
 
         return SourceResult(success=True, records=1, message='Valid live game state')
 
+    def save_raw(self, data: Dict[str, Any], endpoint: str = 'feed_live', **kwargs) -> SourceResult:
+        """Save raw API response to database with checksum deduplication."""
+        import hashlib
+        import json
+        from baseball.core.db import get_db_connection
+
+        try:
+            if not data:
+                return SourceResult(success=False, error='No data to save')
+
+            # Extract game_pk from data
+            game_pk = data.get('gamePk')
+            if not game_pk and 'gameData' in data:
+                game_pk = data['gameData'].get('game', {}).get('pk')
+
+            if not game_pk:
+                return SourceResult(success=False, error='No game_pk found for raw save')
+
+            # Generate checksum for deduplication
+            content = json.dumps(data, sort_keys=True).encode()
+            checksum = hashlib.md5(content).hexdigest()
+
+            conn = get_db_connection()
+            if not conn:
+                return SourceResult(success=False, error='Database connection failed')
+
+            with conn.cursor() as cur:
+                # Check if table exists
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT 1 FROM information_schema.tables
+                        WHERE table_schema = 'raw_mlb'
+                        AND table_name = 'live_feed_snapshots'
+                    )
+                """)
+                result = cur.fetchone()
+                if not result or not result[0]:
+                    return SourceResult(
+                        success=False,
+                        error='raw_mlb.live_feed_snapshots table does not exist'
+                    )
+
+                # Insert with conflict handling
+                cur.execute("""
+                    INSERT INTO raw_mlb.live_feed_snapshots
+                    (game_pk, endpoint, response_data, checksum, fetched_at)
+                    VALUES (%s, %s, %s, %s, NOW())
+                    ON CONFLICT (game_pk, checksum) DO NOTHING
+                    RETURNING id
+                """, (game_pk, endpoint, json.dumps(data), checksum))
+
+                row = cur.fetchone()
+                conn.commit()
+
+                if row:
+                    return SourceResult(
+                        success=True,
+                        records=1,
+                        message=f'Raw snapshot saved for game {game_pk}'
+                    )
+                else:
+                    return SourceResult(
+                        success=True,
+                        records=0,
+                        message=f'Duplicate snapshot skipped for game {game_pk}'
+                    )
+
+        except Exception as e:
+            return SourceResult(success=False, error=f'Failed to save raw data: {e}')
+
     def _extract_game_state(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Extract normalized game state from API response."""
         try:

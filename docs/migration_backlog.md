@@ -150,7 +150,7 @@
 | 3.2.2 | Define `raw_mlb.live_feed_snapshots` | High | ✅ Done | With JSONB payload | 1h |
 | 3.2.3 | Add deduplication logic | High | ✅ Done | Checksum-based | 1h |
 | 3.2.4 | Add indexes on raw table | Medium | ✅ Done | Performance | 30m |
-| 3.2.5 | Implement raw persistence in adapter | High | 🔄 Pending | `save_raw()` method | 2h |
+| 3.2.5 | Implement raw persistence in adapter | High | ✅ Done | `save_raw()` method in LiveMlbSource | 2h |
 
 ### Phase 3.3: Canonical Live Tables
 
@@ -181,8 +181,8 @@
 | 3.5.1 | Create `sql/50_features/500_features_run_expectancy.sql` | High | ✅ Done | RE table | 2h |
 | 3.5.2 | Create `sql/50_features/501_features_live_game_state.sql` | High | ✅ Done | Live state table | 2h |
 | 3.5.3 | Create `baseball/features/base.py` | High | ✅ Done | Base feature class | 2h |
-| 3.5.4 | Create `baseball/features/run_expectancy.py` | High | 🔄 Pending | RE calculation | 2h |
-| 3.5.5 | Create `baseball/features/live_state.py` | High | 🔄 Pending | Live state features | 2h |
+| 3.5.4 | Create `baseball/features/run_expectancy.py` | High | ✅ Done | RE calculation | 2h |
+| 3.5.5 | Create `baseball/features/live_state.py` | High | ✅ Done | LiveStateExtractor class | 2h |
 | 3.5.6 | Implement `baseball features build` | High | 🔄 Pending | CLI command | 1h |
 | 3.5.7 | Add `--scope` parameter | High | 🔄 Pending | `historical`/`live` | 30m |
 
