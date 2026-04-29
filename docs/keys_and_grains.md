@@ -14,6 +14,96 @@
 | **Cardinality** | Relationship type (1:1, 1:N, M:N) |
 | **Temporal Key** | Date/time component for time-series data |
 
+----
+
+## Raw Layer Tables
+
+### Retrosheet Event Files
+
+**Table**: `raw_retrosheet.event_files`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `file_id` (BIGSERIAL) | Auto-increment |
+| **Natural Key** | `file_path` | Unique file location |
+| **Checksum** | `content_hash` (MD5) | Deduplication |
+| **Temporal** | `downloaded_at` | When fetched |
+| **Grain** | One row per event file | Immutable archive |
+
+**Key Columns**:
+- `season` - Baseball season year
+- `file_type` - 'event', 'roster', 'game'
+- `file_size_bytes` - Size for validation
+- `chadwick_version` - Parser version used
+
+### MLB Live Feed Snapshots
+
+**Table**: `raw_mlb.live_feed_snapshots`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `snapshot_id` (BIGSERIAL) | Auto-increment |
+| **Natural Key** | `game_pk` + `checksum` | Deduplication key |
+| **Checksum** | `checksum` (MD5 of JSON) | Change detection |
+| **Temporal** | `fetched_at` | Request timestamp |
+| **Grain** | One row per API response | Immutable snapshots |
+
+**Key Columns**:
+- `game_pk` - MLB game identifier
+- `endpoint` - API endpoint path
+- `response_data` - JSONB payload
+- `http_status` - HTTP response code
+
+### ESPN Schedule Snapshots
+
+**Table**: `raw_espn.schedule_snapshots`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `snapshot_id` (BIGSERIAL) | Auto-increment |
+| **Natural Key** | `request_date` + `checksum` | Daily dedup |
+| **Checksum** | `checksum` (MD5) | Deduplication |
+| **Temporal** | `fetched_at` | Request timestamp |
+| **Grain** | One row per schedule fetch | Immutable snapshots |
+
+**Key Columns**:
+- `request_date` - Date of schedule
+- `response_data` - JSONB payload
+- `sport` - 'baseball', 'basketball', etc.
+- `league` - 'mlb', 'nba', etc.
+
+### Statcast Pitch Data
+
+**Table**: `raw_statcast.pitches`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `pitch_id` (BIGSERIAL) | Auto-increment |
+| **Natural Key** | `game_pk` + `at_bat_number` + `pitch_number` | Unique pitch |
+| **Temporal** | `game_date` | When pitch occurred |
+| **Grain** | One row per pitch | Immutable events |
+
+---
+
+## Staging Layer Tables
+
+### Staging Events
+
+**Table**: `staging_retrosheet.events`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `staging_id` (BIGSERIAL) | Auto-increment |
+| **Natural Key** | `game_id` + `event_seq` | From source |
+| **Grain** | One row per event | Cleaned, typed data |
+
+**Key Columns**:
+- `season` - Baseball season
+- `event_text` - Parsed description
+- `batter_id` - Canonical player ID
+- `pitcher_id` - Canonical player ID
+- `load_status` - 'pending', 'valid', 'error'
+
 ---
 
 ## Core Entities
@@ -59,6 +149,21 @@
 | **Natural Key** | `retrosheet_park_id` | Retrosheet park code |
 | **Alternate NK** | `mlb_venue_id` | MLB API venue ID |
 | **Grain** | One row per physical park | Park renovations = same park |
+
+---
+
+### Umpires
+
+**Table**: `core.umpires`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `umpire_id` (UUID) | Internal reference |
+| **Natural Key** | `retrosheet_id` | Retrosheet umpire code |
+| **Alternate NK** | `mlb_person_id` | MLB API person ID |
+| **Grain** | One row per umpire career | Single record per person |
+
+**Bridge Mapping**: `bridge.umpire_xref` links source IDs to `umpire_id`
 
 ---
 
@@ -199,6 +304,28 @@
 
 ---
 
+### Umpire Xref
+
+**Table**: `bridge.umpire_xref`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `xref_id` (UUID) | Internal reference |
+| **Composite Key** | `source_system` + `source_id` | Unique per source |
+| **Grain** | One row per source umpire ID | Multiple rows per canonical umpire |
+
+**Foreign Keys**:
+- `umpire_id` → `core.umpires.umpire_id`
+
+**Example Data**:
+
+| source_system | source_id | umpire_id | confidence_score |
+|---------------|-----------|-----------|------------------|
+| retrosheet | 'barke901' | <uuid> | 1.0 |
+| mlb | 4274 | <uuid> | 1.0 |
+
+---
+
 ## Feature Tables
 
 ### Run Expectancy State
@@ -307,77 +434,98 @@
 
 ---
 
-## Feature Layer Tables
+## Audit Tables
 
-### Run Expectancy
+### Pipeline Runs
 
-**Table**: `features.run_expectancy_matrix`
-
-| Key Type | Column(s) | Notes |
-|----------|-----------|-------|
-| **Surrogate PK** | `matrix_id` (bigint) | Auto-increment |
-| **Composite UK** | `season` + `scope` + `bases_occupied` + `outs` | One RE value per state |
-| **Grain** | One row per season/scope/base-out state | 24 states per season |
-
-**Table**: `features.re24_values`
+**Table**: `audit.pipeline_runs`
 
 | Key Type | Column(s) | Notes |
 |----------|-----------|-------|
-| **Surrogate PK** | `re24_id` (bigint) | Auto-increment |
-| **Composite Key** | `game_pk` + `event_id` | Per-play tracking |
-| **Grain** | One row per play with RE24 | Links to source events |
+| **Surrogate PK** | `run_id` (BIGSERIAL) | Auto-increment |
+| **Natural Key** | `pipeline_name` + `started_at` | Unique run identifier |
+| **Temporal** | `started_at`, `completed_at` | Execution timestamps |
+| **Grain** | One row per pipeline execution | Tracks ETL jobs |
 
-### Live Game State
+**Key Columns**:
+- `source_adapter` - Which source (MlbSource, RetrosheetSource, etc.)
+- `run_params` - JSONB with run configuration
+- `status` - 'running', 'success', 'failed'
+- `rows_processed` - Record count
+- `checksum` - MD5 of processed data
+- `error_message` - Failure details
 
-**Table**: `features.live_game_state_features`
+### Query Performance
+
+**Table**: `audit.query_performance`
 
 | Key Type | Column(s) | Notes |
 |----------|-----------|-------|
-| **Surrogate PK** | `feature_id` (bigint) | Auto-increment |
-| **Natural Key** | `snapshot_id` | Links to raw_mlb snapshot |
-| **Grain** | One row per snapshot | Pre-calculated features |
+| **Surrogate PK** | `query_id` (BIGSERIAL) | Auto-increment |
+| **Temporal** | `created_at` | When query executed |
+| **Grain** | One row per tracked query | Performance monitoring |
 
-**Table**: `features.win_probability_inputs`
+**Key Columns**:
+- `query_hash` - MD5 of normalized query text
+- `query_text` - Full SQL (truncated if needed)
+- `execution_time_ms` - Query duration
+- `rows_returned` - Result set size
+
+### Error Log
+
+**Table**: `audit.error_log`
 
 | Key Type | Column(s) | Notes |
 |----------|-----------|-------|
-| **Surrogate PK** | `input_id` (bigint) | Auto-increment |
-| **Composite Key** | `game_pk` + `event_id` (if applicable) | For training data |
-| **Grain** | One row per game state | Normalized model inputs |
+| **Surrogate PK** | `error_id` (BIGSERIAL) | Auto-increment |
+| **Temporal** | `created_at` | When error occurred |
+| **Grain** | One row per error | Structured error tracking |
+
+**Key Columns**:
+- `layer` - 'raw', 'core', 'features', etc.
+- `component` - Function or script name
+- `error_type` - Classification (network, data, logic)
+- `error_message` - Human-readable description
+- `stack_trace` - Full traceback
+- `context` - JSONB with relevant state
+
+### Data Lineage
+
+**Table**: `audit.data_lineage`
+
+| Key Type | Column(s) | Notes |
+|----------|-----------|-------|
+| **Surrogate PK** | `lineage_id` (BIGSERIAL) | Auto-increment |
+| **Temporal** | `created_at` | When transformation recorded |
+| **Grain** | One row per data flow | ETL lineage tracking |
+
+**Key Columns**:
+- `source_table` - Origin table
+- `target_table` - Destination table
+- `transformation_name` - SQL function or script
+- `run_id` - FK to pipeline_runs
+- `row_count` - Records transformed
 
 ---
 
-## Model Registry
+## Serving Tables
 
-**Table**: `models.registry`
+### Game Predictions Materialized View
 
-| Key Type | Column(s) | Notes |
-|----------|-----------|-------|
-| **Surrogate PK** | `model_id` (bigint) | Auto-increment |
-| **Composite UK** | `model_name` + `model_version` | Semantic versioning |
-| **Natural Key** | `artifact_hash` | Content-addressable |
-| **Grain** | One row per model version | Versioned artifacts |
-
-**Table**: `models.training_runs`
+**Table**: `serving.game_predictions`
 
 | Key Type | Column(s) | Notes |
 |----------|-----------|-------|
-| **Surrogate PK** | `run_id` (bigint) | Auto-increment |
-| **Composite Key** | `model_name` + `model_version` + `started_at` | Unique run |
-| **Grain** | One row per training execution | Lineage tracking |
+| **Surrogate PK** | `prediction_id` (BIGINT) | Auto-increment |
+| **Natural Key** | `game_pk` + `inning` + `outs` + `model_id` | Game state + model |
+| **Temporal** | `predicted_at` | Prediction timestamp |
+| **Grain** | One row per prediction | Individual inference |
 
----
+**Foreign Keys**:
+- `game_pk` → `core.live_games.game_pk`
+- `model_id` → `models.registry.model_id`
 
-## Predictions/Serving
-
-**Table**: `predictions.inference_results`
-
-| Key Type | Column(s) | Notes |
-|----------|-----------|-------|
-| **Surrogate PK** | `prediction_id` (bigint) | Auto-increment |
-| **Composite Key** | `game_pk` + `prediction_type` + `prediction_timestamp` | Latest per game |
-| **Natural Key** | `feature_hash` | Deduplication |
-| **Grain** | One row per inference call | With confidence intervals |
+**Refresh Strategy**: Incremental, every 30 seconds during live games
 
 ---
 
