@@ -1,5 +1,38 @@
 # Project Log
 
+## 2026-04-29 (Phase 3.6 Complete - Model Infrastructure)
+
+### Summary
+
+Completed Phase 3.6 - First Model (Win Probability) with full training, inference, and CLI integration.
+
+### Completed
+
+- ✅ **Model Registry SQL** - Tables for model versioning and lifecycle
+  - `sql/60_models/600_models_registry.sql` - Model registry and training runs
+  - `sql/70_serving/700_serving_predictions.sql` - Prediction storage and evaluation
+
+- ✅ **Model Python Infrastructure**
+  - `baseball/models/registry.py` - Model registry interface with versioning
+  - `baseball/models/training.py` - Training pipeline with CV and metrics
+  - `baseball/models/inference.py` - Real-time inference with confidence intervals
+
+- ✅ **WinProbabilityModel** - XGBoost classifier for home team win probability
+  - Features: inning, score diff, base state, outs, home/away batting
+  - 8 normalized features from `features.win_probability_inputs`
+
+- ✅ **Models CLI Commands**
+  - `baseball models train` - Train models with cross-validation
+  - `baseball models predict --game-pk <id>` - Single game prediction
+  - `baseball models batch-predict --games <ids>` - Batch predictions
+  - `baseball models list/info/download/archive/compare/export` - Registry management
+
+### Next
+
+- Phase 4: ESPN + Statcast integration
+
+---
+
 ## 2026-04-28 (Phase 2 Implementation - IN PROGRESS)
 
 ### Summary
