@@ -1,435 +1,239 @@
 # Migration Map
 
-**Purpose**: This document maps current files to their new destinations in the target architecture. Use this as the source of truth for file moves, renames, and wrapping decisions.
+**Purpose**: This file maps the current cbwinslow/retrosheet repo structure to the new target architecture. Update this file every time a current script or SQL file is moved, wrapped, split, or archived.
 
 ---
 
-## Legend
+## Status Values
 
-| Action | Meaning |
+| Status | Meaning |
 |--------|---------|
-| **KEEP** | File stays in current location, no changes |
-| **MOVE** | File relocated to new path |
-| **WRAP** | Keep original, create adapter/wrapper in new location |
-| **SPLIT** | File functionality split across multiple new files |
-| **MERGE** | File merged with other files into new location |
-| **ARCHIVE** | Move to `scripts_legacy/` or delete after migration |
+| **keep** | leave in place for now |
+| **wrap** | preserve but expose through new adapter/service |
+| **move** | relocate into new architecture |
+| **split** | break into multiple files/modules |
+| **archive** | move into scripts_legacy/ |
+| **replace** | retire after new implementation is verified |
 
 ---
 
-## Python Package: `retrosheet/` → `baseball/`
+## Python Modules and Scripts
 
-### Core Package Migration
-
-| Current File | New Location | Action | Notes |
-|--------------|--------------|--------|-------|
-| `retrosheet/__init__.py` | `baseball/__init__.py` | MOVE | Package entry point |
-| `retrosheet/archive.py` | `baseball/sources/retrosheet.py` | WRAP | Create `RetrosheetSource` adapter wrapping `archive.py` |
-| `retrosheet/event.py` | `baseball/sources/retrosheet.py` | WRAP | Parser logic wrapped in adapter |
-| `retrosheet/game.py` | `baseball/sources/retrosheet.py` | WRAP | Game-level logic wrapped in adapter |
-| `retrosheet/parser.py` | `baseball/sources/retrosheet.py` | WRAP | Orchestration wrapped in adapter |
-
-### New Core Infrastructure
-
-| Current File | New Location | Action | Notes |
-|--------------|--------------|--------|-------|
-| *new* | `baseball/cli.py` | CREATE | Typer CLI entry point |
-| *new* | `baseball/app.py` | CREATE | Application container |
-| *new* | `baseball/settings.py` | CREATE | Pydantic settings management |
-| *new* | `baseball/logging.py` | CREATE | Structured logging setup |
-| *new* | `baseball/core/db.py` | CREATE | Database connection manager |
-| *new* | `baseball/core/sql_runner.py` | CREATE | SQL file execution utility |
-| *new* | `baseball/core/checkpoints.py` | CREATE | Pipeline checkpoint logic |
-| *new* | `baseball/core/filesystem.py` | CREATE | File I/O utilities |
-| *new* | `baseball/core/http.py` | CREATE | HTTP client with retry/backoff |
-| *new* | `baseball/core/registry.py` | CREATE | Source/feature/model registry |
-| *new* | `baseball/core/types.py` | CREATE | Shared type definitions |
-
----
-
-## Scripts: `scripts/` → Organized Structure
-
-### Ingestion Scripts
-
-| Current Path | New Location | Action | Notes |
-|--------------|--------------|--------|-------|
-| `scripts/data_ingestion/fetch_espn_complete.py` | `baseball/sources/espn.py` | WRAP | Create `EspnSource` adapter |
-| `scripts/data_ingestion/fetch_mlb_schedule.py` | `baseball/sources/mlb.py` | WRAP | Merge into `MlbSource` |
-| `scripts/data_ingestion/complete_mlb_ingestion.py` | `baseball/sources/mlb.py` | WRAP | Orchestration logic in `MlbSource` |
-| `scripts/data_ingestion/download_baseball_savant.py` | `baseball/sources/statcast.py` | WRAP | Create `StatcastSource` adapter |
-| `scripts/data_ingestion/create_live_plate_appearances.py` | `baseball/features/live_state.py` | MOVE | Feature engineering logic |
-| `scripts/data_ingestion/ingest_all_external.sh` | `baseball/cli.py` (command) | WRAP | Shell → Python CLI command |
-| `scripts/data_ingestion/ingest_all_mlb_parallel.sh` | `baseball/cli.py` (command) | WRAP | Shell → Python CLI command |
-
-### Bridge Scripts
-
-| Current Path | New Location | Action | Notes |
-|--------------|--------------|--------|-------|
-| `scripts/bridge/populate_mlb_players_venues_complete.py` | `baseball/services/bridge.py` | WRAP | Bridge service layer |
-| `scripts/bridge/populate_bridge_tables.py` | `baseball/services/bridge.py` | WRAP | Xref population logic |
-| `scripts/bridge/ingest_chadwick_register.py` | `baseball/services/bridge.py` | WRAP | Chadwick register integration |
-| `scripts/bridge/complete_game_xref.py` | `baseball/services/bridge.py` | WRAP | Game xref logic |
-| `scripts/bridge/investigate_coach_names.py` | `scripts_legacy/bridge/` | ARCHIVE | One-off investigation script |
-
-### Transform Scripts
-
-| Current Path | New Location | Action | Notes |
-|--------------|--------------|--------|-------|
-| `scripts/transform_live_game.py` | `baseball/sources/mlb.py` | WRAP | Live transform logic in `MlbSource` |
-| `scripts/ingest_live_games.py` | `baseball/sources/mlb.py` | WRAP | Ingest logic in `MlbSource` |
-
-### Utility Scripts
-
-| Current Path | New Location | Action | Notes |
-|--------------|--------------|--------|-------|
-| `scripts/install_chadwick.sh` | `scripts_legacy/` | KEEP | Keep for reference, document in README |
-| `scripts/warehouse.py` | `baseball/cli.py` | WRAP | CLI commands replace warehouse.py |
-| `scripts/rebuild_warehouse.sh` | `baseball/cli.py` (pipeline command) | WRAP | Pipeline orchestration |
-| `scripts/monitor_mlb_ingestion.sh` | `baseball/cli.py` (status command) | WRAP | Monitoring → `baseball status` |
-| `scripts/add_sql_headers.py` | `scripts_legacy/` | ARCHIVE | One-time utility |
-| `scripts/add_table_comments.py` | `scripts_legacy/` | ARCHIVE | One-time utility |
-| `scripts/apply_accurate_headers.py` | `scripts_legacy/` | ARCHIVE | One-time utility |
-| `scripts/benchmark_queries.py` | `baseball/services/validation.py` | WRAP | Query performance validation |
-
-### Analysis Scripts
-
-| Current Path | New Location | Action | Notes |
-|--------------|--------------|--------|-------|
-| `scripts/analysis/analyze_pa_models.py` | `baseball/models/backtest.py` | WRAP | Model analysis in backtest module |
-| `scripts/analysis/analyze_pa_outcome_calibration.py` | `baseball/models/backtest.py` | WRAP | Calibration analysis |
-| `scripts/analysis/feature_discovery_master.py` | `baseball/features/base.py` | WRAP | Feature discovery framework |
+| Current Path | Current Purpose | New Destination | Action | Notes |
+|---------------|-----------------|-----------------|--------|-------|
+| `retrosheet/archive.py` | Historical archive download/extract | `baseball/sources/retrosheet.py` + shared core wrappers | wrap | Preserve existing logic |
+| `retrosheet/parser.py` | Historical parser orchestration | `baseball/sources/retrosheet.py` | wrap | Keep parser logic intact |
+| `retrosheet/event.py` | Event parsing | `retrosheet/event.py` retained, called by adapter | keep | Core parsing asset |
+| `retrosheet/game.py` | Game parsing/aggregation | `retrosheet/game.py` retained, called by adapter | keep | Core parsing asset |
+| `scripts/bridge/populate_bridge_tables.py` | Populate bridge tables | `baseball/services/bridge.py` | wrap | Preserve script as compatibility entry |
+| `scripts/bridge/populate_game_xref.py` | Game xref load | `baseball/services/bridge.py` | wrap | Merge into bridge build flow |
+| `scripts/bridge/populate_season_aware_team_xref.py` | Team xref logic | `baseball/services/bridge.py` | wrap | |
+| `scripts/bridge/populate_coach_umpire_bridge.py` | Staff bridge logic | `baseball/services/bridge.py` | wrap | |
+| `scripts/bridge/populate_external_bridge.py` | External bridge population | `baseball/services/bridge.py` | wrap | |
+| `scripts/bridge/populate_espn_bridge.py` | ESPN bridge population | `baseball/services/bridge.py` | wrap | |
+| `scripts/data_ingestion/fetch_mlb_schedule.py` | MLB schedule fetch | `baseball/sources/mlb.py` | wrap | |
+| `scripts/data_ingestion/download_mlb_games.py` | MLB game download | `baseball/sources/mlb.py` | wrap | Canonicalize one path |
+| `scripts/data_ingestion/download_mlb_bulk.py` | Bulk MLB download | `baseball/sources/mlb.py` | wrap or archive | Keep only if materially different |
+| `scripts/data_ingestion/ingest_live_games.py` | Live MLB ingest | `baseball/sources/mlb.py` | wrap | |
+| `scripts/data_ingestion/ingest_mlb_pbp.py` | MLB play-by-play ingest | `baseball/sources/mlb.py` | wrap | |
+| `scripts/data_ingestion/create_live_plate_appearances.py` | Live PA derivation | `baseball/sources/mlb.py` + SQL core | split | Move logic into canonical flow |
+| `scripts/data_ingestion/fetch_espn_mlb.py` | ESPN download | `baseball/sources/espn.py` | wrap | CLI fixed: imports now use `baseball.sources.espn` |
+| `scripts/data_ingestion/ingest_espn_plays.py` | ESPN ingest | `baseball/sources/espn.py` | wrap | |
+| `scripts/data_ingestion/download_statcast.py` | Statcast download | `baseball/sources/statcast.py` | wrap | |
+| `scripts/data_ingestion/download_statcast_pitch_level.py` | Pitch-level Statcast | `baseball/sources/statcast.py` | wrap | |
+| `scripts/data_ingestion/download_baseball_savant.py` | Savant download | `baseball/sources/statcast.py` | wrap | |
+| `scripts/data_ingestion/download_lahman_data.py` | Lahman download | `baseball/sources/lahman.py` | wrap | |
+| `scripts/data_ingestion/download_fangraphs.py` | FanGraphs download | `baseball/sources/fangraphs.py` | wrap | |
+| `scripts/data_ingestion/download_fangraphs_html.py` | FanGraphs HTML scrape | `baseball/sources/fangraphs.py` | wrap or archive | Keep only if needed |
+| `scripts/data_ingestion/fetch_weather.py` | Weather fetch | `baseball/sources/weather.py` | wrap | |
+| `scripts/external_data/load_lahman.py` | Lahman load | `baseball/sources/lahman.py` | wrap | |
+| `scripts/external_data/load_baseball_reference.py` | Baseball Reference load | `baseball/sources/bref.py` | wrap | |
+| `scripts/external_data/load_bref_stats.py` | BRef stats load | `baseball/sources/bref.py` | wrap | |
+| `scripts/external_data/load_fangraphs.py` | FanGraphs load | `baseball/sources/fangraphs.py` | wrap | |
+| `scripts/external_data/load_statcast.py` | Statcast load | `baseball/sources/statcast.py` | wrap | |
+| `scripts/external_data/load_baseball_savant.py` | Savant load | `baseball/sources/statcast.py` | wrap | |
+| `scripts/external_data/load_park_factors.py` | Park factor load | `baseball/sources/park_factors.py` | wrap | |
+| `scripts/rebuild_warehouse.sh` | Full warehouse orchestration | `baseball/services/scheduler.py` + `baseball pipeline run` | replace | Keep shell wrapper initially |
+| `scripts/complete_mlb_ingestion.sh` | MLB orchestration | `baseball pipeline run live` | replace | Keep wrapper initially |
+| `scripts/ingest_all_external.sh` | External-data orchestration | `baseball pipeline run external` | replace | Keep wrapper initially |
+| `scripts/bridge/populate_bridge_tables.py` | Bridge population | `baseball/services/bridge.py` | wrap | Wrapped in BridgeService.populate_all() |
+| `scripts/bridge/ingest_chadwick_register.py` | Player bridge | `baseball/services/bridge.py` | wrap | Wrapped in BridgeService.populate_players() |
+| `scripts/bridge/populate_game_xref.py` | Game bridge | `baseball/services/bridge.py` | wrap | Wrapped in BridgeService.populate_games() |
+| `scripts/bridge/populate_season_aware_team_xref.py` | Team bridge | `baseball/services/bridge.py` | wrap | Wrapped in BridgeService.populate_teams() |
+| N/A | Bridge CLI commands | `baseball/cli.py bridge build/validate` | new | Added bridge build and validate commands |
+| `scripts/external_data/load_fangraphs.py` | FanGraphs loader | `baseball/sources/fangraphs.py` | wrap | FanGraphsSource adapter |
+| `scripts/external_data/load_baseball_reference.py` | BRef loader | `baseball/sources/bref.py` | wrap | BRefSource adapter |
+| `scripts/data_ingestion/fetch_weather.py` | Weather fetch | `baseball/sources/weather.py` | wrap | WeatherSource adapter |
+| `scripts/external_data/load_park_factors.py` | Park factors loader | `baseball/sources/park_factors.py` | wrap | ParkFactorsSource adapter |
+| `scripts/data_ingestion/download_fangraphs.py` | FanGraphs download | `baseball/sources/fangraphs.py` | wrap | FanGraphsSource.download() |
+| N/A | FanGraphs CLI | `baseball/cli.py fangraphs` | new | fangraphs download/ingest/validate |
+| N/A | BRef CLI | `baseball/cli.py bref` | new | bref ingest/validate |
+| N/A | Weather CLI | `baseball/cli.py weather` | new | weather fetch/validate |
+| N/A | Park CLI | `baseball/cli.py park` | new | park ingest/validate |
 
 ---
 
-## SQL: `sql/` → Layered Structure
+## SQL Files
 
-### Current → New Mapping
+| Current Path | Current Purpose | New Destination | Action | Notes |
+|--------------|-----------------|-----------------|--------|-------|
+| `sql/live/001_raw_sportradar_schema.sql` | Raw live schema | `sql/10_raw/121_raw_live_vendor.sql` | move | |
+| `sql/live/002_ingest_functions.sql` | Live ingest functions | `sql/20_staging/221_stg_live_ingest_functions.sql` | split | |
+| `sql/live/003_schedule_jobs.sql` | Scheduling helpers | `sql/00_admin/010_schedule_jobs.sql` | move | |
+| `sql/live/004_additional_endpoints_schema.sql` | Additional raw endpoints | `sql/10_raw/122_raw_live_additional_endpoints.sql` | move | |
+| `sql/20_staging/222_stg_live_additional_endpoints.sql` | Additional ingest functions | `sql/20_staging/222_stg_live_additional_endpoints.sql` | move | |
+| `sql/20_staging/222_stg_espn_events.sql` | ESPN events staging | `sql/20_staging/222_stg_espn_events.sql` | new | Flattened ESPN events with bridge ID resolution |
+| `sql/external/210_lahman_raw.sql` | Lahman raw schema | `sql/10_raw/210_raw_lahman.sql` | move | |
+| `sql/external/211_baseball_reference_raw.sql` | BRef raw schema | `sql/10_raw/211_raw_bref.sql` | move | |
+| `sql/external/212_fangraphs_raw.sql` | FanGraphs raw schema | `sql/10_raw/212_raw_fangraphs.sql` | move | |
+| `sql/external/213_park_factors_raw.sql` | Park factors raw schema | `sql/10_raw/213_raw_park_factors.sql` | move | |
+| `sql/external/214_mlb_rosters_raw.sql` | MLB rosters raw schema | `sql/10_raw/214_raw_mlb_rosters.sql` | move | |
+| `sql/external/215_weather_raw.sql` | Weather raw schema | `sql/10_raw/215_raw_weather.sql` | move | |
+| `sql/external/216_statcast_raw.sql` | Statcast raw schema | `sql/10_raw/216_raw_statcast.sql` | move | |
+| `sql/external/220_espn_schema.sql` | ESPN raw schema | `sql/10_raw/1016_raw_espn_schema.sql` | move | 5 tables: game/schedule/player/team/plays snapshots |
+| `sql/external/225_ingest_run_tracking.sql` | Ingest tracking | `sql/00_admin/020_ingest_tracking.sql` | move | |
+| `sql/external/230_data_validation_views.sql` | Validation views | `sql/80_quality/830_external_validation.sql` | move | |
+| `sql/bridge/900_bridge_monitoring_views.sql` | Bridge monitoring | `sql/80_quality/841_bridge_monitoring.sql` | move | |
+| `sql/bridge/910_confidence_scoring.sql` | Bridge confidence | `sql/40_bridge/406_bridge_confidence.sql` | move | |
+| `sql/bridge/920_game_xref_procedure.sql` | Game xref | `sql/40_bridge/401_bridge_games.sql` | move | |
+| `sql/bridge/930_season_aware_team_xref_procedure.sql` | Team xref | `sql/40_bridge/402_bridge_teams.sql` | move | |
+| `sql/bridge/940_coach_umpire_xref_procedures.sql` | Staff xref | `sql/40_bridge/403_bridge_staff.sql` | move | |
+| `sql/bridge/950_park_xref_procedure.sql` | Park xref | `sql/40_bridge/404_bridge_parks.sql` | move | |
+| `sql/bridge/960_player_xref_procedure.sql` | Player xref | `sql/40_bridge/405_bridge_players.sql` | move | |
+| `sql/bridge/970_bridge_validation_functions.sql` | Bridge validation | `sql/80_quality/842_bridge_validation.sql` | move | |
+| `sql/bridge/985_player_xref_population_procedure.sql` | Player xref population | `sql/40_bridge/405_bridge_players.sql` | split/merge | |
+| `sql/bridge/999_master_bridge_population_procedure.sql` | Master bridge build | `sql/40_bridge/499_bridge_master.sql` | move | |
+| `sql/30_core/310_core_live_games.sql` | Live games table | `sql/30_core/310_core_live_games.sql` | keep | Deviates from milestone spec (was 321), kept to avoid breaking references |
+| `sql/30_core/311_core_live_events.sql` | Live events table | `sql/30_core/311_core_live_events.sql` | keep | Deviates from milestone spec (was 322), kept to avoid breaking references |
+| `sql/30_core/312_core_live_plate_appearances.sql` | Live plate appearances | `sql/30_core/312_core_live_plate_appearances.sql` | new | Combined milestone spec's 323/324 duplicate entries |
+| `sql/30_core/313_core_live_pitch_events.sql` | Live pitch events | `sql/30_core/313_core_live_pitch_events.sql` | new | Pitch-level analysis table |
+| `sql/30_core/314_core_game_state_snapshots.sql` | Game state snapshots | `sql/30_core/314_core_game_state_snapshots.sql` | move | New core table for game state snapshots |
+| `sql/20_staging/221_stg_mlb_live_events.sql` | Staging for MLB live events | `sql/20_staging/221_stg_mlb_live_events.sql` | move | New staging table for live events |
+| `sql/20_staging/222_stg_espn_events.sql` | Staging for ESPN events | `sql/20_staging/222_stg_espn_events.sql` | new | New staging table for ESPN events with bridge resolution |
+| `sql/mlb/090_mlb_live_data.sql` | Raw MLB API snapshots | `sql/10_raw/1021_raw_mlb_live_data.sql` | move | Contains raw_mlb.schedule_snapshots and live_feed_snapshots |
+| `sql/mlb/091_mlb_reference_raw.sql` | Raw MLB reference snapshots | `sql/10_raw/1022_raw_mlb_reference.sql` | move | Contains raw_mlb.reference_snapshots |
+| `sql/mlb/145_mlb_historical_schema.sql` | MLB historical tables | `sql/10_raw/1023_raw_mlb_historical.sql` | move | Contains mlb.games and historical tables |
+| `sql/mlb/100_bridge_tables.sql` | MLB bridge tables | `sql/40_bridge/4016_bridge_mlb_tables.sql` | move | Bridge tables for MLB entities |
+| `sql/mlb/150_mlb_data_completeness.sql` | Data completeness checks | `sql/80_quality/8001_data_completeness_mlb.sql` | move | Data quality checks for MLB data |
+| `sql/mlb/150_model_registry.sql` | Model registry | `sql/60_models/6005_mlb_model_registry.sql` | move | MLB-specific model registry |
+| `sql/mlb/151_register_model.sql` | Model registration | `sql/60_models/6006_mlb_register_model.sql` | move | Model registration functions |
+| `sql/mlb/122_live_pa_feature_parity.sql` | Live PA features | `sql/50_features/5038_live_pa_feature_parity.sql` | move | Feature parity for live plate appearances |
+| `sql/mlb/092_live_odds_views.sql` | Live odds views | `sql/70_serving/7002_live_odds_views.sql` | move | Odds and betting views |
+| `sql/mlb/095_mlb_reference_views.sql` | MLB reference views | `sql/70_serving/7003_mlb_reference_views.sql` | move | Reference data views |
+| `sql/mlb/130_analysis_views.sql` | Analysis views | `sql/70_serving/7004_analysis_views.sql` | move | Analysis and reporting views |
+| `sql/mlb/120_inference_optimization.sql` | Inference optimization | `sql/60_models/6007_inference_optimization.sql` | move | Model inference optimization |
+| `sql/mlb/121_inference_functions.sql` | Inference functions | `sql/60_models/6008_inference_functions.sql` | move | Model inference functions |
+| `sql/mlb/110_live_core_tables.sql` | Live core tables (duplicate) | `sql_archive/110_live_core_tables_DUPLICATE.sql` | archive | Duplicates 310/311, archived |
 
-| Current Path | New Location | Action | Notes |
-|--------------|--------------|--------|-------|
-| `sql/core/` | `sql/30_core/` | MOVE | Core tables |
-| `sql/bridge/` | `sql/40_bridge/` | MOVE | Bridge/xref tables |
-| `sql/live/` | `sql/10_raw/` + `sql/30_core/` | SPLIT | Raw live → raw layer, canonical → core layer |
-| `sql/external/` | `sql/10_raw/` + `sql/20_staging/` | SPLIT | External sources to raw/staging |
-| `sql/features/` | `sql/50_features/` | MOVE | Feature marts |
-| `sql/analysis/` | `sql/80_quality/` + `docs/analysis/` | SPLIT | Quality checks → 80_quality/, ad-hoc → docs |
-| `sql/warehouse/` | `sql/70_serving/` | MOVE | Serving layer |
-| `sql/eda/` | `docs/analysis/` | MOVE | Exploratory analysis documentation |
-| `sql/maintenance/` | `sql/00_admin/` | MOVE | Admin/maintenance scripts |
+## Features (Milestone 10)
 
-### New Admin SQL
+| Current Path | Current Purpose | New Destination | Action | Notes |
+|--------------|-----------------|-----------------|--------|-------|
+| `baseball/features/base.py` | Base feature calculator | `baseball/features/base.py` | keep | Abstract base class for all features |
+| `baseball/features/run_expectancy.py` | Run expectancy calc | `baseball/features/run_expectancy.py` | keep | RunExpectancyCalculator |
+| `baseball/features/win_expectancy.py` | Win expectancy calc | `baseball/features/win_expectancy.py` | keep | WinExpectancyCalculator |
+| `baseball/features/leverage_index.py` | Leverage index calc | `baseball/features/leverage_index.py` | keep | LeverageIndexCalculator |
+| `baseball/features/matchup.py` | Matchup features | `baseball/features/matchup.py` | keep | MatchupCalculator |
+| `baseball/features/rolling_form.py` | Rolling form calc | `baseball/features/rolling_form.py` | keep | RollingFormCalculator |
+| `baseball/features/bullpen.py` | Bullpen features | `baseball/features/bullpen.py` | keep | BullpenCalculator |
+| `baseball/features/live_state.py` | Live game state | `baseball/features/live_state.py` | keep | LiveStateCalculator |
+| `sql/50_features/500_features_run_expectancy.sql` | Run expectancy 24 | `sql/50_features/500_features_run_expectancy.sql` | keep | Run expectancy by base/out state |
+| `sql/50_features/501_features_live_game_state.sql` | Live game state | `sql/50_features/501_features_live_game_state.sql` | keep | Live game state features |
+| `sql/50_features/5032_features_win_expectancy.sql` | Win expectancy | `sql/50_features/5032_features_win_expectancy.sql` | keep | Win probability by inning/score |
+| `sql/50_features/5033_features_leverage_index.sql` | Leverage index | `sql/50_features/5033_features_leverage_index.sql` | keep | Situational leverage |
+| `sql/50_features/5034_features_matchup.sql` | Matchup features | `sql/50_features/5034_features_matchup.sql` | keep | Batter-pitcher matchup |
+| `sql/50_features/5035_features_rolling_form.sql` | Rolling form | `sql/50_features/5035_features_rolling_form.sql` | keep | 7/14/30-day rolling stats |
+| `sql/50_features/5036_features_bullpen.sql` | Bullpen features | `sql/50_features/5036_features_bullpen.sql` | keep | Bullpen fatigue/usage |
+| `sql/50_features/5037_features_run_expectancy.sql` | RE24 calculation | `sql/50_features/5037_features_run_expectancy.sql` | keep | RE24 value calculation |
+| N/A | Features build command | `baseball/cli.py features build` | new | Unified feature build CLI |
 
-| New Location | Purpose |
-|--------------|---------|
-| `sql/00_admin/001_pipeline_control_tables.sql` | Create `pipeline_runs`, `pipeline_checkpoints`, `pipeline_errors` |
-| `sql/00_admin/002_source_registry.sql` | Source configuration and metadata |
+## ML Model Layer (Milestone 11)
 
-### SQL Naming Convention
+| Current Path | Current Purpose | New Destination | Action | Notes |
+|--------------|-----------------|-----------------|--------|-------|
+| `baseball/models/base.py` | Base model classes | `baseball/models/base.py` | keep | BaseModel, SklearnBaseModel, ModelConfig |
+| `baseball/models/next_run_model.py` | Next run probability | `baseball/models/next_run_model.py` | keep | NextRunProbabilityModel |
+| `baseball/models/pa_outcome_model.py` | PA outcome model | `baseball/models/pa_outcome_model.py` | keep | PAOutcomeModel |
+| `baseball/models/win_probability_model.py` | Win probability | `baseball/models/win_probability_model.py` | keep | WinProbabilityModel |
+| `baseball/models/training.py` | Training pipeline | `baseball/models/training.py` | keep | TrainingPipeline |
+| `baseball/models/registry.py` | Model registry | `baseball/models/registry.py` | keep | ModelRegistry, ModelRegistryEntry |
+| `baseball/models/inference.py` | Inference pipeline | `baseball/models/inference.py` | keep | InferencePipeline |
+| `sql/60_models/6001_models_registry.sql` | Model registry schema | `sql/60_models/6001_models_registry.sql` | keep | Registry, versions, artifacts tables |
+| `sql/60_models/6008_inference_functions.sql` | Inference functions | `sql/60_models/6008_inference_functions.sql` | keep | get_plate_appearance_features(), init_simulation() |
+| `baseball/cli.py` | Models train/predict | `baseball/cli.py` | keep | `models train`, `models predict`, `models batch-predict` |
+| `baseball/cli.py` | **Models list command** | `baseball/cli.py` | **new** | `models list --name --status --limit --metrics` |
+| `baseball/cli.py` | **Models promote command** | `baseball/cli.py` | **new** | `models promote <id> --to production` |
+| `baseball/cli.py` | **Models archive command** | `baseball/cli.py` | **new** | `models archive <id> --force` |
+| `baseball/cli.py` | **Models backtest command** | `baseball/cli.py` | **new** | `models backtest <model> --season --window` |
+| `baseball/models/backtesting.py` | Backtest engine | `baseball/models/backtesting.py` | **new** | BacktestEngine, walk-forward validation, progress tracking, event hooks |
+| `baseball/models/schemas.py` | Pydantic schemas | `baseball/models/schemas.py` | **new** | Type-safe config/response schemas for simulation and backtesting |
+| `baseball/models/simulation.py` | Monte Carlo sim | `baseball/models/simulation.py` | **new** | BaseSimulator, MarkovChainSimulator, MonteCarloSimulator, SimulationService |
+| `baseball/models/batch_inference.py` | Batch prediction | `baseball/models/batch_inference.py` | pending | BatchPredictionService |
+| `sql/60_models/6009_backtest_schema.sql` | Backtest tables | `sql/60_models/6009_backtest_schema.sql` | pending | backtest_results table |
+| `sql/60_models/6010_simulation_schema.sql` | Simulation schema | `sql/60_models/6010_simulation_schema.sql` | **new** | runs, states, results, transitions, transition_matrix, RE24 |
 
-| Old Pattern | New Pattern | Example |
-|-------------|-------------|---------|
-| `001_init.sql` | `001_admin_database_init.sql` | With layer prefix |
-| `010_core_games_events.sql` | `301_core_games.sql` | Layer 30, sequence 01 |
-| `900_bridge_monitoring_views.sql` | `440_bridge_monitoring_views.sql` | Layer 40, sequence 40 |
+### Milestone 12: Simulation Enhancements & AI Betting Integration
 
----
+| Original File | Original Purpose | Current Location | Disposition | Notes |
+|---------------|------------------|------------------|-------------|-------|
+| `baseball/models/schemas.py` | Added WeatherConfig | `baseball/models/schemas.py` | **updated** | Weather adjustments, park factors, venue_id |
+| `baseball/features/bullpen_fatigue.py` | Bullpen fatigue calc | `baseball/features/bullpen_fatigue.py` | **new** | RelieverWorkload, BullpenFatigueCalculator |
+| `docs/AI_BETTING_INTEGRATION_PLAN.md` | AI betting plan | `docs/AI_BETTING_INTEGRATION_PLAN.md` | **new** | Comprehensive plan for AI-powered betting |
+| `sql/60_models/6010_simulation_schema.sql` | Added weather cols | `sql/60_models/6010_simulation_schema.sql` | **updated** | temperature_f, wind, venue_id, park_factors |
+| `sql/70_betting/7001_betting_schema.sql` | Betting schema | `sql/70_betting/7001_betting_schema.sql` | **new** | strategies, opportunities, bets, line_movements, sharp_opportunities |
+| `baseball/betting/schemas.py` | Pydantic betting schemas | `baseball/betting/schemas.py` | pending | BettingStrategy, BetOpportunity, PlacedBet |
+| `baseball/betting/analyzer.py` | Edge calculation | `baseball/betting/analyzer.py` | complete | BettingAnalyzer, market comparison |
+| `baseball/betting/strategy_ai.py` | AI strategy gen | `baseball/betting/strategy_ai.py` | complete | BettingStrategyAI with pluggable LLM |
+| `baseball/betting/paper_trading.py` | Paper trading | `baseball/betting/paper_trading.py` | complete | PaperTradingAccount, PaperTradingManager |
+| `baseball/betting/sources/pinnacle.py` | Sharp source | `baseball/betting/sources/pinnacle.py` | complete | PinnacleSource adapter |
+| `baseball/betting/sources/draftkings.py` | Retail source | `baseball/betting/sources/draftkings.py` | complete | DraftKingsSource adapter |
+| `baseball/cli.py` | `bet` sub-app | `baseball/cli.py` | complete | `bet analyze`, `bet paper-report`, `bet ingestion` |
 
-## ✅ Milestone 7: SQL Layer Reorganization (COMPLETED 2026-04-27)
+**Betting Pydantic Schemas**
+- `baseball/betting/schemas.py` - Complete 2026-04-30
+- Status: 9 schemas implemented
+- Disposition: NEW - Type-safe betting models
 
-### Completed Actions
+**Odds Integration System**
+- `baseball/betting/sources/base.py` - BaseOddsSource super class
+- `baseball/betting/sources/the_odds_api.py` - TheOddsApi implementation
+- `baseball/betting/sources/pinnacle.py` - Pinnacle sharp source
+- `baseball/betting/sources/draftkings.py` - DraftKings retail source
+- `baseball/betting/sources/__init__.py` - Package exports
+- `baseball/betting/analyzer.py` - BettingAnalyzer engine
+- `baseball/betting/paper_trading.py` - Paper trading system
+- `baseball/betting/strategy_ai.py` - AI strategy generator
+- Status: Complete 2026-04-30
+- Disposition: NEW - Flexible odds source system with edge detection, paper trading, and AI
 
-| Layer | Old Location | New Location | Files | Status |
-|-------|--------------|--------------|-------|--------|
-| 00_admin | `sql/maintenance/` + `sql/00_admin/` | `sql/00_admin/` | 1 | ✅ Consolidated |
-| 10_raw | `sql/live/` + `sql/external/` | `sql/10_raw/` | 19 | ✅ Merged & renamed |
-| 20_staging | *new* | `sql/20_staging/` | 0 | ✅ Created (ready) |
-| 30_core | `sql/core/` | `sql/30_core/` | 23 | ✅ Renamed to 30XX pattern |
-| 40_bridge | `sql/bridge/` | `sql/40_bridge/` | 15 | ✅ Renamed to 40XX pattern |
-| 50_features | `sql/features/` | `sql/50_features/` | 36 | ✅ Renamed to 50XX pattern |
-| 60_models | `sql/models/` + root `sql/600_*.sql` | `sql/60_models/` | 4 | ✅ Consolidated & renamed |
-| 70_serving | *new* | `sql/70_serving/` | 0 | ✅ Created (ready) |
-| 80_quality | *new* | `sql/80_quality/` | 0 | ✅ Created (ready) |
+**Data Ingestion System**
+- `baseball/ingestion/__init__.py` - Package exports
+- `baseball/ingestion/base.py` - BaseIngestionSource super class with event hooks
+- `baseball/ingestion/live_service.py` - LiveDataIngestionService with WebSocket
+- `baseball/ingestion/odds_service.py` - OddsIngestionService for cron-based fetching
+- `baseball/ingestion/scheduler.py` - DatabaseScheduler for job management
+- `sql/75_scheduler/7501_ingestion_scheduler.sql` - Database schema for cron jobs
+- Status: Complete 2026-04-30
+- Disposition: NEW - Event-driven ingestion with WebSocket support
 
-### Naming Convention Applied
+**Simulation-Betting Integration**
+- `baseball/simulation/service.py` - SimulationService for querying Monte Carlo results
+- `baseball/betting/integration.py` - SimulationBackedAnalyzer for real probabilities
+- Status: Complete 2026-04-30
+- Disposition: NEW - Bridges simulation database to betting analysis
 
-All files now follow: `{layer}{sequence}_{layer_name}_{description}.sql`
-
-Examples:
-- `1001_raw_mlb_api_complete.sql` (layer 10, sequence 01)
-- `3001_core_init.sql` (layer 30, sequence 01)
-- `4001_bridge_schema.sql` (layer 40, sequence 01)
-- `5001_features_pitch_data_quality.sql` (layer 50, sequence 01)
-- `6001_models_registry.sql` (layer 60, sequence 01)
-
-### Deleted Directories
-
-- `sql/live/` → merged into `sql/10_raw/`
-- `sql/external/` → merged into `sql/10_raw/`
-- `sql/core/` → moved to `sql/30_core/`
-- `sql/bridge/` → moved to `sql/40_bridge/`
-- `sql/features/` → moved to `sql/50_features/`
-- `sql/models/` → moved to `sql/60_models/`
-
-### Remaining (Non-Layered)
-
-- `sql/analysis/` → analysis queries (future: review for 80_quality/)
-- `sql/eda/` → exploratory analysis (future: move to docs/)
-- `sql/framework/` → framework utilities
-- `sql/maintenance/` → maintenance utilities
-- `sql/metadata/` → metadata queries
-- `sql/mlb/` → MLB-specific queries (future: review)
-- `sql/optimization/` → optimization scripts
-- `sql/test/` → test fixtures
-- `sql/utility/` → utility functions
-- `sql/warehouse/` → warehouse views (future: move to 70_serving/)
-
----
-
-## Configuration: New `config/` Directory
-
-| New Location | Purpose | Source |
-|--------------|---------|--------|
-| `config/sources.yml` | Source configuration (URLs, credentials, schedules) | Extract from scattered config |
-| `config/pipelines.yml` | Pipeline definitions and dependencies | Extract from shell scripts |
-| `config/models.yml` | Model configuration (hyperparameters, features) | Extract from model training scripts |
-
----
-
-## Documentation: `docs/` Structure
-
-| Current | New Location | Action |
-|---------|--------------|--------|
-| `README.md` | `README.md` | KEEP (update) |
-| `AGENTS.md` | `AGENTS.md` | UPDATE (split guidance) |
-| `docs/agents/FILE_INVENTORY.md` | `docs/agents/FILE_INVENTORY.md` | KEEP (maintain) |
-| `docs/agents/PROCEDURES.md` | `docs/agents/PROCEDURES.md` | KEEP (maintain) |
-| `docs/PROJECT_LOG.md` | `docs/PROJECT_LOG.md` | KEEP (append) |
-| *new* | `docs/architecture.md` | CREATE |
-| *new* | `docs/sources.md` | CREATE |
-| *new* | `docs/keys_and_grains.md` | CREATE |
-| *new* | `docs/models.md` | CREATE |
-| *new* | `docs/agents/architecture_agent.md` | CREATE |
-| *new* | `docs/agents/python_agent.md` | CREATE |
-| *new* | `docs/agents/sql_agent.md` | CREATE |
-| *new* | `docs/agents/ml_agent.md` | CREATE |
-| *new* | `docs/agents/live_agent.md` | CREATE |
-| *new* | `docs/agents/docs_agent.md` | CREATE |
-
----
-
-## Package Configuration: `pyproject.toml`
-
-### Required Changes
-
-```toml
-[project.scripts]
-baseball = "baseball.cli:main"
-
-[project.optional-dependencies]
-ml = ["scikit-learn", "xgboost", "lightgbm", "pandas", "numpy"]
-live = ["websockets", "asyncio-mqtt"]
-dev = ["pytest", "ruff", "mypy", "pre-commit"]
-```
-
-### New Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `typer` | CLI framework |
-| `pydantic` | Settings validation |
-| `pydantic-settings` | Configuration management |
-| `structlog` | Structured logging |
-| `tenacity` | HTTP retry logic |
-| `aiohttp` | Async HTTP client |
-
----
-
-## Migration Order
-
-### Phase 1: Foundation (Week 1)
-
-1. Create `baseball/` package skeleton
-2. Create core infrastructure modules
-3. Update `pyproject.toml` with CLI entry
-4. Create `docs/migration_map.md` (this document)
-5. Create `docs/migration_backlog.md`
-
-### Phase 2: Retrosheet Adapter (Week 2)
-
-1. Create `baseball/sources/retrosheet.py` wrapping existing `retrosheet/` package
-2. Move `retrosheet/` → `retrosheet_legacy/` (temporary)
-3. Update imports and tests
-4. Create `baseball/sources/base.py` with `BaseSource` abstract class
-
-### Phase 3: MLB Live Adapter (Week 3)
-
-1. Create `baseball/sources/mlb.py`
-2. Migrate SQL from `sql/live/` → `sql/10_raw/` + `sql/30_core/`
-3. Create admin SQL tables
-4. Implement `baseball mlb` CLI commands
-
-### Phase 4: Bridge Consolidation (Week 4)
-
-1. Create `baseball/services/bridge.py`
-2. Migrate bridge scripts
-3. Move `sql/bridge/` → `sql/40_bridge/`
-4. Implement `baseball bridge` CLI commands
-
-### Phase 5: ESPN + Statcast (Week 5)
-
-1. Create `baseball/sources/espn.py`
-2. Create `baseball/sources/statcast.py`
-3. Implement `baseball espn` and `baseball statcast` commands
-
-### Phase 6: Features + Models (Week 6-7)
-
-1. Create feature framework in `baseball/features/`
-2. Create model framework in `baseball/models/`
-3. Migrate SQL from `sql/features/` → `sql/50_features/`
-4. Implement `baseball features` and `baseball models` commands
-
-### Phase 7: Cleanup (Week 8)
-
-1. Move remaining scripts to `scripts_legacy/`
-2. Archive one-time utilities
-3. Finalize documentation
-4. Run full pipeline validation
+**User Documentation**
+- `.env.example` - Environment configuration template with all betting API keys
+- `docs/BETTING_QUICKSTART.md` - Complete user guide (~400 lines)
+- Status: Complete 2026-04-30
+- Disposition: NEW - User-facing documentation and configuration
 
 ---
 
-## Rollback Plan
+## Notes
 
-If migration issues arise:
+Update this file every time a migration action is completed.
 
-1. **Phase 1-2**: Can revert by removing `baseball/` directory, restoring imports
-2. **Phase 3-4**: Keep `scripts_legacy/` intact for rollback
-3. **Phase 5+**: Database migrations are additive, can coexist with old scripts
-4. **Emergency**: `git checkout` to pre-migration branch, database unchanged
+If a file's role changes materially, update the "Current purpose" or add a note.
 
----
-
-## Validation Checklist
-
-After each phase, verify:
-
-- [ ] All tests pass
-- [ ] `baseball doctor` reports healthy status
-- [ ] At least one source adapter works end-to-end
-- [ ] No orphan scripts created
-- [ ] SQL files follow naming convention
-- [ ] Documentation updated
-
----
-
-## Script Consolidation (April 26, 2026)
-
-Consolidation effort following major_update.md principles: preserve working logic, wrap existing scripts, archive true orphans only.
-
-### Archived Scripts (True Orphans)
-
-| File | Destination | Reason |
-|------|-------------|--------|
-| `scripts/bridge/investigate_coach_names.py` | `scripts/archive/bridge_investigations/` | One-time investigation |
-| `scripts/bridge/investigate_umpire_ids.py` | `scripts/archive/bridge_investigations/` | One-time investigation |
-| `scripts/bridge/replay_live_bridge_backfill.py` | `scripts/archive/one_time_backfills/` | One-time backfill |
-| `scripts/add_table_comments.py` | `scripts/archive/deprecated_sql_tools/` | Superseded by sql_maintenance.py |
-| `scripts/apply_accurate_headers.py` | `scripts/archive/deprecated_sql_tools/` | Superseded by sql_maintenance.py |
-| `scripts/fix_sql_headers.py` | `scripts/archive/deprecated_sql_tools/` | Superseded by sql_maintenance.py |
-| `scripts/convert_block_headers.py` | `scripts/archive/deprecated_sql_tools/` | Superseded by sql_maintenance.py |
-
-### Unified Scripts (Merged Functionality)
-
-| Previous Files | New File | Purpose |
-|----------------|----------|---------|
-| `add_sql_headers.py`, `add_table_comments.py`, `apply_accurate_headers.py`, `fix_sql_headers.py` | `scripts/utility/sql_maintenance.py` | Unified SQL header/comment management tool |
-
-### Shell Wrappers Updated
-
-| File | Change | New Behavior |
-|------|--------|--------------|
-| `scripts/complete_mlb_ingestion.sh` | Updated | Calls `baseball mlb download/ingest` |
-| `scripts/ingest_all_mlb_parallel.sh` | Updated | Calls `baseball mlb download/ingest` |
-
-### Source Adapters Created (WRAP Pattern)
-
-| Adapter | Wraps | Location |
-|-----------|-------|----------|
-| `MlbSource` | `download_mlb_bulk.py`, `ingest_all_mlb_data.py` | `baseball/sources/mlb.py` |
-| `EspnSource` | `fetch_espn_mlb.py` | `baseball/sources/espn.py` |
-| `StatcastSource` | `download_statcast.py`, `load_statcast.py` | `baseball/sources/statcast.py` |
-| `LahmanSource` | `download_lahman_data.py`, `load_lahman.py` | `baseball/sources/lahman.py` |
-| `RetrosheetSource` | `retrosheet/archive.py`, `retrosheet/parser.py` | `baseball/sources/retrosheet.py` |
-
-### Bridge Service Created
-
-| Service | Wraps | Location |
-|---------|-------|----------|
-| `BridgeService` | `populate_bridge_tables.py`, `ingest_chadwick_register.py`, `populate_game_xref.py`, `populate_season_aware_team_xref.py` | `baseball/services/bridge.py` |
-
-### E2E Test Framework Created
-
-| Test File | Coverage | Status |
-|-----------|----------|--------|
-| `tests/e2e/test_source_adapters.py` | All 5 source adapters | 12 passed |
-| `tests/e2e/test_bridge_service.py` | Bridge service | 4 passed, 1 skipped |
-
----
-
-## ✅ Milestone 9: Cleanup - Scripts Legacy Archive (COMPLETED 2026-04-27)
-
-### Scripts Moved to `scripts_legacy/`
-
-| Script | New Location | Reason |
-|--------|--------------|--------|
-| `complete_mlb_ingestion.sh` | `scripts_legacy/` | Replaced by `baseball mlb download/ingest` |
-| `ingest_all_mlb_parallel.sh` | `scripts_legacy/` | Replaced by `baseball mlb ingest` |
-| `ingest_all_external.sh` | `scripts_legacy/` | Replaced by `baseball lahman/espn/statcast` |
-| `monitor_mlb_ingestion.sh` | `scripts_legacy/` | Replaced by `baseball status` |
-| `demo_advanced_modeling.py` | `scripts_legacy/` | Replaced by `baseball models train` |
-| `demo_chatbot_integration.py` | `scripts_legacy/` | Replaced by `baseball chatbot` |
-| `fix_repo_issues.sh` | `scripts_legacy/` | One-time utility |
-| `ingest_all_mlb_data.py` | `scripts_legacy/data_ingestion/` | Replaced by `MlbSource` adapter |
-| `download_missing_2023.py` | `scripts_legacy/data_ingestion/` | One-time fix |
-
-### Migration Guide
-
-| Old Command | New Command |
-|-------------|-------------|
-| `./scripts/complete_mlb_ingestion.sh` | `baseball mlb download --seasons 2000-2024 && baseball mlb ingest --seasons 2000-2024` |
-| `./scripts/ingest_all_mlb_parallel.sh` | `baseball mlb ingest --parallel` |
-| `./scripts/monitor_mlb_ingestion.sh` | `baseball status` |
-| `python scripts/demo_advanced_modeling.py` | `baseball models train --dry-run` |
-
----
-
-### Feature and Model SQL Files Created
-
-| SQL File | Creates | Purpose |
-|----------|---------|---------|
-| `sql/50_features/500_features_run_expectancy.sql` | `features.run_expectancy_matrix`, `features.re24_values` | 24 base-out states for RE24 calculation |
-| `sql/50_features/501_features_live_game_state.sql` | `features.live_game_state_features`, `features.win_probability_inputs` | Real-time game state features |
-| `sql/60_models/600_models_registry.sql` | `models.registry`, `models.training_runs` | Model versioning and lifecycle |
-| `sql/70_serving/700_serving_predictions.sql` | `predictions.inference_results` | Prediction storage and evaluation |
-| `sql/10_raw/1020_raw_mlb_live_feed.sql` | `raw_mlb.live_feed_snapshots` | Live MLB feed deduplication |
-| `sql/30_core/310_core_live_games.sql` | `core.live_games`, `core.v_live_games_current` | Canonical live game state |
-| `sql/30_core/311_core_live_events.sql` | `core.live_events`, `core.v_live_events_current` | Canonical live events |
-
-### Live Data Infrastructure
-
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| `MlbLiveSource` | `baseball/sources/mlb_live.py` | Real-time feed ingestion |
-| `LiveFeedPoller` | `baseball/services/live_feed.py` | Continuous polling service |
-| WebSocket Server | `baseball/live_server.py` | Real-time client updates |
-| Live Dashboard | `static/live_dashboard.html` | Web-based game monitoring |
-
----
-
-## Document Control
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2026-04-26 | Migration Agent | Initial file inventory and mapping |
-| 1.1 | 2026-04-26 | Migration Agent | Added Script Consolidation section |
-| 1.2 | 2026-04-27 | Migration Agent | Added Milestone 9 Scripts Legacy Archive section |
-| 1.3 | 2026-04-28 | Migration Agent | Added Feature/Model SQL and Live Data sections |
+Do not silently move files without updating this document.

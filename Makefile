@@ -20,6 +20,52 @@ run:
 .PHONY: kb run
 
 # -------------------------------------------------------------------
+# Code Quality & Linting (Ruff)
+# -------------------------------------------------------------------
+lint:
+	@echo "=== Running Ruff linter ==="
+	ruff check baseball/ tests/ scripts/
+
+lint-fix:
+	@echo "=== Auto-fixing issues with Ruff ==="
+	ruff check --fix baseball/ tests/ scripts/
+
+format:
+	@echo "=== Formatting code with Ruff ==="
+	ruff format baseball/ tests/ scripts/
+
+imports:
+	@echo "=== Organizing imports with Ruff ==="
+	ruff check --select I --fix baseball/ tests/ scripts/
+
+# Run all quality checks
+quality: format imports lint
+	@echo "=== All quality checks passed ==="
+
+# -------------------------------------------------------------------
+# Testing
+# -------------------------------------------------------------------
+test:
+	@echo "=== Running all tests ==="
+	pytest tests/ -v --tb=short
+
+test-unit:
+	@echo "=== Running unit tests ==="
+	pytest tests/unit/ -v --tb=short
+
+test-integration:
+	@echo "=== Running integration tests ==="
+	pytest tests/integration/ -v --tb=short -m integration
+
+test-betting:
+	@echo "=== Running betting tests ==="
+	pytest tests/betting/ -v --tb=short
+
+test-ingestion:
+	@echo "=== Running ingestion tests ==="
+	pytest tests/ingestion/ -v --tb=short
+
+# -------------------------------------------------------------------
 # Feature marts
 # -------------------------------------------------------------------
 feature-marts:

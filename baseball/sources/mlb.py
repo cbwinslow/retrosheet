@@ -202,3 +202,64 @@ class MlbSource(BaseSource):
             },
         )
         return self.download(config)
+
+    def transform_live(self, game_pk: int) -> SourceResult:
+        """Transform live MLB feed snapshot into canonical live tables.
+
+        Wraps: scripts/transform/transform_live_game.py
+        Transforms raw_mlb.live_feed_snapshots into:
+        - core.live_games
+        - core.live_events
+        - staging.stg_mlb_live_events
+        """
+        cmd = [
+            sys.executable,
+            'scripts/transform/transform_live_game.py',
+            '--game-pk',
+            str(game_pk),
+        ]
+
+        try:
+            result = subprocess.run(
+                cmd,
+                cwd=PROJECT_ROOT,
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 minute timeout
+            )
+
+            if result.returncode == 0:
+                # Parse output for event count
+                events = self._parse_transform_output(result.stdout)
+                return SourceResult(
+                    success=True,
+                    rows_inserted=events,
+                    metadata={
+                        'stdout': result.stdout[-1000:]
+                        if len(result.stdout) > 1000
+                        else result.stdout
+                    },
+                )
+            return SourceResult(
+                success=False,
+                error_message=f'Transform failed: {result.stderr[:500]}',
+            )
+        except subprocess.TimeoutExpired:
+            return SourceResult(
+                success=False,
+                error_message='Transform timed out after 5 minutes',
+            )
+        except Exception as e:
+            return SourceResult(
+                success=False,
+                error_message=f'Transform error: {e!s}',
+            )
+
+    def _parse_transform_output(self, output: str) -> int:
+        """Parse transform script output to extract event count."""
+        import re
+
+        matches = re.findall(r'with (\d+) live events', output)
+        if matches:
+            return int(matches[0])
+        return 0

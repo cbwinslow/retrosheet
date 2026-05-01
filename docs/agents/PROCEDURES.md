@@ -1500,3 +1500,47 @@ file:test_.*\.py pattern:test_pitch_sequence_model
 
 See `docs/dev/SOURCEGRAPH_SETUP.md` for full documentation.
 
+---
+
+## GitHub Issue Tracking Procedure
+
+**MANDATORY**: All significant work must be tracked in GitHub issues.
+
+### After Every Response/Work Session:
+
+1. **Update existing issues** with progress:
+   - Add comments with what was completed
+   - Update status if milestone reached
+   - Reference commits or files changed
+
+2. **Create new issues** for:
+   - New features or enhancements identified
+   - Technical debt discovered
+   - Future work that can't be completed immediately
+
+3. **Issue Template**:
+   ```
+   Title: [Component] Brief description
+   Body:
+   - Objective: What we're doing
+   - Acceptance Criteria: Definition of done
+   - Related Files: Paths to relevant code
+   - Dependencies: Blocked by / blocking
+   - Notes: Implementation details
+   ```
+
+### Current Issue Tracking:
+
+**Epic #108**: ML Model Layer - Phase 3: Monte Carlo Simulation
+- #109: Create simulation SQL schema ✅ COMPLETE
+- #110: Implement MarkovChainSimulator ✅ COMPLETE  
+- #111: Implement MonteCarloSimulator ✅ COMPLETE
+- #112: Add models simulate CLI ⏳ PENDING
+- #113: Add parallel simulation support ⏳ PENDING
+
+**Milestone 12**: Simulation Enhancements & AI Betting
+- Weather integration for scoring adjustments
+- Bullpen fatigue tracking
+- Betting schema with line movement detection
+- `bet analyze` CLI command
+

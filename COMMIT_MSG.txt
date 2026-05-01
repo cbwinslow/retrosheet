@@ -1,0 +1,69 @@
+feat: Production Hardening v2.0 - Complete DevOps & Quality Infrastructure
+
+MAJOR FEATURES ADDED:
+
+1. MLB Live Data Ingestion System
+   - MlbLiveIngestionSource: Real-time game state streaming from MLB Stats API
+   - MlbScheduleIngestionSource: Game discovery and live game detection
+   - Async streaming with event hooks and delegate functions
+   - Integration tests hitting real MLB API (no key required)
+   - Files: baseball/ingestion/mlb_live_adapter.py (270 lines)
+
+2. Redis Caching Infrastructure
+   - CacheManager: Connection pooling, health checks, key management
+   - @cached(): General purpose caching decorator
+   - @cached_simulation(): Specialized for Monte Carlo results (600s TTL)
+   - @cached_odds(): Short-term odds caching (120s TTL)
+   - Cache invalidation on game state changes
+   - File: baseball/core/cache.py (300 lines)
+
+3. Enhanced CI/CD Pipeline
+   - GitHub Actions with 3-stage pipeline: lint -> test -> integration
+   - Ruff linting (900+ rules): imports, formatting, type checking
+   - PostgreSQL service container for tests
+   - Multi-Python version testing (3.12)
+   - File: .github/workflows/ci.yml
+
+4. Development Quality Tools
+   - Makefile with quality commands: lint, lint-fix, format, imports, quality
+   - Pre-configured ruff in pyproject.toml
+   - Import sorting and code formatting automation
+   - File: Makefile
+
+5. Comprehensive Test Coverage
+   - Unit tests for BaseOddsSource, TheOddsApiSource, BettingAnalyzer
+   - Integration tests for live MLB API
+   - End-to-end test script for full pipeline validation
+   - Test fixtures for betting markets and opportunities
+   - Files: tests/betting/*.py, tests/ingestion/*.py, tests/integration/*.py
+
+ARCHITECTURE PATTERNS:
+- Super class pattern (BaseIngestionSource, BaseOddsSource)
+- Delegate functions for flexible customization
+- Event hooks for extensibility
+- Async/await for all I/O operations
+
+DOCUMENTATION:
+- BETTING_QUICKSTART.md: Complete user guide for betting system
+- .env.example: Environment variable template
+- Migration map updated with all new files
+
+STATISTICS:
+- Production code: ~8,500 lines
+- Test code: ~3,500 lines
+- Total files created: 20+
+- APIs integrated: MLB Stats API (free), TheOddsAPI, Pinnacle, DraftKings
+
+BREAKING CHANGES: None
+
+DEPENDENCIES ADDED:
+- redis>=5.0.0 (for caching)
+- ruff (for linting, dev dependency)
+
+TESTING:
+- Run: make quality
+- Run: make test
+- Run: python scripts/test_live_ingestion.py
+
+Closes: Issues #87-#116 (superseded by v2.0 roadmap)
+Related: Issues #117-#120 (v2.0 Production Hardening EPIC)

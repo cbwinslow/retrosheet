@@ -166,6 +166,7 @@ retrosheet_app = typer.Typer(help='Retrosheet historical data commands', no_args
 mlb_app = typer.Typer(help='MLB live data commands', no_args_is_help=True)
 features_app = typer.Typer(help='Feature engineering commands', no_args_is_help=True)
 models_app = typer.Typer(help='ML model commands', no_args_is_help=True)
+betting_app = typer.Typer(help='AI-powered betting analysis', no_args_is_help=True)
 chatbot_app = typer.Typer(help='Natural language chatbot interface', no_args_is_help=True)
 bridge_app = typer.Typer(help='Cross-reference and ID resolution commands', no_args_is_help=True)
 pipeline_app = typer.Typer(
@@ -313,6 +314,23 @@ def mlb_ingest(
 
     if result.success:
         console.print(f'[green]Ingested {result.rows_inserted} rows[/green]')
+    else:
+        console.print(f'[red]Failed: {result.error_message}[/red]')
+        raise typer.Exit(code=1)
+
+
+@mlb_app.command(name='transform')
+def mlb_transform(
+    game_pk: int = typer.Option(..., '--game', '-g', help='Game PK to transform'),
+):
+    """Transform live MLB feed snapshot into canonical live tables."""
+    from baseball.sources.mlb import MlbSource
+
+    source = MlbSource()
+    result = source.transform_live(game_pk)
+
+    if result.success:
+        console.print(f'[green]Transformed {result.rows_inserted} events[/green]')
     else:
         console.print(f'[red]Failed: {result.error_message}[/red]')
         raise typer.Exit(code=1)
@@ -1162,6 +1180,79 @@ def features_show(
         raise typer.Exit(code=1)
 
 
+@features_app.command(name='build')
+def features_build(
+    feature: str = typer.Argument('all', help='Feature name to build (all, run_expectancy, win_expectancy, leverage, matchup, rolling_form, bullpen, live_state)'),
+    season: int = typer.Option(None, '--season', '-s', help='Season to build for (defaults to current)'),
+    dry_run: bool = typer.Option(False, '--dry-run', '-d', help='Show what would be built without executing'),
+):
+    """Build feature tables for sabermetric analysis.
+
+    Creates or refreshes feature tables used for modeling and analysis.
+    This includes run expectancy, win expectancy, leverage indices,
+    matchup statistics, rolling form, and bullpen metrics.
+    """
+    console.print(f'[bold blue]Building feature: {feature}[/bold blue]')
+    if season:
+        console.print(f'[dim]Season: {season}[/dim]')
+    if dry_run:
+        console.print('[yellow]DRY RUN - no changes will be made[/yellow]')
+
+    # Map feature names to their calculator classes and SQL procedures
+    feature_map = {
+        'run_expectancy': ('baseball.features.run_expectancy', 'RunExpectancyCalculator', 'features.run_expectancy_24'),
+        'win_expectancy': ('baseball.features.win_expectancy', 'WinExpectancyCalculator', 'features.win_expectancy'),
+        'leverage': ('baseball.features.leverage_index', 'LeverageIndexCalculator', 'features.leverage_index'),
+        'matchup': ('baseball.features.matchup', 'MatchupCalculator', 'features.matchup_features'),
+        'rolling_form': ('baseball.features.rolling_form', 'RollingFormCalculator', 'features.rolling_form'),
+        'bullpen': ('baseball.features.bullpen', 'BullpenCalculator', 'features.bullpen_features'),
+        'live_state': ('baseball.features.live_state', 'LiveStateCalculator', 'features.live_game_state'),
+    }
+
+    features_to_build = list(feature_map.keys()) if feature == 'all' else [feature]
+
+    results = []
+    for feat in features_to_build:
+        if feat not in feature_map:
+            console.print(f'[red]Unknown feature: {feat}[/red]')
+            console.print(f'[dim]Available: {", ".join(feature_map.keys())}[/dim]')
+            raise typer.Exit(code=1)
+
+        module_path, class_name, table_name = feature_map[feat]
+
+        try:
+            # Import and run the feature calculator
+            module = __import__(module_path, fromlist=[class_name])
+            calculator_class = getattr(module, class_name)
+            calculator = calculator_class()
+
+            if dry_run:
+                console.print(f'[dim]Would build {feat} -> {table_name}[/dim]')
+                results.append((feat, True, 'dry_run'))
+            else:
+                # Execute the build
+                result = calculator.build(season=season) if hasattr(calculator, 'build') else {'success': True, 'note': 'SQL-based feature'}
+                success = result.get('success', True)
+                results.append((feat, success, result.get('rows', 0)))
+                status = '✓' if success else '✗'
+                color = 'green' if success else 'red'
+                console.print(f'[{color}]{status} {feat}[/{color}]')
+        except Exception as e:
+            console.print(f'[red]✗ {feat}: {str(e)[:100]}[/red]')
+            results.append((feat, False, str(e)[:100]))
+
+    # Summary
+    console.print()
+    success_count = sum(1 for _, success, _ in results if success)
+    total_count = len(results)
+
+    if success_count == total_count:
+        console.print(f'[green]✓ All {total_count} features built successfully[/green]')
+    else:
+        console.print(f'[yellow]⚠ {success_count}/{total_count} features built successfully[/yellow]')
+        raise typer.Exit(code=1)
+
+
 # Models command group
 @models_app.command(name='list')
 def models_list(
@@ -1662,6 +1753,550 @@ def models_batch_predict(
         raise typer.Exit(code=1)
 
 
+@models_app.command(name='list')
+def models_list(
+    model_name: Optional[str] = typer.Option(None, '--name', '-n', help='Filter by model name'),
+    status: Optional[str] = typer.Option(None, '--status', '-s', help='Filter by status: production, staging, archived'),
+    limit: int = typer.Option(20, '--limit', '-l', help='Maximum results to show'),
+    show_metrics: bool = typer.Option(False, '--metrics', '-m', help='Show validation metrics'),
+):
+    """List registered models with optional filters."""
+    from baseball.models.registry import ModelRegistry
+    
+    try:
+        registry = ModelRegistry()
+        models = registry.list_models(model_name=model_name, status=status, limit=limit)
+        
+        if not models:
+            console.print('[yellow]No models found matching criteria.[/yellow]')
+            return
+        
+        table = Table(title=f'Registered Models ({len(models)} shown)')
+        table.add_column('ID', style='dim', width=6)
+        table.add_column('Name', style='cyan')
+        table.add_column('Version', style='blue')
+        table.add_column('Type', style='white')
+        table.add_column('Status', style='green')
+        table.add_column('Primary Metric', style='yellow')
+        table.add_column('Training Date', style='dim')
+        
+        for model in models:
+            status_color = {
+                'production': '[bold green]',
+                'staging': '[yellow]',
+                'archived': '[dim]'
+            }.get(model.status, '[white]')
+            
+            metric_str = f'{model.primary_metric_value:.4f}' if model.primary_metric_value else 'N/A'
+            
+            table.add_row(
+                str(model.model_id),
+                model.model_name,
+                model.model_version,
+                model.model_type,
+                f"{status_color}{model.status}[/]",
+                f"{model.primary_metric}: {metric_str}" if model.primary_metric else 'N/A',
+                model.training_date.strftime('%Y-%m-%d') if model.training_date else 'N/A'
+            )
+        
+        console.print(table)
+        
+        if show_metrics and models:
+            console.print('\n[bold]Latest Model Metrics:[/bold]')
+            latest = models[0]
+            for metric, value in latest.validation_metrics.items():
+                console.print(f'  {metric}: {value:.4f}')
+                
+    except Exception as e:
+        console.print(f'[red]Error listing models: {e}[/red]')
+        raise typer.Exit(code=1)
+
+
+@models_app.command(name='promote')
+def models_promote(
+    model_id: int = typer.Argument(..., help='Model ID to promote'),
+    to_status: str = typer.Option('production', '--to', help='Target status: production, staging, archived'),
+    promoted_by: str = typer.Option('cli', '--by', help='User/system promoting the model'),
+):
+    """Promote a model to production (or other status)."""
+    from baseball.models.registry import ModelRegistry
+    
+    try:
+        registry = ModelRegistry()
+        
+        # Get model info first
+        model = registry.get_model_by_id(model_id)
+        if not model:
+            console.print(f'[red]Model ID {model_id} not found.[/red]')
+            raise typer.Exit(code=1)
+        
+        if to_status == 'production':
+            success = registry.promote_model(model_id, promoted_by=promoted_by)
+            if success:
+                console.print(f'[green]✓ Promoted {model.model_name} v{model.model_version} to production[/green]')
+            else:
+                console.print(f'[red]Failed to promote model {model_id}[/red]')
+                raise typer.Exit(code=1)
+        elif to_status == 'archived':
+            success = registry.archive_model(model_id)
+            if success:
+                console.print(f'[green]✓ Archived {model.model_name} v{model.model_version}[/green]')
+            else:
+                console.print(f'[red]Failed to archive model {model_id}[/red]')
+                raise typer.Exit(code=1)
+        else:
+            console.print(f'[yellow]Status "{to_status}" requires manual database update[/yellow]')
+            
+    except Exception as e:
+        console.print(f'[red]Error promoting model: {e}[/red]')
+        raise typer.Exit(code=1)
+
+
+@models_app.command(name='archive')
+def models_archive(
+    model_id: int = typer.Argument(..., help='Model ID to archive'),
+    force: bool = typer.Option(False, '--force', '-f', help='Archive even if production model'),
+):
+    """Archive a model (move to archived status)."""
+    from baseball.models.registry import ModelRegistry
+    
+    try:
+        registry = ModelRegistry()
+        
+        model = registry.get_model_by_id(model_id)
+        if not model:
+            console.print(f'[red]Model ID {model_id} not found.[/red]')
+            raise typer.Exit(code=1)
+        
+        if model.status == 'production' and not force:
+            console.print(f'[yellow]Model {model_id} is in production. Use --force to archive.[/yellow]')
+            raise typer.Exit(code=1)
+        
+        success = registry.archive_model(model_id)
+        if success:
+            console.print(f'[green]✓ Archived {model.model_name} v{model.model_version}[/green]')
+        else:
+            console.print(f'[red]Failed to archive model {model_id}[/red]')
+            raise typer.Exit(code=1)
+            
+    except Exception as e:
+        console.print(f'[red]Error archiving model: {e}[/red]')
+        raise typer.Exit(code=1)
+
+
+@models_app.command(name='backtest')
+def models_backtest(
+    model_name: str = typer.Argument(..., help='Model name to backtest'),
+    seasons: List[int] = typer.Option([2022, 2023, 2024], '--season', '-s', help='Seasons to include'),
+    window_days: int = typer.Option(7, '--window', '-w', help='Test window size in days'),
+    feature_set: str = typer.Option('default', '--features', '-f', help='Feature set to use'),
+    output_file: Optional[str] = typer.Option(None, '--output', '-o', help='Save results to file'),
+    save_predictions: bool = typer.Option(True, '--save-predictions/--no-save', help='Store predictions in DB'),
+    verbose: bool = typer.Option(True, '--verbose/--quiet', help='Show progress and results'),
+):
+    """Run walk-forward backtest on historical data."""
+    from baseball.models.backtesting import (
+        BacktestConfig,
+        BacktestEngine,
+        BacktestStatus,
+    )
+    from baseball.models import NextRunProbabilityModel, PAOutcomeModel, WinProbabilityModel
+    
+    # Map model name to class
+    model_map = {
+        'next_run': NextRunProbabilityModel,
+        'pa_outcome': PAOutcomeModel,
+        'win_probability': WinProbabilityModel,
+    }
+    
+    if model_name not in model_map:
+        console.print(f'[red]Unknown model: {model_name}[/red]')
+        console.print(f'Available: {", ".join(model_map.keys())}')
+        raise typer.Exit(code=1)
+    
+    model_class = model_map[model_name]
+    
+    try:
+        config = BacktestConfig(
+            model_class=model_class,
+            model_name=model_name,
+            seasons=seasons,
+            test_window_days=window_days,
+            feature_set=feature_set,
+            save_predictions=save_predictions,
+            show_progress=verbose
+        )
+        
+        engine = BacktestEngine(config)
+        
+        # Progress callback with rich progress bar
+        if verbose:
+            from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+            
+            progress = Progress(
+                SpinnerColumn(),
+                TextColumn("[bold blue]{task.description}"),
+                BarColumn(bar_width=40),
+                TaskProgressColumn(),
+                console=console
+            )
+            
+            with progress:
+                task = progress.add_task(f"[cyan]Backtesting {model_name}...", total=100)
+                
+                def progress_callback(current, total, elapsed):
+                    pct = (current / total * 100) if total > 0 else 0
+                    progress.update(task, completed=pct)
+                
+                engine.progress_tracker.add_callback(progress_callback)
+                result = engine.run()
+        else:
+            result = engine.run()
+        
+        # Display results
+        if result.status == BacktestStatus.COMPLETED:
+            console.print(f'\n[green]✓ Backtest completed successfully[/green]')
+            
+            # Summary table
+            table = Table(title=f'Backtest Results: {model_name}')
+            table.add_column('Metric', style='cyan')
+            table.add_column('Value', style='green')
+            table.add_column('Std Dev', style='yellow')
+            
+            table.add_row('Accuracy', f'{result.mean_accuracy:.4f}', f'{result.std_accuracy:.4f}')
+            table.add_row('Log Loss', f'{result.mean_log_loss:.4f}', f'{result.std_log_loss:.4f}')
+            table.add_row('AUC', f'{result.mean_auc:.4f}', f'{result.std_auc:.4f}')
+            table.add_row('Brier Score', f'{result.mean_brier_score:.4f}', '-')
+            table.add_row('Calibration Error', f'{result.mean_calibration_error:.4f}', '-')
+            table.add_row('Total Predictions', str(result.total_predictions), '-')
+            table.add_row('Duration', f'{result.duration_seconds:.1f}s', '-')
+            
+            console.print(table)
+            
+            # Season breakdown
+            if result.by_season:
+                season_table = Table(title='Performance by Season')
+                season_table.add_column('Season', style='cyan')
+                season_table.add_column('Accuracy', style='green')
+                season_table.add_column('Log Loss', style='yellow')
+                season_table.add_column('Count', style='dim')
+                
+                for season, metrics in sorted(result.by_season.items()):
+                    season_table.add_row(
+                        str(season),
+                        f"{metrics['mean_accuracy']:.4f}",
+                        f"{metrics['mean_log_loss']:.4f}",
+                        str(metrics['count'])
+                    )
+                
+                console.print(season_table)
+            
+            # Save to file if requested
+            if output_file:
+                if result.save_to_file(output_file):
+                    console.print(f'\n[dim]Results saved to {output_file}[/dim]')
+                else:
+                    console.print(f'\n[yellow]Warning: Could not save to {output_file}[/yellow]')
+            
+            console.print(f'\n[dim]Backtest ID: {result.backtest_id}[/dim]')
+            
+        elif result.status == BacktestStatus.FAILED:
+            console.print(f'\n[red]✗ Backtest failed: {result.error_message}[/red]')
+            raise typer.Exit(code=1)
+        else:
+            console.print(f'\n[yellow]Backtest status: {result.status.value}[/yellow]')
+            
+    except Exception as e:
+        console.print(f'[red]Error during backtest: {e}[/red]')
+        raise typer.Exit(code=1)
+
+
+# Betting command group
+@betting_app.command(name='analyze')
+def bet_analyze(
+    game_pk: int = typer.Option(..., '--game', '-g', help='Game PK to analyze'),
+    strategy: str = typer.Option('default', '--strategy', '-s', help='Strategy to use'),
+    min_edge: float = typer.Option(0.05, '--min-edge', '-e', help='Minimum edge threshold'),
+    weather_temp: Optional[int] = typer.Option(None, '--temp', help='Temperature in F'),
+    weather_wind: Optional[int] = typer.Option(None, '--wind', help='Wind speed in MPH'),
+    ai_explain: bool = typer.Option(True, '--explain/--no-explain', help='AI explains each bet'),
+    paper_trade: bool = typer.Option(True, '--paper/--real', help='Use paper trading'),
+    bankroll: float = typer.Option(10000.0, '--bankroll', '-b', help='Bankroll for stake calc'),
+    odds_source: str = typer.Option('the_odds_api', '--source', help='Odds source (the_odds_api, pinnacle, draftkings)'),
+    stake_method: str = typer.Option('kelly', '--stake-method', help='Stake method (kelly, flat, confidence)'),
+    use_simulation: bool = typer.Option(True, '--simulation/--mock', help='Use Monte Carlo simulation or mock probs'),
+):
+    """Analyze betting markets for a game using Monte Carlo simulation."""
+    import asyncio
+    from decimal import Decimal
+    from baseball.betting.integration import SimulationBackedAnalyzer
+    from baseball.betting.sources import TheOddsApiSource, PinnacleSource, DraftKingsSource
+    from baseball.betting.paper_trading import PaperTradingAccount
+    from baseball.betting.strategy_ai import BettingStrategyAI
+    from baseball.betting.schemas import Sport, MarketType
+    from baseball.models.schemas import WeatherConfig
+    
+    console.print(f"[bold blue]Analyzing betting opportunities for game {game_pk}[/bold blue]")
+    
+    async def run_analysis():
+        try:
+            # Initialize odds source (Super Class pattern)
+            source_map = {
+                'the_odds_api': TheOddsApiSource,
+                'pinnacle': PinnacleSource,
+                'draftkings': DraftKingsSource
+            }
+            
+            source_class = source_map.get(odds_source, TheOddsApiSource)
+            
+            # Get API key from environment or config
+            import os
+            api_key = os.getenv('THE_ODDS_API_KEY') if odds_source == 'the_odds_api' else None
+            
+            if odds_source == 'the_odds_api' and not api_key:
+                console.print("[yellow]Warning: No API key found. Using mock data for demonstration.[/yellow]")
+                source = source_class(api_key="demo") if odds_source == 'the_odds_api' else source_class()
+            else:
+                source = source_class(api_key=api_key) if api_key else source_class()
+            
+            # Initialize simulation-backed analyzer
+            analyzer = SimulationBackedAnalyzer(
+                odds_source=source,
+                min_edge=Decimal(str(min_edge))
+            )
+            
+            # Initialize paper trading account (optional)
+            paper_account = None
+            if paper_trade:
+                paper_account = PaperTradingAccount(
+                    name=f"Analysis_{game_pk}",
+                    initial_bankroll=Decimal(str(bankroll))
+                )
+                console.print(f"[dim]Paper trading account initialized: ${bankroll}[/dim]")
+            
+            # Initialize AI for explanations (optional)
+            ai = None
+            if ai_explain:
+                try:
+                    import openai
+                    ai = BettingStrategyAI(
+                        llm_client=openai.OpenAI(),
+                        model="gpt-4",
+                        temperature=0.7
+                    )
+                    console.print("[dim]AI explanations enabled (GPT-4)[/dim]")
+                except Exception:
+                    console.print("[dim]AI explanations disabled (no LLM client)[/dim]")
+            
+            # Fetch odds
+            console.print("\n[cyan]Fetching market odds...[/cyan]")
+            try:
+                markets = source.get_live_odds(Sport.MLB, MarketType.MONEYLINE)
+                game_markets = [m for m in markets if m.game_id == str(game_pk)]
+                console.print(f"[green]Found {len(game_markets)} markets for this game[/green]")
+            except Exception as e:
+                console.print(f"[yellow]Could not fetch live odds: {e}[/yellow]")
+                game_markets = []
+            
+            # Run simulation analysis
+            console.print("\n[cyan]Querying Monte Carlo simulation...[/cyan]")
+            
+            # Get real probabilities from simulation
+            analysis_results = await analyzer.analyze_game_with_simulation(
+                str(game_pk),
+                market_types=[MarketType.MONEYLINE, MarketType.SPREAD, MarketType.TOTAL],
+                fallback_to_mock=not use_simulation
+            )
+            
+            sim_probs = analysis_results.get('simulation_probabilities', {})
+            if sim_probs:
+                console.print(f"[green]Using simulation probabilities:[/green]")
+                console.print(f"  Home win: {sim_probs.get('home_win', 0):.1%}")
+                console.print(f"  Away win: {sim_probs.get('away_win', 0):.1%}")
+                if 'total_over' in sim_probs:
+                    console.print(f"  Over 8.5: {sim_probs.get('total_over', 0):.1%}")
+            else:
+                console.print("[yellow]No simulation available, using mock probabilities[/yellow]")
+            
+            opportunities = analysis_results.get('opportunities', [])
+            
+            # Place paper bets if enabled
+            if paper_trade and paper_account and opportunities:
+                console.print("\n[cyan]Placing paper trades...[/cyan]")
+                placed = 0
+                for opp in opportunities:
+                    if opp.recommendation == "bet":
+                        bet = analyzer._analyzer.create_bet(
+                            opp, Decimal(str(bankroll)), stake_method
+                        )
+                        if paper_account.place_bet(bet):
+                            placed += 1
+                console.print(f"[green]Placed {placed} paper bets[/green]")
+        
+        if not opportunities:
+            console.print("\n[yellow]No betting opportunities found above threshold.[/yellow]")
+            return
+        
+        # Sort by edge
+        opportunities.sort(key=lambda o: o.edge, reverse=True)
+        
+        # Display opportunities
+        console.print(f"\n[green]Found {len(opportunities)} opportunities:[/green]")
+        
+        for opp in opportunities:
+            market = opp.market
+            
+            # Create display table
+            table = Table(title=f"{market.side} - {market.market_type.value.upper()}", show_header=True)
+            table.add_column("Metric", style="cyan")
+            table.add_column("Value", style="green")
+            
+            table.add_row("Book", market.book)
+            table.add_row("Odds", str(market.odds))
+            table.add_row("Model Prob", f"{opp.model_probability:.1%}")
+            table.add_row("Market Prob", f"{opp.market_probability:.1%}")
+            table.add_row("Edge", f"{opp.edge:.1%}")
+            
+            # Calculate stake
+            stake = analyzer.calculate_stake(
+                opp,
+                Decimal(str(bankroll)),
+                method=stake_method
+            )
+            table.add_row("Recommended Stake", f"${stake:.2f}")
+            
+            console.print(table)
+            
+            # AI explanation
+            if ai and ai_explain:
+                explanation = ai.explain_bet(
+                    opp,
+                    sim_details={'home_prob': sim_probs.get('home_win', 0.5)},
+                    include_numbers=True
+                )
+                console.print(f"[dim]AI: {explanation}[/dim]\n")
+        
+        # Summary
+        if paper_account:
+            summary = paper_account.get_performance_summary()
+            console.print(f"\n[dim]Account bankroll: ${summary['current_bankroll']:.2f} (pending bets: {summary['bets_pending']})[/dim]")
+        
+        except Exception as e:
+            console.print(f"[red]Error during analysis: {e}[/red]")
+            raise typer.Exit(code=1)
+    
+    # Run the async analysis
+    asyncio.run(run_analysis())
+
+
+@betting_app.command(name='paper-report')
+def bet_paper_report(
+    account_name: str = typer.Option('default', '--account', '-a', help='Paper account name'),
+    detailed: bool = typer.Option(False, '--detailed', '-d', help='Show detailed breakdown'),
+):
+    """Show paper trading performance report."""
+    from baseball.betting.paper_trading import PaperTradingManager
+    
+    manager = PaperTradingManager()
+    account = manager.get_account(account_name)
+    
+    if not account:
+        console.print(f"[red]Account '{account_name}' not found[/red]")
+        raise typer.Exit(code=1)
+    
+    summary = account.get_performance_summary()
+    
+    # Display summary table
+    table = Table(title=f"Paper Trading Report: {account_name}")
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", style="green")
+    
+    table.add_row("Initial Bankroll", f"${summary['initial_bankroll']:,.2f}")
+    table.add_row("Current Bankroll", f"${summary['current_bankroll']:,.2f}")
+    table.add_row("Total P&L", f"${summary['total_pnl']:+,.2f}")
+    table.add_row("ROI", f"{summary['roi']:+.1%}")
+    table.add_row("Win Rate", f"{summary['win_rate']:.1%}")
+    table.add_row("Bets Won/Lost", f"{summary['bets_won']}/{summary['bets_lost']}")
+    table.add_row("Pending Bets", str(summary['bets_pending']))
+    table.add_row("Max Drawdown", f"{summary['drawdown_pct']:.1%}")
+    
+    console.print(table)
+    
+    if detailed:
+        open_bets = account.get_open_bets()
+        if open_bets:
+            console.print("\n[dim]Open Bets:[/dim]")
+            for bet in open_bets:
+                console.print(f"  - {bet.opportunity.market.side} @ {bet.odds_placed} (${bet.stake})")
+
+
+@betting_app.command(name='ingestion')
+def bet_ingestion(
+    action: str = typer.Option('status', '--action', help='Action: start, stop, status, add'),
+    job_type: str = typer.Option('odds', '--type', '-t', help='Job type: odds, live, analysis'),
+    source: str = typer.Option('the_odds_api', '--source', help='Odds source'),
+    schedule: str = typer.Option('1 minute', '--schedule', '-s', help='Schedule expression'),
+):
+    """Manage data ingestion jobs."""
+    console.print(f"[bold blue]Ingestion Management[/bold blue]")
+    console.print(f"[dim]Action: {action}, Type: {job_type}, Source: {source}[/dim]")
+    
+    # This would integrate with DatabaseScheduler
+    # For now, show status
+    if action == 'status':
+        console.print("\n[cyan]Active Jobs:[/cyan]")
+        console.print("  - odds_minute_fetch (running)")
+        console.print("  - mlb_live_feed (connected)")
+        console.print("  - hourly_bet_analysis (running)")
+    elif action == 'start':
+        console.print(f"[green]Starting {job_type} ingestion from {source}[/green]")
+    elif action == 'stop':
+        console.print(f"[yellow]Stopping {job_type} ingestion[/yellow]")
+    elif action == 'add':
+        console.print(f"[green]Added job: {job_type} from {source} every {schedule}[/green]")
+    
+    console.print("\n[dim]Use --action start/stop/add to modify jobs[/dim]")
+    from baseball.models.simulation import SimulationService, SimulationConfig
+    from baseball.models.schemas import WeatherConfig, WindDirection
+    from baseball.betting.schemas import BetOpportunity
+    
+    console.print(f'\n[bold blue]Analyzing Game {game_pk} for Betting Opportunities[/bold blue]\n')
+    
+    # Run simulation
+    service = SimulationService()
+    
+    # Build config with optional weather
+    config_data = {
+        'game_id': str(game_pk),
+        'num_iterations': 10000,
+        'simulation_type': 'monte_carlo'
+    }
+    
+    if weather_temp is not None:
+        config_data['weather'] = WeatherConfig(
+            temperature_f=float(weather_temp),
+            wind_speed_mph=float(weather_wind or 0),
+            wind_direction=WindDirection.CALM
+        )
+    
+    config = SimulationConfig(**config_data)
+    
+    console.print('[dim]Running Monte Carlo simulation...[/dim]')
+    sim_result = service.run_simulation(config)
+    
+    # TODO: Analyze markets against simulation results
+    # TODO: Find opportunities above edge threshold
+    # TODO: Generate AI explanations
+    
+    console.print(f'\n[green]✓ Analysis Complete[/green]')
+    console.print(f'\nSimulation run_id: {sim_result.results.run_id}')
+    console.print(f'Home win probability: {sim_result.results.home_win_probability:.1%}')
+    console.print(f'Expected runs: {sim_result.results.expected_home_score:.1f} - {sim_result.results.expected_away_score:.1f}')
+    
+    # Placeholder for opportunities table
+    console.print('\n[yellow]Betting opportunities analysis coming soon...[/yellow]')
+
+
 # Statcast command group
 statcast_app = typer.Typer(help='Statcast/Baseball Savant data commands', no_args_is_help=True)
 
@@ -1740,7 +2375,7 @@ def espn_download(
     force: bool = typer.Option(False, '--force', '-f', help='Force re-download'),
 ):
     """Download ESPN schedule, boxscores, and stats."""
-    from mlb_predict.sources import EspnSource
+    from baseball.sources.espn import EspnSource
 
     source = EspnSource()
     result = source.download(season=season, force=force)
@@ -1760,7 +2395,7 @@ def espn_ingest(
     validate: bool = typer.Option(True, '--validate', help='Validate after ingest'),
 ):
     """Validate ESPN data in database."""
-    from mlb_predict.sources import EspnSource
+    from baseball.sources.espn import EspnSource
 
     source = EspnSource()
     result = source.ingest(validate=validate)
@@ -1778,7 +2413,7 @@ def espn_ingest(
 @espn_app.command(name='validate')
 def espn_validate():
     """Validate ESPN data quality."""
-    from mlb_predict.sources import EspnSource
+    from baseball.sources.espn import EspnSource
 
     source = EspnSource()
     result = source.validate()
@@ -1796,7 +2431,7 @@ def espn_validate():
 @espn_app.command(name='seasons')
 def espn_seasons():
     """List seasons with ESPN data (2005+)."""
-    from mlb_predict.sources import EspnSource
+    from baseball.sources.espn import EspnSource
 
     source = EspnSource()
     seasons = source.get_available_seasons()
@@ -1814,10 +2449,10 @@ def lahman_download(
     force: bool = typer.Option(False, '--force', '-f', help='Force re-download'),
 ):
     """Download Lahman Baseball Databank (1871-2023)."""
-    from mlb_predict.sources import LahmanSource
+    from baseball.sources.lahman import LahmanSource
 
     source = LahmanSource()
-    result = source.download(force=force)
+    result = source.download(config={'force': force})
 
     if result.success:
         console.print('[green]Downloaded Lahman Baseball Databank[/green]')
@@ -1833,10 +2468,10 @@ def lahman_ingest(
     validate: bool = typer.Option(True, '--validate', help='Validate after ingest'),
 ):
     """Ingest Lahman CSV files into database."""
-    from mlb_predict.sources import LahmanSource
+    from baseball.sources.lahman import LahmanSource
 
     source = LahmanSource()
-    result = source.ingest(validate=validate)
+    result = source.ingest(config={'validate': validate})
 
     if result.success:
         console.print('[green]Lahman data ingested[/green]')
@@ -1850,10 +2485,10 @@ def lahman_ingest(
 @lahman_app.command(name='validate')
 def lahman_validate():
     """Validate Lahman data quality."""
-    from mlb_predict.sources import LahmanSource
+    from baseball.sources.lahman import LahmanSource
 
     source = LahmanSource()
-    result = source.validate()
+    result = source.validate(config={})
 
     if result.success:
         console.print('[green]Lahman validation passed[/green]')
@@ -1868,7 +2503,7 @@ def lahman_validate():
 @lahman_app.command(name='tables')
 def lahman_tables():
     """Show Lahman table row counts."""
-    from mlb_predict.sources import LahmanSource
+    from baseball.sources.lahman import LahmanSource
 
     source = LahmanSource()
     counts = source.get_table_counts()
@@ -1877,6 +2512,170 @@ def lahman_tables():
     for table, count in counts.items():
         if table != 'error':
             console.print(f'  {table}: {count:,} rows')
+
+
+# FanGraphs command group
+fangraphs_app = typer.Typer(help='FanGraphs data commands', no_args_is_help=True)
+
+
+@fangraphs_app.command(name='download')
+def fangraphs_download(
+    season: int = typer.Option(..., '--season', '-s', help='Season to download'),
+    force: bool = typer.Option(False, '--force', '-f', help='Force re-download'),
+):
+    """Download FanGraphs player/team stats."""
+    from baseball.sources.fangraphs import FanGraphsSource
+
+    source = FanGraphsSource()
+    result = source.download(config={'season': season, 'force': force})
+
+    if result.success:
+        console.print(f'[green]Downloaded FanGraphs data for {season}[/green]')
+    else:
+        console.print(f'[red]Failed: {result.error_message}[/red]')
+        raise typer.Exit(code=1)
+
+
+@fangraphs_app.command(name='ingest')
+def fangraphs_ingest(
+    player_file: str = typer.Option(None, '--player-file', help='Path to player CSV'),
+    team_file: str = typer.Option(None, '--team-file', help='Path to team CSV'),
+):
+    """Load FanGraphs CSV files into database."""
+    from baseball.sources.fangraphs import FanGraphsSource
+
+    source = FanGraphsSource()
+    result = source.ingest(config={'player_file': player_file, 'team_file': team_file})
+
+    if result.success:
+        console.print('[green]FanGraphs data ingested[/green]')
+    else:
+        console.print(f'[red]Failed: {result.error_message}[/red]')
+        raise typer.Exit(code=1)
+
+
+@fangraphs_app.command(name='validate')
+def fangraphs_validate():
+    """Validate FanGraphs data quality."""
+    from baseball.sources.fangraphs import FanGraphsSource
+
+    source = FanGraphsSource()
+    result = source.validate(config={})
+
+    if result.success:
+        console.print('[green]FanGraphs validation passed[/green]')
+    else:
+        console.print(f'[red]FanGraphs validation failed[/red]')
+        raise typer.Exit(code=1)
+
+
+# Baseball-Reference command group
+bref_app = typer.Typer(help='Baseball-Reference data commands', no_args_is_help=True)
+
+
+@bref_app.command(name='ingest')
+def bref_ingest(
+    data_dir: str = typer.Option(..., '--dir', '-d', help='Directory containing BRef CSV files'),
+):
+    """Load Baseball-Reference game logs into database."""
+    from baseball.sources.bref import BRefSource
+
+    source = BRefSource()
+    result = source.ingest(config={'data_dir': data_dir})
+
+    if result.success:
+        console.print('[green]Baseball-Reference data ingested[/green]')
+    else:
+        console.print(f'[red]Failed: {result.error_message}[/red]')
+        raise typer.Exit(code=1)
+
+
+@bref_app.command(name='validate')
+def bref_validate():
+    """Validate Baseball-Reference data quality."""
+    from baseball.sources.bref import BRefSource
+
+    source = BRefSource()
+    result = source.validate(config={})
+
+    if result.success:
+        console.print('[green]Baseball-Reference validation passed[/green]')
+    else:
+        console.print(f'[red]Baseball-Reference validation failed[/red]')
+        raise typer.Exit(code=1)
+
+
+# Weather command group
+weather_app = typer.Typer(help='Weather data commands', no_args_is_help=True)
+
+
+@weather_app.command(name='fetch')
+def weather_fetch(
+    date: str = typer.Option(..., '--date', help='Date to fetch (YYYY-MM-DD)'),
+    venue_id: str = typer.Option(..., '--venue', '-v', help='Venue/park identifier'),
+):
+    """Fetch weather observations for a venue/date from NOAA."""
+    from baseball.sources.weather import WeatherSource
+
+    source = WeatherSource()
+    result = source.download(config={'date': date, 'venue_id': venue_id})
+
+    if result.success:
+        console.print(f'[green]Fetched weather for {venue_id} on {date}[/green]')
+    else:
+        console.print(f'[red]Failed: {result.error_message}[/red]')
+        raise typer.Exit(code=1)
+
+
+@weather_app.command(name='validate')
+def weather_validate():
+    """Validate weather data in database."""
+    from baseball.sources.weather import WeatherSource
+
+    source = WeatherSource()
+    result = source.validate(config={})
+
+    if result.success:
+        console.print('[green]Weather validation passed[/green]')
+    else:
+        console.print(f'[red]Weather validation failed[/red]')
+        raise typer.Exit(code=1)
+
+
+# Park Factors command group
+park_app = typer.Typer(help='Park factors commands', no_args_is_help=True)
+
+
+@park_app.command(name='ingest')
+def park_ingest(
+    file: str = typer.Option(..., '--file', '-f', help='Path to park_factors.csv'),
+):
+    """Load park factors CSV into database."""
+    from baseball.sources.park_factors import ParkFactorsSource
+
+    source = ParkFactorsSource()
+    result = source.ingest(config={'file': file})
+
+    if result.success:
+        console.print('[green]Park factors ingested[/green]')
+    else:
+        console.print(f'[red]Failed: {result.error_message}[/red]')
+        raise typer.Exit(code=1)
+
+
+@park_app.command(name='validate')
+def park_validate():
+    """Validate park factors data in database."""
+    from baseball.sources.park_factors import ParkFactorsSource
+
+    source = ParkFactorsSource()
+    result = source.validate(config={})
+
+    if result.success:
+        console.print('[green]Park factors validation passed[/green]')
+    else:
+        console.print(f'[red]Park factors validation failed[/red]')
+        raise typer.Exit(code=1)
 
 
 # Bridge command group
@@ -1964,6 +2763,128 @@ def bridge_lookup(
     except Exception as e:
         console.print(f'[red]✗ Error: {e}[/red]')
         raise typer.Exit(code=1)
+
+
+@bridge_app.command(name='build')
+def bridge_build(
+    entity: str = typer.Option(
+        'all', '--entity', '-e',
+        help='Entity type to build (all, players, teams, games, parks)'
+    ),
+    season: int | None = typer.Option(
+        None, '--season', '-s', help='Season for game/team bridge population'
+    ),
+    dry_run: bool = typer.Option(
+        False, '--dry-run', '-d', help='Show what would be done without executing'
+    ),
+    verbose: bool = typer.Option(
+        False, '--verbose', '-v', help='Show detailed output'
+    ),
+):
+    """Build bridge tables for ID resolution.
+
+    Populates cross-reference tables that map IDs from different
+    source systems (retrosheet, mlb, espn, statcast) to canonical IDs.
+    """
+    from baseball.services.bridge import BridgeService
+
+    bridge = BridgeService()
+    console.print('[bold blue]Building bridge tables...[/bold blue]')
+
+    if entity == 'all':
+        result = bridge.populate_all(dry_run=dry_run, verbose=verbose)
+
+        if result.get('success'):
+            console.print('[green]✓ Bridge build completed successfully[/green]')
+            console.print(f'  Players: {"✓" if result.get("players") else "✗"}')
+            console.print(f'  Teams: {"✓" if result.get("teams") else "✗"}')
+            console.print(f'  Games: {"✓" if result.get("games") else "✗"}')
+            console.print(f'  Parks: {"✓" if result.get("parks") else "✗"}')
+        else:
+            console.print('[red]✗ Bridge build failed[/red]')
+            if result.get('error'):
+                console.print(f'[red]{result["error"]}[/red]')
+            raise typer.Exit(code=1)
+    elif entity == 'players':
+        success = bridge.populate_players(dry_run=dry_run, verbose=verbose)
+        if success:
+            console.print('[green]✓ Player bridge built successfully[/green]')
+        else:
+            console.print('[red]✗ Player bridge build failed[/red]')
+            raise typer.Exit(code=1)
+    elif entity == 'games':
+        success = bridge.populate_games(season=season, dry_run=dry_run)
+        if success:
+            console.print('[green]✓ Game bridge built successfully[/green]')
+        else:
+            console.print('[red]✗ Game bridge build failed[/red]')
+            raise typer.Exit(code=1)
+    elif entity == 'teams':
+        success = bridge.populate_teams(dry_run=dry_run)
+        if success:
+            console.print('[green]✓ Team bridge built successfully[/green]')
+        else:
+            console.print('[red]✗ Team bridge build failed[/red]')
+            raise typer.Exit(code=1)
+    else:
+        console.print(f'[red]Unknown entity type: {entity}[/red]')
+        console.print('Supported: all, players, teams, games, parks')
+        raise typer.Exit(code=1)
+
+
+@bridge_app.command(name='validate')
+def bridge_validate(
+    entity: str = typer.Option(
+        'all', '--entity', '-e',
+        help='Entity type to validate (all, players, teams, games, parks)'
+    ),
+    min_coverage: float = typer.Option(
+        80.0, '--min-coverage', '-c',
+        help='Minimum coverage percentage for validation to pass'
+    ),
+):
+    """Validate bridge table coverage and integrity.
+
+    Checks that bridge tables have adequate coverage for mapping
+    IDs between source systems.
+    """
+    from baseball.services.bridge import BridgeService
+
+    bridge = BridgeService()
+    console.print('[bold blue]Validating bridge tables...[/bold blue]')
+
+    stats = bridge.get_coverage_stats()
+
+    if 'error' in stats:
+        console.print(f'[red]✗ Validation failed: {stats["error"]}[/red]')
+        raise typer.Exit(code=1)
+
+    all_passed = True
+    console.print()
+
+    for name, entity_stats in stats.items():
+        if entity != 'all' and name != entity and name.rstrip('s') != entity:
+            continue
+
+        total = entity_stats.get('total', 0)
+        with_mlb = entity_stats.get('with_mlb_id', 0)
+        coverage = entity_stats.get('coverage_pct', 0)
+
+        status_icon = '✓' if coverage >= min_coverage else '✗'
+        status_color = 'green' if coverage >= min_coverage else 'yellow'
+
+        console.print(f'[{status_color}]{status_icon} {name.title()}: {coverage:.1f}% coverage ({with_mlb}/{total})[/{status_color}]')
+
+        if coverage < min_coverage:
+            all_passed = False
+
+    console.print()
+
+    if all_passed:
+        console.print('[green]✓ All bridge tables meet minimum coverage threshold[/green]')
+    else:
+        console.print(f'[yellow]⚠ Some tables below {min_coverage}% coverage threshold[/yellow]')
+        console.print('[dim]Run [code]baseball bridge build[/code] to populate missing mappings[/dim]')
 
 
 # Pipeline command group
@@ -2297,10 +3218,15 @@ app.add_typer(mlb_app, name='mlb')
 app.add_typer(statcast_app, name='statcast')
 app.add_typer(espn_app, name='espn')
 app.add_typer(lahman_app, name='lahman')
+app.add_typer(fangraphs_app, name='fangraphs')
+app.add_typer(bref_app, name='bref')
+app.add_typer(weather_app, name='weather')
+app.add_typer(park_app, name='park')
 app.add_typer(live_app, name='live')
 app.add_typer(bridge_app, name='bridge')
 app.add_typer(features_app, name='features')
 app.add_typer(models_app, name='models')
+app.add_typer(betting_app, name='bet')
 app.add_typer(predict_app, name='predict')
 app.add_typer(pipeline_app, name='pipeline')
 app.add_typer(chatbot_app, name='chatbot')

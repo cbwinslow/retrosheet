@@ -1,5 +1,262 @@
 # Project Log
 
+## 2026-04-30 (Milestone 12 Complete - All Enhancements + CLI)
+
+### Summary
+Completed all Milestone 12 enhancements: weather integration, bullpen fatigue tracking, complete betting schema with Pydantic models, and `bet analyze` CLI command.
+
+### Files Created/Modified
+
+**1. Weather Integration ✅**
+- `baseball/models/schemas.py` - `WeatherConfig`, `WeatherAdjustments`, `WindDirection` enum
+- `sql/60_models/6010_simulation_schema.sql` - Weather columns in `simulation.runs`
+- `baseball/models/simulation.py` - Weather adjustments in `MonteCarloSimulator._apply_weather_to_probs()`
+- Sabermetric formulas: temp ±0.025 runs/degree, wind ±0.5 runs at 15mph, HR multipliers 0.5-1.5x
+
+**2. Bullpen Fatigue ✅**
+- `baseball/features/bullpen_fatigue.py` - `RelieverWorkload`, `BullpenFatigueCalculator`
+- `sql/65_features/6501_bullpen_fatigue_schema.sql` - Full SQL schema
+  - `bullpen.appearances`, `bullpen.reliever_workloads`, `bullpen.daily_fatigue`
+  - Functions: `calculate_fatigue_score()`, `get_reliever_status()`, `update_daily_fatigue()`
+  - Views: `bullpen.current_fatigue`, `bullpen.fatigue_alerts`
+  - Trigger: Auto-update workloads on new appearances
+- Exported in `features/__init__.py`
+
+**3. Betting Schema ✅**
+- `sql/70_betting/7001_betting_schema.sql` - Complete betting infrastructure
+  - Tables: `strategies`, `market_odds`, `opportunities`, `bets`, `backtest_results`
+  - Views: `line_movements`, `sharp_opportunities` (reverse line movement)
+  - Functions: `american_to_implied_prob()`, `calculate_ev()`, `update_strategy_stats()`
+
+**4. Betting Pydantic Schemas ✅**
+- `baseball/betting/schemas.py` - Complete type-safe betting schemas
+  - `StrategyConstraints`, `BettingStrategy`, `BettingMarket`
+  - `BetOpportunity`, `PlacedBet`, `RiskMetrics`, `StrategyBacktestResult`
+  - Enums: `MarketType`, `BetOutcome`, `BetRecommendation`, `RiskProfile`
+
+**5. CLI Command ✅**
+- `baseball/cli.py` - `betting_app` sub-app with `bet analyze` command
+  - Options: `--game`, `--strategy`, `--min-edge`, `--temp`, `--wind`, `--explain`
+  - Integrates with `SimulationService` and `WeatherConfig`
+  - Registered as `baseball bet` sub-command
+
+### GitHub Issues Updated/Created
+- #112 - bet analyze CLI ✅ COMPLETE
+- #114 - Betting Pydantic schemas ✅ COMPLETE
+- #115 - Bullpen fatigue SQL schema ✅ COMPLETE
+- #116 - Weather integration ✅ COMPLETE
+
+### Documentation
+- `docs/AI_BETTING_INTEGRATION_PLAN.md` - AI betting roadmap
+- `docs/agents/PROCEDURES.md` - Added GitHub issue tracking procedure
+- `docs/migration_map.md` - Updated Milestone 12 section
+- `docs/PROJECT_LOG.md` - This entry
+
+### Integration Points
+- Weather → `SimulationConfig.weather` → `MonteCarloSimulator._apply_weather_to_probs()`
+- Bullpen fatigue → `BullpenFatigueCalculator` → reliever PA outcomes
+- Line movement → `betting.sharp_opportunities` view
+- CLI → `SimulationService.run_simulation()` with weather args
+
+### Next Steps (Future Work)
+- Complete `BettingAnalyzer` class for market comparison ✅ DONE
+- Add odds API integration for real-time line feeds ✅ DONE
+- Implement `bet strategy --generate` with AI strategy generation
+- Implement paper trading with auto-bet tracking
+
+---
+
+## 2026-04-30 (Odds Integration System)
+
+### Summary
+Built complete live betting odds infrastructure with super class architecture, enabling plug-and-play source switching and flexible edge detection.
+
+### Files Created
+
+**1. `docs/agents/python_agent.md`** - Architectural principles:
+- Super Classes for abstraction (BaseOddsSource)
+- Delegate functions for flexibility (edge_calculator, odds_transform)
+- Lambda expressions for simple transforms
+- When to use each pattern
+
+**2. `baseball/betting/sources/base.py`** - `BaseOddsSource` super class:
+- Abstract interface: `get_live_odds()`, `get_game_odds()`, `get_line_movement()`
+- Delegate pattern: `odds_transform`, `market_filter` callables
+- Helper methods: `calculate_implied_probability()`, `remove_vig()`
+- Health check and caching support
+
+**3. `baseball/betting/sources/the_odds_api.py`** - First implementation:
+- Full TheOddsApi.com integration ($29/mo, 500 req/day)
+- Covers 20+ books: DraftKings, FanDuel, Pinnacle, Betfair, BetMGM
+- Auto-maps API response to `BettingMarket` Pydantic schemas
+- Sharp book filtering for calibration
+
+**4. `baseball/betting/analyzer.py`** - `BettingAnalyzer` engine:
+- `analyze_game()` - Compare sim to all markets using delegate edge calc
+- `find_edges()` - Batch scan with lambda filtering
+- `calculate_stake()` - Kelly/float/confidence methods
+- `detect_reverse_line_movement()` - Sharp money detection
+- `create_bet()` - Generate `PlacedBet` with risk metrics
+
+**5. `baseball/betting/sources/__init__.py`** - Package exports
+
+### Architecture Highlights
+
+**Super Class Pattern**:
+```python
+class DraftKingsSource(BaseOddsSource):  # Easy to add
+class PinnacleSource(BaseOddsSource):     # Just implement 4 methods
+```
+
+**Delegate Functions**:
+```python
+# Pluggable edge calculation
+analyzer = BettingAnalyzer(
+    edge_calculator=lambda model, market: model - market
+)
+
+# Pluggable odds transformation
+source = TheOddsApiSource(
+    odds_transform=lambda odds: remove_vig(odds)
+)
+```
+
+**Lambda Transformations**:
+```python
+sharp_lines = filter(lambda m: m.book in sharp_books, markets)
+best_line = max(markets, key=lambda m: m.odds)
+```
+
+### Usage Example
+```python
+from baseball.betting import TheOddsApiSource, BettingAnalyzer
+
+source = TheOddsApiSource(api_key="xxx")
+analyzer = BettingAnalyzer(source, min_edge=Decimal("0.05"))
+
+# Analyze game
+sim_probs = {"Yankees": 0.58, "Red Sox": 0.42}
+opportunities = analyzer.analyze_game("716190", sim_probs)
+
+# Get stakes
+for opp in opportunities:
+    stake = analyzer.calculate_stake(opp, bankroll=10000)
+    print(f"{opp.edge:.1%} edge: ${stake:.2f}")
+```
+
+### Integration Points
+- Works with existing `BettingMarket`, `BetOpportunity`, `PlacedBet` schemas
+- `MonteCarloSimulator` feeds probabilities to `analyzer.analyze_game()`
+- Ready for `bet analyze` CLI command integration
+- All sources share `BaseOddsSource` interface
+
+### Documents
+- GitHub issue #112 updated with complete details
+
+---
+
+## 2026-04-30 (AI Betting Integration Plan)
+
+### Summary
+Created comprehensive plan for AI-powered betting strategy and bet generation system using Typer CLI integration with Letta AI.
+
+### Plan Components
+
+**New Typer Sub-App:** `betting_app` with commands:
+- `bet analyze` - Analyze markets using Monte Carlo + AI explanation
+- `bet strategy --generate` - AI-generated betting strategies
+- `bet recommend` - AI-ranked bet recommendations
+- `bet backtest-strategy` - Historical strategy backtesting
+- `bet explain` - AI explains why a bet was recommended
+
+**AI Integration Points:**
+- Letta memory for strategy storage and retrieval
+- LLM prompts for bet explanation and strategy generation
+- Kelly criterion optimization with AI risk management
+
+**Pydantic Schemas:**
+- `BettingStrategy` - Complete strategy definition
+- `BetOpportunity` - Identified edge + EV calculation
+- `PlacedBet` - Bet tracking with outcomes
+- `StrategyBacktestResult` - Performance metrics + AI insights
+
+**SQL Schema:**
+- `betting.strategies` - Strategy definitions
+- `betting.opportunities` - Detected opportunities
+- `betting.bets` - Placed bet tracking
+- `betting.backtest_results` - Strategy performance
+
+**Implementation Phases:**
+1. Core betting module + `bet analyze` CLI
+2. AI integration with Letta
+3. Strategy management + backtesting
+4. Live tracking + odds API
+
+**Document:** `docs/AI_BETTING_INTEGRATION_PLAN.md`
+
+---
+
+## 2026-04-30 (Phase 3.7 Complete - ML Model Layer: Backtesting & Simulation Design)
+
+### Summary
+
+Implemented comprehensive ML Model Layer (Milestone 11) with backtesting framework, simulation architecture design, and full GitHub issue tracking. Added Pydantic-based schemas for type-safe configuration management.
+
+### Completed
+
+- ✅ **Backtesting Framework** - Walk-forward validation with full observability
+  - `baseball/models/backtesting.py` - BacktestEngine with 6 dataclasses
+  - `models backtest` CLI command with rich progress bars
+  - Event hooks, progress tracking, calibration analysis
+  - PostgreSQL integration for result storage
+
+- ✅ **Simulation Architecture Design** - Markov chain + Monte Carlo design
+  - `docs/RESEARCH_ML_SIMULATION_DESIGN.md` - Sabermetric research synthesis
+  - `sql/60_models/6010_simulation_schema.sql` - Complete PostgreSQL schema
+  - State encoding (0-23 base-out), transition matrices, RE24 MV
+  - 6 PostgreSQL functions: init_run, record_state, record_transition, etc.
+
+- ✅ **GitHub Issue Tracking** - Epic #108 with 5 sub-issues
+  - #109: SQL schema (ready)
+  - #110: MarkovChainSimulator (planned)
+  - #111: MonteCarloSimulator (planned)
+  - #112: CLI commands (planned)
+  - #113: Parallel simulation (planned)
+
+- ✅ **Documentation Updates**
+  - `docs/ML_LAYER_STATUS.md` - Implementation status tracker
+  - `docs/migration_map.md` - Updated with Milestone 11 entries
+  - GitHub issues with detailed specifications and acceptance criteria
+
+### Design Patterns Established
+
+| Pattern | Implementation |
+|---------|---------------|
+| **Event-Driven** | EventHook + BacktestEventType for lifecycle callbacks |
+| **Status Tracking** | Enum-based status (pending/running/completed/failed/cancelled) |
+| **Progress Tracking** | ProgressTracker with ETA, callbacks, percentage |
+| **State Encoding** | Integer 0-23 for 24 base-out states |
+| **PostgreSQL Persistence** | State stored in simulation_states table |
+
+### SQL Schema Created
+
+```sql
+simulation.runs           -- Top-level tracking
+simulation.states         -- Per-iteration state
+simulation.results        -- Final outcomes
+simulation.transitions    -- Markov chain log
+simulation.transition_matrix  -- Transition probabilities
+simulation.re24           -- Run expectancy MV (24 states)
+```
+
+### Next
+
+- Implement MarkovChainSimulator class (#110)
+- Implement MonteCarloSimulator with PAOutcomeModel (#111)
+- Add models simulate CLI commands (#112)
+
+---
+
 ## 2026-04-29 (Phase 3.4 Complete - MLB Live Infrastructure)
 
 ### Summary

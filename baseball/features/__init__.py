@@ -14,6 +14,7 @@ Date: 2026-04-26
 
 from .base import FeatureConfig, FeatureResult, FeatureStore, GameState
 from .bullpen import AvailabilityStatus, BullpenCalculator, RelieverFatigue, TeamBullpenStatus
+from .bullpen_fatigue import BullpenFatigueCalculator, RelieverWorkload, get_fatigue_calculator
 from .leverage_index import LeverageIndexCalculator
 from .matchup import MatchupCalculator, MatchupHistory, PlatoonSplit
 from .rolling_form import BatterForm, PitcherForm, RollingFormCalculator, TrendDirection
@@ -25,6 +26,7 @@ __all__ = [
     'AvailabilityStatus',
     'BatterForm',
     'BullpenCalculator',
+    'BullpenFatigueCalculator',
     'FeatureConfig',
     'FeatureResult',
     'FeatureStore',
@@ -35,9 +37,11 @@ __all__ = [
     'PitcherForm',
     'PlatoonSplit',
     'RelieverFatigue',
+    'RelieverWorkload',
     'RollingFormCalculator',
     'RunExpectancyCalculator',
     'TeamBullpenStatus',
     'TrendDirection',
     'WinExpectancyCalculator',
+    'get_fatigue_calculator',
 ]

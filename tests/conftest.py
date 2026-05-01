@@ -189,3 +189,207 @@ def benchmark_logger():
             return elapsed
 
     return BenchmarkLogger()
+
+
+# ---------------------------------------------------------------------------
+# Betting fixtures
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def sample_betting_market():
+    """Return a sample betting market for testing."""
+    from datetime import datetime
+    from decimal import Decimal
+    from baseball.betting.schemas import BettingMarket, MarketType, Sport, BookRegion, MarketStatus
+    
+    return BettingMarket(
+        market_id="test_market_001",
+        game_id="716190",
+        sport=Sport.MLB,
+        market_type=MarketType.MONEYLINE,
+        book="draftkings",
+        book_region=BookRegion.US,
+        odds=Decimal("-110"),
+        odds_format="american",
+        line=None,
+        side="Home",
+        timestamp=datetime.now(),
+        game_time=datetime.now(),
+        status=MarketStatus.OPEN,
+        home_team="Yankees",
+        away_team="Red Sox",
+        is_live=False
+    )
+
+
+@pytest.fixture
+def sample_bet_opportunity():
+    """Return a sample bet opportunity for testing."""
+    from datetime import datetime
+    from decimal import Decimal
+    from baseball.betting.schemas import BetOpportunity, BettingMarket, MarketType, Sport, BookRegion, MarketStatus
+    
+    market = BettingMarket(
+        market_id="test_market_001",
+        game_id="716190",
+        sport=Sport.MLB,
+        market_type=MarketType.MONEYLINE,
+        book="draftkings",
+        book_region=BookRegion.US,
+        odds=Decimal("-110"),
+        odds_format="american",
+        line=None,
+        side="Home",
+        timestamp=datetime.now(),
+        game_time=datetime.now(),
+        status=MarketStatus.OPEN,
+        home_team="Yankees",
+        away_team="Red Sox",
+        is_live=False
+    )
+    
+    return BetOpportunity(
+        opportunity_id="opp_001",
+        market=market,
+        model_probability=Decimal("0.55"),
+        model_confidence=Decimal("0.75"),
+        edge=Decimal("0.05"),
+        ev=Decimal("0.0475"),
+        recommendation="bet",
+        timestamp=datetime.now(),
+        strategy_id="test_strategy",
+        notes=["Strong edge on home team"]
+    )
+
+
+@pytest.fixture
+def mock_odds_api_response():
+    """Return mock response from The Odds API."""
+    return {
+        "id": "test_game_001",
+        "sport_key": "baseball_mlb",
+        "sport_title": "MLB",
+        "commence_time": "2024-04-30T18:00:00Z",
+        "home_team": "Yankees",
+        "away_team": "Red Sox",
+        "bookmakers": [
+            {
+                "key": "draftkings",
+                "title": "DraftKings",
+                "last_update": "2024-04-30T17:00:00Z",
+                "markets": [
+                    {
+                        "key": "h2h",
+                        "last_update": "2024-04-30T17:00:00Z",
+                        "outcomes": [
+                            {"name": "Yankees", "price": -110},
+                            {"name": "Red Sox", "price": 100}
+                        ]
+                    },
+                    {
+                        "key": "spreads",
+                        "last_update": "2024-04-30T17:00:00Z",
+                        "outcomes": [
+                            {"name": "Yankees", "price": -110, "point": -1.5},
+                            {"name": "Red Sox", "price": -110, "point": 1.5}
+                        ]
+                    },
+                    {
+                        "key": "totals",
+                        "last_update": "2024-04-30T17:00:00Z",
+                        "outcomes": [
+                            {"name": "Over", "price": -110, "point": 8.5},
+                            {"name": "Under", "price": -110, "point": 8.5}
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+
+
+@pytest.fixture
+def mock_the_odds_api_source():
+    """Return mock TheOddsApiSource for testing."""
+    from unittest.mock import Mock, patch
+    from baseball.betting.sources.the_odds_api import TheOddsApiSource
+    
+    with patch('baseball.betting.sources.the_odds_api.requests.get') as mock_get:
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.json.return_value = {
+            "data": [mock_odds_api_response()]
+        }
+        
+        source = TheOddsApiSource(api_key="test_key")
+        yield source
+
+
+# ---------------------------------------------------------------------------
+# Ingestion fixtures
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def sample_ingestion_source():
+    """Return a sample ingestion source for testing."""
+    from baseball.ingestion.base import BaseIngestionSource
+    
+    class TestSource(BaseIngestionSource):
+        def __init__(self):
+            super().__init__("test_source", "rest")
+            self.fetched_data = None
+            self.transformed_data = None
+        
+        def fetch(self, params):
+            self.fetched_data = {"test": "data", "params": params}
+            return self.fetched_data
+        
+        def transform(self, raw_data):
+            self.transformed_data = [{"transformed": True, "raw": raw_data}]
+            return self.transformed_data
+        
+        def load(self, records):
+            return len(records)
+    
+    return TestSource()
+
+
+@pytest.fixture
+def mock_websocket_message():
+    """Return a mock WebSocket message for testing."""
+    return {
+        "type": "play",
+        "game_pk": 716190,
+        "inning": 3,
+        "top_bottom": "top",
+        "outs": 1,
+        "balls": 2,
+        "strikes": 1,
+        "description": "Single to center field",
+        "batter": {"id": 12345, "name": "Test Batter"},
+        "pitcher": {"id": 67890, "name": "Test Pitcher"},
+        "timestamp": "2024-04-30T18:15:00Z"
+    }
+
+
+# ---------------------------------------------------------------------------
+# Async fixtures
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def event_loop():
+    """Create an instance of the default event loop for async tests."""
+    import asyncio
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+
+@pytest.fixture
+def async_mock_websocket():
+    """Return an async mock WebSocket for testing."""
+    from unittest.mock import AsyncMock, MagicMock
+    
+    mock_ws = AsyncMock()
+    mock_ws.send = AsyncMock()
+    mock_ws.recv = AsyncMock(return_value='{"type": "test"}')
+    mock_ws.close = AsyncMock()
+    mock_ws.ping = AsyncMock()
+    
+    return mock_ws
