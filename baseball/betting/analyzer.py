@@ -323,7 +323,8 @@ class BettingAnalyzer:
             logger.exception(f'RLM detection failed: {e}')
             return None
 
-    def get_best_lines(
+    @cached_odds(ttl=120)
+    async def get_best_lines(
         self,
         game_id: str,
         market_type: MarketType,
@@ -338,6 +339,8 @@ class BettingAnalyzer:
 
         Returns:
             Markets sorted by odds (best first)
+        
+        Cached for 2 minutes.
         """
         markets = self.odds_source.get_game_odds(game_id, [market_type])
 

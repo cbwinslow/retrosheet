@@ -1263,7 +1263,7 @@ class SimulationService:
 # Convenience Functions
 # ============================================================================
 
-def run_quick_simulation(
+async def run_quick_simulation(
     game_state: GameState,
     num_iterations: int = 1000,
     simulation_type: SimulationType = SimulationType.MARKOV,
@@ -1287,10 +1287,10 @@ def run_quick_simulation(
     )
 
     service = SimulationService()
-    return service.run_simulation(config, show_progress=show_progress)
+    return await service.run_simulation(config, show_progress=show_progress)
 
 
-def run_game_simulation(
+async def run_game_simulation(
     game_id: str,
     season: int,
     starting_inning: int = 1,
@@ -1337,7 +1337,7 @@ def run_game_simulation(
     )
 
     service = SimulationService()
-    return service.run_simulation(config, show_progress=True)
+    return await service.run_simulation(config, show_progress=True)
 
 
 # ============================================================================

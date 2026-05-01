@@ -1,1 +1,1 @@
-{"version":1,"functions":{"/api/analytics":{},"/api/backtests":{},"/api/chat":{},"/api/live-odds":{},"/api/predict":{},"/api/simulate":{},"/api/simulation-runs":{},"/api/status":{},"/api/terminal":{}}}
+{"version":1,"functions":{"/api/analytics":{},"/api/backtests":{},"/api/live-odds":{},"/api/simulation-runs":{},"/api/predict":{},"/api/chat":{},"/api/status":{},"/api/terminal":{},"/api/simulate":{}}}

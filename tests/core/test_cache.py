@@ -21,7 +21,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
-from redis.asyncio import Redis
 
 from baseball.core.cache import (
     CacheManager,
@@ -31,6 +30,7 @@ from baseball.core.cache import (
     cached,
     cached_odds,
     cached_simulation,
+    cached_sync,
     clear_all_cache,
     invalidate_game_cache,
 )
