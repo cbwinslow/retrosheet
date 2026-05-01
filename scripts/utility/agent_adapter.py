@@ -41,8 +41,9 @@ def _load_langchain_agent():
         try:
             from scripts.llm.langchain_baseball_agent import LangChainBaseballAgent as LCAgent
         except ImportError as exc:
+            msg = "LangChain agent module not found. Ensure 'scripts/llm/langchain_baseball_agent.py' exists."
             raise RuntimeError(
-                "LangChain agent module not found. Ensure 'scripts/llm/langchain_baseball_agent.py' exists.",
+                msg,
             ) from exc
         _langchain_agent = LCAgent()
     return _langchain_agent

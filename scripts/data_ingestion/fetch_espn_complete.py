@@ -39,7 +39,7 @@ def get_db_conn():
     )
 
 
-def fetch_json(url: str, params: dict = None):
+def fetch_json(url: str, params: dict | None = None):
     """Fetch JSON from ESPN API."""
     try:
         response = requests.get(url, params=params, timeout=30)
@@ -51,7 +51,7 @@ def fetch_json(url: str, params: dict = None):
         return None, 0
 
 
-def fetch_espn_schedule(season: int, limit: int = None):
+def fetch_espn_schedule(season: int, limit: int | None = None):
     """Fetch ESPN schedule to get game IDs."""
     url = f'{ESPN_API_BASE}/scoreboard'
 
@@ -70,7 +70,7 @@ def fetch_espn_schedule(season: int, limit: int = None):
             'limit': 100,
         }
 
-        data, status = fetch_json(url, params)
+        data, _status = fetch_json(url, params)
 
         if data and 'events' in data:
             for event in data['events']:
@@ -84,7 +84,7 @@ def fetch_espn_schedule(season: int, limit: int = None):
                             'game_date': game_date,
                             'name': event.get('name', ''),
                             'status': event.get('status', {}).get('type', {}).get('name', ''),
-                        }
+                        },
                     )
 
         time.sleep(0.5)  # Rate limiting
@@ -100,7 +100,7 @@ def fetch_espn_game_plays(espn_game_id: str):
     url = f'{ESPN_API_BASE}/summary'
     params = {'event': espn_game_id}
 
-    data, status = fetch_json(url, params)
+    data, _status = fetch_json(url, params)
 
     if not data:
         return None
@@ -137,7 +137,7 @@ def fetch_espn_player_stats(season: int):
         'limit': 500,
     }
 
-    data, status = fetch_json(url, params)
+    data, _status = fetch_json(url, params)
 
     if not data:
         return []
@@ -154,7 +154,7 @@ def fetch_espn_player_stats(season: int):
                     'player_name': athlete.get('name', ''),
                     'category': category.get('name', ''),
                     'stats': athlete.get('statistics', []),
-                }
+                },
             )
 
     return stats
@@ -169,7 +169,7 @@ def fetch_espn_team_stats(season: int):
         'limit': 50,
     }
 
-    data, status = fetch_json(url, params)
+    data, _status = fetch_json(url, params)
 
     if not data:
         return []
@@ -183,7 +183,7 @@ def fetch_espn_team_stats(season: int):
                 'team_name': team_data.get('name', ''),
                 'abbreviation': team_data.get('abbreviation', ''),
                 'record': team_data.get('record', {}),
-            }
+            },
         )
 
     return teams
@@ -202,7 +202,7 @@ def store_espn_plays(conn, espn_game_id: str, game_date: str, plays_data: dict):
     try:
         cur.execute(
             """
-            INSERT INTO raw_espn.plays_snapshots 
+            INSERT INTO raw_espn.plays_snapshots
                 (espn_game_id, game_date, http_status, response_time_ms, payload, checksum)
             VALUES (%s, %s, %s, %s, %s::jsonb, %s)
             ON CONFLICT (espn_game_id, checksum) DO NOTHING
@@ -352,11 +352,10 @@ def main():
                         print(f'  Processing game {i + 1}/{len(games)}...', end='\r')
 
                     plays_data = fetch_espn_game_plays(game['espn_game_id'])
-                    if plays_data:
-                        if store_espn_plays(
-                            conn, game['espn_game_id'], game['game_date'], plays_data
-                        ):
-                            play_count += 1
+                    if plays_data and store_espn_plays(
+                        conn, game['espn_game_id'], game['game_date'], plays_data,
+                    ):
+                        play_count += 1
 
                     time.sleep(0.1)
 

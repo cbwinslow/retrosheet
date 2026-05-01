@@ -101,7 +101,7 @@ class PredictionService:
                 row = cur.fetchone()
                 if row:
                     # Convert to dict (simplified - would need column names)
-                    return dict(zip([desc[0] for desc in cur.description], row))
+                    return dict(zip([desc[0] for desc in cur.description], row, strict=False))
                 return None
         finally:
             self.db_pool.putconn(conn)
@@ -138,7 +138,7 @@ class PredictionService:
                 row = cur.fetchone()
                 if row:
                     # Create feature vector
-                    features = dict(zip([desc[0] for desc in cur.description], row))
+                    features = dict(zip([desc[0] for desc in cur.description], row, strict=False))
 
                     # Create base features
                     base_features = {
@@ -164,7 +164,8 @@ class PredictionService:
     def predict_single(self, target_id: str, features: pd.DataFrame) -> float:
         """Make a single prediction."""
         if target_id not in self.models:
-            raise ValueError(f'No active model found for {target_id}')
+            msg = f'No active model found for {target_id}'
+            raise ValueError(msg)
 
         model, feature_spec = self.models[target_id]
         numeric_features = feature_spec['numeric_features']

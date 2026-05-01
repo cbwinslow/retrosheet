@@ -28,10 +28,9 @@ def clean_filename(filename):
     # Remove leading numeric prefixes (001_, 200_, etc.)
     base = re.sub(r'^[0-9]+_', '', base)
     # Remove redundant layer indicators
-    base = re.sub(
-        r'^(raw_|external_|stg_|core_|bridge_|features_|models_|serving_|quality_)', '', base
+    return re.sub(
+        r'^(raw_|external_|stg_|core_|bridge_|features_|models_|serving_|quality_)', '', base,
     )
-    return base
 
 
 def rename_files_in_layer(layer_dir, dry_run=True):

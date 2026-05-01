@@ -60,9 +60,9 @@ class FeatureConfig:
 
     def __post_init__(self):
         """Validate configuration."""
-        if self.start_date and self.end_date:
-            if self.start_date > self.end_date:
-                raise ValueError('start_date must be before end_date')
+        if self.start_date and self.end_date and self.start_date > self.end_date:
+            msg = 'start_date must be before end_date'
+            raise ValueError(msg)
 
 
 @dataclass
@@ -153,7 +153,7 @@ class FeatureStore(ABC):
     All feature calculators must inherit from this class.
     """
 
-    def __init__(self, db_connection=None, config: FeatureConfig | None = None):
+    def __init__(self, db_connection=None, config: FeatureConfig | None = None) -> None:
         """Initialize feature store.
 
         Args:
@@ -197,7 +197,7 @@ class FeatureStore(ABC):
         return [self.compute(gs) for gs in game_states]
 
     def save(
-        self, game_pk: int, at_bat_index: int, value: float, metadata: dict | None = None
+        self, game_pk: int, at_bat_index: int, value: float, metadata: dict | None = None,
     ) -> bool:
         """Save computed feature to database.
 
@@ -217,7 +217,7 @@ class FeatureStore(ABC):
         try:
             with self.db.cursor() as cur:
                 cur.execute(
-                    f"""INSERT INTO {self.table_name} 
+                    f"""INSERT INTO {self.table_name}
                         (game_pk, at_bat_index, feature_value, metadata, computed_at)
                         VALUES (%s, %s, %s, %s, NOW())
                         ON CONFLICT (game_pk, at_bat_index) DO UPDATE SET
@@ -229,7 +229,7 @@ class FeatureStore(ABC):
             self.db.commit()
             return True
         except Exception as e:
-            logger.error(f'Failed to save feature: {e}')
+            logger.exception(f'Failed to save feature: {e}')
             return False
 
     def load_from_db(self, game_pk: int | None = None) -> int:
@@ -269,7 +269,7 @@ class FeatureStore(ABC):
 
             logger.info(f'Loaded {count} {self.feature_name} features from database')
         except Exception as e:
-            logger.error(f'Failed to load features from DB: {e}')
+            logger.exception(f'Failed to load features from DB: {e}')
 
         return count
 

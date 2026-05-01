@@ -43,7 +43,8 @@ def model_row(*, model_name: str, model_version: str) -> tuple[int, dict]:
             )
             row = cur.fetchone()
             if not row:
-                raise ValueError(f'Model not found: {model_name} {model_version}')
+                msg = f'Model not found: {model_name} {model_version}'
+                raise ValueError(msg)
             return int(row[0]), row[1]
     finally:
         conn.close()
@@ -51,7 +52,8 @@ def model_row(*, model_name: str, model_version: str) -> tuple[int, dict]:
 
 def parse_year_window(values: list[int]) -> str:
     if len(values) != 2:
-        raise ValueError(f'Expected two years, got {values}')
+        msg = f'Expected two years, got {values}'
+        raise ValueError(msg)
     return f'[{values[0]}-01-01,{values[1] + 1}-01-01)'
 
 

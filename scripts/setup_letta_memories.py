@@ -298,7 +298,8 @@ Key Tables:
             continue
 
     if agent is None:
-        raise Exception(f'Failed to create agent with any model. Last error: {last_error}')
+        msg = f'Failed to create agent with any model. Last error: {last_error}'
+        raise Exception(msg)
 
     print(f'✅ Created agent: {agent.name} (ID: {agent.id})')
     print(f'   Memory blocks: {[b["label"] for b in memory_blocks]}')
@@ -695,7 +696,7 @@ PENDING WORK:
     for i, passage_data in enumerate(passages, 1):
         try:
             # Create passage
-            result = client.agents.passages.create(
+            client.agents.passages.create(
                 agent_id=agent_id,
                 text=passage_data['text'],
             )
@@ -770,7 +771,7 @@ def main():
     print(f"  - Via API: client.agents.messages.create(agent_id='{agent_id}', ...)")
     print('\nMemory structure:')
     print(
-        '  - Core blocks: persona, project, infrastructure, models, git_history, current_status, commands'
+        '  - Core blocks: persona, project, infrastructure, models, git_history, current_status, commands',
     )
     print('  - Archival passages: 10 detailed searchable documents')
     print()

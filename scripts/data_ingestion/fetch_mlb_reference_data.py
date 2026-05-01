@@ -8,10 +8,14 @@ import os
 import time
 import urllib.parse
 import urllib.request
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 import psycopg2
 from psycopg2.extras import Json
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 BASE_URL = 'https://statsapi.mlb.com/api/v1'

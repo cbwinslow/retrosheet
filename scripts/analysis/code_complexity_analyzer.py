@@ -68,7 +68,7 @@ def analyze_file(filepath: Path) -> list[dict]:
 
     return results
 
-def analyze_directory(root: Path, exclude_dirs: list[str] = None) -> tuple[list[dict], dict]:
+def analyze_directory(root: Path, exclude_dirs: list[str] | None = None) -> tuple[list[dict], dict]:
     """Recursively analyze all Python files under root."""
     if exclude_dirs is None:
         exclude_dirs = ['.git', '__pycache__', '.venv', 'node_modules', '.mypy_cache']

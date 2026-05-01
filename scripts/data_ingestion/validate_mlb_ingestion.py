@@ -19,7 +19,7 @@ import psycopg2
 from scripts.utility.setup_mlb_analytics import database_kwargs
 
 
-def run_validation(limit_hours: int = None) -> int:
+def run_validation(limit_hours: int | None = None) -> int:
     """Execute the validation procedure and return the number of warnings.
 
     If ``limit_hours`` is provided, the procedure is called with a temporary

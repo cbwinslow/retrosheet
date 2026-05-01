@@ -1,15 +1,16 @@
-"""
-Live Feed Polling Service
+"""Live Feed Polling Service.
 
 Provides real-time game state polling with database persistence.
 """
-from typing import Optional, Dict, Any, List, Callable
-from datetime import datetime
 import hashlib
 import json
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from baseball.sources.live_mlb import LiveMlbSource
+from datetime import datetime
+from typing import Any
+
 from baseball.core.db import get_db_connection
+from baseball.sources.live_mlb import LiveMlbSource
 
 
 @dataclass
@@ -23,8 +24,8 @@ class GameUpdate:
     score_home: int
     score_away: int
     base_state: int
-    home_win_prob: Optional[float] = None
-    raw_data: Dict[str, Any] = field(default_factory=dict)
+    home_win_prob: float | None = None
+    raw_data: dict[str, Any] = field(default_factory=dict)
 
 
 class LiveFeedPoller:
@@ -32,22 +33,22 @@ class LiveFeedPoller:
 
     def __init__(
         self,
-        game_pk: Optional[int] = None,
+        game_pk: int | None = None,
         poll_interval: int = 10,
-        save_raw_snapshots: bool = True
-    ):
+        save_raw_snapshots: bool = True,
+    ) -> None:
         self.game_pk = game_pk
         self.poll_interval = poll_interval
         self.save_raw = save_raw_snapshots
         self.source = LiveMlbSource(game_pk=game_pk, poll_interval=poll_interval)
-        self._callbacks: List[Callable[[GameUpdate], None]] = []
-        self._last_hashes: Dict[int, str] = {}
+        self._callbacks: list[Callable[[GameUpdate], None]] = []
+        self._last_hashes: dict[int, str] = {}
 
-    def add_callback(self, callback: Callable[[GameUpdate], None]):
+    def add_callback(self, callback: Callable[[GameUpdate], None]) -> None:
         """Add callback to be called on each game update."""
         self._callbacks.append(callback)
 
-    def poll(self) -> List[Dict[str, Any]]:
+    def poll(self) -> list[dict[str, Any]]:
         """Poll for updates. Returns list of updates found."""
         updates = []
 
@@ -71,7 +72,7 @@ class LiveFeedPoller:
 
         return updates
 
-    def _process_game(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _process_game(self, data: dict[str, Any]) -> dict[str, Any] | None:
         """Process single game data. Returns update if changed."""
         game_pk = data.get('gamePk') or data.get('gameData', {}).get('game', {}).get('pk')
         if not game_pk:
@@ -103,7 +104,7 @@ class LiveFeedPoller:
             score_home=state.get('score_home', 0),
             score_away=state.get('score_away', 0),
             base_state=state.get('base_state', 0),
-            raw_data=data if self.save_raw else {}
+            raw_data=data if self.save_raw else {},
         )
 
         # Save to database
@@ -114,17 +115,17 @@ class LiveFeedPoller:
         for callback in self._callbacks:
             try:
                 callback(update)
-            except Exception as e:
+            except Exception:
                 pass  # Don't let callbacks break polling
 
         return {
             'game_pk': game_pk,
             'update_type': 'game_state',
             'description': f"{update.score_away}-{update.score_home}, {update.inning}{'▲' if update.is_top else '▼'} {update.outs} outs",
-            'timestamp': update.timestamp.isoformat()
+            'timestamp': update.timestamp.isoformat(),
         }
 
-    def _save_snapshot(self, game_pk: int, data: Dict[str, Any], content_hash: str):
+    def _save_snapshot(self, game_pk: int, data: dict[str, Any], content_hash: str) -> None:
         """Save raw snapshot to database."""
         try:
             conn = get_db_connection()
@@ -149,10 +150,10 @@ class LiveFeedPoller:
                     ON CONFLICT (game_pk, checksum) DO NOTHING
                 """, (game_pk, 'feed_live', json.dumps(data), content_hash))
                 conn.commit()
-        except Exception as e:
+        except Exception:
             pass  # Don't let DB errors break polling
 
-    def get_live_games(self) -> List[Dict[str, Any]]:
+    def get_live_games(self) -> list[dict[str, Any]]:
         """Get list of currently live games."""
         result = self.source.download()
         if not result.success:
@@ -170,6 +171,6 @@ class LiveFeedPoller:
                         'status': game.get('status', {}).get('detailedState', 'Unknown'),
                         'inning': game.get('linescore', {}).get('currentInning'),
                         'score_home': game.get('teams', {}).get('home', {}).get('score', 0),
-                        'score_away': game.get('teams', {}).get('away', {}).get('score', 0)
+                        'score_away': game.get('teams', {}).get('away', {}).get('score', 0),
                     })
         return games

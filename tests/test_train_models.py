@@ -52,7 +52,8 @@ def test_build_models_returns_pipelines() -> None:
     assert set(models.keys()) == {'logistic_regression', 'hist_gradient_boosting'}
     # Each value should be a sklearn Pipeline instance.
     for name, pipeline in models.items():
-        assert hasattr(pipeline, 'fit') and hasattr(pipeline, 'predict_proba')
+        assert hasattr(pipeline, 'fit')
+        assert hasattr(pipeline, 'predict_proba')
         # The final step should be the estimator matching the key.
         estimator = pipeline.steps[-1][1]
         if name == 'logistic_regression':

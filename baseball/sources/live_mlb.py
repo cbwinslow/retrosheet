@@ -1,27 +1,28 @@
-"""
-MLB Live Data Source Adapter
+"""MLB Live Data Source Adapter.
 
 Real-time game state ingestion from MLB Stats API for live predictions.
 """
-from typing import Optional, Dict, Any, List
-from datetime import datetime
-import requests
 import time
+from datetime import datetime
+from typing import Any
+
+import requests
+
 from .base import BaseSource, SourceResult
 
 
 class LiveMlbSource(BaseSource):
     """Source adapter for live MLB game data."""
 
-    def __init__(self, game_pk: Optional[int] = None, poll_interval: int = 10):
+    def __init__(self, game_pk: int | None = None, poll_interval: int = 10) -> None:
         self.name = 'live_mlb'
         self.game_pk = game_pk
         self.poll_interval = poll_interval
         self.base_url = 'https://statsapi.mlb.com/api/v1'
-        self._last_hash: Optional[str] = None
+        self._last_hash: str | None = None
         self._session = requests.Session()
 
-    def download(self, game_pk: Optional[int] = None, **kwargs) -> SourceResult:
+    def download(self, game_pk: int | None = None, **kwargs) -> SourceResult:
         """Fetch current live game state."""
         target_game = game_pk or self.game_pk
 
@@ -39,43 +40,42 @@ class LiveMlbSource(BaseSource):
                     return SourceResult(
                         success=True,
                         records=0,
-                        message=f'Game {target_game} not live (status: {status})'
+                        message=f'Game {target_game} not live (status: {status})',
                     )
 
                 return SourceResult(
                     success=True,
                     records=1,
                     data=data,
-                    raw_bytes=len(resp.content)
+                    raw_bytes=len(resp.content),
                 )
-            else:
-                # Fetch all live games for today
-                url = f'{self.base_url}/schedule?sportId=1&gameTypes=R,F,D,L,W&hydrate=linescore(runners)'
-                resp = self._session.get(url, timeout=15)
-                resp.raise_for_status()
-                data = resp.json()
+            # Fetch all live games for today
+            url = f'{self.base_url}/schedule?sportId=1&gameTypes=R,F,D,L,W&hydrate=linescore(runners)'
+            resp = self._session.get(url, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
 
-                # Count live/preview games
-                live_count = 0
-                for date_info in data.get('dates', []):
-                    for game in date_info.get('games', []):
-                        status = game.get('status', {}).get('abstractGameCode', '')
-                        if status in ('L', 'P'):
-                            live_count += 1
+            # Count live/preview games
+            live_count = 0
+            for date_info in data.get('dates', []):
+                for game in date_info.get('games', []):
+                    status = game.get('status', {}).get('abstractGameCode', '')
+                    if status in ('L', 'P'):
+                        live_count += 1
 
-                return SourceResult(
-                    success=True,
-                    records=live_count,
-                    data=data,
-                    raw_bytes=len(resp.content)
-                )
+            return SourceResult(
+                success=True,
+                records=live_count,
+                data=data,
+                raw_bytes=len(resp.content),
+            )
 
         except requests.RequestException as e:
             return SourceResult(success=False, error=str(e))
         except Exception as e:
             return SourceResult(success=False, error=f'Unexpected: {e}')
 
-    def ingest(self, data: Dict[str, Any], **kwargs) -> SourceResult:
+    def ingest(self, data: dict[str, Any], **kwargs) -> SourceResult:
         """Transform live game data to canonical format."""
         try:
             if not data:
@@ -99,14 +99,14 @@ class LiveMlbSource(BaseSource):
                 data={
                     'game_pk': game_pk,
                     'state': game_state,
-                    'timestamp': datetime.utcnow().isoformat()
-                }
+                    'timestamp': datetime.utcnow().isoformat(),
+                },
             )
 
         except Exception as e:
             return SourceResult(success=False, error=str(e))
 
-    def validate(self, data: Dict[str, Any], **kwargs) -> SourceResult:
+    def validate(self, data: dict[str, Any], **kwargs) -> SourceResult:
         """Validate live game data completeness."""
         errors = []
 
@@ -130,10 +130,11 @@ class LiveMlbSource(BaseSource):
 
         return SourceResult(success=True, records=1, message='Valid live game state')
 
-    def save_raw(self, data: Dict[str, Any], endpoint: str = 'feed_live', **kwargs) -> SourceResult:
+    def save_raw(self, data: dict[str, Any], endpoint: str = 'feed_live', **kwargs) -> SourceResult:
         """Save raw API response to database with checksum deduplication."""
         import hashlib
         import json
+
         from baseball.core.db import get_db_connection
 
         try:
@@ -169,7 +170,7 @@ class LiveMlbSource(BaseSource):
                 if not result or not result[0]:
                     return SourceResult(
                         success=False,
-                        error='raw_mlb.live_feed_snapshots table does not exist'
+                        error='raw_mlb.live_feed_snapshots table does not exist',
                     )
 
                 # Insert with conflict handling
@@ -188,19 +189,18 @@ class LiveMlbSource(BaseSource):
                     return SourceResult(
                         success=True,
                         records=1,
-                        message=f'Raw snapshot saved for game {game_pk}'
+                        message=f'Raw snapshot saved for game {game_pk}',
                     )
-                else:
-                    return SourceResult(
-                        success=True,
-                        records=0,
-                        message=f'Duplicate snapshot skipped for game {game_pk}'
-                    )
+                return SourceResult(
+                    success=True,
+                    records=0,
+                    message=f'Duplicate snapshot skipped for game {game_pk}',
+                )
 
         except Exception as e:
             return SourceResult(success=False, error=f'Failed to save raw data: {e}')
 
-    def _extract_game_state(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _extract_game_state(self, data: dict[str, Any]) -> dict[str, Any] | None:
         """Extract normalized game state from API response."""
         try:
             if 'liveData' in data and 'linescore' in data['liveData']:
@@ -237,10 +237,10 @@ class LiveMlbSource(BaseSource):
                     'base_state': base_state,
                     'score_diff': score_home - score_away,
                     'game_pk': game_data.get('pk') or data.get('gamePk'),
-                    'status': data.get('gameData', {}).get('status', {}).get('abstractGameCode', 'U')
+                    'status': data.get('gameData', {}).get('status', {}).get('abstractGameCode', 'U'),
                 }
 
-            elif 'teams' in data:
+            if 'teams' in data:
                 # Schedule format (less detailed)
                 status = data.get('status', {}).get('abstractGameCode', 'U')
                 return {
@@ -251,13 +251,13 @@ class LiveMlbSource(BaseSource):
                     'inning': data.get('linescore', {}).get('currentInning', 1),
                     'is_top': data.get('linescore', {}).get('isTopInning', True),
                     'outs': data.get('linescore', {}).get('outs', 0),
-                    'base_state': 0  # Not available in schedule format
+                    'base_state': 0,  # Not available in schedule format
                 }
 
-        except Exception as e:
+        except Exception:
             return None
 
-    def poll(self, game_pk: Optional[int] = None) -> Optional[Dict[str, Any]]:
+    def poll(self, game_pk: int | None = None) -> dict[str, Any] | None:
         """Poll for game updates. Returns data only if changed."""
         result = self.download(game_pk=game_pk)
         if not result.success or not result.data:
@@ -274,7 +274,7 @@ class LiveMlbSource(BaseSource):
         self._last_hash = current_hash
         return result.data
 
-    def stream(self, game_pk: Optional[int] = None, duration: Optional[int] = None):
+    def stream(self, game_pk: int | None = None, duration: int | None = None):
         """Generator that yields game state updates."""
         start_time = time.time()
         poll_count = 0
@@ -294,7 +294,7 @@ class LiveMlbSource(BaseSource):
                     yield {
                         'poll': poll_count,
                         'elapsed': elapsed,
-                        'data': ingest_result.data
+                        'data': ingest_result.data,
                     }
 
             time.sleep(self.poll_interval)

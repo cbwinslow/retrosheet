@@ -121,7 +121,7 @@ def store_json_snapshot(
         # Try insert with conflict resolution (deduplication)
         cur.execute(
             f"""
-            INSERT INTO raw_mlb.{table} 
+            INSERT INTO raw_mlb.{table}
                 (mlb_game_pk, game_date, http_status, response_time_ms, payload, checksum)
             VALUES (%s, %s, %s, %s, %s::jsonb, %s)
             ON CONFLICT (mlb_game_pk, checksum) DO NOTHING
@@ -147,7 +147,7 @@ def fetch_boxscore(game_pk: int, game_date: str, conn) -> bool:
     data, status, time_ms = fetch_json(url)
     if status == 200:
         return store_json_snapshot(
-            conn, 'boxscore_snapshots', game_pk, game_date, status, time_ms, data
+            conn, 'boxscore_snapshots', game_pk, game_date, status, time_ms, data,
         )
     return False
 
@@ -158,7 +158,7 @@ def fetch_play_by_play(game_pk: int, game_date: str, conn) -> bool:
     data, status, time_ms = fetch_json(url)
     if status == 200:
         return store_json_snapshot(
-            conn, 'play_by_play_snapshots', game_pk, game_date, status, time_ms, data
+            conn, 'play_by_play_snapshots', game_pk, game_date, status, time_ms, data,
         )
     return False
 
@@ -169,7 +169,7 @@ def fetch_pitch_metrics(game_pk: int, game_date: str, conn) -> bool:
     data, status, time_ms = fetch_json(url)
     if status == 200:
         return store_json_snapshot(
-            conn, 'pitch_metrics_snapshots', game_pk, game_date, status, time_ms, data
+            conn, 'pitch_metrics_snapshots', game_pk, game_date, status, time_ms, data,
         )
     return False
 
@@ -180,7 +180,7 @@ def fetch_win_probability(game_pk: int, game_date: str, conn) -> bool:
     data, status, time_ms = fetch_json(url)
     if status == 200:
         return store_json_snapshot(
-            conn, 'win_probability_snapshots', game_pk, game_date, status, time_ms, data
+            conn, 'win_probability_snapshots', game_pk, game_date, status, time_ms, data,
         )
     return False
 
@@ -204,7 +204,7 @@ def fetch_gameday_xml(game_pk: int, game_date: str, xml_type: str, conn) -> bool
             cur.execute(
                 """
                 INSERT INTO raw_mlb.gameday_xml_snapshots
-                    (mlb_game_pk, game_date, xml_type, http_status, response_time_ms, 
+                    (mlb_game_pk, game_date, xml_type, http_status, response_time_ms,
                      payload, checksum)
                 VALUES (%s, %s, %s, %s, %s, %s::xml, %s)
                 ON CONFLICT (mlb_game_pk, xml_type, checksum) DO NOTHING
@@ -251,7 +251,7 @@ def get_games_to_fetch(season: int, conn, limit: int | None = None) -> list[tupl
 
 
 def fetch_all_game_data(
-    game_pk: int, game_date: str, conn, skip_existing: bool = True
+    game_pk: int, game_date: str, conn, skip_existing: bool = True,
 ) -> dict[str, bool]:
     """
     Fetch ALL MLB Stats API data for a single game.
@@ -272,7 +272,7 @@ def fetch_all_game_data(
         ]:
             cur.execute(
                 f"""
-                SELECT 1 FROM raw_mlb.{table} 
+                SELECT 1 FROM raw_mlb.{table}
                 WHERE mlb_game_pk = %s AND http_status = 200
                 LIMIT 1;
             """,
@@ -320,7 +320,7 @@ def fetch_team_rosters(season: int, conn) -> int:
     url = f'{MLB_API_BASE}/teams'
     params = {'season': season, 'sportId': 1}
 
-    data, status, time_ms = fetch_json(url, params)
+    data, status, _time_ms = fetch_json(url, params)
     if status != 200:
         print(f'Failed to fetch team list: HTTP {status}')
         return 0
@@ -448,10 +448,10 @@ def main():
         help='Which endpoints to fetch',
     )
     parser.add_argument(
-        '--skip-existing', action='store_true', default=True, help='Skip games already in database'
+        '--skip-existing', action='store_true', default=True, help='Skip games already in database',
     )
     parser.add_argument(
-        '--dry-run', action='store_true', help='Print what would be fetched without fetching'
+        '--dry-run', action='store_true', help='Print what would be fetched without fetching',
     )
     args = parser.parse_args()
 
@@ -534,7 +534,7 @@ def main():
                     else 0
                 )
                 print(
-                    f'  {endpoint:20s}: {counts["success"]:6,} / {counts["attempted"]:6,} ({success_rate:5.1f}%)'
+                    f'  {endpoint:20s}: {counts["success"]:6,} / {counts["attempted"]:6,} ({success_rate:5.1f}%)',
                 )
 
         print('=' * 70)

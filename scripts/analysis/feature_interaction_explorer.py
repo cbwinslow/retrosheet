@@ -55,7 +55,8 @@ def load_top_features(conn, n_features: int = 20, sample_size: int = 50000) -> p
             features = features_df['feature_name'].tolist()
             print(f'Loaded {len(features)} features from importance table')
         else:
-            raise Exception('No importance data')
+            msg = 'No importance data'
+            raise Exception(msg)
     except:
         # Fallback to numeric columns
         query = """
@@ -146,7 +147,7 @@ def find_top_interactions(
     """Find top feature interactions."""
 
     print(
-        f'\nTesting {len(features)} choose 2 = {len(features) * (len(features) - 1) // 2} interactions...'
+        f'\nTesting {len(features)} choose 2 = {len(features) * (len(features) - 1) // 2} interactions...',
     )
 
     interactions = []
@@ -320,10 +321,10 @@ def save_results(results: dict, output_dir: str = 'models/interaction_analysis')
 def main():
     parser = argparse.ArgumentParser(description='Feature Interaction Explorer')
     parser.add_argument(
-        '--top-features', type=int, default=20, help='Number of top features to test'
+        '--top-features', type=int, default=20, help='Number of top features to test',
     )
     parser.add_argument(
-        '--top-interactions', type=int, default=50, help='Number of top interactions to return'
+        '--top-interactions', type=int, default=50, help='Number of top interactions to return',
     )
     parser.add_argument('--sample-size', type=int, default=50000, help='Sample size for analysis')
     args = parser.parse_args()
@@ -399,7 +400,7 @@ def main():
         for i, inter in enumerate(top_interactions[:5], 1):
             print(f'  {i}. {inter["feature_1"]} × {inter["feature_2"]}')
             print(
-                f'     MI: {inter["mi_interaction"]:.4f} (gain: {inter["interaction_gain"]:+.4f})'
+                f'     MI: {inter["mi_interaction"]:.4f} (gain: {inter["interaction_gain"]:+.4f})',
             )
 
         print('\nCategory Breakdown:')

@@ -63,7 +63,8 @@ def fetch_latest_snapshot(conn, game_pk: int) -> Snapshot:
         )
         row = cur.fetchone()
     if not row:
-        raise ValueError(f'No live feed snapshot found for game_pk {game_pk}')
+        msg = f'No live feed snapshot found for game_pk {game_pk}'
+        raise ValueError(msg)
     return Snapshot(
         snapshot_id=row[0],
         game_pk=row[1],

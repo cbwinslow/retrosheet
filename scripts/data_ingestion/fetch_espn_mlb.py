@@ -103,9 +103,9 @@ def start_run(source_name: str, script_name: str, command_args: dict) -> int:
 
 def update_run_progress(
     run_id: int,
-    records_downloaded: int = None,
-    records_ingested: int = None,
-    records_failed: int = None,
+    records_downloaded: int | None = None,
+    records_ingested: int | None = None,
+    records_failed: int | None = None,
 ):
     """Update run progress counters."""
     if not run_id:
@@ -127,7 +127,7 @@ def update_run_progress(
         conn.close()
 
 
-def complete_run(run_id: int, final_details: dict = None):
+def complete_run(run_id: int, final_details: dict | None = None):
     """Mark run as completed."""
     if not run_id:
         return
@@ -148,7 +148,7 @@ def complete_run(run_id: int, final_details: dict = None):
         conn.close()
 
 
-def fail_run(run_id: int, error_message: str, error_details: dict = None):
+def fail_run(run_id: int, error_message: str, error_details: dict | None = None):
     """Mark run as failed with error message."""
     if not run_id:
         return
@@ -171,10 +171,7 @@ def fail_run(run_id: int, error_message: str, error_details: dict = None):
 
 def compute_checksum(data: Any) -> str:
     """Compute SHA256 checksum of data for deduplication."""
-    if isinstance(data, (dict, list)):
-        data_str = json.dumps(data, sort_keys=True)
-    else:
-        data_str = str(data)
+    data_str = json.dumps(data, sort_keys=True) if isinstance(data, (dict, list)) else str(data)
     return hashlib.sha256(data_str.encode()).hexdigest()
 
 

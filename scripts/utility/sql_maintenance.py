@@ -344,7 +344,7 @@ Examples:
 
     # add-headers
     headers_parser = subparsers.add_parser(
-        'add-headers', help='Add standardized headers to SQL files'
+        'add-headers', help='Add standardized headers to SQL files',
     )
     headers_parser.add_argument('--check', action='store_true', help='Only check, do not modify')
 

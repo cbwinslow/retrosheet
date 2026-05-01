@@ -1,42 +1,45 @@
-# Makefile for EdgeForge project
+# Makefile for retrosheet baseball prediction platform
 
 PYTHON=python3
+PIP=pip3
 
-## Knowledge‑base creation
-kb:
-	@echo "=== Scraping Retrosheet publications ==="
-	$(PYTHON) scripts/scrape_retrosheet_kb.py
-	@echo "=== Downloading Moneyball PDF ==="
-	$(PYTHON) scripts/download_moneyball.py
-	@echo "=== Performing web search for baseball‑ML resources ==="
-	$(PYTHON) scripts/web_search_kb.py
-	@echo "=== Building LlamaIndex vector store (optional) ==="
-	$(PYTHON) scripts/ingest_kb_llamaindex.py
-
-## Convenience shortcuts
+## Run the CLI
 run:
-	$(PYTHON) main.py
+	$(PYTHON) -m baseball.cli
 
-.PHONY: kb run
+## Install dependencies
+install:
+	$(PIP) install -e .
+
+## Install dev dependencies
+install-dev:
+	$(PIP) install -e ".[dev]"
+	$(PIP) install ruff pytest pytest-asyncio
+
+.PHONY: run install install-dev
 
 # -------------------------------------------------------------------
 # Code Quality & Linting (Ruff)
 # -------------------------------------------------------------------
 lint:
 	@echo "=== Running Ruff linter ==="
-	ruff check baseball/ tests/ scripts/
+	uv run ruff check baseball/ tests/ scripts/
 
 lint-fix:
 	@echo "=== Auto-fixing issues with Ruff ==="
-	ruff check --fix baseball/ tests/ scripts/
+	uv run ruff check --fix baseball/ tests/ scripts/
+
+lint-fix-unsafe:
+	@echo "=== Auto-fixing issues with Ruff (unsafe) ==="
+	uv run ruff check --fix --unsafe-fixes baseball/ tests/ scripts/
 
 format:
 	@echo "=== Formatting code with Ruff ==="
-	ruff format baseball/ tests/ scripts/
+	uv run ruff format baseball/ tests/ scripts/
 
 imports:
 	@echo "=== Organizing imports with Ruff ==="
-	ruff check --select I --fix baseball/ tests/ scripts/
+	uv run ruff check --select I --fix baseball/ tests/ scripts/
 
 # Run all quality checks
 quality: format imports lint
@@ -55,7 +58,7 @@ test-unit:
 
 test-integration:
 	@echo "=== Running integration tests ==="
-	pytest tests/integration/ -v --tb=short -m integration
+	pytest tests/integration/ -v --tb=short
 
 test-betting:
 	@echo "=== Running betting tests ==="
@@ -65,14 +68,42 @@ test-ingestion:
 	@echo "=== Running ingestion tests ==="
 	pytest tests/ingestion/ -v --tb=short
 
+test-live:
+	@echo "=== Running live MLB API tests ==="
+	python scripts/test_live_ingestion.py
+
+coverage:
+	@echo "=== Running tests with coverage ==="
+	pytest tests/ --cov=baseball --cov-report=html --cov-report=term
+
+# -------------------------------------------------------------------
+# Cleanup
+# -------------------------------------------------------------------
+clean:
+	@echo "=== Cleaning up ==="
+	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	find . -type f -name "*.pyo" -delete 2>/dev/null || true
+	find . -type f -name ".coverage" -delete 2>/dev/null || true
+	rm -rf htmlcov/ .pytest_cache/ .ruff_cache/ 2>/dev/null || true
+	@echo "=== Cleanup complete ==="
+
 # -------------------------------------------------------------------
 # Feature marts
 # -------------------------------------------------------------------
 feature-marts:
 	@echo "Running feature‑mart migrations..."
-	python scripts/migrate_feature_marts.py
+	$(PYTHON) scripts/migrate_feature_marts.py
 
-## Run KB pipeline in parallel (scrape, download, search) then ingest
-kb_parallel:
-	@echo "=== Running KB pipeline in parallel ==="
-	$(PYTHON) scripts/run_kb_parallel.py
+# -------------------------------------------------------------------
+# Database
+# -------------------------------------------------------------------
+db-migrate:
+	@echo "=== Running database migrations ==="
+	$(PYTHON) scripts/migrate.py
+
+db-refresh:
+	@echo "=== Refreshing materialized views ==="
+	psql -d retrosheet -f sql/maintenance/refresh_all_views.sql
+
+.PHONY: lint lint-fix format imports quality test test-unit test-integration test-betting test-ingestion test-live coverage clean feature-marts db-migrate db-refresh

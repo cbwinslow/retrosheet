@@ -118,19 +118,19 @@ class TestGameState:
         """Test base state encoding (for WE/LI lookup)."""
         # Empty bases
         state = GameState(
-            inning=1, is_top=True, outs=0, runner_1b=False, runner_2b=False, runner_3b=False
+            inning=1, is_top=True, outs=0, runner_1b=False, runner_2b=False, runner_3b=False,
         )
         assert state.base_state == '000'
 
         # Runners on 1st and 3rd
         state = GameState(
-            inning=1, is_top=True, outs=0, runner_1b=True, runner_2b=False, runner_3b=True
+            inning=1, is_top=True, outs=0, runner_1b=True, runner_2b=False, runner_3b=True,
         )
         assert state.base_state == '101'
 
         # Bases loaded
         state = GameState(
-            inning=1, is_top=True, outs=0, runner_1b=True, runner_2b=True, runner_3b=True
+            inning=1, is_top=True, outs=0, runner_1b=True, runner_2b=True, runner_3b=True,
         )
         assert state.base_state == '111'
 

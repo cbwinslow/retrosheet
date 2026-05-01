@@ -15,7 +15,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, PostgresDsn, field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,44 +23,44 @@ class DatabaseSettings(BaseSettings):
     """Database connection settings."""
 
     model_config = SettingsConfigDict(
-        env_prefix="PG",
-        extra="ignore",
+        env_prefix='PG',
+        extra='ignore',
     )
 
-    host: str = Field(default="localhost", description="PostgreSQL host")
-    port: int = Field(default=5432, description="PostgreSQL port")
-    database: str = Field(default="retrosheet", description="Database name")
-    user: str | None = Field(default=None, description="Database user")
-    password: str | None = Field(default=None, description="Database password")
-    url: str | None = Field(default=None, description="Full DATABASE_URL override")
+    host: str = Field(default='localhost', description='PostgreSQL host')
+    port: int = Field(default=5432, description='PostgreSQL port')
+    database: str = Field(default='retrosheet', description='Database name')
+    user: str | None = Field(default=None, description='Database user')
+    password: str | None = Field(default=None, description='Database password')
+    url: str | None = Field(default=None, description='Full DATABASE_URL override')
 
     @property
     def database_url(self) -> str:
         """Build PostgreSQL connection URL."""
         if self.url:
             return self.url
-        user_part = f"{self.user}:" if self.user else ""
-        password_part = f"{self.password}@" if self.password else ""
-        return f"postgresql://{user_part}{password_part}{self.host}:{self.port}/{self.database}"
+        user_part = f'{self.user}:' if self.user else ''
+        password_part = f'{self.password}@' if self.password else ''
+        return f'postgresql://{user_part}{password_part}{self.host}:{self.port}/{self.database}'
 
 
 class MLBStatsAPISettings(BaseSettings):
     """MLB Stats API configuration."""
 
     model_config = SettingsConfigDict(
-        env_prefix="MLB_",
-        extra="ignore",
+        env_prefix='MLB_',
+        extra='ignore',
     )
 
     base_url: str = Field(
-        default="https://statsapi.mlb.com/api/v1",
-        description="MLB Stats API base URL",
+        default='https://statsapi.mlb.com/api/v1',
+        description='MLB Stats API base URL',
     )
-    timeout: int = Field(default=30, description="Request timeout in seconds")
-    retries: int = Field(default=3, description="Number of retry attempts")
+    timeout: int = Field(default=30, description='Request timeout in seconds')
+    retries: int = Field(default=3, description='Number of retry attempts')
     rate_limit_per_minute: int = Field(
         default=100,
-        description="API rate limit per minute",
+        description='API rate limit per minute',
     )
 
 
@@ -68,32 +68,32 @@ class DataPathsSettings(BaseSettings):
     """File system paths for data storage."""
 
     model_config = SettingsConfigDict(
-        env_prefix="DATA_",
-        extra="ignore",
+        env_prefix='DATA_',
+        extra='ignore',
     )
 
     root: Path = Field(
-        default=Path("./data"),
-        description="Root data directory",
+        default=Path('./data'),
+        description='Root data directory',
     )
     raw: Path = Field(
-        default=Path("./data/raw"),
-        description="Raw ingested data",
+        default=Path('./data/raw'),
+        description='Raw ingested data',
     )
     processed: Path = Field(
-        default=Path("./data/processed"),
-        description="Processed/transformed data",
+        default=Path('./data/processed'),
+        description='Processed/transformed data',
     )
     models: Path = Field(
-        default=Path("./data/models"),
-        description="Trained model artifacts",
+        default=Path('./data/models'),
+        description='Trained model artifacts',
     )
     cache: Path = Field(
-        default=Path("./data/cache"),
-        description="Temporary cache files",
+        default=Path('./data/cache'),
+        description='Temporary cache files',
     )
 
-    @field_validator("root", "raw", "processed", "models", "cache", mode="before")
+    @field_validator('root', 'raw', 'processed', 'models', 'cache', mode='before')
     @classmethod
     def ensure_path(cls, v: str | Path) -> Path:
         """Convert string to Path and create if needed."""
@@ -106,21 +106,21 @@ class LoggingSettings(BaseSettings):
     """Logging configuration."""
 
     model_config = SettingsConfigDict(
-        env_prefix="LOG_",
-        extra="ignore",
+        env_prefix='LOG_',
+        extra='ignore',
     )
 
-    level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
-        default="INFO",
-        description="Logging level",
+    level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = Field(
+        default='INFO',
+        description='Logging level',
     )
-    format: Literal["json", "console"] = Field(
-        default="console",
-        description="Log output format",
+    format: Literal['json', 'console'] = Field(
+        default='console',
+        description='Log output format',
     )
     file: Path | None = Field(
         default=None,
-        description="Optional log file path",
+        description='Optional log file path',
     )
 
 
@@ -128,21 +128,21 @@ class ModelSettings(BaseSettings):
     """Model training and inference settings."""
 
     model_config = SettingsConfigDict(
-        env_prefix="MODEL_",
-        extra="ignore",
+        env_prefix='MODEL_',
+        extra='ignore',
     )
 
     default_model_dir: Path = Field(
-        default=Path("./data/models"),
-        description="Default directory for model storage",
+        default=Path('./data/models'),
+        description='Default directory for model storage',
     )
     training_test_size: float = Field(
         default=0.2,
-        description="Fraction of data for test split",
+        description='Fraction of data for test split',
     )
     training_random_state: int = Field(
         default=42,
-        description="Random seed for reproducibility",
+        description='Random seed for reproducibility',
     )
 
 
@@ -154,9 +154,9 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
+        env_file='.env',
+        env_file_encoding='utf-8',
+        extra='ignore',
     )
 
     # Sub-settings
@@ -167,10 +167,10 @@ class Settings(BaseSettings):
     model: ModelSettings = Field(default_factory=ModelSettings)
 
     # Global settings
-    debug: bool = Field(default=False, description="Enable debug mode")
-    env: Literal["development", "staging", "production"] = Field(
-        default="development",
-        description="Runtime environment",
+    debug: bool = Field(default=False, description='Enable debug mode')
+    env: Literal['development', 'staging', 'production'] = Field(
+        default='development',
+        description='Runtime environment',
     )
 
     @property
@@ -196,12 +196,12 @@ settings = get_settings()
 
 
 __all__ = [
-    "Settings",
-    "DatabaseSettings",
-    "MLBStatsAPISettings",
-    "DataPathsSettings",
-    "LoggingSettings",
-    "ModelSettings",
-    "get_settings",
-    "settings",
+    'DataPathsSettings',
+    'DatabaseSettings',
+    'LoggingSettings',
+    'MLBStatsAPISettings',
+    'ModelSettings',
+    'Settings',
+    'get_settings',
+    'settings',
 ]

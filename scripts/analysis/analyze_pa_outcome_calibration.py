@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 from pathlib import Path
 
@@ -161,7 +162,7 @@ def expected_calibration_error(actual: np.ndarray, predicted: np.ndarray, bins: 
     edges = np.linspace(0.0, 1.0, bins + 1)
     total = len(actual)
     ece = 0.0
-    for left, right in zip(edges[:-1], edges[1:]):
+    for left, right in itertools.pairwise(edges):
         if right == 1.0:
             mask = (predicted >= left) & (predicted <= right)
         else:
@@ -183,7 +184,7 @@ def class_calibration_table(
 ) -> list[dict]:
     edges = np.linspace(0.0, 1.0, bins + 1)
     rows: list[dict] = []
-    for index, (left, right) in enumerate(zip(edges[:-1], edges[1:]), start=1):
+    for index, (left, right) in enumerate(itertools.pairwise(edges), start=1):
         if right == 1.0:
             mask = (predicted >= left) & (predicted <= right)
         else:

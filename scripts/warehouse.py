@@ -252,11 +252,13 @@ def year_source_files(year: int, *, include_boxscore: bool = False) -> dict[str,
 
 def extract_events(args: argparse.Namespace) -> None:
     if not (RETROSHEET_REPO / '.git').exists():
+        msg = 'Retrosheet data is missing. Run `python3 scripts/warehouse.py fetch-retrosheet` first.'
         raise SystemExit(
-            'Retrosheet data is missing. Run `python3 scripts/warehouse.py fetch-retrosheet` first.',
+            msg,
         )
     if not shutil.which('cwevent'):
-        raise SystemExit('`cwevent` is missing. Install Chadwick tools before extracting events.')
+        msg = '`cwevent` is missing. Install Chadwick tools before extracting events.'
+        raise SystemExit(msg)
 
     EVENT_OUT.mkdir(parents=True, exist_ok=True)
     for year in parse_years(args.years):
@@ -289,7 +291,8 @@ def selected_outputs(value: str) -> list[str]:
     outputs = [part.strip() for part in value.split(',') if part.strip()]
     unknown = sorted(set(outputs) - set(CHADWICK_OUTPUTS))
     if unknown:
-        raise SystemExit(f'Unknown Chadwick output(s): {", ".join(unknown)}')
+        msg = f'Unknown Chadwick output(s): {", ".join(unknown)}'
+        raise SystemExit(msg)
     return outputs
 
 
@@ -297,11 +300,13 @@ def extract_chadwick_output(output: str, years: list[int]) -> None:
     spec = CHADWICK_OUTPUTS[output]
     tool = str(spec['tool'])
     if not (RETROSHEET_REPO / '.git').exists():
+        msg = 'Retrosheet data is missing. Run `python3 scripts/warehouse.py fetch-retrosheet` first.'
         raise SystemExit(
-            'Retrosheet data is missing. Run `python3 scripts/warehouse.py fetch-retrosheet` first.',
+            msg,
         )
     if not shutil.which(tool):
-        raise SystemExit(f'`{tool}` is missing. Install Chadwick tools before extracting {output}.')
+        msg = f'`{tool}` is missing. Install Chadwick tools before extracting {output}.'
+        raise SystemExit(msg)
 
     out_dir = Path(spec['out_dir'])
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -378,8 +383,9 @@ def load_chadwick_csv(output: str, path: Path, year: int, source_type: str) -> N
             rows = 0
             for row_number, row in enumerate(reader, start=1):
                 if len(row) != len(columns):
+                    msg = f'{path}:{row_number + 1} has {len(row)} columns; expected {len(columns)}'
                     raise ValueError(
-                        f'{path}:{row_number + 1} has {len(row)} columns; expected {len(columns)}',
+                        msg,
                     )
                 writer.writerow([year, source_type, row_number, *row])
                 rows += 1
@@ -446,8 +452,9 @@ def load_labeled_event_file(path: Path, year: int, source_type: str) -> None:
             ):
                 continue
             if len(row) != len(feature_columns):
+                msg = f'{path}:{input_row_number} has {len(row)} columns; expected {len(feature_columns)}'
                 raise ValueError(
-                    f'{path}:{input_row_number} has {len(row)} columns; expected {len(feature_columns)}',
+                    msg,
                 )
             row_number = rows + 1
             writer.writerow([year, source_type, row_number, *row])

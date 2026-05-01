@@ -67,7 +67,7 @@ class ModelCache:
         >>> cache.set(features_dict, result)
     """
 
-    def __init__(self, max_size: int = 10000, default_ttl: int = 300):
+    def __init__(self, max_size: int = 10000, default_ttl: int = 300) -> None:
         """Initialize model cache.
 
         Args:
@@ -196,7 +196,7 @@ class ModelCache:
                 self._cache.clear()
                 return count
 
-            to_remove = [k for k in self._cache.keys() if pattern in k]
+            to_remove = [k for k in self._cache if pattern in k]
             for k in to_remove:
                 del self._cache[k]
             return len(to_remove)
@@ -228,7 +228,7 @@ class ModelServer:
         model_dir: str = 'models',
         enable_cache: bool = True,
         cache_size: int = 10000,
-    ):
+    ) -> None:
         """Initialize model server.
 
         Args:
@@ -296,7 +296,7 @@ class ModelServer:
             return True
 
         except Exception as e:
-            logger.error(f'Failed to load model {model_name}: {e}')
+            logger.exception(f'Failed to load model {model_name}: {e}')
             return False
 
     def _get_latest_version(self, model_name: str) -> str:
@@ -310,8 +310,7 @@ class ModelServer:
         # Sort by modification time
         latest = max(files, key=lambda p: p.stat().st_mtime)
         # Extract version from filename
-        version = latest.stem.replace(f'{model_name}_', '')
-        return version
+        return latest.stem.replace(f'{model_name}_', '')
 
     def _get_production_version(self, model_name: str) -> str:
         """Get production version from database."""
@@ -322,8 +321,8 @@ class ModelServer:
             with self.db.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT model_version 
-                    FROM models.model_versions 
+                    SELECT model_version
+                    FROM models.model_versions
                     WHERE model_type = %s AND status = 'production'
                     ORDER BY promoted_at DESC
                     LIMIT 1
@@ -335,7 +334,7 @@ class ModelServer:
                 if row:
                     return row[0]
         except Exception as e:
-            logger.error(f'Failed to get production version: {e}')
+            logger.exception(f'Failed to get production version: {e}')
 
         return self._get_latest_version(model_name)
 
@@ -358,7 +357,7 @@ class ModelServer:
         return False
 
     def predict(
-        self, model_name: str, features: dict[str, Any], use_cache: bool = True
+        self, model_name: str, features: dict[str, Any], use_cache: bool = True,
     ) -> dict[str, Any] | None:
         """Make a prediction using loaded model.
 
@@ -403,7 +402,7 @@ class ModelServer:
             return result
 
         except Exception as e:
-            logger.error(f'Prediction failed: {e}')
+            logger.exception(f'Prediction failed: {e}')
             self._error_count += 1
             return None
 
@@ -467,7 +466,7 @@ class ModelServer:
         """Build feature vector from feature dictionary."""
         # This would use the same feature columns as training
         # For now, extract common features
-        vector = [
+        return [
             float(features.get('inning', 1)),
             float(features.get('outs', 0)),
             float(features.get('base_state', 0)),
@@ -478,7 +477,6 @@ class ModelServer:
             float(features.get('batter_l14_ops', 0.7)),
             float(features.get('pitcher_l14_era', 4.5)),
         ]
-        return vector
 
     def get_loaded_models(self) -> list[str]:
         """Get list of loaded model names."""

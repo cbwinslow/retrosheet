@@ -11,21 +11,24 @@ Date: 2026-04-30
 """
 
 import logging
+from collections.abc import Callable
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from baseball.betting.schemas import (
-    BettingStrategy, BetOpportunity, PlacedBet,
-    StrategyConstraints, BetRecommendation
+    BetOpportunity,
+    BettingStrategy,
+    StrategyConstraints,
 )
+
 
 logger = logging.getLogger(__name__)
 
 
 class BettingStrategyAI:
     """AI-powered strategy generator and bet explainer.
-    
+
     This class provides AI capabilities for betting without requiring
     Letta specifically. It uses a pluggable LLM interface that can
     work with:
@@ -33,38 +36,38 @@ class BettingStrategyAI:
     - OpenAI GPT
     - Anthropic Claude
     - Local models (Llama, etc.)
-    
+
     The LLM is used for:
     1. Strategy generation from natural language constraints
     2. Bet explanations (why this edge exists)
     3. Stake optimization reasoning
     4. Market analysis summaries
-    
+
     Example:
         >>> ai = BettingStrategyAI(llm_client=openai_client)
-        >>> 
+        >>>
         >>> # Generate strategy from natural language
         >>> strategy = ai.generate_strategy(
         ...     name="Aggressive Value",
         ...     description="Focus on high edges, accept higher risk"
         ... )
-        >>> 
+        >>>
         >>> # Explain a bet
         >>> explanation = ai.explain_bet(opportunity, sim_details)
         >>> print(explanation.rationale)
     """
-    
+
     def __init__(
         self,
-        llm_client: Optional[Any] = None,
-        model: str = "gpt-4",
+        llm_client: Any | None = None,
+        model: str = 'gpt-4',
         temperature: float = 0.7,
         max_tokens: int = 1000,
-        on_strategy_generated: Optional[Callable] = None,
-        on_explanation_created: Optional[Callable] = None
-    ):
+        on_strategy_generated: Callable | None = None,
+        on_explanation_created: Callable | None = None,
+    ) -> None:
         """Initialize AI strategy generator.
-        
+
         Args:
             llm_client: LLM client (OpenAI, Anthropic, or Letta-compatible)
             model: Model name to use
@@ -77,28 +80,28 @@ class BettingStrategyAI:
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
-        
+
         # Event hooks (Event Pattern)
         self._on_strategy_generated = on_strategy_generated or (lambda s: None)
         self._on_explanation_created = on_explanation_created or (lambda e: None)
-        
-        logger.info(f"BettingStrategyAI initialized (model: {model})")
-    
+
+        logger.info(f'BettingStrategyAI initialized (model: {model})')
+
     # ===================================================================
     # Strategy Generation
     # ===================================================================
-    
+
     def generate_strategy(
         self,
         name: str,
         description: str,
-        constraints: Optional[StrategyConstraints] = None,
-        risk_profile: str = "moderate",
-        target_sports: List[str] = None,
-        prompt_template: Optional[str] = None
-    ) -> Optional[BettingStrategy]:
+        constraints: StrategyConstraints | None = None,
+        risk_profile: str = 'moderate',
+        target_sports: list[str] | None = None,
+        prompt_template: str | None = None,
+    ) -> BettingStrategy | None:
         """Generate a betting strategy from natural language description.
-        
+
         Args:
             name: Strategy name
             description: Natural language strategy description
@@ -106,36 +109,36 @@ class BettingStrategyAI:
             risk_profile: conservative, moderate, or aggressive
             target_sports: List of sports to focus on
             prompt_template: Custom prompt override
-            
+
         Returns:
             Generated BettingStrategy or None if no LLM
-            
+
         Example:
             >>> strategy = ai.generate_strategy(
             ...     name="MLB Underdog Hunter",
-            ...     description="Focus on underdogs with model edges >5%, 
+            ...     description="Focus on underdogs with model edges >5%,
             ...                  avoid heavy favorites, max 2% bankroll per bet"
             ... )
         """
         if not self.llm_client:
-            logger.warning("No LLM client available, using default strategy")
+            logger.warning('No LLM client available, using default strategy')
             return self._create_default_strategy(name, description, constraints)
-        
+
         # Build prompt
         if prompt_template:
             prompt = prompt_template
         else:
             prompt = self._build_strategy_prompt(
-                name, description, constraints, risk_profile, target_sports
+                name, description, constraints, risk_profile, target_sports,
             )
-        
+
         try:
             # Call LLM
             response = self._call_llm(prompt)
-            
+
             # Parse response into strategy parameters
             strategy_params = self._parse_strategy_response(response)
-            
+
             # Create strategy
             strategy = BettingStrategy(
                 strategy_id=f"ai_{name.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}",
@@ -152,26 +155,26 @@ class BettingStrategyAI:
                 created_at=datetime.now(),
                 ai_generated=True,
                 ai_prompt=prompt,
-                ai_rationale=strategy_params.get('rationale', '')
+                ai_rationale=strategy_params.get('rationale', ''),
             )
-            
+
             # Emit event (Event Pattern)
             self._on_strategy_generated(strategy)
-            
-            logger.info(f"Generated AI strategy: {name}")
+
+            logger.info(f'Generated AI strategy: {name}')
             return strategy
-            
+
         except Exception as e:
-            logger.error(f"Strategy generation failed: {e}")
+            logger.exception(f'Strategy generation failed: {e}')
             return self._create_default_strategy(name, description, constraints)
-    
+
     def _build_strategy_prompt(
         self,
         name: str,
         description: str,
-        constraints: Optional[StrategyConstraints],
+        constraints: StrategyConstraints | None,
         risk_profile: str,
-        target_sports: List[str]
+        target_sports: list[str],
     ) -> str:
         """Build LLM prompt for strategy generation."""
         return f"""You are an expert sports betting strategist. Create a betting strategy based on the following description.
@@ -206,13 +209,13 @@ Respond ONLY with the parameters above, no additional text."""
         """Format constraints for prompt."""
         lines = []
         if constraints.max_bets_per_day:
-            lines.append(f"- Max {constraints.max_bets_per_day} bets per day")
+            lines.append(f'- Max {constraints.max_bets_per_day} bets per day')
         if constraints.max_exposure_pct:
-            lines.append(f"- Max {constraints.max_exposure_pct:.1%} bankroll exposure")
+            lines.append(f'- Max {constraints.max_exposure_pct:.1%} bankroll exposure')
         if constraints.min_odds:
-            lines.append(f"- Minimum odds: +{constraints.min_odds}")
+            lines.append(f'- Minimum odds: +{constraints.min_odds}')
         if constraints.max_odds:
-            lines.append(f"- Maximum odds: {constraints.max_odds}")
+            lines.append(f'- Maximum odds: {constraints.max_odds}')
         if constraints.avoid_teams:
             lines.append(f"- Avoid teams: {', '.join(constraints.avoid_teams)}")
         return '\n'.join(lines) if lines else 'No hard constraints'
@@ -224,28 +227,28 @@ Respond ONLY with the parameters above, no additional text."""
         if hasattr(self.llm_client, 'chat'):
             # Letta-style interface
             return self.llm_client.chat(prompt)
-        elif hasattr(self.llm_client, 'completions'):
+        if hasattr(self.llm_client, 'completions'):
             # OpenAI-style interface
             response = self.llm_client.completions.create(
                 model=self.model,
                 prompt=prompt,
                 temperature=self.temperature,
-                max_tokens=self.max_tokens
+                max_tokens=self.max_tokens,
             )
             return response.choices[0].text
-        else:
-            raise RuntimeError("Unknown LLM client interface")
+        msg = 'Unknown LLM client interface'
+        raise RuntimeError(msg)
 
-    def _parse_strategy_response(self, response: str) -> Dict:
+    def _parse_strategy_response(self, response: str) -> dict:
         """Parse LLM response into strategy parameters."""
         params = {}
-        
+
         for line in response.strip().split('\n'):
             if ':' in line:
                 key, value = line.split(':', 1)
                 key = key.strip().lower()
                 value = value.strip()
-                
+
                 if key == 'filters':
                     # Parse JSON-like filters
                     try:
@@ -262,14 +265,14 @@ Respond ONLY with the parameters above, no additional text."""
                         params[key] = float(value)
                     except:
                         params[key] = value
-        
+
         return params
 
     def _create_default_strategy(
         self,
         name: str,
         description: str,
-        constraints: Optional[StrategyConstraints]
+        constraints: StrategyConstraints | None,
     ) -> BettingStrategy:
         """Create a default strategy when LLM is unavailable."""
         return BettingStrategy(
@@ -277,39 +280,39 @@ Respond ONLY with the parameters above, no additional text."""
             name=name,
             description=description,
             constraints=constraints or StrategyConstraints(),
-            min_edge=Decimal("0.05"),
-            max_bet_pct=Decimal("0.02"),
-            kelly_fraction=Decimal("0.25"),
+            min_edge=Decimal('0.05'),
+            max_bet_pct=Decimal('0.02'),
+            kelly_fraction=Decimal('0.25'),
             target_markets=['moneyline'],
             stake_method='kelly',
             filters={},
             is_active=True,
             created_at=datetime.now(),
-            ai_generated=False
+            ai_generated=False,
         )
 
     # ===================================================================
     # Bet Explanation
     # ===================================================================
-    
+
     def explain_bet(
         self,
         opportunity: BetOpportunity,
-        sim_details: Dict[str, Any],
-        market_context: Optional[Dict] = None,
-        include_numbers: bool = True
+        sim_details: dict[str, Any],
+        market_context: dict | None = None,
+        include_numbers: bool = True,
     ) -> str:
         """Generate AI explanation for a bet opportunity.
-        
+
         Args:
             opportunity: The betting opportunity
             sim_details: Simulation details (features, probabilities)
             market_context: Market context (line movement, sharp action)
             include_numbers: Include specific odds/edges in explanation
-            
+
         Returns:
             Natural language explanation of why this is a good bet
-            
+
         Example:
             >>> explanation = ai.explain_bet(
             ...     opportunity=opp,
@@ -324,7 +327,7 @@ Respond ONLY with the parameters above, no additional text."""
         """
         if not self.llm_client:
             return self._generate_simple_explanation(opportunity, include_numbers)
-        
+
         prompt = f"""Explain why this is a good betting opportunity:
 
 Game: {opportunity.market.home_team} vs {opportunity.market.away_team}
@@ -350,40 +353,39 @@ Provide a concise 2-3 sentence explanation suitable for a bettor. Focus on:
         try:
             return self._call_llm(prompt)
         except Exception as e:
-            logger.error(f"Bet explanation failed: {e}")
+            logger.exception(f'Bet explanation failed: {e}')
             return self._generate_simple_explanation(opportunity, include_numbers)
 
     def _generate_simple_explanation(
         self,
         opportunity: BetOpportunity,
-        include_numbers: bool
+        include_numbers: bool,
     ) -> str:
         """Generate simple explanation without LLM."""
         if include_numbers:
             return (
-                f"The model estimates a {opportunity.model_probability:.1%} chance of winning, "
-                f"while the market implies only {opportunity.market_probability:.1%}. "
-                f"This {opportunity.edge:.1%} edge represents value."
+                f'The model estimates a {opportunity.model_probability:.1%} chance of winning, '
+                f'while the market implies only {opportunity.market_probability:.1%}. '
+                f'This {opportunity.edge:.1%} edge represents value.'
             )
-        else:
-            return (
-                f"The model sees more value in this bet than the market price suggests. "
-                f"Key factors likely include team matchups, recent form, and situational advantages."
-            )
+        return (
+            'The model sees more value in this bet than the market price suggests. '
+            'Key factors likely include team matchups, recent form, and situational advantages.'
+        )
 
-    def _format_sim_details(self, details: Dict) -> str:
+    def _format_sim_details(self, details: dict) -> str:
         """Format simulation details for prompt."""
         lines = []
         for key, value in details.items():
             if isinstance(value, list):
                 lines.append(f"- {key}: {', '.join(str(v) for v in value)}")
             elif isinstance(value, float):
-                lines.append(f"- {key}: {value:.1%}" if value < 1 else f"- {key}: {value:.1f}")
+                lines.append(f'- {key}: {value:.1%}' if value < 1 else f'- {key}: {value:.1f}')
             else:
-                lines.append(f"- {key}: {value}")
+                lines.append(f'- {key}: {value}')
         return '\n'.join(lines)
 
-    def _format_market_context(self, context: Dict) -> str:
+    def _format_market_context(self, context: dict) -> str:
         """Format market context for prompt."""
         lines = []
         if 'sharp_line' in context:
@@ -397,33 +399,33 @@ Provide a concise 2-3 sentence explanation suitable for a bettor. Focus on:
     # ===================================================================
     # Stake Optimization Reasoning
     # ===================================================================
-    
+
     def explain_stake(
         self,
         opportunity: BetOpportunity,
         stake: Decimal,
         bankroll: Decimal,
-        method: str = "kelly"
+        method: str = 'kelly',
     ) -> str:
         """Generate explanation for stake size.
-        
+
         Args:
             opportunity: The bet
             stake: Recommended stake
             bankroll: Current bankroll
             method: Stake calculation method
-            
+
         Returns:
             Explanation of why this stake size
         """
         pct = stake / bankroll
-        
+
         if not self.llm_client:
             return (
-                f"Based on {method} criterion with a {opportunity.edge:.1%} edge, "
-                f"the optimal stake is ${stake:.2f} ({pct:.1%} of bankroll)."
+                f'Based on {method} criterion with a {opportunity.edge:.1%} edge, '
+                f'the optimal stake is ${stake:.2f} ({pct:.1%} of bankroll).'
             )
-        
+
         prompt = f"""Explain the stake sizing for this bet:
 
 Bet: {opportunity.market.side}
@@ -444,31 +446,31 @@ Keep it concise and focused on the bettor's risk management."""
         try:
             return self._call_llm(prompt)
         except:
-            return f"Full Kelly would suggest {pct*4:.1%}, but using fractional Kelly ({pct:.1%}) for risk management."
+            return f'Full Kelly would suggest {pct*4:.1%}, but using fractional Kelly ({pct:.1%}) for risk management.'
 
     # ===================================================================
     # Market Analysis
     # ===================================================================
-    
+
     def analyze_market_efficiency(
         self,
         game_id: str,
-        markets: List[Dict[str, Any]],
-        sim_result: Dict[str, Any]
+        markets: list[dict[str, Any]],
+        sim_result: dict[str, Any],
     ) -> str:
         """Generate AI analysis of market efficiency for a game.
-        
+
         Args:
             game_id: Game identifier
             markets: List of market odds from multiple books
             sim_result: Simulation probabilities
-            
+
         Returns:
             Market efficiency analysis
         """
         if not self.llm_client:
-            return "Market efficiency analysis requires LLM client."
-        
+            return 'Market efficiency analysis requires LLM client.'
+
         prompt = f"""Analyze the market efficiency for this game:
 
 Game ID: {game_id}
@@ -490,10 +492,10 @@ Keep to 3-4 sentences."""
         try:
             return self._call_llm(prompt)
         except Exception as e:
-            logger.error(f"Market analysis failed: {e}")
-            return "Unable to generate market analysis."
+            logger.exception(f'Market analysis failed: {e}')
+            return 'Unable to generate market analysis.'
 
-    def _format_market_summary(self, markets: List[Dict]) -> str:
+    def _format_market_summary(self, markets: list[dict]) -> str:
         """Format market summary for prompt."""
         lines = []
         for m in markets:

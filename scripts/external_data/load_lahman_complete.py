@@ -80,8 +80,7 @@ def read_csv_headers(csv_path: Path) -> list[str]:
     """Read CSV header row and return list of column names."""
     with open(csv_path, encoding='utf-8') as f:
         reader = csv.reader(f)
-        headers = next(reader)
-        return headers
+        return next(reader)
 
 
 def count_csv_rows(csv_path: Path) -> int:
@@ -189,7 +188,7 @@ def get_column_type(column_name: str) -> str:
             'G_ph',
             'G_pr',
             'openings',
-        )
+        ),
     ):
         return 'INTEGER'
 
@@ -276,8 +275,8 @@ def get_db_column_count(cur, table_name: str) -> int:
     """Get number of columns in the database table."""
     cur.execute(
         """
-        SELECT COUNT(*) 
-        FROM information_schema.columns 
+        SELECT COUNT(*)
+        FROM information_schema.columns
         WHERE table_schema = 'raw_lahman' AND table_name = %s;
     """,
         (table_name,),
@@ -345,7 +344,7 @@ def process_file(
 
         print(
             f'{col_match} {filename}: {len(csv_columns)} CSV cols -> {db_col_count} DB cols, '
-            f'{row_match} {csv_row_count:,} CSV rows -> {db_row_count:,} DB rows'
+            f'{row_match} {csv_row_count:,} CSV rows -> {db_row_count:,} DB rows',
         )
 
         if db_row_count != csv_row_count:
@@ -375,7 +374,7 @@ def main():
     )
     parser.add_argument('--dir', type=Path, required=True, help='Directory containing Lahman CSVs')
     parser.add_argument(
-        '--dry-run', action='store_true', help='Print what would be loaded without actually loading'
+        '--dry-run', action='store_true', help='Print what would be loaded without actually loading',
     )
     parser.add_argument('--tables', nargs='+', help='Specific tables to load (default: all)')
     args = parser.parse_args()

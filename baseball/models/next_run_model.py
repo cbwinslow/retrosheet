@@ -70,7 +70,7 @@ class NextRunProbabilityModel(SklearnBaseModel):
         'pitcher_l14_era',
     ]
 
-    def __init__(self, db_connection=None, config: ModelConfig | None = None):
+    def __init__(self, db_connection=None, config: ModelConfig | None = None) -> None:
         """Initialize Next-Run Probability Model.
 
         Args:
@@ -162,7 +162,7 @@ class NextRunProbabilityModel(SklearnBaseModel):
             self._model.predict_proba(X)[:, 1] if hasattr(self._model, 'predict_proba') else y_pred
         )
 
-        metrics = {
+        return {
             'accuracy': accuracy_score(y, y_pred),
             'precision': precision_score(y, y_pred, zero_division=0),
             'recall': recall_score(y, y_pred, zero_division=0),
@@ -172,18 +172,18 @@ class NextRunProbabilityModel(SklearnBaseModel):
             'log_loss': log_loss(y, y_prob) if len(np.unique(y)) > 1 else 0.0,
         }
 
-        return metrics
 
     def _load_features_and_target(self, seasons: list[int]) -> tuple[Any, Any]:
         """Load features and target from database."""
         import pandas as pd
 
         if self.db is None:
-            raise ValueError('No database connection')
+            msg = 'No database connection'
+            raise ValueError(msg)
 
         # Query training data
         query = """
-            SELECT 
+            SELECT
                 nf.inning_normalized,
                 nf.is_top_half::int as is_top_half,
                 nf.outs,
@@ -216,7 +216,7 @@ class NextRunProbabilityModel(SklearnBaseModel):
                     'pitcher_l14_era': 4.5,
                     'is_platoon_advantage': 0,
                     'is_high_leverage': 0,
-                }
+                },
             )
 
             # Separate features and target
@@ -233,7 +233,7 @@ class NextRunProbabilityModel(SklearnBaseModel):
             return X, y
 
         except Exception as e:
-            logger.error(f'Failed to load training data: {e}')
+            logger.exception(f'Failed to load training data: {e}')
             return None, None
 
     def predict_run_probability(self, game_state: dict[str, Any]) -> float:
@@ -246,7 +246,8 @@ class NextRunProbabilityModel(SklearnBaseModel):
             Probability (0.0 to 1.0)
         """
         if not self.is_trained:
-            raise ValueError('Model not trained')
+            msg = 'Model not trained'
+            raise ValueError(msg)
 
         # Extract features in correct order
         features = []
@@ -272,12 +273,13 @@ class NextRunProbabilityModel(SklearnBaseModel):
             List of prediction dictionaries
         """
         if self.db is None:
-            raise ValueError('No database connection')
+            msg = 'No database connection'
+            raise ValueError(msg)
 
         import pandas as pd
 
         query = """
-            SELECT 
+            SELECT
                 nf.game_pk,
                 t.observation_at_bat_index,
                 nf.inning_normalized,
@@ -322,7 +324,7 @@ class NextRunProbabilityModel(SklearnBaseModel):
                     'run_probability': float(prob),
                     'prediction': prob > 0.5,
                     'confidence': abs(prob - 0.5) * 2,  # 0-1 scale
-                }
+                },
             )
 
         return results
@@ -349,7 +351,7 @@ class NextRunProbabilityModel(SklearnBaseModel):
                              observation_at_bat_index, inning, is_top,
                              run_probability, confidence, feature_snapshot)
                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                           ON CONFLICT (model_version, game_pk, observation_at_bat_index) 
+                           ON CONFLICT (model_version, game_pk, observation_at_bat_index)
                            DO UPDATE SET
                              run_probability = EXCLUDED.run_probability,
                              confidence = EXCLUDED.confidence,
@@ -370,7 +372,7 @@ class NextRunProbabilityModel(SklearnBaseModel):
             logger.info(f'Saved {len(predictions)} predictions')
             return True
         except Exception as e:
-            logger.error(f'Failed to save predictions: {e}')
+            logger.exception(f'Failed to save predictions: {e}')
             return False
 
     def get_model_info(self) -> dict[str, Any]:

@@ -56,7 +56,8 @@ class PAOutcomeDistributionPredictor(Predictor[pd.DataFrame, np.ndarray]):
     def predict_raw(self, features: pd.DataFrame) -> np.ndarray:
         """Raw prediction before calibration."""
         if self._model is None:
-            raise ValueError('Model not loaded')
+            msg = 'Model not loaded'
+            raise ValueError(msg)
         return self._model.predict_proba(features)
 
     def predict(self, features: pd.DataFrame) -> np.ndarray:
@@ -83,6 +84,6 @@ class PAOutcomeDistributionPredictor(Predictor[pd.DataFrame, np.ndarray]):
         """Format prediction as readable string."""
         top_classes, top_probs = self.predict_top_k(features)
         lines = ['Top predictions:']
-        for cls, prob in zip(top_classes, top_probs):
+        for cls, prob in zip(top_classes, top_probs, strict=False):
             lines.append(f'  {cls}: {prob:.1%}')
         return '\n'.join(lines)

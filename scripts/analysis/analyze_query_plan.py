@@ -31,22 +31,23 @@ import graphviz
 
 from baseball.core.db import get_db_connection
 
+
 def explain_query(conn, sql: str, analyze: bool = False, buffers: bool = False) -> dict:
     """Run EXPLAIN on SQL query and return JSON plan."""
     with conn.cursor() as cur:
-        explain_sql = "EXPLAIN (FORMAT JSON"
+        explain_sql = 'EXPLAIN (FORMAT JSON'
         if analyze:
-            explain_sql += ", ANALYZE"
+            explain_sql += ', ANALYZE'
         if buffers:
-            explain_sql += ", BUFFERS"
-        explain_sql += f") {sql}"
+            explain_sql += ', BUFFERS'
+        explain_sql += f') {sql}'
         cur.execute(explain_sql)
         result = cur.fetchone()[0]
         if isinstance(result, str):
             result = json.loads(result)
     return result
 
-def render_plan_node(node: dict, dot: graphviz.Digraph, parent_id: str = None, node_id: str = "root"):
+def render_plan_node(node: dict, dot: graphviz.Digraph, parent_id: str | None = None, node_id: str = 'root'):
     """Recursively render EXPLAIN node and children to graphviz."""
     node_type = node.get('Node Type', 'Unknown')
     actual_rows = node.get('Actual Rows', 'N/A')
@@ -56,10 +57,10 @@ def render_plan_node(node: dict, dot: graphviz.Digraph, parent_id: str = None, n
 
     # Build node label
     label_parts = [
-        f"<b>{node_type}</b>",
-        f"Rows: est={estimated_rows} act={actual_rows}",
-        f"Cost: {cost:.1f}",
-        f"Width: {width} bytes"
+        f'<b>{node_type}</b>',
+        f'Rows: est={estimated_rows} act={actual_rows}',
+        f'Cost: {cost:.1f}',
+        f'Width: {width} bytes',
     ]
 
     # Add relation info for scans
@@ -98,7 +99,7 @@ def render_plan_node(node: dict, dot: graphviz.Digraph, parent_id: str = None, n
     # Recurse for child plans
     children = node.get('Plans', [])
     for i, child in enumerate(children):
-        child_id = f"{node_id}_c{i}"
+        child_id = f'{node_id}_c{i}'
         render_plan_node(child, dot, node_id, child_id)
 
 def generate_query_plan_diagram(plan: dict, output_path: Path):
@@ -113,47 +114,47 @@ def generate_query_plan_diagram(plan: dict, output_path: Path):
     output_format = output_path.suffix.lstrip('.') or 'png'
     try:
         dot.render(str(output_path.with_suffix('')), format=output_format, cleanup=True)
-        print(f"✅ Query plan diagram generated: {output_path}")
+        print(f'✅ Query plan diagram generated: {output_path}')
     except Exception as e:
-        print(f"❌ Error rendering diagram: {e}")
-        print(f"   Ensure graphviz is installed: brew install graphviz")
+        print(f'❌ Error rendering diagram: {e}')
+        print('   Ensure graphviz is installed: brew install graphviz')
         return 1
 
     return 0
 
 def main():
-    parser = argparse.ArgumentParser(description="Visualize PostgreSQL query execution plan")
-    parser.add_argument("--sql", required=True, help="SQL query to analyze")
-    parser.add_argument("--output", type=Path, default=Path("query_plan"), help="Output file (without extension)")
-    parser.add_argument("--analyze", action='store_true', help="Run with ANALYZE to get actual execution stats")
-    parser.add_argument("--buffers", action='store_true', help="Include buffer usage statistics")
-    parser.add_argument("--format", choices=['png', 'pdf', 'svg'], default='png', help="Output format")
+    parser = argparse.ArgumentParser(description='Visualize PostgreSQL query execution plan')
+    parser.add_argument('--sql', required=True, help='SQL query to analyze')
+    parser.add_argument('--output', type=Path, default=Path('query_plan'), help='Output file (without extension)')
+    parser.add_argument('--analyze', action='store_true', help='Run with ANALYZE to get actual execution stats')
+    parser.add_argument('--buffers', action='store_true', help='Include buffer usage statistics')
+    parser.add_argument('--format', choices=['png', 'pdf', 'svg'], default='png', help='Output format')
     args = parser.parse_args()
 
     # Check graphviz
     try:
         subprocess.run(['dot', '-V'], capture_output=True, check=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print("❌ ERROR: Graphviz required. Install: brew install graphviz or apt-get install graphviz")
+        print('❌ ERROR: Graphviz required. Install: brew install graphviz or apt-get install graphviz')
         return 1
 
     # Connect to DB
     try:
         conn = get_db_connection()
     except Exception as e:
-        print(f"❌ ERROR: Could not connect: {e}")
+        print(f'❌ ERROR: Could not connect: {e}')
         return 1
 
-    print(f"Analyzing query: {args.sql[:80]}...")
+    print(f'Analyzing query: {args.sql[:80]}...')
     plan = explain_query(conn, args.sql, analyze=args.analyze, buffers=args.buffers)
 
     # Print textual plan
-    print("\n📊 EXPLAIN Output (JSON):")
+    print('\n📊 EXPLAIN Output (JSON):')
     print(json.dumps(plan, indent=2)[:1000])  # Truncate for readability
 
     # Generate diagram
     output_file = args.output.with_suffix(f'.{args.format}')
     return generate_query_plan_diagram(plan, output_file)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())

@@ -110,7 +110,7 @@ def main():
         if lower.endswith('.pdf'):
             dest = ARTICLES_DIR / filename
             download_file(full_url, dest)
-        elif lower.endswith('.htm') or lower.endswith('.html'):
+        elif lower.endswith(('.htm', '.html')):
             # Save raw HTML and also extract text version
             dest_html = ARTICLES_DIR / filename
             entry = download_file(full_url, dest_html)

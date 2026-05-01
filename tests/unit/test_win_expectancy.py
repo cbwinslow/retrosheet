@@ -57,7 +57,7 @@ class TestWinExpectancyCalculator:
 
     def test_load_from_db_empty(self, mock_db):
         """Test loading WE matrix when database is empty."""
-        conn, cursor = mock_db
+        conn, _cursor = mock_db
 
         # Mock context manager that returns empty rows
         context_cursor = MagicMock()
@@ -215,7 +215,7 @@ class TestWinExpectancyCalculator:
 
     def test_save(self, mock_db):
         """Test saving computed WE to database."""
-        conn, cursor = mock_db
+        conn, _cursor = mock_db
 
         calc = WinExpectancyCalculator(db_connection=conn)
 

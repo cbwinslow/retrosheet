@@ -157,7 +157,7 @@ class BullpenCalculator(FeatureStore):
     STRONG_BULLPEN_ERA = 3.50
     WEAK_BULLPEN_ERA = 5.00
 
-    def __init__(self, db_connection=None, config: FeatureConfig | None = None):
+    def __init__(self, db_connection=None, config: FeatureConfig | None = None) -> None:
         """Initialize bullpen calculator.
 
         Args:
@@ -177,7 +177,7 @@ class BullpenCalculator(FeatureStore):
         return 'features.bullpen_features'
 
     def get_team_bullpen(
-        self, team_id: int, game_pk: int, season: int, game_date: date | None = None
+        self, team_id: int, game_pk: int, season: int, game_date: date | None = None,
     ) -> TeamBullpenStatus | None:
         """Get bullpen status for a team in a game.
 
@@ -234,12 +234,12 @@ class BullpenCalculator(FeatureStore):
                     self._bullpen_cache[cache_key] = status
                     return status
         except Exception as e:
-            logger.error(f'Failed to load bullpen status: {e}')
+            logger.exception(f'Failed to load bullpen status: {e}')
 
         return None
 
     def get_reliever_fatigue(
-        self, player_id: int, team_id: int, season: int, as_of_date: date | None = None
+        self, player_id: int, team_id: int, season: int, as_of_date: date | None = None,
     ) -> RelieverFatigue | None:
         """Get fatigue status for a reliever.
 
@@ -301,12 +301,12 @@ class BullpenCalculator(FeatureStore):
                     self._reliever_cache[cache_key] = fatigue
                     return fatigue
         except Exception as e:
-            logger.error(f'Failed to load reliever fatigue: {e}')
+            logger.exception(f'Failed to load reliever fatigue: {e}')
 
         return None
 
     def calculate_fatigue_score(
-        self, games_3d: int, pitches_1d: int, back_to_back: bool, days_rest: int
+        self, games_3d: int, pitches_1d: int, back_to_back: bool, days_rest: int,
     ) -> float:
         """Calculate fatigue score from workload metrics.
 
@@ -347,7 +347,7 @@ class BullpenCalculator(FeatureStore):
         return min(1.0, score)
 
     def get_bullpen_advantage(
-        self, home_team_id: int, away_team_id: int, game_pk: int, season: int
+        self, home_team_id: int, away_team_id: int, game_pk: int, season: int,
     ) -> dict[str, Any]:
         """Compare bullpens and determine advantage.
 
@@ -464,7 +464,7 @@ class BullpenCalculator(FeatureStore):
         return None
 
     def save_bullpen_features(
-        self, game_pk: int, season: int, home_team_id: int, away_team_id: int
+        self, game_pk: int, season: int, home_team_id: int, away_team_id: int,
     ) -> bool:
         """Save computed bullpen features to database.
 
@@ -490,7 +490,7 @@ class BullpenCalculator(FeatureStore):
 
             with self.db.cursor() as cur:
                 cur.execute(
-                    """INSERT INTO features.bullpen_features 
+                    """INSERT INTO features.bullpen_features
                         (game_pk, season,
                          home_team_id, home_bullpen_fatigue, home_bullpen_depth,
                          home_available_pitchers, home_rested_pitchers,
@@ -542,11 +542,11 @@ class BullpenCalculator(FeatureStore):
             self.db.commit()
             return True
         except Exception as e:
-            logger.error(f'Failed to save bullpen features: {e}')
+            logger.exception(f'Failed to save bullpen features: {e}')
             return False
 
     def get_fatigued_relievers(
-        self, team_id: int, season: int, threshold: float = 0.50
+        self, team_id: int, season: int, threshold: float = 0.50,
     ) -> list[RelieverFatigue]:
         """Get list of fatigued relievers for a team.
 
@@ -571,7 +571,7 @@ class BullpenCalculator(FeatureStore):
                               days_rest, fatigue_score, availability_status
                        FROM features.reliever_fatigue
                        WHERE team_id = %s AND season = %s
-                         AND (fatigue_score > %s 
+                         AND (fatigue_score > %s
                               OR availability_status = 'tired'
                               OR availability_status = 'rest')
                        ORDER BY fatigue_score DESC""",
@@ -599,7 +599,7 @@ class BullpenCalculator(FeatureStore):
                     for row in cur.fetchall()
                 ]
         except Exception as e:
-            logger.error(f'Failed to get fatigued relievers: {e}')
+            logger.exception(f'Failed to get fatigued relievers: {e}')
             return []
 
     def _build_historical(self, config: FeatureConfig, result: FeatureResult) -> None:

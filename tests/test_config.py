@@ -375,13 +375,13 @@ class TestExperimentConfig:
             ModelConfig(
                 family=ModelFamily.XGBOOST,
                 target=TargetVariable.SWING_DECISION,
-            )
+            ),
         )
         exp.add_model(
             ModelConfig(
                 family=ModelFamily.LIGHTGBM,
                 target=TargetVariable.SWING_DECISION,
-            )
+            ),
         )
 
         yaml_path = tmp_path / 'experiment.yaml'
@@ -515,7 +515,7 @@ class TestConfigManager:
 
     def test_initialization(self, tmp_path):
         """Test that ConfigManager creates directories."""
-        manager = ConfigManager(tmp_path / 'configs')
+        ConfigManager(tmp_path / 'configs')
         assert (tmp_path / 'configs').exists()
         assert (tmp_path / 'configs' / 'models').exists()
         assert (tmp_path / 'configs' / 'experiments').exists()
@@ -544,7 +544,7 @@ class TestConfigManager:
             ModelConfig(
                 family=ModelFamily.XGBOOST,
                 target=TargetVariable.SWING_DECISION,
-            )
+            ),
         )
 
         path = manager.save_experiment_config(exp)

@@ -197,7 +197,7 @@ class TestEdgeCases:
 
         # Very long game
         state = GameState(
-            inning=18, is_top=False, outs=2, runner_1b=True, runner_2b=True, runner_3b=True
+            inning=18, is_top=False, outs=2, runner_1b=True, runner_2b=True, runner_3b=True,
         )
         result = calc.compute(state)
         assert result == 0.6
@@ -335,7 +335,7 @@ class TestPerformance:
 
         start = time.time()
         # Mock computation
-        results = [0.5 for _ in states]
+        [0.5 for _ in states]
         duration = time.time() - start
 
         # Should be fast
@@ -408,7 +408,8 @@ class TestReliability:
 
         # Simulate error then recovery
         try:
-            raise Exception('Simulated error')
+            msg = 'Simulated error'
+            raise Exception(msg)
         except Exception:
             pass  # Handled
 

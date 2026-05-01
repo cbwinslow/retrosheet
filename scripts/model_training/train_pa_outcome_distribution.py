@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import catboost as cb
@@ -147,11 +147,13 @@ def load_examples(
     target_taxonomy: str,
 ) -> pd.DataFrame:
     if not 0 < sample_rate <= 1:
-        raise ValueError('--sample-rate must be between 0 and 1')
+        msg = '--sample-rate must be between 0 and 1'
+        raise ValueError(msg)
     sample_ppm = int(sample_rate * 1_000_000)
 
     if target_taxonomy not in {'granular', 'grouped'}:
-        raise ValueError('--target-taxonomy must be granular or grouped')
+        msg = '--target-taxonomy must be granular or grouped'
+        raise ValueError(msg)
 
     source_relation = (
         'features.plate_appearance_outcome_grouped_examples'
@@ -570,12 +572,14 @@ def train(args: argparse.Namespace) -> None:
         )
         frame = filter_sparse_classes(frame, args.min_class_rows)
         if frame.empty:
-            raise SystemExit('No rows returned after sparse-class filtering.')
+            msg = 'No rows returned after sparse-class filtering.'
+            raise SystemExit(msg)
 
         train_frame = frame[frame['season'] <= args.train_through].copy()
         validation_frame = frame[frame['season'] > args.train_through].copy()
         if train_frame.empty or validation_frame.empty:
-            raise SystemExit('Need both training and validation rows.')
+            msg = 'Need both training and validation rows.'
+            raise SystemExit(msg)
         train_frame, train_season_weights = add_temporal_weights(
             train_frame,
             train_through=args.train_through,
@@ -584,7 +588,7 @@ def train(args: argparse.Namespace) -> None:
         )
         validation_frame['sample_weight'] = 1.0
 
-        version = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+        version = datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')
         class_counts = frame['target'].value_counts().sort_index().to_dict()
         feature_spec = {
             'numeric_features': numeric_features,
@@ -724,13 +728,17 @@ def main() -> None:
     )
     args = parser.parse_args()
     if args.recent_window is not None and args.recent_window <= 0:
-        raise SystemExit('--recent-window must be positive.')
+        msg = '--recent-window must be positive.'
+        raise SystemExit(msg)
     if args.season_half_life is not None and args.season_half_life <= 0:
-        raise SystemExit('--season-half-life must be positive.')
+        msg = '--season-half-life must be positive.'
+        raise SystemExit(msg)
     if args.downweight_2020 is not None and not 0 < args.downweight_2020 <= 1:
-        raise SystemExit('--downweight-2020 must be in the interval (0, 1].')
+        msg = '--downweight-2020 must be in the interval (0, 1].'
+        raise SystemExit(msg)
     if args.exclude_2020 and args.downweight_2020 is not None:
-        raise SystemExit('--exclude-2020 and --downweight-2020 are mutually exclusive.')
+        msg = '--exclude-2020 and --downweight-2020 are mutually exclusive.'
+        raise SystemExit(msg)
     train(args)
 
 

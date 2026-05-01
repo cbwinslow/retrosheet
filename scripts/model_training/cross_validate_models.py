@@ -12,15 +12,19 @@ import argparse
 import json
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import joblib
 import numpy as np
-import pandas as pd
 import psycopg2
 import train_models
 from sklearn.metrics import accuracy_score, brier_score_loss, log_loss, roc_auc_score
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sqlalchemy import create_engine
+
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -82,10 +86,11 @@ def load_training_data(target_id: str, sample_rate: float = 0.1) -> pd.DataFrame
     elif target_id in train_models.HI_TARGETS:
         feature_set = 'basic'  # Only basic for half-inning
     else:
-        raise ValueError(f'Unknown target_id: {target_id}')
+        msg = f'Unknown target_id: {target_id}'
+        raise ValueError(msg)
 
     try:
-        frame = train_models.load_examples(
+        return train_models.load_examples(
             engine,
             target_id=target_id,
             min_season=2000,
@@ -93,7 +98,6 @@ def load_training_data(target_id: str, sample_rate: float = 0.1) -> pd.DataFrame
             sample_rate=sample_rate,
             feature_set=feature_set,
         )
-        return frame
     finally:
         engine.dispose()
 
@@ -171,7 +175,8 @@ def run_cross_validation(target_id: str, sample_rate: float = 0.1, cv_folds: int
     # Get active models
     models = get_active_models(target_id)
     if not models:
-        raise ValueError(f'No active models found for {target_id}')
+        msg = f'No active models found for {target_id}'
+        raise ValueError(msg)
 
     # Load training data
     data = load_training_data(target_id, sample_rate)

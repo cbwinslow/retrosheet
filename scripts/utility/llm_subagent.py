@@ -35,9 +35,11 @@ class LLMSubAgent:
     def _verify_setup(self) -> None:
         """Verify llama.cpp and model are available."""
         if not LLAMA_SIMPLE.exists():
-            raise RuntimeError(f'llama-simple not found at {LLAMA_SIMPLE}')
+            msg = f'llama-simple not found at {LLAMA_SIMPLE}'
+            raise RuntimeError(msg)
         if not MODEL_PATH.exists():
-            raise RuntimeError(f'Model not found at {MODEL_PATH}')
+            msg = f'Model not found at {MODEL_PATH}'
+            raise RuntimeError(msg)
         print(f'✓ LLM Sub-Agent ready: {MODEL_PATH.name}')
 
     def _call_llm(self, prompt: str, max_tokens: int = 500) -> str:
@@ -114,7 +116,7 @@ Provide ONLY the corrected line(s). No explanation, no markdown, just the fixed 
                             'rule': rule,
                             'suggestion': fixed_code,
                             'applied': False,
-                        }
+                        },
                     )
                 else:
                     if self._apply_fix(filepath, line_no, fixed_code):
@@ -218,7 +220,7 @@ def main():
         print(f'Found {len(errors)} errors with rule {rule}')
         results = agent.batch_fix(errors, dry_run=True)
         print(
-            f'\nSummary: {results["fixed"]} would be fixed, {results["failed"]} failed, {results["skipped"]} skipped'
+            f'\nSummary: {results["fixed"]} would be fixed, {results["failed"]} failed, {results["skipped"]} skipped',
         )
 
     elif command == 'fix-apply' and len(sys.argv) >= 3:
@@ -228,7 +230,7 @@ def main():
         print(f'Found {len(errors)} errors with rule {rule}')
         results = agent.batch_fix(errors, dry_run=False)
         print(
-            f'\nSummary: {results["fixed"]} fixed, {results["failed"]} failed, {results["skipped"]} skipped'
+            f'\nSummary: {results["fixed"]} fixed, {results["failed"]} failed, {results["skipped"]} skipped',
         )
 
     else:

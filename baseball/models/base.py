@@ -214,7 +214,7 @@ class BaseModel(ABC):
         ...     predictions = model.predict(game_states)
     """
 
-    def __init__(self, db_connection=None, config: ModelConfig | None = None):
+    def __init__(self, db_connection=None, config: ModelConfig | None = None) -> None:
         """Initialize model.
 
         Args:
@@ -321,8 +321,8 @@ class BaseModel(ABC):
         try:
             with self.db.cursor() as cur:
                 cur.execute(
-                    """INSERT INTO models.model_registry 
-                        (model_type, model_version, status, metrics, 
+                    """INSERT INTO models.model_registry
+                        (model_type, model_version, status, metrics,
                          hyperparameters, feature_columns, training_date, notes)
                        VALUES (%s, %s, %s, %s, %s, %s, NOW(), %s)
                        RETURNING registry_id""",
@@ -348,7 +348,7 @@ class BaseModel(ABC):
                     training_date=datetime.now(),
                 )
         except Exception as e:
-            logger.error(f'Failed to register version: {e}')
+            logger.exception(f'Failed to register version: {e}')
             return ModelVersion(
                 version_id=0,
                 model_type=self.model_type,
@@ -368,7 +368,8 @@ class BaseModel(ABC):
             Training data (format depends on implementation)
         """
         if self.db is None:
-            raise ValueError('No database connection')
+            msg = 'No database connection'
+            raise ValueError(msg)
 
         # Base implementation - subclasses may override
         logger.info(f'Loading training data for seasons: {seasons}')
@@ -404,7 +405,7 @@ class SklearnBaseModel(BaseModel):
     - Feature importance extraction
     """
 
-    def __init__(self, db_connection=None, config: ModelConfig | None = None):
+    def __init__(self, db_connection=None, config: ModelConfig | None = None) -> None:
         super().__init__(db_connection, config)
         self._feature_names: list[str] = []
 
@@ -484,24 +485,29 @@ class SklearnBaseModel(BaseModel):
     def predict(self, features: Any) -> Any:
         """Make predictions."""
         if not self.is_trained:
-            raise ValueError('Model not trained')
+            msg = 'Model not trained'
+            raise ValueError(msg)
 
         if self._model is None:
-            raise ValueError('Model not loaded')
+            msg = 'Model not loaded'
+            raise ValueError(msg)
 
         return self._model.predict(features)
 
     def predict_proba(self, features: Any) -> Any:
         """Make probability predictions."""
         if not self.is_trained:
-            raise ValueError('Model not trained')
+            msg = 'Model not trained'
+            raise ValueError(msg)
 
         if self._model is None:
-            raise ValueError('Model not loaded')
+            msg = 'Model not loaded'
+            raise ValueError(msg)
 
         if hasattr(self._model, 'predict_proba'):
             return self._model.predict_proba(features)
-        raise ValueError('Model does not support probability predictions')
+        msg = 'Model does not support probability predictions'
+        raise ValueError(msg)
 
     def save(self, path: str) -> bool:
         """Save model using joblib."""
@@ -520,7 +526,7 @@ class SklearnBaseModel(BaseModel):
             logger.info(f'Model saved to {path}')
             return True
         except Exception as e:
-            logger.error(f'Failed to save model: {e}')
+            logger.exception(f'Failed to save model: {e}')
             return False
 
     def load(self, path: str) -> bool:
@@ -539,7 +545,7 @@ class SklearnBaseModel(BaseModel):
             logger.info(f'Model loaded from {path}')
             return True
         except Exception as e:
-            logger.error(f'Failed to load model: {e}')
+            logger.exception(f'Failed to load model: {e}')
             return False
 
     def get_feature_importance(self) -> dict[str, float]:
@@ -554,7 +560,7 @@ class SklearnBaseModel(BaseModel):
         else:
             return {}
 
-        return {name: float(imp) for name, imp in zip(self._feature_names, importances)}
+        return {name: float(imp) for name, imp in zip(self._feature_names, importances, strict=False)}
 
     @abstractmethod
     def _fit_model(self, X_train: Any, y_train: Any, config: TrainingConfig) -> None:

@@ -37,7 +37,7 @@ class XrefManager:
         >>> game = manager.games.lookup_by_retro('202604040NYY01')
     """
 
-    def __init__(self, db_connection=None):
+    def __init__(self, db_connection=None) -> None:
         """Initialize the xref manager.
 
         Args:
@@ -137,7 +137,7 @@ class XrefManager:
         return self.games.lookup(source, game_id)
 
     def find_player(
-        self, first_name: str, last_name: str, birth_date: Any | None = None
+        self, first_name: str, last_name: str, birth_date: Any | None = None,
     ) -> list[PlayerXref]:
         """Find players by name.
 
@@ -168,7 +168,7 @@ class XrefManager:
         return self.games.find_by_date(game_date)
 
     def find_games_by_matchup(
-        self, team1_code: str, team2_code: str, year: int | None = None
+        self, team1_code: str, team2_code: str, year: int | None = None,
     ) -> list[GameXref]:
         """Find games between two teams.
 

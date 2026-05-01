@@ -75,7 +75,8 @@ def load_registered_model(
     }
     artifact_path = ROOT / metadata['artifact_uri']
     if not artifact_path.exists():
-        raise FileNotFoundError(f'Model artifact not found: {artifact_path}')
+        msg = f'Model artifact not found: {artifact_path}'
+        raise FileNotFoundError(msg)
     return joblib.load(artifact_path), metadata['feature_spec'], metadata
 
 
@@ -147,7 +148,8 @@ def load_calibration_artifact(
     }
     artifact_path = ROOT / metadata['artifact_uri']
     if not artifact_path.exists():
-        raise FileNotFoundError(f'Calibration artifact not found: {artifact_path}')
+        msg = f'Calibration artifact not found: {artifact_path}'
+        raise FileNotFoundError(msg)
     return joblib.load(artifact_path), metadata
 
 
@@ -355,13 +357,15 @@ def predict_pa_outcome_distribution(
         engine.dispose()
 
     if frame.empty:
-        raise ValueError(f'Plate appearance not found: {game_id}:{plate_appearance_id}')
+        msg = f'Plate appearance not found: {game_id}:{plate_appearance_id}'
+        raise ValueError(msg)
 
     missing_features = [
         column for column in numeric_features + categorical_features if column not in frame
     ]
     if missing_features:
-        raise ValueError(f'Missing model features: {", ".join(missing_features)}')
+        msg = f'Missing model features: {", ".join(missing_features)}'
+        raise ValueError(msg)
 
     feature_frame = frame[numeric_features + categorical_features]
     raw_probabilities = model.predict_proba(feature_frame)[0]
@@ -376,7 +380,8 @@ def predict_pa_outcome_distribution(
         )
         artifact_classes = [str(label) for label in calibration_artifact['classes']]
         if artifact_classes != classes:
-            raise ValueError('Calibration artifact classes do not match model classes.')
+            msg = 'Calibration artifact classes do not match model classes.'
+            raise ValueError(msg)
         raw_probability_map = {
             label: float(raw_probabilities[index]) for index, label in enumerate(classes)
         }

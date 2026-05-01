@@ -142,7 +142,7 @@ class IntentParser:
         ],
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize intent parser."""
         self._compile_patterns()
 

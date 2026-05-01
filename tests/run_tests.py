@@ -279,7 +279,7 @@ def main():
     parser.add_argument('--all', action='store_true', help='Run all tests including benchmarks')
     parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     parser.add_argument(
-        '--output-dir', type=Path, default=Path('test_results'), help='Output directory'
+        '--output-dir', type=Path, default=Path('test_results'), help='Output directory',
     )
 
     args = parser.parse_args()

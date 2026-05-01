@@ -72,7 +72,7 @@ def store_br_game_logs(conn, season: int, team: str, games: list):
 
             # Create unique ID
             game_id = f'{season}_{team}_{game_date}_{opponent}'
-            game_id_hash = hashlib.md5(game_id.encode()).hexdigest()
+            hashlib.md5(game_id.encode()).hexdigest()
 
             payload_json = json.dumps(game, sort_keys=True)
             checksum = hashlib.md5(payload_json.encode()).hexdigest()
@@ -80,7 +80,7 @@ def store_br_game_logs(conn, season: int, team: str, games: list):
             cur.execute(
                 """
                 INSERT INTO raw_baseball_reference.game_logs (
-                    game_date, season, team, opponent, 
+                    game_date, season, team, opponent,
                     http_status, response_time_ms, payload, checksum
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s)
                 ON CONFLICT (checksum) DO NOTHING

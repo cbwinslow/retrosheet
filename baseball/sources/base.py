@@ -42,7 +42,7 @@ class BaseSource(ABC):
         season: int,
         entity_type: str,
         entity_key: str,
-        metadata: dict | None = None
+        metadata: dict | None = None,
     ) -> int:
         """Start a checkpoint for tracking download progress.
 
@@ -76,8 +76,8 @@ class BaseSource(ABC):
                         entity_type,
                         entity_key,
                         self._ingest_run_id,
-                        metadata or {}
-                    )
+                        metadata or {},
+                    ),
                 )
                 result = cur.fetchone()
                 conn.commit()
@@ -90,7 +90,7 @@ class BaseSource(ABC):
         checkpoint_id: int,
         file_path: str | None = None,
         records_processed: int | None = None,
-        metadata: dict | None = None
+        metadata: dict | None = None,
     ) -> None:
         """Mark a checkpoint as successfully completed.
 
@@ -112,7 +112,7 @@ class BaseSource(ABC):
                     """
                     SELECT staging.complete_checkpoint(%s, %s, %s, %s)
                     """,
-                    (checkpoint_id, file_path, records_processed, metadata or {})
+                    (checkpoint_id, file_path, records_processed, metadata or {}),
                 )
                 conn.commit()
         finally:
@@ -123,7 +123,7 @@ class BaseSource(ABC):
         checkpoint_id: int,
         error: str,
         error_code: str | None = None,
-        records_processed: int | None = None
+        records_processed: int | None = None,
     ) -> None:
         """Mark a checkpoint as failed with error information.
 
@@ -145,7 +145,7 @@ class BaseSource(ABC):
                     """
                     SELECT staging.fail_checkpoint(%s, %s, %s, %s)
                     """,
-                    (checkpoint_id, error, error_code, records_processed)
+                    (checkpoint_id, error, error_code, records_processed),
                 )
                 conn.commit()
         finally:
@@ -154,7 +154,7 @@ class BaseSource(ABC):
     def get_resumable_entities(
         self,
         season: int,
-        entity_type: str | None = None
+        entity_type: str | None = None,
     ) -> list[dict]:
         """Get list of entities that can be resumed from checkpoint.
 
@@ -177,10 +177,10 @@ class BaseSource(ABC):
                     """
                     SELECT * FROM staging.get_resumable_checkpoints(%s, %s, %s)
                     """,
-                    (self._get_source_name(), season, entity_type)
+                    (self._get_source_name(), season, entity_type),
                 )
                 columns = [desc[0] for desc in cur.description]
-                return [dict(zip(columns, row)) for row in cur.fetchall()]
+                return [dict(zip(columns, row, strict=False)) for row in cur.fetchall()]
         finally:
             conn.close()
 

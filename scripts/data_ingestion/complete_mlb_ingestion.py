@@ -58,7 +58,17 @@ def download_season(season: int) -> bool:
         timeout=600,  # 10 minutes for transformation
     )
 
-    success = schedule_success and games_success and transform_success
+    # Refresh materialized views after ingestion
+    if transform_success:
+        refresh_success = run_command(
+            f'psql -d retrosheet -c "SELECT * FROM maintenance.refresh_features_after_ingestion(NULL)"',
+            f'Refresh feature materialized views',
+            timeout=300,  # 5 minutes for refresh
+        )
+    else:
+        refresh_success = False
+
+    success = schedule_success and games_success and transform_success and refresh_success
     status = '✅ SUCCESS' if success else '❌ FAILED'
     print(f'🏁 Season {season}: {status}')
 
@@ -87,10 +97,9 @@ def get_missing_seasons() -> list[int]:
         )
 
         if result.returncode == 0:
-            seasons = [
+            return [
                 int(line.strip()) for line in result.stdout.strip().split('\n') if line.strip()
             ]
-            return seasons
         print(f'❌ Failed to get missing seasons: {result.stderr}')
         return list(range(2000, 2020))  # Fallback
 
@@ -174,11 +183,12 @@ def main():
 
     # Estimate workload
     estimated_games = len(missing_seasons) * 2500  # ~2500 games per season
-    estimated_games * 0.0005  # Rough estimate per game
+    estimated_time_hours = estimated_games * 0.0005  # Rough estimate per game
     print('\n📊 WORKLOAD ESTIMATE:')
     print(f'   • Seasons to download: {len(missing_seasons)}')
     print(f'   • Estimated games: ~{estimated_games:,}')
-    print('.1f')
+    print(f'   • Estimated time: ~{estimated_time_hours:.1f} hours')
+
     # Process seasons in parallel (but not too aggressively to avoid API limits)
     max_workers = 2  # Conservative to avoid rate limiting
     completed = 0

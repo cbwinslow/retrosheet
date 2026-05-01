@@ -48,7 +48,7 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 
 
 def load_data_with_features(
-    conn, features: list[str], sample_size: int
+    conn, features: list[str], sample_size: int,
 ) -> tuple[pd.DataFrame, pd.Series]:
     """Load data with specified features."""
 
@@ -172,7 +172,7 @@ def phase_1_train_full_model(sample_size: int = 100000):
                     'feature': feat,
                     'importance': float(score),
                     'rank': 0,  # Will fill in after sorting
-                }
+                },
             )
 
         # Sort by importance
@@ -191,7 +191,7 @@ def phase_1_train_full_model(sample_size: int = 100000):
         print('\nTop 10 Most Important Features:')
         for fi in feature_importance[:10]:
             print(
-                f'  {fi["rank"]:2d}. {fi["feature"][:40]:40} = {fi["importance"]:,.0f} ({fi["cumulative_pct"]:.1f}%)'
+                f'  {fi["rank"]:2d}. {fi["feature"][:40]:40} = {fi["importance"]:,.0f} ({fi["cumulative_pct"]:.1f}%)',
             )
 
         # Save everything
@@ -229,7 +229,7 @@ def phase_1_train_full_model(sample_size: int = 100000):
 def phase_2_test_feature_subsets(
     importance_file: str,
     sample_size: int = 50000,
-    subset_sizes: list = None,
+    subset_sizes: list | None = None,
 ):
     """
     Phase 2: Test progressively smaller feature subsets.
@@ -270,7 +270,7 @@ def phase_2_test_feature_subsets(
     # Filter to available features
     subset_sizes = [s for s in subset_sizes if s <= available_features and s >= 10]
     # Remove duplicates and sort descending
-    subset_sizes = sorted(list(set(subset_sizes)), reverse=True)
+    subset_sizes = sorted(set(subset_sizes), reverse=True)
 
     print(f'Testing {len(subset_sizes)} subset sizes: {subset_sizes}')
     print(f'Full model baseline: AUC={full_performance["auc"]:.4f}')
@@ -371,10 +371,10 @@ def phase_2_test_feature_subsets(
         if efficient:
             smallest_efficient = min(efficient, key=lambda x: x['n_features'])
             print(
-                f'Most efficient: {smallest_efficient["auc"]:.4f} with {smallest_efficient["n_features"]} features'
+                f'Most efficient: {smallest_efficient["auc"]:.4f} with {smallest_efficient["n_features"]} features',
             )
             print(
-                f'  ({smallest_efficient["n_features"]}/{available_features} = {smallest_efficient["n_features"] / available_features:.0%} of features)'
+                f'  ({smallest_efficient["n_features"]}/{available_features} = {smallest_efficient["n_features"] / available_features:.0%} of features)',
             )
 
         return results_file
@@ -394,7 +394,7 @@ def phase_3_train_final_model(n_features: int, sample_size: int = 200000):
 
     # Load importance to get features
     importance_files = sorted(
-        [f for f in os.listdir(RESULTS_DIR) if f.startswith('feature_importance_')]
+        [f for f in os.listdir(RESULTS_DIR) if f.startswith('feature_importance_')],
     )
     if not importance_files:
         print('Error: No importance file found. Run Phase 1 first.')
@@ -480,7 +480,7 @@ def phase_3_train_final_model(n_features: int, sample_size: int = 200000):
 def main():
     parser = argparse.ArgumentParser(description='Post-Hoc Feature Selection')
     parser.add_argument(
-        '--phase', type=int, choices=[1, 2, 3], required=True, help='Which phase to run'
+        '--phase', type=int, choices=[1, 2, 3], required=True, help='Which phase to run',
     )
     parser.add_argument('--sample-size', type=int, default=100000, help='Sample size for training')
     parser.add_argument('--n-features', type=int, default=50, help='Number of features for Phase 3')
@@ -502,7 +502,7 @@ def main():
         else:
             # Find latest importance file
             files = sorted(
-                [f for f in os.listdir(RESULTS_DIR) if f.startswith('feature_importance_')]
+                [f for f in os.listdir(RESULTS_DIR) if f.startswith('feature_importance_')],
             )
             if not files:
                 print('Error: No importance file found. Run Phase 1 first.')

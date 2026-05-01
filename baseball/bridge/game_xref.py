@@ -136,7 +136,7 @@ class GameXrefService:
     Provides lookup by any ID type and returns canonical game info.
     """
 
-    def __init__(self, db_connection=None):
+    def __init__(self, db_connection=None) -> None:
         """Initialize the game xref service.
 
         Args:
@@ -180,7 +180,7 @@ class GameXrefService:
 
             logger.info(f'Loaded {count} game xref records from database')
         except Exception as e:
-            logger.error(f'Failed to load game xref from DB: {e}')
+            logger.exception(f'Failed to load game xref from DB: {e}')
 
         return count
 
@@ -252,10 +252,7 @@ class GameXrefService:
         lookup_fn = lookup_map.get(source.lower())
         if lookup_fn:
             try:
-                if source.lower() == 'retro':
-                    game_id = str(game_id)
-                else:
-                    game_id = int(game_id)
+                game_id = str(game_id) if source.lower() == 'retro' else int(game_id)
             except (ValueError, TypeError):
                 return None
             return lookup_fn(game_id)
@@ -345,7 +342,7 @@ class GameXrefService:
 
             return True
         except Exception as e:
-            logger.error(f'Failed to register game xref: {e}')
+            logger.exception(f'Failed to register game xref: {e}')
             return False
 
     def _save_to_db(self, xref: GameXref) -> None:
@@ -394,7 +391,7 @@ class GameXrefService:
                 )
             self._db.commit()
         except Exception as e:
-            logger.error(f'Failed to save game xref to DB: {e}')
+            logger.exception(f'Failed to save game xref to DB: {e}')
             raise
 
     def get_stats(self) -> dict[str, int]:

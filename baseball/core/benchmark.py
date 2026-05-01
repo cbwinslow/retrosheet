@@ -55,7 +55,7 @@ class BenchmarkResult:
 class BenchmarkLogger:
     """Logger for benchmark results with persistence."""
 
-    def __init__(self, log_file: str | None = None):
+    def __init__(self, log_file: str | None = None) -> None:
         self.results: list[BenchmarkResult] = []
         self.log_file = log_file or f'benchmarks_{datetime.now().strftime("%Y%m%d_%H%M%S")}.jsonl'
 
@@ -110,7 +110,7 @@ class BenchmarkLogger:
         print('=' * 60)
         print(f'Total operations: {summary["total_operations"]}')
         print(
-            f'Successful: {summary["successful_operations"]} | Failed: {summary["failed_operations"]}'
+            f'Successful: {summary["successful_operations"]} | Failed: {summary["failed_operations"]}',
         )
         print(f'Total duration: {summary["total_duration_ms"]:.2f}ms')
         print(f'Avg duration: {summary["avg_duration_ms"]:.2f}ms')
@@ -211,7 +211,7 @@ def benchmark_fn(name: str | None = None):
 class QueryProfiler:
     """Profile PostgreSQL query execution."""
 
-    def __init__(self, connection):
+    def __init__(self, connection) -> None:
         self.conn = connection
         self.queries: list[dict[str, Any]] = []
 
@@ -266,7 +266,7 @@ class QueryProfiler:
 class PerformanceMonitor:
     """Monitor system performance during operations."""
 
-    def __init__(self, interval_seconds: float = 1.0):
+    def __init__(self, interval_seconds: float = 1.0) -> None:
         self.interval = interval_seconds
         self.running = False
         self.samples: list[dict[str, Any]] = []

@@ -53,7 +53,7 @@ class LeverageIndexCalculator(FeatureStore):
     MEDIUM_THRESHOLD = 1.3
     HIGH_THRESHOLD = 2.0
 
-    def __init__(self, db_connection=None, config: FeatureConfig | None = None):
+    def __init__(self, db_connection=None, config: FeatureConfig | None = None) -> None:
         """Initialize LI calculator.
 
         Args:
@@ -108,7 +108,7 @@ class LeverageIndexCalculator(FeatureStore):
 
             logger.info(f'Loaded {count} LI matrix entries')
         except Exception as e:
-            logger.error(f'Failed to load LI matrix: {e}')
+            logger.exception(f'Failed to load LI matrix: {e}')
             self._load_default_matrix()
 
         return count
@@ -410,7 +410,7 @@ class LeverageIndexCalculator(FeatureStore):
                     for row in cur.fetchall()
                 ]
         except Exception as e:
-            logger.error(f'Failed to get clutch opportunities: {e}')
+            logger.exception(f'Failed to get clutch opportunities: {e}')
             return []
 
     def get_matrix_stats(self) -> dict[str, Any]:

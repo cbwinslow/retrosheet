@@ -276,7 +276,7 @@ def load_to_staging(
                         record['wikipedia_id'],
                         record['gelb_id'],
                         record['lahman_id'],
-                    )
+                    ),
                 )
 
         file_count = len(records)
@@ -386,7 +386,7 @@ def run_validation_tests(conn: psycopg2.extensions.connection) -> dict[str, Any]
                     'actual': actual,
                     'expected': expected,
                     'details': details,
-                }
+                },
             )
             results['total'] += 1
             if passed:
@@ -415,7 +415,7 @@ def run_validation_tests(conn: psycopg2.extensions.connection) -> dict[str, Any]
 
     print('\n' + '=' * 70)
     print(
-        f'TEST SUMMARY: {results["passed"]}/{results["total"]} passed ({results["summary"]["pass_rate"]:.1f}%)'
+        f'TEST SUMMARY: {results["passed"]}/{results["total"]} passed ({results["summary"]["pass_rate"]:.1f}%)',
     )
     print(f'STATUS: {results["summary"]["status"]}')
     print('=' * 70)

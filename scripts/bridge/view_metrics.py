@@ -62,7 +62,7 @@ def main() -> int:
             for m in metrics[:10]:  # Show last 10
                 status = '✓' if m.success else '✗'
                 print(
-                    f'  {status} {m.operation_id} - {m.duration_seconds:.1f}s - {m.records_processed:,} records'
+                    f'  {status} {m.operation_id} - {m.duration_seconds:.1f}s - {m.records_processed:,} records',
                 )
                 if m.error_count > 0:
                     print(f'      Errors: {m.error_count}, Retries: {m.retry_count}')

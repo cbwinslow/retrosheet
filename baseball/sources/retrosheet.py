@@ -47,7 +47,7 @@ class RetrosheetSource(BaseSource):
                     start_date.isoformat(),
                     '--end-date',
                     end_date.isoformat(),
-                ]
+                ],
             )
 
         if force:
@@ -69,7 +69,7 @@ class RetrosheetSource(BaseSource):
                     metadata={
                         'stdout': result.stdout[-1000:]
                         if len(result.stdout) > 1000
-                        else result.stdout
+                        else result.stdout,
                     },
                 )
             return SourceResult(
@@ -112,7 +112,7 @@ class RetrosheetSource(BaseSource):
                     metadata={
                         'stdout': result.stdout[-1000:]
                         if len(result.stdout) > 1000
-                        else result.stdout
+                        else result.stdout,
                     },
                 )
             return SourceResult(

@@ -1,5 +1,4 @@
-"""
-Model Registry for the baseball prediction warehouse.
+"""Model Registry for the baseball prediction warehouse.
 
 Provides model versioning, artifact management, and deployment lifecycle.
 Integrates with the SQL models.registry table for persistence.
@@ -8,47 +7,46 @@ Author: Agent Cascade
 Date: 2026-04-28
 """
 
-import json
 import hashlib
+import json
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any, List
-from dataclasses import dataclass, asdict
+from typing import Any
 
 from baseball.core.db import get_db_connection
-from baseball.models.base import BaseModel, ModelMetadata
 
 
 @dataclass
 class ModelRegistryEntry:
     """Represents a registered model version."""
-    model_id: Optional[int] = None
-    model_name: str = ""
-    model_version: str = "1.0.0"
-    model_type: str = "classification"
-    training_date: Optional[datetime] = None
-    training_dataset: str = ""
-    training_start_date: Optional[str] = None
-    training_end_date: Optional[str] = None
-    hyperparameters: Dict[str, Any] = None
-    feature_set: List[str] = None
-    training_config: Dict[str, Any] = None
-    primary_metric: str = ""
+    model_id: int | None = None
+    model_name: str = ''
+    model_version: str = '1.0.0'
+    model_type: str = 'classification'
+    training_date: datetime | None = None
+    training_dataset: str = ''
+    training_start_date: str | None = None
+    training_end_date: str | None = None
+    hyperparameters: dict[str, Any] = None
+    feature_set: list[str] = None
+    training_config: dict[str, Any] = None
+    primary_metric: str = ''
     primary_metric_value: float = 0.0
-    validation_metrics: Dict[str, float] = None
+    validation_metrics: dict[str, float] = None
     cv_folds: int = 5
     cv_mean: float = 0.0
     cv_std: float = 0.0
-    artifact_path: str = ""
-    artifact_hash: str = ""
+    artifact_path: str = ''
+    artifact_hash: str = ''
     artifact_size_bytes: int = 0
-    framework: str = "sklearn"
-    framework_version: str = ""
-    status: str = "staging"
-    promoted_at: Optional[datetime] = None
-    promoted_by: str = ""
-    training_run_id: Optional[int] = None
-    
+    framework: str = 'sklearn'
+    framework_version: str = ''
+    status: str = 'staging'
+    promoted_at: datetime | None = None
+    promoted_by: str = ''
+    training_run_id: int | None = None
+
     def __post_init__(self):
         if self.hyperparameters is None:
             self.hyperparameters = {}
@@ -61,18 +59,17 @@ class ModelRegistryEntry:
 
 
 class ModelRegistry:
-    """
-    Central registry for ML model versioning and lifecycle management.
-    
+    """Central registry for ML model versioning and lifecycle management.
+
     Provides:
     - Model registration with versioning
     - Artifact storage and retrieval
     - Status management (staging -> production -> archived)
     - Production model discovery
-    
+
     Usage:
         registry = ModelRegistry()
-        
+
         # Register a new model
         entry = registry.register_model(
             model_name="win_probability",
@@ -82,18 +79,18 @@ class ModelRegistry:
             primary_metric="log_loss",
             primary_metric_value=0.45
         )
-        
+
         # Promote to production
         registry.promote_model(entry.model_id, promoted_by="user")
-        
+
         # Get production model
         prod_model = registry.get_production_model("win_probability")
     """
-    
-    def __init__(self, artifacts_dir: str = "models/artifacts"):
+
+    def __init__(self, artifacts_dir: str = 'models/artifacts') -> None:
         self.artifacts_dir = Path(artifacts_dir)
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
-    
+
     def register_model(
         self,
         model_name: str,
@@ -102,22 +99,21 @@ class ModelRegistry:
         artifact_path: str,
         primary_metric: str,
         primary_metric_value: float,
-        hyperparameters: Optional[Dict[str, Any]] = None,
-        feature_set: Optional[List[str]] = None,
-        training_config: Optional[Dict[str, Any]] = None,
-        validation_metrics: Optional[Dict[str, float]] = None,
-        framework: str = "sklearn",
-        framework_version: str = "",
+        hyperparameters: dict[str, Any] | None = None,
+        feature_set: list[str] | None = None,
+        training_config: dict[str, Any] | None = None,
+        validation_metrics: dict[str, float] | None = None,
+        framework: str = 'sklearn',
+        framework_version: str = '',
         cv_folds: int = 5,
         cv_mean: float = 0.0,
         cv_std: float = 0.0,
-        training_dataset: str = "",
-        training_start_date: Optional[str] = None,
-        training_end_date: Optional[str] = None
+        training_dataset: str = '',
+        training_start_date: str | None = None,
+        training_end_date: str | None = None,
     ) -> ModelRegistryEntry:
-        """
-        Register a new model version in the registry.
-        
+        """Register a new model version in the registry.
+
         Args:
             model_name: Model identifier (e.g., "win_probability")
             model_version: Semantic version (e.g., "1.0.0")
@@ -137,7 +133,7 @@ class ModelRegistry:
             training_dataset: Training dataset identifier
             training_start_date: Training data start date (YYYY-MM-DD)
             training_end_date: Training data end date (YYYY-MM-DD)
-            
+
         Returns:
             ModelRegistryEntry with assigned model_id
         """
@@ -148,8 +144,8 @@ class ModelRegistry:
             artifact_hash = self._calculate_hash(artifact_path_obj)
         else:
             artifact_size = 0
-            artifact_hash = ""
-        
+            artifact_hash = ''
+
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
@@ -169,11 +165,11 @@ class ModelRegistry:
                         json.dumps(hyperparameters or {}),
                         json.dumps(feature_set or []),
                         json.dumps(training_config or {}),
-                        json.dumps(validation_metrics or {})
-                    )
+                        json.dumps(validation_metrics or {}),
+                    ),
                 )
                 model_id = cur.fetchone()[0]
-                
+
                 # Update additional fields
                 cur.execute(
                     """
@@ -201,16 +197,16 @@ class ModelRegistry:
                         training_dataset,
                         training_start_date,
                         training_end_date,
-                        model_id
-                    )
+                        model_id,
+                    ),
                 )
                 conn.commit()
-                
+
                 return self.get_model_by_id(model_id)
         finally:
             conn.close()
-    
-    def get_model_by_id(self, model_id: int) -> Optional[ModelRegistryEntry]:
+
+    def get_model_by_id(self, model_id: int) -> ModelRegistryEntry | None:
         """Get model registry entry by ID."""
         conn = get_db_connection()
         try:
@@ -219,7 +215,7 @@ class ModelRegistry:
                     """
                     SELECT * FROM models.registry WHERE model_id = %s
                     """,
-                    (model_id,)
+                    (model_id,),
                 )
                 row = cur.fetchone()
                 if row:
@@ -227,18 +223,18 @@ class ModelRegistry:
                 return None
         finally:
             conn.close()
-    
-    def get_production_model(self, model_name: str) -> Optional[ModelRegistryEntry]:
+
+    def get_production_model(self, model_name: str) -> ModelRegistryEntry | None:
         """Get the current production model for a model type."""
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT * FROM models.v_production_models 
+                    SELECT * FROM models.v_production_models
                     WHERE model_name = %s
                     """,
-                    (model_name,)
+                    (model_name,),
                 )
                 row = cur.fetchone()
                 if row:
@@ -246,21 +242,20 @@ class ModelRegistry:
                 return None
         finally:
             conn.close()
-    
+
     def promote_model(
-        self, 
-        model_id: int, 
-        promoted_by: str = "system"
+        self,
+        model_id: int,
+        promoted_by: str = 'system',
     ) -> bool:
-        """
-        Promote a model to production status.
-        
+        """Promote a model to production status.
+
         Archives the current production model if one exists.
-        
+
         Args:
             model_id: Model to promote
             promoted_by: User/system promoting the model
-            
+
         Returns:
             True if successful
         """
@@ -268,47 +263,47 @@ class ModelRegistry:
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT models.promote_model(%s, %s)",
-                    (model_id, promoted_by)
+                    'SELECT models.promote_model(%s, %s)',
+                    (model_id, promoted_by),
                 )
                 conn.commit()
                 return True
         finally:
             conn.close()
-    
+
     def list_models(
-        self, 
-        model_name: Optional[str] = None,
-        status: Optional[str] = None,
-        limit: int = 100
-    ) -> List[ModelRegistryEntry]:
+        self,
+        model_name: str | None = None,
+        status: str | None = None,
+        limit: int = 100,
+    ) -> list[ModelRegistryEntry]:
         """List models with optional filters."""
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
-                query = "SELECT * FROM models.registry WHERE 1=1"
+                query = 'SELECT * FROM models.registry WHERE 1=1'
                 params = []
-                
+
                 if model_name:
-                    query += " AND model_name = %s"
+                    query += ' AND model_name = %s'
                     params.append(model_name)
                 if status:
-                    query += " AND status = %s"
+                    query += ' AND status = %s'
                     params.append(status)
-                
-                query += " ORDER BY training_date DESC LIMIT %s"
+
+                query += ' ORDER BY training_date DESC LIMIT %s'
                 params.append(limit)
-                
+
                 cur.execute(query, params)
-                
+
                 return [self._row_to_entry(row, cur.description) for row in cur.fetchall()]
         finally:
             conn.close()
-    
-    def get_model_history(self, model_name: str) -> List[ModelRegistryEntry]:
+
+    def get_model_history(self, model_name: str) -> list[ModelRegistryEntry]:
         """Get version history for a specific model."""
         return self.list_models(model_name=model_name, limit=50)
-    
+
     def archive_model(self, model_id: int) -> bool:
         """Archive a model (move from production/staging to archived)."""
         conn = get_db_connection()
@@ -316,21 +311,20 @@ class ModelRegistry:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    UPDATE models.registry 
+                    UPDATE models.registry
                     SET status = 'archived', updated_at = NOW()
                     WHERE model_id = %s
                     """,
-                    (model_id,)
+                    (model_id,),
                 )
                 conn.commit()
                 return cur.rowcount > 0
         finally:
             conn.close()
-    
+
     def delete_model(self, model_id: int) -> bool:
-        """
-        Delete a model from the registry.
-        
+        """Delete a model from the registry.
+
         Only allowed for staging models. Production models must be archived first.
         """
         conn = get_db_connection()
@@ -338,35 +332,34 @@ class ModelRegistry:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    DELETE FROM models.registry 
+                    DELETE FROM models.registry
                     WHERE model_id = %s AND status = 'staging'
                     """,
-                    (model_id,)
+                    (model_id,),
                 )
                 conn.commit()
                 return cur.rowcount > 0
         finally:
             conn.close()
-    
+
     def _calculate_hash(self, file_path: Path) -> str:
         """Calculate SHA-256 hash of a file."""
         sha256_hash = hashlib.sha256()
-        with open(file_path, "rb") as f:
-            for byte_block in iter(lambda: f.read(4096), b""):
+        with open(file_path, 'rb') as f:
+            for byte_block in iter(lambda: f.read(4096), b''):
                 sha256_hash.update(byte_block)
         return sha256_hash.hexdigest()
-    
+
     def _row_to_entry(self, row, description) -> ModelRegistryEntry:
         """Convert database row to ModelRegistryEntry."""
         columns = [desc[0] for desc in description]
-        data = dict(zip(columns, row))
-        
+        data = dict(zip(columns, row, strict=False))
+
         # Parse JSON fields
         for field in ['hyperparameters', 'feature_set', 'training_config', 'validation_metrics']:
-            if field in data and data[field]:
-                if isinstance(data[field], str):
-                    data[field] = json.loads(data[field])
-        
+            if data.get(field) and isinstance(data[field], str):
+                data[field] = json.loads(data[field])
+
         # Convert to ModelRegistryEntry
         return ModelRegistryEntry(
             model_id=data.get('model_id'),
@@ -394,7 +387,7 @@ class ModelRegistry:
             status=data.get('status', 'staging'),
             promoted_at=data.get('promoted_at'),
             promoted_by=data.get('promoted_by', ''),
-            training_run_id=data.get('training_run_id')
+            training_run_id=data.get('training_run_id'),
         )
 
 

@@ -2,9 +2,13 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import psycopg2
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def database_kwargs() -> dict[str, str]:

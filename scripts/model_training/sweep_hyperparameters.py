@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import itertools
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import joblib
@@ -50,7 +50,8 @@ def feature_columns(target_id: str, feature_set: str) -> tuple[list[str], list[s
             )
         return train_models.PA_NUMERIC_FEATURES, train_models.PA_CATEGORICAL_FEATURES
 
-    raise ValueError(f'Unknown target_id: {target_id}')
+    msg = f'Unknown target_id: {target_id}'
+    raise ValueError(msg)
 
 
 def hgb_candidates() -> list[tuple[str, HistGradientBoostingClassifier]]:
@@ -164,7 +165,8 @@ def main() -> None:
         train_frame = frame[frame['season'] <= args.train_through].copy()
         validation_frame = frame[frame['season'] > args.train_through].copy()
         if train_frame.empty or validation_frame.empty:
-            raise SystemExit('Need both training and validation rows.')
+            msg = 'Need both training and validation rows.'
+            raise SystemExit(msg)
 
         candidates = []
         if 'hgb' in args.families:
@@ -172,7 +174,7 @@ def main() -> None:
         if 'logistic' in args.families:
             candidates.extend(logistic_candidates())
         candidates = candidates[: args.max_candidates]
-        version = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+        version = datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')
 
         leaderboard = []
         for candidate_name, model in candidates:

@@ -55,13 +55,13 @@ def parse_args() -> argparse.Namespace:
 Examples:
   # Train with legacy arguments
   python train_with_framework.py --target-id swing_outcome --feature-set advanced
-  
+
   # Train with config file
   python train_with_framework.py --config configs/xgboost.yaml
-  
+
   # Compare model families
   python train_with_framework.py --compare --target swing_outcome --families xgboost lightgbm
-  
+
   # Production training with full feature set
   python train_with_framework.py --target-id hit_outcome --feature-set complete \\
     --min-season 2020 --max-season 2025 --train-through 2023
@@ -70,13 +70,13 @@ Examples:
 
     # Mode selection
     parser.add_argument(
-        '--config', '-c', type=str, help='Path to ModelConfig YAML file (new-style)'
+        '--config', '-c', type=str, help='Path to ModelConfig YAML file (new-style)',
     )
     parser.add_argument('--compare', action='store_true', help='Run comparison experiment')
 
     # Legacy-style arguments
     parser.add_argument(
-        '--target-id', type=str, help='Target to train (e.g., swing_outcome, hit_outcome)'
+        '--target-id', type=str, help='Target to train (e.g., swing_outcome, hit_outcome)',
     )
     parser.add_argument(
         '--feature-set',
@@ -104,20 +104,20 @@ Examples:
     # Comparison arguments
     parser.add_argument('--target', type=str, help='Target for comparison (when using --compare)')
     parser.add_argument(
-        '--families', nargs='+', default=['xgboost', 'lightgbm'], help='Model families to compare'
+        '--families', nargs='+', default=['xgboost', 'lightgbm'], help='Model families to compare',
     )
     parser.add_argument('--feature-sets', nargs='+', help='Feature sets to compare (optional)')
 
     # Output options
     parser.add_argument(
-        '--output', '-o', type=str, default='results', help='Output directory for results'
+        '--output', '-o', type=str, default='results', help='Output directory for results',
     )
     parser.add_argument('--save-config', type=str, help='Save generated config to YAML file')
     parser.add_argument(
-        '--report', action='store_true', help='Generate HTML report (for experiments)'
+        '--report', action='store_true', help='Generate HTML report (for experiments)',
     )
     parser.add_argument(
-        '--legacy-output', action='store_true', help='Print results in legacy format'
+        '--legacy-output', action='store_true', help='Print results in legacy format',
     )
 
     return parser.parse_args()
@@ -137,7 +137,7 @@ def train_legacy_style(args: argparse.Namespace) -> TrainResult:
     print(f'[INFO] Target: {args.target_id}')
     print(f'[INFO] Feature set: {args.feature_set}')
     print(
-        f'[INFO] Seasons: {args.min_season}-{args.max_season} (train through {args.train_through})'
+        f'[INFO] Seasons: {args.min_season}-{args.max_season} (train through {args.train_through})',
     )
     print(f'[INFO] Model family: {args.model_family}')
 
@@ -158,7 +158,7 @@ def train_legacy_style(args: argparse.Namespace) -> TrainResult:
 
     # Train using compatible trainer
     trainer = LegacyCompatibleTrainer(output_dir=args.output)
-    result = trainer.train_legacy_style(
+    return trainer.train_legacy_style(
         target_id=args.target_id,
         feature_set=args.feature_set,
         min_season=args.min_season,
@@ -167,7 +167,6 @@ def train_legacy_style(args: argparse.Namespace) -> TrainResult:
         model_family=args.model_family,
     )
 
-    return result
 
 
 def train_new_style(config_path: str, output_dir: str) -> TrainResult:
@@ -191,9 +190,8 @@ def train_new_style(config_path: str, output_dir: str) -> TrainResult:
 
     # Train
     trainer = ModelTrainer(config)
-    result = trainer.train()
+    return trainer.train()
 
-    return result
 
 
 def run_comparison(args: argparse.Namespace) -> None:
@@ -285,7 +283,7 @@ def main() -> int:
                     print('\nTop 5 features:')
                     for feat in result.get_best_features(5):
                         print(
-                            f'  {feat.importance_rank}. {feat.feature_name}: {feat.importance_score:.4f}'
+                            f'  {feat.importance_rank}. {feat.feature_name}: {feat.importance_score:.4f}',
                         )
 
         elif args.target_id:

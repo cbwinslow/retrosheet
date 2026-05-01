@@ -320,10 +320,10 @@ def train_swing_model(X: pd.DataFrame, y: pd.Series) -> dict:
     print('                 Predicted')
     print('                 Take   Swing')
     print(
-        f'Actual Take    {cm[0, 0]:5d}  {cm[0, 1]:5d}  (Specificity: {cm[0, 0] / (cm[0, 0] + cm[0, 1]):.3f})'
+        f'Actual Take    {cm[0, 0]:5d}  {cm[0, 1]:5d}  (Specificity: {cm[0, 0] / (cm[0, 0] + cm[0, 1]):.3f})',
     )
     print(
-        f'       Swing   {cm[1, 0]:5d}  {cm[1, 1]:5d}  (Sensitivity: {cm[1, 1] / (cm[1, 0] + cm[1, 1]):.3f})'
+        f'       Swing   {cm[1, 0]:5d}  {cm[1, 1]:5d}  (Sensitivity: {cm[1, 1] / (cm[1, 0] + cm[1, 1]):.3f})',
     )
 
     # Feature importance
@@ -331,7 +331,7 @@ def train_swing_model(X: pd.DataFrame, y: pd.Series) -> dict:
         {
             'feature': X.columns,
             'importance': model.feature_importances_,
-        }
+        },
     ).sort_values('importance', ascending=False)
 
     print('\nTop 15 Most Important Features:')
@@ -403,7 +403,7 @@ def analyze_by_context(y_test: pd.Series, y_pred_proba: np.ndarray, X_test: pd.D
                 'actual_swing': 'mean',
                 'pred_proba': 'mean',
                 'pitch_id': 'count',
-            }
+            },
         )
         .reset_index()
     )
@@ -414,7 +414,7 @@ def analyze_by_context(y_test: pd.Series, y_pred_proba: np.ndarray, X_test: pd.D
 def main():
     parser = argparse.ArgumentParser(description='Train Swing Probability Model')
     parser.add_argument(
-        '--sample', type=int, default=None, help='Use sample of N rows for quick testing'
+        '--sample', type=int, default=None, help='Use sample of N rows for quick testing',
     )
     parser.add_argument('--skip-analysis', action='store_true', help='Skip contextual analysis')
     args = parser.parse_args()
@@ -444,7 +444,7 @@ def main():
         # Contextual analysis (unless skipped)
         if not args.skip_analysis:
             # Re-split to get test set for analysis
-            X_train, X_test, y_train, y_test = train_test_split(
+            _X_train, X_test, _y_train, y_test = train_test_split(
                 X,
                 y,
                 test_size=0.2,

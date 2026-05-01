@@ -122,8 +122,8 @@ class TestSQLQueryCorrectness:
         cursor = db_connection.cursor()
 
         cursor.execute("""
-            SELECT table_name 
-            FROM information_schema.tables 
+            SELECT table_name
+            FROM information_schema.tables
             WHERE table_schema = 'core'
         """)
         tables = [row[0] for row in cursor.fetchall()]
@@ -136,8 +136,8 @@ class TestSQLQueryCorrectness:
         cursor = db_connection.cursor()
 
         cursor.execute("""
-            SELECT table_name 
-            FROM information_schema.tables 
+            SELECT table_name
+            FROM information_schema.tables
             WHERE table_schema = 'features'
         """)
         tables = [row[0] for row in cursor.fetchall()]
@@ -151,9 +151,9 @@ class TestSQLQueryCorrectness:
 
         try:
             cursor.execute("""
-                SELECT column_name, data_type 
-                FROM information_schema.columns 
-                WHERE table_schema = 'features' 
+                SELECT column_name, data_type
+                FROM information_schema.columns
+                WHERE table_schema = 'features'
                 AND table_name = 'win_expectancy_matrix'
             """)
             columns = {row[0]: row[1] for row in cursor.fetchall()}
@@ -214,8 +214,8 @@ class TestSQLPerformance:
 
         try:
             cursor.execute("""
-                SELECT indexname, indexdef 
-                FROM pg_indexes 
+                SELECT indexname, indexdef
+                FROM pg_indexes
                 WHERE schemaname = 'features'
             """)
             indexes = cursor.fetchall()
@@ -239,7 +239,7 @@ class TestSQLPerformance:
             stats = cursor.fetchall()
 
             for row in stats:
-                schema, table, last_analyze, last_auto = row
+                schema, table, last_analyze, _last_auto = row
                 print(f'{schema}.{table}: last_analyze={last_analyze}')
 
         except Exception as e:
@@ -358,8 +358,8 @@ class TestMaterializedViews:
 
         try:
             cursor.execute("""
-                SELECT schemaname, matviewname 
-                FROM pg_matviews 
+                SELECT schemaname, matviewname
+                FROM pg_matviews
                 WHERE schemaname = 'serving'
             """)
             mvs = cursor.fetchall()
@@ -396,8 +396,8 @@ class TestMaterializedViews:
 
         try:
             cursor.execute("""
-                SELECT proname 
-                FROM pg_proc 
+                SELECT proname
+                FROM pg_proc
                 WHERE proname = 'refresh_all_views'
                 AND pronamespace = 'serving'::regnamespace
             """)

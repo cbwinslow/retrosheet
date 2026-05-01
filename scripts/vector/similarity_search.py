@@ -69,8 +69,7 @@ def search_similar_pgvector(player_id: int, player_type: str, season: int, top_k
             ORDER BY pe.embedding <=> q.embedding
             LIMIT %s
         """, (player_id, player_type, season, player_id, player_type, min_sim, top_k))
-        results = cur.fetchall()
-    return results
+        return cur.fetchall()
 
 def search_similar_faiss(player_id: int, player_type: str, season: int, top_k: int, min_sim: float, index_path: Path):
     """Find similar players using FAISS index."""
@@ -104,7 +103,7 @@ def search_similar_faiss(player_id: int, player_type: str, season: int, top_k: i
     metadata = pd.read_csv(metadata_path)
 
     results = []
-    for dist, idx in zip(distances[0], indices[0]):
+    for dist, idx in zip(distances[0], indices[0], strict=False):
         if idx >= len(metadata):
             continue
         sim = float(dist)  # FAISS returns inner product = cosine similarity for normalized vectors

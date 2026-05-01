@@ -337,7 +337,7 @@ def train_model(X: np.ndarray, y: np.ndarray, feature_names: list[str]) -> dict:
 
     # Feature importance
     importance = model.feature_importances_
-    feature_importance = sorted(zip(feature_names, importance), key=lambda x: x[1], reverse=True)
+    feature_importance = sorted(zip(feature_names, importance, strict=False), key=lambda x: x[1], reverse=True)
 
     results = {
         'accuracy': accuracy,

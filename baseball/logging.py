@@ -29,8 +29,8 @@ def add_timestamp(
     """Add ISO8601 timestamp to log entries."""
     import datetime
 
-    event_dict["timestamp"] = datetime.datetime.now(
-        datetime.timezone.utc
+    event_dict['timestamp'] = datetime.datetime.now(
+        datetime.UTC,
     ).isoformat()
     return event_dict
 
@@ -41,8 +41,8 @@ def add_service_info(
     event_dict: EventDict,
 ) -> EventDict:
     """Add service name and version to log entries."""
-    event_dict["service"] = "baseball-warehouse"
-    event_dict["version"] = "0.1.0"
+    event_dict['service'] = 'baseball-warehouse'
+    event_dict['version'] = '0.1.0'
     return event_dict
 
 
@@ -77,7 +77,7 @@ def configure_logging(
         handlers.append(file_handler)
 
     logging.basicConfig(
-        format="%(message)s",
+        format='%(message)s',
         level=getattr(logging, log_level),
         handlers=handlers,
         force=True,
@@ -93,7 +93,7 @@ def configure_logging(
     ]
 
     # Format-specific processors
-    if log_format == "json":
+    if log_format == 'json':
         # JSON output for production/log aggregation
         final_processors: list[Any] = [
             *shared_processors,
@@ -112,7 +112,7 @@ def configure_logging(
     structlog.configure(
         processors=final_processors,
         wrapper_class=structlog.make_filtering_bound_logger(
-            getattr(logging, log_level)
+            getattr(logging, log_level),
         ),
         context_class=dict,
         logger_factory=structlog.PrintLoggerFactory(),
@@ -125,10 +125,10 @@ class ContextFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:
         """Add context attributes if not present."""
-        if not hasattr(record, "request_id"):
-            record.request_id = "-"  # type: ignore
-        if not hasattr(record, "user_id"):
-            record.user_id = "-"  # type: ignore
+        if not hasattr(record, 'request_id'):
+            record.request_id = '-'  # type: ignore
+        if not hasattr(record, 'user_id'):
+            record.user_id = '-'  # type: ignore
         return True
 
 
@@ -172,11 +172,11 @@ def clear_context() -> None:
 configure_logging()
 
 __all__ = [
-    "configure_logging",
-    "get_logger",
-    "bind_context",
-    "clear_context",
-    "add_timestamp",
-    "add_service_info",
-    "ContextFilter",
+    'ContextFilter',
+    'add_service_info',
+    'add_timestamp',
+    'bind_context',
+    'clear_context',
+    'configure_logging',
+    'get_logger',
 ]

@@ -75,7 +75,8 @@ def load_model(target_id: str, model_name: str = 'hist_gradient_boosting') -> tu
                 )
                 row = cur.fetchone()
             if not row:
-                raise ValueError(f'No active model found for {target_id} with {model_name}')
+                msg = f'No active model found for {target_id} with {model_name}'
+                raise ValueError(msg)
 
             artifact_path = ROOT / row[0]
             feature_spec = row[1]
@@ -176,7 +177,8 @@ def predict_plate_appearance(
             params={'game_id': game_id, 'plate_appearance_id': plate_appearance_id},
         )
         if df.empty:
-            raise ValueError(f'Plate appearance {game_id}:{plate_appearance_id} not found')
+            msg = f'Plate appearance {game_id}:{plate_appearance_id} not found'
+            raise ValueError(msg)
 
         predictions = {}
 

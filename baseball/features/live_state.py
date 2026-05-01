@@ -1,7 +1,7 @@
 """Live game state feature extraction for real-time predictions."""
 
-from typing import Optional, Dict, Any, List
 from datetime import datetime
+from typing import Any
 
 from .base import FeatureExtractor
 from .run_expectancy import RunExpectancyCalculator
@@ -10,11 +10,11 @@ from .run_expectancy import RunExpectancyCalculator
 class LiveStateExtractor(FeatureExtractor):
     """Extract features from live MLB game state for ML models."""
 
-    def __init__(self, run_expectancy: Optional[RunExpectancyCalculator] = None):
+    def __init__(self, run_expectancy: RunExpectancyCalculator | None = None) -> None:
         super().__init__()
         self._re_calc = run_expectancy or RunExpectancyCalculator()
 
-    def extract(self, game_state: Dict[str, Any]) -> Dict[str, Any]:
+    def extract(self, game_state: dict[str, Any]) -> dict[str, Any]:
         """Extract features from a live game state dictionary."""
         features = {}
 
@@ -36,12 +36,12 @@ class LiveStateExtractor(FeatureExtractor):
         features['runner_3b'] = 1 if bases.get('third', False) else 0
 
         # Run expectancy from base-out state
-        base_state = f"{features['runner_1b']}{features['runner_2b']}{features['runner_3b']}"
+        f"{features['runner_1b']}{features['runner_2b']}{features['runner_3b']}"
         re_state = self._re_calc.get_run_expectancy(
             outs=features['outs'],
             runner_1b=features['runner_1b'],
             runner_2b=features['runner_2b'],
-            runner_3b=features['runner_3b']
+            runner_3b=features['runner_3b'],
         )
         features['run_expectancy'] = re_state
 
@@ -68,25 +68,25 @@ class LiveStateExtractor(FeatureExtractor):
 
         return features
 
-    def extract_batch(self, game_states: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def extract_batch(self, game_states: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Extract features from multiple game states."""
         return [self.extract(state) for state in game_states]
 
-    def get_feature_names(self) -> List[str]:
+    def get_feature_names(self) -> list[str]:
         """Return list of feature names produced by this extractor."""
         return [
             'inning', 'is_top', 'outs', 'score_diff', 'total_score',
             'runner_1b', 'runner_2b', 'runner_3b', 'run_expectancy',
             'inning_normal', 'leverage_index', 'is_extra_innings',
             'pitcher_pitches', 'pitcher_strikes', 'pitcher_balls',
-            'count_balls', 'count_strikes', 'count_strikes_adj'
+            'count_balls', 'count_strikes', 'count_strikes_adj',
         ]
 
 
 class GameContextExtractor(FeatureExtractor):
     """Extract game context features not tied to specific plate appearances."""
 
-    def extract(self, game_data: Dict[str, Any]) -> Dict[str, Any]:
+    def extract(self, game_data: dict[str, Any]) -> dict[str, Any]:
         """Extract game-level context features."""
         features = {}
 
@@ -106,13 +106,13 @@ class GameContextExtractor(FeatureExtractor):
 
         return features
 
-    def extract_batch(self, game_data_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def extract_batch(self, game_data_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Extract features from multiple games."""
         return [self.extract(data) for data in game_data_list]
 
-    def get_feature_names(self) -> List[str]:
+    def get_feature_names(self) -> list[str]:
         """Return list of feature names produced by this extractor."""
         return [
             'game_pk', 'season', 'game_type', 'home_team_id', 'away_team_id',
-            'is_night_game', 'is_doubleheader'
+            'is_night_game', 'is_doubleheader',
         ]

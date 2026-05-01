@@ -4,13 +4,17 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 from analyze_pa_outcome_calibration import feature_columns, load_validation_frame
 from predict_pa_outcome_distribution import load_registered_model
 from sqlalchemy import create_engine
 from train_pa_outcome_distribution import database_url
+
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]

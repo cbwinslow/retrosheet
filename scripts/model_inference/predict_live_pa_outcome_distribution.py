@@ -19,9 +19,12 @@ from train_pa_outcome_distribution import TARGET_ID, database_url
 
 def live_feature_query(feature_set: str) -> str:
     if feature_set != 'advanced_count':
-        raise ValueError(
+        msg = (
             'Live scoring currently supports only feature_set=advanced_count. '
-            'Historical models with other feature sets are not yet wired to a live parity view.',
+            'Historical models with other feature sets are not yet wired to a live parity view.'
+        )
+        raise ValueError(
+            msg,
         )
     return """
         SELECT *
@@ -59,13 +62,15 @@ def predict_live_pa_outcome_distribution(
         engine.dispose()
 
     if frame.empty:
-        raise ValueError(f'Live plate appearance not found: {game_id}:{plate_appearance_id}')
+        msg = f'Live plate appearance not found: {game_id}:{plate_appearance_id}'
+        raise ValueError(msg)
 
     missing_features = [
         column for column in numeric_features + categorical_features if column not in frame
     ]
     if missing_features:
-        raise ValueError(f'Missing live model features: {", ".join(missing_features)}')
+        msg = f'Missing live model features: {", ".join(missing_features)}'
+        raise ValueError(msg)
 
     feature_frame = frame[numeric_features + categorical_features]
     raw_probabilities = model.predict_proba(feature_frame)[0]
@@ -80,7 +85,8 @@ def predict_live_pa_outcome_distribution(
         )
         artifact_classes = [str(label) for label in calibration_artifact['classes']]
         if artifact_classes != classes:
-            raise ValueError('Calibration artifact classes do not match model classes.')
+            msg = 'Calibration artifact classes do not match model classes.'
+            raise ValueError(msg)
         raw_probability_map = {
             label: float(raw_probabilities[index]) for index, label in enumerate(classes)
         }

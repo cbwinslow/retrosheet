@@ -67,7 +67,7 @@ class MlbSource(BaseSource):
                     metadata={
                         'stdout': result.stdout[-1000:]
                         if len(result.stdout) > 1000
-                        else result.stdout
+                        else result.stdout,
                     },
                 )
             return SourceResult(
@@ -90,9 +90,6 @@ class MlbSource(BaseSource):
 
         Wraps: scripts/data_ingestion/ingest_all_mlb_data.py
         """
-        season = None  # Ingest all available data
-        validate = True
-
         cmd = [
             sys.executable,
             'scripts/data_ingestion/ingest_all_mlb_data.py',
@@ -115,7 +112,7 @@ class MlbSource(BaseSource):
                     metadata={
                         'stdout': result.stdout[-1000:]
                         if len(result.stdout) > 1000
-                        else result.stdout
+                        else result.stdout,
                     },
                 )
             return SourceResult(
@@ -237,7 +234,7 @@ class MlbSource(BaseSource):
                     metadata={
                         'stdout': result.stdout[-1000:]
                         if len(result.stdout) > 1000
-                        else result.stdout
+                        else result.stdout,
                     },
                 )
             return SourceResult(

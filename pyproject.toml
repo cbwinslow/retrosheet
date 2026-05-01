@@ -1,12 +1,26 @@
 [project]
 name = "retrosheet"
-version = "0.1.0"
-description = "Baseball prediction warehouse from Retrosheet historical data"
+version = "2.0.0"
+description = "Baseball prediction warehouse from Retrosheet historical data with live MLB ingestion, betting analytics, and ML modeling"
 authors = [
-  { name = "Retrosheet Project Contributors" }
+  { name = "Retrosheet Project Contributors", email = "cbwinslow@users.noreply.github.com" }
 ]
 readme = "README.md"
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.10,<3.13"
+license = { text = "MIT" }
+keywords = ["baseball", "mlb", "prediction", "betting", "data-warehouse", "retrosheet"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Database",
+]
 dependencies = [
   "httpx>=0.27",
   "joblib>=1.3.0",
@@ -38,7 +52,19 @@ dependencies = [
   "pandasai>=0.1.0",
   "haystack-ai>=2.29.0.dev20260428001541",
   "openrouter-haystack>=1.0.0",
+  "sqlfluff>=4.1.0",
+  "redis>=5.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/cbwinslow/retrosheet"
+Documentation = "https://github.com/cbwinslow/retrosheet#readme"
+Repository = "https://github.com/cbwinslow/retrosheet"
+Issues = "https://github.com/cbwinslow/retrosheet/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project.optional-dependencies]
 dev = [
@@ -62,7 +88,7 @@ python-downloads = "auto"
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py312"
 exclude = ["scripts/archive"]
 
 [tool.ruff.lint]
@@ -243,6 +269,17 @@ docstring-quotes = "double"
     "D",        # Docstrings not required
     "ANN",      # Annotations not required
     "INP001",   # Implicit namespace package
+    "SLF001",   # Private member access (testing internals)
+    "ARG",      # Unused arguments (test fixtures)
+    "F841",     # Unused variables (test setup)
+    "S607",     # Partial executable paths (test subprocess calls)
+    "S108",     # Insecure temp files (test fixtures)
+    "RUF059",   # Unpacked variables (test fixtures)
+    "S603",     # Subprocess calls (test execution)
+    "DTZ001",   # Datetime without tzinfo (test fixtures)
+    "DTZ005",   # Datetime.now() without tz (test fixtures)
+    "PERF401",  # List comprehension (test readability)
+    "COM812",   # Trailing commas (test readability)
 ]
 # Notebooks/jupyter
 "**/*.ipynb" = [
@@ -270,7 +307,7 @@ docstring-quotes = "double"
 ]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 strict = true
 ignore_missing_imports = true
 disallow_untyped_defs = false

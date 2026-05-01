@@ -38,7 +38,7 @@ class WinExpectancyCalculator(FeatureStore):
         >>> print(f'Home team win probability: {we:.1%}')
     """
 
-    def __init__(self, db_connection=None, config: FeatureConfig | None = None):
+    def __init__(self, db_connection=None, config: FeatureConfig | None = None) -> None:
         """Initialize WE calculator.
 
         Args:
@@ -93,7 +93,7 @@ class WinExpectancyCalculator(FeatureStore):
 
             logger.info(f'Loaded {count} WE matrix entries')
         except Exception as e:
-            logger.error(f'Failed to load WE matrix: {e}')
+            logger.exception(f'Failed to load WE matrix: {e}')
             self._load_default_matrix()
 
         return count
@@ -319,5 +319,5 @@ class WinExpectancyCalculator(FeatureStore):
             'min_we': min(win_probs),
             'max_we': max(win_probs),
             'avg_we': sum(win_probs) / len(win_probs),
-            'innings_covered': len(set(k[0] for k in self._we_matrix.keys())),
+            'innings_covered': len({k[0] for k in self._we_matrix}),
         }

@@ -104,7 +104,7 @@ def extract_plate_appearances_from_payload(payload: dict):
     return pas
 
 
-def populate_live_plate_appearances(conn, season: int, limit: int = None):
+def populate_live_plate_appearances(conn, season: int, limit: int | None = None):
     """Populate live_plate_appearances from live_feed_snapshots."""
     cur = conn.cursor()
 
@@ -127,7 +127,7 @@ def populate_live_plate_appearances(conn, season: int, limit: int = None):
     total_pas = 0
     games_with_pas = 0
 
-    for i, (game_pk, game_date, payload) in enumerate(rows):
+    for i, (game_pk, _game_date, payload) in enumerate(rows):
         if i % 100 == 0:
             print(f'  Processing game {i + 1}/{len(rows)}...', end='\r')
 
@@ -255,7 +255,7 @@ def main():
             print('DRY RUN - Would process games and extract PAs')
             return
 
-        count = populate_live_plate_appearances(conn, args.season, args.limit)
+        populate_live_plate_appearances(conn, args.season, args.limit)
 
         # Final count
         cur = conn.cursor()

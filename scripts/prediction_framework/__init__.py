@@ -20,10 +20,9 @@ Usage:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
-import pandas as pd
 import psycopg2
 
 from .base import (
@@ -33,6 +32,10 @@ from .base import (
     PredictorRegistry,
 )
 from .db import database_kwargs
+
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 
 class PredictionEngine:
@@ -62,7 +65,8 @@ class PredictionEngine:
         # Get model metadata
         model_meta = self._registry.get_active_model(target_id)
         if not model_meta:
-            raise ValueError(f'No active model for {target_id}')
+            msg = f'No active model for {target_id}'
+            raise ValueError(msg)
 
         # Get target definition
         conn = psycopg2.connect(**self.db_kwargs)
@@ -79,7 +83,8 @@ class PredictionEngine:
 
             predictor = PAOutcomeDistributionPredictor(target, self.root_path)
         else:
-            raise ValueError(f'Unknown predictor family: {target.target_family}')
+            msg = f'Unknown predictor family: {target.target_family}'
+            raise ValueError(msg)
 
         # Load model
         model_path = self.root_path / model_meta.artifact_uri
@@ -106,7 +111,7 @@ class PredictionEngine:
         if probs.ndim > 1:
             probs = probs[0]
         top_idx = np.argsort(probs)[::-1][:k]
-        return list(predictor.classes[i] for i in top_idx), [float(probs[i]) for i in top_idx]
+        return [predictor.classes[i] for i in top_idx], [float(probs[i]) for i in top_idx]
 
     def list_targets(self) -> list[str]:
         """List available targets."""

@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import joblib
@@ -257,7 +257,8 @@ def load_examples(
     feature_set: str,
 ) -> pd.DataFrame:
     if not 0 < sample_rate <= 1:
-        raise ValueError('--sample-rate must be between 0 and 1')
+        msg = '--sample-rate must be between 0 and 1'
+        raise ValueError(msg)
     sample_ppm = int(sample_rate * 1_000_000)
 
     if target_id == 'game_home_win' and feature_set == 'basic':
@@ -581,7 +582,8 @@ def load_examples(
         """
         target_col = 'target'
     else:
-        raise ValueError(f'Unknown target_id: {target_id}')
+        msg = f'Unknown target_id: {target_id}'
+        raise ValueError(msg)
 
     df = pd.read_sql_query(
         text(sql),
@@ -764,7 +766,8 @@ def train(args: argparse.Namespace) -> None:
             numeric_features = HI_NUMERIC_FEATURES
             categorical_features = HI_CATEGORICAL_FEATURES
         else:
-            raise ValueError(f'Unknown target_id: {args.target_id}')
+            msg = f'Unknown target_id: {args.target_id}'
+            raise ValueError(msg)
 
         frame = load_examples(
             engine,
@@ -775,18 +778,20 @@ def train(args: argparse.Namespace) -> None:
             feature_set=args.feature_set,
         )
         if frame.empty:
+            msg = f'No training rows returned for {args.target_id}. Check the feature table and season filters.'
             raise SystemExit(
-                f'No training rows returned for {args.target_id}. Check the feature table and season filters.',
+                msg,
             )
 
         train_frame = frame[frame['season'] <= args.train_through].copy()
         validation_frame = frame[frame['season'] > args.train_through].copy()
         if train_frame.empty or validation_frame.empty:
+            msg = 'Need both training and validation rows. Adjust --train-through or season range.'
             raise SystemExit(
-                'Need both training and validation rows. Adjust --train-through or season range.',
+                msg,
             )
 
-        version = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+        version = datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')
         feature_spec = {
             'numeric_features': numeric_features,
             'categorical_features': categorical_features,

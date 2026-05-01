@@ -126,8 +126,35 @@ def ingest_game(game_pk: int, skip_existing: bool = True) -> bool:
         print(f'Failed to transform game {game_pk}')
         return False
 
+    # Refresh live materialized views after ingestion
+    refresh_success = refresh_live_views(game_pk)
+    if not refresh_success:
+        print(f'Failed to refresh live views for game {game_pk}')
+        return False
+
     print(f'Successfully ingested game {game_pk}')
     return True
+
+
+def refresh_live_views(game_pk: int) -> bool:
+    """Refresh live materialized views after game ingestion."""
+    print(f'Refreshing live views for game {game_pk}...')
+    try:
+        conn = psycopg2.connect(**database_kwargs())
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT * FROM maintenance.refresh_live_after_ingestion(%s)",
+                    (str(game_pk),),
+                )
+                results = cur.fetchall()
+                print(f'Refresh results: {len(results)} views refreshed')
+                return True
+        finally:
+            conn.close()
+    except Exception as e:
+        print(f'Error refreshing live views: {e}')
+        return False
 
 
 def main():

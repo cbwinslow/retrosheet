@@ -29,7 +29,7 @@ def database_kwargs() -> dict[str, str]:
     }
 
 
-def get_targets_to_evaluate(prefix: str = None) -> list[str]:
+def get_targets_to_evaluate(prefix: str | None = None) -> list[str]:
     """Get all targets that have active models."""
     conn = psycopg2.connect(**database_kwargs())
     try:

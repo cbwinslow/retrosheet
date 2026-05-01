@@ -6,10 +6,14 @@ import os
 import re
 import subprocess
 import tempfile
-from collections.abc import Iterable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import psycopg2
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -171,14 +175,16 @@ def run_psql(sql: str | None = None, file_path: Path | None = None) -> None:
         subprocess.run([*psql_base_args(), '-f', str(file_path)], check=True)
         return
     if sql is None:
-        raise ValueError('sql or file_path is required')
+        msg = 'sql or file_path is required'
+        raise ValueError(msg)
     subprocess.run([*psql_base_args(), '-c', sql], check=True)
 
 
 def season_from_path(path: Path) -> int:
     match = re.search(r'(18|19|20)\d{2}', path.name)
     if not match:
-        raise ValueError(f'Could not infer season from {path}')
+        msg = f'Could not infer season from {path}'
+        raise ValueError(msg)
     return int(match.group(0))
 
 
@@ -231,7 +237,8 @@ def load_biofile_legacy() -> Path:
             reader = csv.reader(handle)
             header = next(reader)
             if len(header) != len(columns):
-                raise SystemExit(f'Unexpected column count in {source}: {len(header)}')
+                msg = f'Unexpected column count in {source}: {len(header)}'
+                raise SystemExit(msg)
             for row in reader:
                 yield dict(zip(columns, row, strict=False))
 

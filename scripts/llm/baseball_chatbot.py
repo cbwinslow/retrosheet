@@ -29,25 +29,29 @@ class LLMClient:
 class OpenAIClient(LLMClient):
     """OpenAI GPT integration."""
 
-    def __init__(self, api_key: str = None, model: str = 'gpt-4'):
+    def __init__(self, api_key: str | None = None, model: str = 'gpt-4'):
         try:
             import openai
 
             key = api_key or os.environ.get('OPENAI_API_KEY')
             if not key or not key.strip() or key == '' or len(key.strip()) < 10:
-                raise ValueError('No valid OpenAI API key provided')
+                msg = 'No valid OpenAI API key provided'
+                raise ValueError(msg)
             # Check if it's actually an OpenAI key (starts with sk-)
             if not key.strip().startswith('sk-'):
-                raise ValueError("API key doesn't appear to be an OpenAI key")
+                msg = "API key doesn't appear to be an OpenAI key"
+                raise ValueError(msg)
             self.client = openai.OpenAI(api_key=key.strip())
             self.model = model
             # Test the client with a simple request
             try:
                 self.client.models.list()
             except Exception as e:
-                raise ValueError(f'OpenAI API key validation failed: {e}')
+                msg = f'OpenAI API key validation failed: {e}'
+                raise ValueError(msg)
         except ImportError:
-            raise ImportError('OpenAI package not installed. Run: pip install openai')
+            msg = 'OpenAI package not installed. Run: pip install openai'
+            raise ImportError(msg)
 
     def chat(self, messages: list[dict], **kwargs) -> str:
         response = self.client.chat.completions.create(
@@ -108,7 +112,8 @@ class LocalLLMClient(LLMClient):
             self.model = model
             self.session = requests.Session()
         except ImportError:
-            raise ImportError('requests package not installed')
+            msg = 'requests package not installed'
+            raise ImportError(msg)
 
     def chat(self, messages: list[dict], **kwargs) -> str:
         # Convert to Ollama format
@@ -526,8 +531,7 @@ Be helpful, accurate, and engaging in your responses."""
             return {'error': 'Missing game_id or plate_appearance_id'}
 
         try:
-            result = self.prediction_service.predict_plate_appearance(game_id, int(pa_id))
-            return result
+            return self.prediction_service.predict_plate_appearance(game_id, int(pa_id))
         except Exception:
             # For mock/demo purposes, return sample predictions
             return {

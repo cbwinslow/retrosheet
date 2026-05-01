@@ -206,8 +206,8 @@ def create_statcast_table(engine, schema: str = 'features_pitch'):
 
 def load_statcast_data(
     engine,
-    seasons: list[int] = None,
-    limit: int = None,
+    seasons: list[int] | None = None,
+    limit: int | None = None,
     batch_size: int = 100000,
 ):
     """

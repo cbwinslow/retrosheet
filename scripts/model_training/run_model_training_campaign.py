@@ -174,7 +174,7 @@ def load_training_data(
     table = target_info['table']
 
     sql = f"""
-    SELECT 
+    SELECT
         season,
         {numeric_cols},
         {categorical_cols},
@@ -221,21 +221,21 @@ def build_model_pipeline(
         [
             ('imputer', SimpleImputer(strategy='median')),
             ('scaler', StandardScaler()),
-        ]
+        ],
     )
 
     categorical_transformer = Pipeline(
         [
             ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
             ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False)),
-        ]
+        ],
     )
 
     preprocessor = ColumnTransformer(
         [
             ('num', numeric_transformer, numeric_features),
             ('cat', categorical_transformer, categorical_features),
-        ]
+        ],
     )
 
     # Model
@@ -299,14 +299,13 @@ def build_model_pipeline(
         )
 
     # Pipeline
-    pipeline = Pipeline(
+    return Pipeline(
         [
             ('preprocessor', preprocessor),
             ('model', model),
-        ]
+        ],
     )
 
-    return pipeline
 
 
 # ============================================================================
@@ -319,7 +318,7 @@ def compute_metrics(model, X: pd.DataFrame, y: pd.Series) -> dict:
     y_pred = model.predict(X)
     y_prob = model.predict_proba(X)[:, 1]
 
-    metrics = {
+    return {
         'roc_auc': roc_auc_score(y, y_prob),
         'accuracy': accuracy_score(y, y_pred),
         'log_loss': log_loss(y, y_prob),
@@ -327,7 +326,6 @@ def compute_metrics(model, X: pd.DataFrame, y: pd.Series) -> dict:
         'n_samples': len(y),
     }
 
-    return metrics
 
 
 # ============================================================================
@@ -482,13 +480,13 @@ def main():
 Examples:
   # Train all models
   python run_model_training_campaign.py --all
-  
+
   # Train specific target
   python run_model_training_campaign.py --target swing_decision
-  
+
   # Train with custom seasons
   python run_model_training_campaign.py --all --min-season 2020 --max-season 2025 --train-through 2023
-  
+
   # Compare models
   python run_model_training_campaign.py --compare --target swing_decision --families xgboost lightgbm
 """,
@@ -497,7 +495,7 @@ Examples:
     parser.add_argument('--all', action='store_true', help='Train all targets')
     parser.add_argument('--target', type=str, choices=list(TARGETS.keys()), help='Target to train')
     parser.add_argument(
-        '--feature-set', type=str, default='advanced', choices=['basic', 'advanced']
+        '--feature-set', type=str, default='advanced', choices=['basic', 'advanced'],
     )
     parser.add_argument(
         '--model-family',

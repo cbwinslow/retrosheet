@@ -46,7 +46,7 @@ class PredictionAPI:
         db_connection=None,
         model_dir: str = 'models',
         enable_cache: bool = True,
-    ):
+    ) -> None:
         """Initialize prediction API.
 
         Args:
@@ -95,7 +95,7 @@ class PredictionAPI:
                 {
                     'models': models,
                     'count': len(models),
-                }
+                },
             )
 
         # Model info
@@ -122,13 +122,13 @@ class PredictionAPI:
                         'success': True,
                         'model': model_name,
                         'version': version,
-                    }
+                    },
                 )
             return jsonify(
                 {
                     'success': False,
                     'error': f'Failed to load {model_name}',
-                }
+                },
             ), 500
 
         # Single prediction
@@ -150,7 +150,7 @@ class PredictionAPI:
                     {
                         'error': 'Prediction failed',
                         'model': model_name,
-                    }
+                    },
                 ), 500
 
             return jsonify(
@@ -158,7 +158,7 @@ class PredictionAPI:
                     'success': True,
                     'model': model_name,
                     'result': result,
-                }
+                },
             )
 
         # Batch prediction
@@ -183,14 +183,14 @@ class PredictionAPI:
                         {
                             'index': i,
                             'result': result,
-                        }
+                        },
                     )
                 else:
                     errors.append(
                         {
                             'index': i,
                             'error': 'Prediction failed',
-                        }
+                        },
                     )
 
             return jsonify(
@@ -202,7 +202,7 @@ class PredictionAPI:
                     'failed': len(errors),
                     'results': results,
                     'errors': errors,
-                }
+                },
             )
 
         # Cache stats
@@ -237,7 +237,7 @@ class PredictionAPI:
                 {
                     'success': True,
                     'results': results,
-                }
+                },
             )
 
         return app

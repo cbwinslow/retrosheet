@@ -70,7 +70,7 @@ class ConversationManager:
         >>> print(context.active_team)  # 'NYY'
     """
 
-    def __init__(self, max_history: int = 20, session_id: str | None = None):
+    def __init__(self, max_history: int = 20, session_id: str | None = None) -> None:
         """Initialize conversation manager.
 
         Args:
@@ -85,7 +85,7 @@ class ConversationManager:
         self._last_activity = datetime.now()
 
     def add_user_message(
-        self, content: str, intent: str | None = None, entities: list[dict] | None = None
+        self, content: str, intent: str | None = None, entities: list[dict] | None = None,
     ) -> None:
         """Add a user message to history.
 
@@ -216,10 +216,7 @@ class ConversationManager:
             'an',
         ]
         words = last_user.content.lower().split()
-        if any(word in follow_up_indicators for word in words[:3]):
-            return True
-
-        return False
+        return bool(any(word in follow_up_indicators for word in words[:3]))
 
     def get_referred_team(self) -> str | None:
         """Get the team being referred to in context."""

@@ -101,7 +101,8 @@ def run_psql(sql: str) -> None:
 
 def normalize_csv(source: Path, columns: list[str]) -> Path:
     if not source.exists():
-        raise SystemExit(f'Missing reference file: {source}')
+        msg = f'Missing reference file: {source}'
+        raise SystemExit(msg)
     tmp = tempfile.NamedTemporaryFile('w', suffix='.csv', newline='', delete=False)
     tmp_path = Path(tmp.name)
     with tmp, source.open(newline='', encoding='utf-8-sig') as fin:
@@ -109,7 +110,8 @@ def normalize_csv(source: Path, columns: list[str]) -> Path:
         writer = csv.writer(tmp)
         header = next(reader)
         if len(header) != len(columns):
-            raise SystemExit(f'Unexpected column count in {source}: {len(header)}')
+            msg = f'Unexpected column count in {source}: {len(header)}'
+            raise SystemExit(msg)
         writer.writerow(columns)
         for row in reader:
             writer.writerow(row)

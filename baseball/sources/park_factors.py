@@ -67,7 +67,7 @@ class ParkFactorsSource(BaseSource):
                     metadata={
                         'stdout': result.stdout[-1000:]
                         if len(result.stdout) > 1000
-                        else result.stdout
+                        else result.stdout,
                     },
                 )
             return SourceResult(
@@ -84,6 +84,7 @@ class ParkFactorsSource(BaseSource):
         """Validate park factors data in database."""
         try:
             import psycopg2
+
             from baseball.core.db import get_database_url
 
             conn = psycopg2.connect(get_database_url())

@@ -86,7 +86,7 @@ class PAOutcomeModel(SklearnBaseModel):
         'historical_hr_rate',
     ]
 
-    def __init__(self, db_connection=None, config: ModelConfig | None = None):
+    def __init__(self, db_connection=None, config: ModelConfig | None = None) -> None:
         """Initialize PA Outcome Model.
 
         Args:
@@ -210,10 +210,11 @@ class PAOutcomeModel(SklearnBaseModel):
         import pandas as pd
 
         if self.db is None:
-            raise ValueError('No database connection')
+            msg = 'No database connection'
+            raise ValueError(msg)
 
         query = """
-            SELECT 
+            SELECT
                 pf.inning_normalized,
                 pf.is_top_half::int as is_top_half,
                 pf.outs,
@@ -260,7 +261,7 @@ class PAOutcomeModel(SklearnBaseModel):
                     'historical_walk_rate': 0.09,
                     'historical_hit_rate': 0.23,
                     'historical_hr_rate': 0.035,
-                }
+                },
             )
 
             # Separate features and target
@@ -272,12 +273,12 @@ class PAOutcomeModel(SklearnBaseModel):
 
             logger.info(f'Loaded {len(y)} training samples')
             logger.info(f'Features: {feature_cols}')
-            logger.info(f'Class distribution: {dict(zip(*np.unique(y, return_counts=True)))}')
+            logger.info(f'Class distribution: {dict(zip(*np.unique(y, return_counts=True), strict=False))}')
 
             return X, y
 
         except Exception as e:
-            logger.error(f'Failed to load training data: {e}')
+            logger.exception(f'Failed to load training data: {e}')
             return None, None
 
     def predict_class_probabilities(self, game_state: dict[str, Any]) -> dict[str, float]:
@@ -290,7 +291,8 @@ class PAOutcomeModel(SklearnBaseModel):
             Dictionary mapping class names to probabilities
         """
         if not self.is_trained:
-            raise ValueError('Model not trained')
+            msg = 'Model not trained'
+            raise ValueError(msg)
 
         # Extract features in correct order
         features = []
@@ -378,12 +380,13 @@ class PAOutcomeModel(SklearnBaseModel):
             List of prediction dictionaries
         """
         if self.db is None:
-            raise ValueError('No database connection')
+            msg = 'No database connection'
+            raise ValueError(msg)
 
         import pandas as pd
 
         query = """
-            SELECT 
+            SELECT
                 pf.game_pk,
                 t.at_bat_index,
                 t.batter_id,
@@ -437,14 +440,14 @@ class PAOutcomeModel(SklearnBaseModel):
                     'at_bat_index': row['at_bat_index'],
                     'batter_id': row['batter_id'],
                     'pitcher_id': row['pitcher_id'],
-                }
+                },
             )
             results.append(pred)
 
         return results
 
     def save_predictions(
-        self, predictions: list[dict[str, Any]], model_version: str, season: int
+        self, predictions: list[dict[str, Any]], model_version: str, season: int,
     ) -> bool:
         """Save predictions to database.
 
@@ -509,11 +512,11 @@ class PAOutcomeModel(SklearnBaseModel):
             logger.info(f'Saved {len(predictions)} predictions')
             return True
         except Exception as e:
-            logger.error(f'Failed to save predictions: {e}')
+            logger.exception(f'Failed to save predictions: {e}')
             return False
 
     def get_top_predictions(
-        self, game_states: list[dict[str, Any]], min_prob: float = 0.3
+        self, game_states: list[dict[str, Any]], min_prob: float = 0.3,
     ) -> list[dict[str, Any]]:
         """Get high-probability predictions for monitoring.
 
@@ -537,7 +540,7 @@ class PAOutcomeModel(SklearnBaseModel):
                         'confidence': pred['confidence'],
                         'prob_hit': pred['prob_hit'],
                         'prob_home_run': pred['probabilities']['home_run'],
-                    }
+                    },
                 )
             elif pred['probabilities']['home_run'] >= 0.15:
                 results.append(
@@ -547,7 +550,7 @@ class PAOutcomeModel(SklearnBaseModel):
                         'confidence': pred['probabilities']['home_run'],
                         'prob_hit': pred['prob_hit'],
                         'prob_home_run': pred['probabilities']['home_run'],
-                    }
+                    },
                 )
 
         return sorted(results, key=lambda x: x['confidence'], reverse=True)

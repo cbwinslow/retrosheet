@@ -137,6 +137,27 @@ def store_plays_snapshot(snapshot_data: dict[str, Any], game_id: str) -> bool:
         conn.close()
 
 
+def refresh_live_views(game_id: str) -> bool:
+    """Refresh live materialized views after ESPN ingestion."""
+    print(f'Refreshing live views for ESPN game {game_id}...')
+    try:
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT * FROM maintenance.refresh_live_after_ingestion(%s)",
+                    (game_id,),
+                )
+                results = cur.fetchall()
+                print(f'Refresh results: {len(results)} views refreshed')
+                return True
+        finally:
+            conn.close()
+    except Exception as e:
+        print(f'Error refreshing live views: {e}')
+        return False
+
+
 def main():
     """Main function to ingest plays data for all games."""
     conn = get_db_connection()
@@ -189,6 +210,8 @@ def main():
                 if snapshot and snapshot['data'] is not None and len(snapshot['data']) > 0:
                     if store_plays_snapshot(snapshot, game_id):
                         success_count += 1
+                        # Refresh live materialized views after successful ingestion
+                        _ = refresh_live_views(game_id)
                     else:
                         failed_count += 1
                 elif snapshot and snapshot.get('status') == 404:

@@ -60,4 +60,5 @@ def get_engine(preferred: str = 'auto'):
     if preferred == 'logreg':
         return LogisticRegressionEngine()
 
-    raise ValueError(f'Unknown engine request: {preferred}')
+    msg = f'Unknown engine request: {preferred}'
+    raise ValueError(msg)

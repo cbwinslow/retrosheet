@@ -268,7 +268,7 @@ def generate_feature_report():
 def main():
     parser = argparse.ArgumentParser(description='Master Feature Discovery Orchestrator')
     parser.add_argument(
-        '--quick', action='store_true', help='Quick analysis (PCA only, 10k samples)'
+        '--quick', action='store_true', help='Quick analysis (PCA only, 10k samples)',
     )
     parser.add_argument('--full', action='store_true', help='Full analysis (all methods)')
     parser.add_argument('--skip-correlation', action='store_true', help='Skip correlation analysis')

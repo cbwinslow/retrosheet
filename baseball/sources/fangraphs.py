@@ -55,7 +55,7 @@ class FanGraphsSource(BaseSource):
                     metadata={
                         'stdout': result.stdout[-1000:]
                         if len(result.stdout) > 1000
-                        else result.stdout
+                        else result.stdout,
                     },
                 )
             return SourceResult(
@@ -102,7 +102,7 @@ class FanGraphsSource(BaseSource):
                     metadata={
                         'stdout': result.stdout[-1000:]
                         if len(result.stdout) > 1000
-                        else result.stdout
+                        else result.stdout,
                     },
                 )
             return SourceResult(
@@ -120,6 +120,7 @@ class FanGraphsSource(BaseSource):
         try:
             # Basic validation - check table existence
             import psycopg2
+
             from baseball.core.db import get_database_url
 
             conn = psycopg2.connect(get_database_url())

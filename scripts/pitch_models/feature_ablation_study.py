@@ -267,14 +267,14 @@ def build_cumulative_groups() -> list[tuple[str, list[str]]]:
                 f'baseline+{group.name}',
                 all_features.copy(),
                 group.description,
-            )
+            ),
         )
 
     return cumulative
 
 
 def load_data_for_features(
-    conn, features: list[str], sample_size: int | None = None
+    conn, features: list[str], sample_size: int | None = None,
 ) -> pd.DataFrame:
     """Load data with specified features."""
 
@@ -298,8 +298,7 @@ def load_data_for_features(
     if sample_size:
         query += f' ORDER BY RANDOM() LIMIT {sample_size}'
 
-    df = pd.read_sql(query, conn)
-    return df
+    return pd.read_sql(query, conn)
 
 
 def prepare_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
@@ -460,7 +459,7 @@ def analyze_results(results: list[dict]):
     print(
         df[
             ['group', 'n_features', 'accuracy', 'log_loss', 'auc_macro', 'train_time_seconds']
-        ].to_string(index=False)
+        ].to_string(index=False),
     )
 
     print('\nMarginal Improvements (vs previous group):')
@@ -468,7 +467,7 @@ def analyze_results(results: list[dict]):
 
     print('\nEfficiency (training time per feature):')
     print(
-        df[['group', 'n_features', 'train_time_seconds', 'time_per_feature']].to_string(index=False)
+        df[['group', 'n_features', 'train_time_seconds', 'time_per_feature']].to_string(index=False),
     )
 
     # Recommendations

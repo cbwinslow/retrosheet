@@ -95,13 +95,10 @@ def bing_html_search(query: str):
     return results
 
 
-def process_query(query: str, api_key: str = None):
+def process_query(query: str, api_key: str | None = None):
     print(f'🔎 Searching for: {query}')
     try:
-        if api_key:
-            raw_results = serpapi_search(query, api_key)
-        else:
-            raw_results = bing_html_search(query)
+        raw_results = serpapi_search(query, api_key) if api_key else bing_html_search(query)
     except Exception as e:
         print(f"❌ Search failed for '{query}': {e}")
         return

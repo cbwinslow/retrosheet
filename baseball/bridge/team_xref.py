@@ -363,7 +363,7 @@ class TeamXrefService:
         },  # 1901 Milwaukee Brewers
     }
 
-    def __init__(self, db_connection=None):
+    def __init__(self, db_connection=None) -> None:
         """Initialize the team xref service.
 
         Args:
@@ -527,7 +527,7 @@ class TeamXrefService:
 
             return True
         except Exception as e:
-            logger.error(f'Failed to register team xref: {e}')
+            logger.exception(f'Failed to register team xref: {e}')
             return False
 
     def _save_to_db(self, xref: TeamXref) -> None:
@@ -580,7 +580,7 @@ class TeamXrefService:
                 )
             self._db.commit()
         except Exception as e:
-            logger.error(f'Failed to save team xref to DB: {e}')
+            logger.exception(f'Failed to save team xref to DB: {e}')
             raise
 
     def get_stats(self) -> dict[str, int]:

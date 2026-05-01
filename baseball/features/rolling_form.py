@@ -139,7 +139,7 @@ class RollingFormCalculator(FeatureStore):
     HOT_PITCHER_ERA = 3.00
     COLD_PITCHER_ERA = 5.00
 
-    def __init__(self, db_connection=None, config: FeatureConfig | None = None):
+    def __init__(self, db_connection=None, config: FeatureConfig | None = None) -> None:
         """Initialize rolling form calculator.
 
         Args:
@@ -159,7 +159,7 @@ class RollingFormCalculator(FeatureStore):
         return 'features.rolling_form_features'
 
     def get_batter_form(
-        self, player_id: int, season: int, as_of_date: date | None = None
+        self, player_id: int, season: int, as_of_date: date | None = None,
     ) -> BatterForm | None:
         """Get rolling form for a batter.
 
@@ -217,12 +217,12 @@ class RollingFormCalculator(FeatureStore):
                     self._batter_cache[cache_key] = form
                     return form
         except Exception as e:
-            logger.error(f'Failed to load batter form: {e}')
+            logger.exception(f'Failed to load batter form: {e}')
 
         return None
 
     def get_pitcher_form(
-        self, player_id: int, season: int, as_of_date: date | None = None
+        self, player_id: int, season: int, as_of_date: date | None = None,
     ) -> PitcherForm | None:
         """Get rolling form for a pitcher.
 
@@ -285,12 +285,12 @@ class RollingFormCalculator(FeatureStore):
                     self._pitcher_cache[cache_key] = form
                     return form
         except Exception as e:
-            logger.error(f'Failed to load pitcher form: {e}')
+            logger.exception(f'Failed to load pitcher form: {e}')
 
         return None
 
     def get_form_advantage(
-        self, batter_id: int, pitcher_id: int, season: int, as_of_date: date | None = None
+        self, batter_id: int, pitcher_id: int, season: int, as_of_date: date | None = None,
     ) -> tuple[str, float]:
         """Determine which player has form advantage.
 
@@ -426,7 +426,7 @@ class RollingFormCalculator(FeatureStore):
 
             with self.db.cursor() as cur:
                 cur.execute(
-                    """INSERT INTO features.rolling_form_features 
+                    """INSERT INTO features.rolling_form_features
                         (game_pk, season,
                          batter_id, pitcher_id,
                          batter_l7_ops, batter_l14_ops, batter_l30_ops,
@@ -483,7 +483,7 @@ class RollingFormCalculator(FeatureStore):
             self.db.commit()
             return True
         except Exception as e:
-            logger.error(f'Failed to save form features: {e}')
+            logger.exception(f'Failed to save form features: {e}')
             return False
 
     def _build_historical(self, config: FeatureConfig, result: FeatureResult) -> None:
@@ -548,7 +548,7 @@ class RollingFormCalculator(FeatureStore):
                     for row in cur.fetchall()
                 ]
         except Exception as e:
-            logger.error(f'Failed to get hot batters: {e}')
+            logger.exception(f'Failed to get hot batters: {e}')
             return []
 
     def get_hot_pitchers(self, season: int, min_ip: float = 10.0) -> list[dict[str, Any]]:
@@ -585,5 +585,5 @@ class RollingFormCalculator(FeatureStore):
                     for row in cur.fetchall()
                 ]
         except Exception as e:
-            logger.error(f'Failed to get hot pitchers: {e}')
+            logger.exception(f'Failed to get hot pitchers: {e}')
             return []

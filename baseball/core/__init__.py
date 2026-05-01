@@ -15,13 +15,14 @@ from baseball.core.settings import (
     settings,
 )
 
+
 __all__ = [
-    "DatabaseSettings",
-    "DataPathsSettings",
-    "LoggingSettings",
-    "MLBStatsAPISettings",
-    "ModelSettings",
-    "Settings",
-    "get_settings",
-    "settings",
+    'DataPathsSettings',
+    'DatabaseSettings',
+    'LoggingSettings',
+    'MLBStatsAPISettings',
+    'ModelSettings',
+    'Settings',
+    'get_settings',
+    'settings',
 ]

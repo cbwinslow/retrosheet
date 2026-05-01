@@ -52,7 +52,7 @@ class WebSocketServer:
         >>> await server.broadcast_prediction(game_pk=777777, prediction={...})
     """
 
-    def __init__(self, model_server=None, host: str = '0.0.0.0', port: int = 8765):
+    def __init__(self, model_server=None, host: str = '0.0.0.0', port: int = 8765) -> None:
         """Initialize WebSocket server.
 
         Args:
@@ -103,12 +103,12 @@ class WebSocketServer:
             async for message in websocket:
                 await self._process_message(client_id, websocket, message)
         except Exception as e:
-            logger.error(f'Client error {client_id}: {e}')
+            logger.exception(f'Client error {client_id}: {e}')
         finally:
             await self._disconnect_client(client_id)
 
     async def _process_message(
-        self, client_id: str, websocket: WebSocketServerProtocol, message: str
+        self, client_id: str, websocket: WebSocketServerProtocol, message: str,
     ) -> None:
         """Process a message from a client.
 
@@ -135,8 +135,8 @@ class WebSocketServer:
                         {
                             'type': 'error',
                             'message': f'Unknown message type: {msg_type}',
-                        }
-                    )
+                        },
+                    ),
                 )
 
         except json.JSONDecodeError:
@@ -145,22 +145,22 @@ class WebSocketServer:
                     {
                         'type': 'error',
                         'message': 'Invalid JSON',
-                    }
-                )
+                    },
+                ),
             )
         except Exception as e:
-            logger.error(f'Error processing message from {client_id}: {e}')
+            logger.exception(f'Error processing message from {client_id}: {e}')
             await websocket.send(
                 json.dumps(
                     {
                         'type': 'error',
                         'message': str(e),
-                    }
-                )
+                    },
+                ),
             )
 
     async def _handle_subscribe(
-        self, client_id: str, websocket: WebSocketServerProtocol, data: dict
+        self, client_id: str, websocket: WebSocketServerProtocol, data: dict,
     ) -> None:
         """Handle subscription request.
 
@@ -198,8 +198,8 @@ class WebSocketServer:
                     'client_id': client_id,
                     'game_pk': game_pk,
                     'prediction_types': list(prediction_types),
-                }
-            )
+                },
+            ),
         )
 
     async def _handle_unsubscribe(self, client_id: str, data: dict) -> None:
@@ -215,7 +215,7 @@ class WebSocketServer:
             logger.info(f'Client {client_id} unsubscribed')
 
     async def _handle_predict_request(
-        self, client_id: str, websocket: WebSocketServerProtocol, data: dict
+        self, client_id: str, websocket: WebSocketServerProtocol, data: dict,
     ) -> None:
         """Handle prediction request from client.
 
@@ -230,8 +230,8 @@ class WebSocketServer:
                     {
                         'type': 'error',
                         'message': 'Model server not available',
-                    }
-                )
+                    },
+                ),
             )
             return
 
@@ -292,7 +292,7 @@ class WebSocketServer:
                 'game_pk': game_pk,
                 'prediction': prediction,
                 'timestamp': asyncio.get_event_loop().time(),
-            }
+            },
         )
 
         notified = 0
@@ -340,7 +340,7 @@ class WebSocketServer:
                 'game_pk': game_pk,
                 'update': update,
                 'timestamp': asyncio.get_event_loop().time(),
-            }
+            },
         )
 
         notified = 0

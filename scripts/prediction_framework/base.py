@@ -13,14 +13,18 @@ from __future__ import annotations
 import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
-import pandas as pd
 import psycopg2
 
 from .db import database_kwargs
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    import pandas as pd
 
 
 T = TypeVar('T')
@@ -49,7 +53,8 @@ class PredictionTarget:
             )
             row = cur.fetchone()
             if not row:
-                raise ValueError(f'Target {target_id} not found')
+                msg = f'Target {target_id} not found'
+                raise ValueError(msg)
             return cls(row[0], row[1], row[2], row[3])
 
 
@@ -67,7 +72,7 @@ class ModelMetadata:
     metrics: dict | None = None
 
 
-class Predictor(ABC, Generic[T, R]):
+class Predictor[T, R](ABC):
     """Base class for all predictors."""
 
     def __init__(self, target: PredictionTarget):

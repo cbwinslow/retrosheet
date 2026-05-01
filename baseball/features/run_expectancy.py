@@ -33,7 +33,7 @@ class RunExpectancyCalculator(FeatureStore):
         >>> print(f'Expected runs: {re:.2f}')
     """
 
-    def __init__(self, db_connection=None, config: FeatureConfig | None = None):
+    def __init__(self, db_connection=None, config: FeatureConfig | None = None) -> None:
         """Initialize RE calculator.
 
         Args:
@@ -89,7 +89,7 @@ class RunExpectancyCalculator(FeatureStore):
 
             logger.info(f'Loaded {count} RE matrix entries')
         except Exception as e:
-            logger.error(f'Failed to load RE matrix: {e}')
+            logger.exception(f'Failed to load RE matrix: {e}')
             self._load_default_matrix()
 
         return count
@@ -302,7 +302,7 @@ class RunExpectancyCalculator(FeatureStore):
 
         except Exception as e:
             result.add_error(f'Failed to build RE matrix: {e}')
-            logger.error(f'RE matrix build failed: {e}')
+            logger.exception(f'RE matrix build failed: {e}')
 
         return result
 

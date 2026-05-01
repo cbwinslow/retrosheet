@@ -26,8 +26,7 @@ def get_db_connection() -> connection | None:
     """
     try:
         db_url = get_database_url()
-        conn = psycopg2.connect(db_url)
-        return conn
+        return psycopg2.connect(db_url)
     except Exception as e:
         import logging
 

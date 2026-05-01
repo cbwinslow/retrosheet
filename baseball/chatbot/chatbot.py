@@ -47,7 +47,7 @@ class Chatbot:
         model_server=None,
         db_connection=None,
         query_handlers: dict[str, Callable] | None = None,
-    ):
+    ) -> None:
         """Initialize chatbot.
 
         Args:
@@ -81,7 +81,7 @@ class Chatbot:
                 IntentType.GREETING: self._handle_greeting,
                 IntentType.HELP: self._handle_help,
                 IntentType.UNKNOWN: self._handle_unknown,
-            }
+            },
         )
 
     def chat(self, user_input: str) -> str:
@@ -140,7 +140,7 @@ class Chatbot:
             return response
 
         except Exception as e:
-            logger.error(f'Error processing chat: {e}')
+            logger.exception(f'Error processing chat: {e}')
             return 'Sorry, I ran into an issue. Could you try rephrasing your question?'
 
     def _build_context(self, intent: Intent, entities: list[Entity]) -> dict[str, Any]:
@@ -287,7 +287,7 @@ class Chatbot:
     def _handle_explanation(self, intent: Intent, entities: list[Entity]) -> dict | None:
         """Handle explanation intent."""
         return {
-            'explanation': """I predict baseball outcomes using machine learning models trained on thousands of historical games. 
+            'explanation': """I predict baseball outcomes using machine learning models trained on thousands of historical games.
 
 My predictions consider:
 • Current game state (score, inning, outs, base runners)

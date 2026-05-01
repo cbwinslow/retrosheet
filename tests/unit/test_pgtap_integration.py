@@ -1,11 +1,10 @@
---
-— File: scripts/test/test_pgtap_integration.py
-— Purpose: pytest wrapper to run pgTAP tests and integrate with pytest suite
-— Author: Agent KiloSwift
-— Date: 2026-04-27
-— Usage: pytest tests/unit/test_pgtap_integration.py -v
-— Dependencies: pytest, psycopg, scripts/test/run_pgtap.sh
-—
+# File: scripts/test/test_pgtap_integration.py
+# Purpose: pytest wrapper to run pgTAP tests and integrate with pytest suite
+# Author: Agent KiloSwift
+# Date: 2026-04-27
+# Usage: pytest tests/unit/test_pgtap_integration.py -v
+# Dependencies: pytest, psycopg, scripts/test/run_pgtap.sh
+
 
 """pytest integration tests for pgTAP database testing framework."""
 

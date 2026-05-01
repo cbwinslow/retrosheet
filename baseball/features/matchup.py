@@ -143,7 +143,7 @@ class MatchupCalculator(FeatureStore):
         >>> score = calc.compute_matchup_score(batter_id=123, pitcher_id=456, season=2026)
     """
 
-    def __init__(self, db_connection=None, config: FeatureConfig | None = None):
+    def __init__(self, db_connection=None, config: FeatureConfig | None = None) -> None:
         """Initialize matchup calculator.
 
         Args:
@@ -163,7 +163,7 @@ class MatchupCalculator(FeatureStore):
         return 'features.matchup_features'
 
     def load_matchup_history(
-        self, batter_id: int, pitcher_id: int, season: int | None = None
+        self, batter_id: int, pitcher_id: int, season: int | None = None,
     ) -> MatchupHistory | None:
         """Load matchup history from database.
 
@@ -196,7 +196,7 @@ class MatchupCalculator(FeatureStore):
                     )
                 else:
                     cur.execute(
-                        """SELECT batter_id, pitcher_id, 
+                        """SELECT batter_id, pitcher_id,
                                   SUM(career_pa), AVG(career_avg),
                                   AVG(career_ops), SUM(career_hr),
                                   SUM(recent_pa), AVG(recent_avg),
@@ -224,12 +224,12 @@ class MatchupCalculator(FeatureStore):
                     self._matchup_cache[cache_key] = history
                     return history
         except Exception as e:
-            logger.error(f'Failed to load matchup history: {e}')
+            logger.exception(f'Failed to load matchup history: {e}')
 
         return None
 
     def load_platoon_split(
-        self, player_id: int, player_type: str, season: int | None = None
+        self, player_id: int, player_type: str, season: int | None = None,
     ) -> PlatoonSplit | None:
         """Load platoon split for a player.
 
@@ -286,12 +286,12 @@ class MatchupCalculator(FeatureStore):
                     self._platoon_cache[cache_key] = split
                     return split
         except Exception as e:
-            logger.error(f'Failed to load platoon split: {e}')
+            logger.exception(f'Failed to load platoon split: {e}')
 
         return None
 
     def is_platoon_advantage(
-        self, batter_id: int, pitcher_id: int, season: int | None = None
+        self, batter_id: int, pitcher_id: int, season: int | None = None,
     ) -> bool | None:
         """Check if platoon situation favors the batter.
 
@@ -396,7 +396,7 @@ class MatchupCalculator(FeatureStore):
             return 0.50  # Unknown matchup
 
         total_weight = sum(weights)
-        weighted_sum = sum(s * w for s, w in zip(scores, weights))
+        weighted_sum = sum(s * w for s, w in zip(scores, weights, strict=False))
 
         return weighted_sum / total_weight if total_weight > 0 else 0.50
 
@@ -423,7 +423,7 @@ class MatchupCalculator(FeatureStore):
         return None
 
     def save_matchup_features(
-        self, game_pk: int, at_bat_index: int, batter_id: int, pitcher_id: int, season: int
+        self, game_pk: int, at_bat_index: int, batter_id: int, pitcher_id: int, season: int,
     ) -> bool:
         """Save computed matchup features to database.
 
@@ -451,7 +451,7 @@ class MatchupCalculator(FeatureStore):
 
             with self.db.cursor() as cur:
                 cur.execute(
-                    """INSERT INTO features.matchup_features 
+                    """INSERT INTO features.matchup_features
                         (game_pk, at_bat_index, season,
                          batter_id, pitcher_id,
                          career_matchup_pa, career_matchup_avg, career_matchup_ops,
@@ -489,7 +489,7 @@ class MatchupCalculator(FeatureStore):
             self.db.commit()
             return True
         except Exception as e:
-            logger.error(f'Failed to save matchup features: {e}')
+            logger.exception(f'Failed to save matchup features: {e}')
             return False
 
     def _build_historical(self, config: FeatureConfig, result: FeatureResult) -> None:

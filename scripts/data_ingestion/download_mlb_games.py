@@ -23,7 +23,7 @@ def database_kwargs():
     }
 
 
-def get_games_to_download(start_date: str, end_date: str, max_games: int = None) -> list:
+def get_games_to_download(start_date: str, end_date: str, max_games: int | None = None) -> list:
     """Get list of completed games that need live feed downloads."""
     conn = psycopg2.connect(**database_kwargs())
 

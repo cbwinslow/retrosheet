@@ -243,7 +243,7 @@ def find_optimal_clusters(X: np.ndarray, max_clusters: int = 15) -> dict:
                 'k': k,
                 'inertia': float(kmeans.inertia_),
                 'silhouette': float(silhouette),
-            }
+            },
         )
 
         print(f'  k={k:2d}: silhouette={silhouette:.3f}, inertia={kmeans.inertia_:.1f}')
@@ -282,7 +282,7 @@ def save_results(results: dict, output_dir: str = 'models/clustering'):
     print('\nCluster Sizes:')
     for stat in results['cluster_stats']:
         print(
-            f'  Cluster {stat["cluster_id"]}: {stat["n_pitches"]:,} pitches ({stat["pct_of_data"]}%)'
+            f'  Cluster {stat["cluster_id"]}: {stat["n_pitches"]:,} pitches ({stat["pct_of_data"]}%)',
         )
         if stat.get('velocity_mean'):
             print(f'    Avg velocity: {stat["velocity_mean"]:.1f} mph')
@@ -302,10 +302,10 @@ def main():
     parser.add_argument('--n-clusters', type=int, default=8, help='Number of clusters')
     parser.add_argument('--find-optimal', action='store_true', help='Find optimal cluster count')
     parser.add_argument(
-        '--max-clusters', type=int, default=15, help='Max clusters for optimization'
+        '--max-clusters', type=int, default=15, help='Max clusters for optimization',
     )
     parser.add_argument(
-        '--sample-size', type=int, default=100000, help='Number of pitches to analyze'
+        '--sample-size', type=int, default=100000, help='Number of pitches to analyze',
     )
     parser.add_argument(
         '--feature-set',
@@ -330,7 +330,7 @@ def main():
         df = load_pitch_data(conn, args.sample_size)
 
         # Prepare features
-        X, df_clean, features, scaler = prepare_features(df, args.feature_set)
+        X, df_clean, features, _scaler = prepare_features(df, args.feature_set)
 
         # Find optimal clusters if requested
         if args.find_optimal:

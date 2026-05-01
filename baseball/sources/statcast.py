@@ -55,7 +55,7 @@ class StatcastSource(BaseSource):
                     metadata={
                         'stdout': result.stdout[-1000:]
                         if len(result.stdout) > 1000
-                        else result.stdout
+                        else result.stdout,
                     },
                 )
             return SourceResult(
@@ -94,7 +94,7 @@ class StatcastSource(BaseSource):
                     metadata={
                         'stdout': result.stdout[-1000:]
                         if len(result.stdout) > 1000
-                        else result.stdout
+                        else result.stdout,
                     },
                 )
             return SourceResult(

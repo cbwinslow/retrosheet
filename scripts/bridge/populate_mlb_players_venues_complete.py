@@ -33,7 +33,7 @@ def get_db_conn():
     )
 
 
-def fetch_mlb_players(season: int, limit: int = None):
+def fetch_mlb_players(season: int, limit: int | None = None):
     """Fetch ALL MLB players for a season."""
     url = f'{MLB_API_BASE}/sports/1/players'
     params = {'season': season}
@@ -107,8 +107,8 @@ def store_mlb_players(conn, players: list, season: int):
         try:
             cur.execute(
                 """
-                INSERT INTO mlb.players (id, full_name, first_name, last_name, 
-                                         primary_position, birth_date, current_team_id, 
+                INSERT INTO mlb.players (id, full_name, first_name, last_name,
+                                         primary_position, birth_date, current_team_id,
                                          season, api_data)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
                 ON CONFLICT (id) DO UPDATE SET
@@ -170,7 +170,7 @@ def store_mlb_venues(conn, venues: list, season: int):
         try:
             cur.execute(
                 """
-                INSERT INTO mlb.venues (id, name, city, state, country, 
+                INSERT INTO mlb.venues (id, name, city, state, country,
                                        time_zone, latitude, longitude,
                                        season, api_data)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
@@ -245,7 +245,7 @@ def main():
     parser.add_argument('--skip-players', action='store_true')
     parser.add_argument('--skip-venues', action='store_true')
     parser.add_argument(
-        '--link-parks', action='store_true', help='Link venues to Retrosheet park IDs'
+        '--link-parks', action='store_true', help='Link venues to Retrosheet park IDs',
     )
     args = parser.parse_args()
 

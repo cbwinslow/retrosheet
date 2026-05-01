@@ -5,7 +5,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -47,8 +47,9 @@ def run_candidate(command: list[str]) -> list[dict]:
             },
         )
     if not results:
+        msg = f'No model metrics found in trainer output.\n{completed.stdout}\n{completed.stderr}'
         raise RuntimeError(
-            f'No model metrics found in trainer output.\n{completed.stdout}\n{completed.stderr}',
+            msg,
         )
     return results
 
@@ -134,7 +135,8 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.exclude_2020 and args.downweight_2020 is not None:
-        raise SystemExit('--exclude-2020 and --downweight-2020 are mutually exclusive.')
+        msg = '--exclude-2020 and --downweight-2020 are mutually exclusive.'
+        raise SystemExit(msg)
 
     recent_windows = parse_int_list(args.recent_windows)
     if args.include_all_window:
@@ -188,7 +190,7 @@ def main() -> None:
 
     results.sort(key=lambda row: (row['log_loss'], row['model_name'], row['policy']))
     summary = {
-        'generated_at': datetime.now(timezone.utc).isoformat(),
+        'generated_at': datetime.now(UTC).isoformat(),
         'feature_set': args.feature_set,
         'target_taxonomy': args.target_taxonomy,
         'sample_rate': args.sample_rate,

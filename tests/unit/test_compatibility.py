@@ -6,6 +6,7 @@ Author: Agent cbwinslow/retrosheet
 Date: 2026-04-27
 """
 
+import contextlib
 import platform
 import subprocess
 import sys
@@ -99,12 +100,9 @@ class TestPythonCompatibility:
             ('matplotlib', 'visualization'),
         ]
 
-        for dep, purpose in optional:
-            try:
+        for dep, _purpose in optional:
+            with contextlib.suppress(ImportError):
                 __import__(dep)
-                available = True
-            except ImportError:
-                available = False
 
             # Should not break if optional deps missing
             assert True  # Just documenting availability
@@ -424,7 +422,7 @@ class TestAPICompatibility:
         # Verify main commands exist
         commands = ['pipeline', 'features', 'models', 'predict']
 
-        for cmd in commands:
+        for _cmd in commands:
             # Commands are registered as Typer apps
             assert hasattr(app, 'registered_commands') or True  # Typer structure
 

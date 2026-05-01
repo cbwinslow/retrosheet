@@ -148,13 +148,15 @@ def main() -> None:
     calibration_frame = frame[frame['season'] <= args.calibration_through].copy()
     evaluation_frame = frame[frame['season'] == args.evaluation_season].copy()
     if calibration_frame.empty or evaluation_frame.empty:
-        raise SystemExit('Calibration or evaluation split is empty.')
+        msg = 'Calibration or evaluation split is empty.'
+        raise SystemExit(msg)
 
     classes = [str(label) for label in model.named_steps['model'].classes_]
     calibration_frame = calibration_frame[calibration_frame['target'].isin(classes)].copy()
     evaluation_frame = evaluation_frame[evaluation_frame['target'].isin(classes)].copy()
     if calibration_frame.empty or evaluation_frame.empty:
-        raise SystemExit("No rows remain after restricting to the model's trained class set.")
+        msg = "No rows remain after restricting to the model's trained class set."
+        raise SystemExit(msg)
 
     features_cal = calibration_frame[numeric_features + categorical_features]
     features_eval = evaluation_frame[numeric_features + categorical_features]

@@ -40,7 +40,7 @@ def get_ruff_errors(rule: str, path: str = '.') -> list:
                     'line': int(match.group(2)),
                     'col': int(match.group(3)),
                     'rule': match.group(4),
-                }
+                },
             )
     return errors
 

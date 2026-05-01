@@ -139,7 +139,7 @@ class TestETLPipelines:
 
     def test_script_logging(self, temp_dir):
         """Test scripts produce proper log output."""
-        log_file = temp_dir / 'test.log'
+        temp_dir / 'test.log'
 
         # Create a simple test script
         test_script = temp_dir / 'test_logging.sh'
@@ -383,7 +383,7 @@ class TestScriptEnvironment:
 
         # Document which vars are set
         for var in required_vars:
-            value = os.getenv(var)
+            os.getenv(var)
             # Just documenting, not requiring
             assert True  # Test passes regardless
 

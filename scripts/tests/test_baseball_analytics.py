@@ -44,7 +44,7 @@ class BaseballTester:
             'password': os.environ.get('PGPASSWORD', ''),
         }
 
-    def run_query(self, query: str, params: tuple = None):
+    def run_query(self, query: str, params: tuple | None = None):
         """Execute a query and return results."""
         conn = self.db_pool.getconn()
         try:
@@ -143,7 +143,7 @@ class BaseballTester:
     def benchmark_query(
         self,
         query: str,
-        params: tuple = None,
+        params: tuple | None = None,
         iterations: int = 3,
     ) -> dict[str, float]:
         """Benchmark a query's execution time."""
@@ -458,10 +458,7 @@ def generate_report(tester: BaseballTester) -> None:
     for name, result in tester.results.items():
         if result['status'] == 'PASS':
             duration = result['duration']
-            if duration < 0.1:
-                time_str = '.4f'
-            else:
-                time_str = '.2f'
+            time_str = '.4f' if duration < 0.1 else '.2f'
             print(f'  • {name}: {time_str}')
 
     # Save detailed results

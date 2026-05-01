@@ -201,7 +201,7 @@ def test_prediction_pipeline() -> bool:
         print_result('Instantiation', True, 'Pipeline created')
 
         # Test 4b: Load model (may use fallback)
-        loaded = pipeline.load_model('win_probability')
+        pipeline.load_model('win_probability')
         print_result('Model loading', True, 'Model loaded or fallback available')
 
         # Test 4c: Prediction
@@ -228,7 +228,7 @@ def test_prediction_pipeline() -> bool:
         )
 
         # Test 4d: Caching
-        result2 = pipeline.predict(context, use_cache=True)
+        pipeline.predict(context, use_cache=True)
         print_result('Prediction caching', True, f'cache_hits={pipeline._cache_hits}')
 
         # Test 4e: Metrics
@@ -284,7 +284,7 @@ async def test_websocket_client_server() -> bool:
         )
 
         # Start server
-        server = PredictionWebSocketServer(
+        PredictionWebSocketServer(
             host='localhost',
             port=18766,
             poll_interval=30.0,

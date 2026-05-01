@@ -133,7 +133,7 @@ class PlayerXrefService:
     Provides lookup by any ID type and returns canonical player info.
     """
 
-    def __init__(self, db_connection=None):
+    def __init__(self, db_connection=None) -> None:
         """Initialize the player xref service.
 
         Args:
@@ -168,7 +168,7 @@ class PlayerXrefService:
                     count += 1
             logger.info(f'Loaded {count} player xref records from database')
         except Exception as e:
-            logger.error(f'Failed to load player xref from DB: {e}')
+            logger.exception(f'Failed to load player xref from DB: {e}')
 
         return count
 
@@ -293,7 +293,7 @@ class PlayerXrefService:
 
             return True
         except Exception as e:
-            logger.error(f'Failed to register player xref: {e}')
+            logger.exception(f'Failed to register player xref: {e}')
             return False
 
     def _save_to_db(self, xref: PlayerXref) -> None:
@@ -344,11 +344,11 @@ class PlayerXrefService:
                 )
             self._db.commit()
         except Exception as e:
-            logger.error(f'Failed to save player xref to DB: {e}')
+            logger.exception(f'Failed to save player xref to DB: {e}')
             raise
 
     def find_candidates(
-        self, first_name: str, last_name: str, birth_date: date | None = None
+        self, first_name: str, last_name: str, birth_date: date | None = None,
     ) -> list[PlayerXref]:
         """Find potential matches by name and optional birth date.
 
@@ -370,9 +370,8 @@ class PlayerXrefService:
                 and xref.last_name.lower() == last_name.lower()
             )
 
-            if name_match:
-                if birth_date is None or xref.birth_date == birth_date:
-                    candidates.append(xref)
+            if name_match and (birth_date is None or xref.birth_date == birth_date):
+                candidates.append(xref)
 
         return candidates
 

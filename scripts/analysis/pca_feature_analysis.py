@@ -108,10 +108,10 @@ def run_pca_analysis(df: pd.DataFrame, feature_cols: list, n_components: int) ->
         [
             ('scaler', StandardScaler()),
             ('pca', PCA(n_components=min(n_components, len(valid_cols)), random_state=42)),
-        ]
+        ],
     )
 
-    X_transformed = pipeline.fit_transform(X)
+    pipeline.fit_transform(X)
     pca = pipeline.named_steps['pca']
 
     print('\nPCA Results:')
@@ -135,7 +135,7 @@ def run_pca_analysis(df: pd.DataFrame, feature_cols: list, n_components: int) ->
 
     for i in range(pca.n_components_):
         # Get feature loadings for this component
-        feature_loadings = list(zip(valid_cols, loadings[i]))
+        feature_loadings = list(zip(valid_cols, loadings[i], strict=False))
         feature_loadings.sort(key=lambda x: abs(x[1]), reverse=True)
 
         top_pos = {k: round(v, 4) for k, v in feature_loadings[:5] if v > 0}
@@ -162,7 +162,7 @@ def run_pca_analysis(df: pd.DataFrame, feature_cols: list, n_components: int) ->
                 'top_negative': top_neg,
                 'label': label,
                 'n_top_features': len(top_pos) + len(top_neg),
-            }
+            },
         )
 
     return {
@@ -207,13 +207,13 @@ def save_results(results: dict, output_dir: str = 'models/pca_analysis'):
     print(f'  95% variance: {results["components_for_95"]} components')
     print('\nReduction ratios:')
     print(
-        f'  80%: {results["components_for_80"]}/{results["n_features_original"]} = {results["components_for_80"] / results["n_features_original"]:.1%}'
+        f'  80%: {results["components_for_80"]}/{results["n_features_original"]} = {results["components_for_80"] / results["n_features_original"]:.1%}',
     )
     print(
-        f'  90%: {results["components_for_90"]}/{results["n_features_original"]} = {results["components_for_90"] / results["n_features_original"]:.1%}'
+        f'  90%: {results["components_for_90"]}/{results["n_features_original"]} = {results["components_for_90"] / results["n_features_original"]:.1%}',
     )
     print(
-        f'  95%: {results["components_for_95"]}/{results["n_features_original"]} = {results["components_for_95"] / results["n_features_original"]:.1%}'
+        f'  95%: {results["components_for_95"]}/{results["n_features_original"]} = {results["components_for_95"] / results["n_features_original"]:.1%}',
     )
 
     print('\nTop Components by Variance:')
@@ -229,7 +229,7 @@ def main():
     parser = argparse.ArgumentParser(description='PCA Feature Analysis')
     parser.add_argument('--n-components', type=int, default=50, help='Max number of PCA components')
     parser.add_argument(
-        '--feature-sample', type=int, default=None, help='Sample N features for quick analysis'
+        '--feature-sample', type=int, default=None, help='Sample N features for quick analysis',
     )
     args = parser.parse_args()
 

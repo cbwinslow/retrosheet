@@ -67,7 +67,7 @@ class WinProbabilityModel(SklearnBaseModel):
         'historical_home_win_rate',
     ]
 
-    def __init__(self, db_connection=None, config: ModelConfig | None = None):
+    def __init__(self, db_connection=None, config: ModelConfig | None = None) -> None:
         """Initialize Win Probability Model.
 
         Args:
@@ -115,7 +115,7 @@ class WinProbabilityModel(SklearnBaseModel):
             prob = self.model.predict_proba(X)[0][1]  # Probability of class 1 (home win)
             return float(prob)
         except Exception as e:
-            logger.error(f'Prediction failed: {e}')
+            logger.exception(f'Prediction failed: {e}')
             return self._heuristic_prediction(game_state)
 
     def _heuristic_prediction(self, game_state: dict[str, Any]) -> float:
@@ -166,7 +166,7 @@ class WinProbabilityModel(SklearnBaseModel):
         run_expectancy = game_state.get('run_expectancy', 0.5)
         leverage_index = game_state.get('leverage_index', 1.0)
 
-        features = [
+        return [
             inning / 9.0,  # inning_normalized
             1.0 if is_top else 0.0,  # is_top_half
             float(outs),
@@ -183,10 +183,9 @@ class WinProbabilityModel(SklearnBaseModel):
             0.54,  # historical_home_win_rate (MLB average)
         ]
 
-        return features
 
     def _prepare_training_data(
-        self, config: TrainingConfig
+        self, config: TrainingConfig,
     ) -> tuple[np.ndarray, np.ndarray] | None:
         """Prepare training data from historical games.
 
@@ -249,7 +248,7 @@ class WinProbabilityModel(SklearnBaseModel):
             return X, y
 
         except Exception as e:
-            logger.error(f'Failed to prepare training data: {e}')
+            logger.exception(f'Failed to prepare training data: {e}')
             return None
 
     def train(self, config: TrainingConfig) -> Any:
@@ -261,9 +260,9 @@ class WinProbabilityModel(SklearnBaseModel):
         Returns:
             ModelResult with training metrics
         """
-        from sklearn.model_selection import train_test_split
-        from sklearn.metrics import log_loss, roc_auc_score
         import xgboost as xgb
+        from sklearn.metrics import log_loss, roc_auc_score
+        from sklearn.model_selection import train_test_split
 
         result = self._prepare_result()
 
@@ -278,7 +277,7 @@ class WinProbabilityModel(SklearnBaseModel):
 
         # Split data
         X_train, X_val, y_train, y_val = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
+            X, y, test_size=0.2, random_state=42, stratify=y,
         )
 
         # Train model
@@ -287,7 +286,7 @@ class WinProbabilityModel(SklearnBaseModel):
             model.fit(
                 X_train, y_train,
                 eval_set=[(X_val, y_val)],
-                verbose=False
+                verbose=False,
             )
 
             self.model = model
@@ -300,11 +299,11 @@ class WinProbabilityModel(SklearnBaseModel):
 
             logger.info(
                 f'Training complete: AUC={result.validation_auc:.4f}, '
-                f'LogLoss={result.log_loss:.4f}'
+                f'LogLoss={result.log_loss:.4f}',
             )
 
         except Exception as e:
             result.error_message = f'Training failed: {e}'
-            logger.error(result.error_message)
+            logger.exception(result.error_message)
 
         return result

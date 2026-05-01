@@ -214,7 +214,7 @@ pipelines:
 
     def test_run_pipeline_success(self, service_with_config, mock_db):
         """Test successful pipeline execution."""
-        conn, cursor = mock_db
+        conn, _cursor = mock_db
 
         with patch('baseball.services.pipeline.get_db_connection', return_value=conn):
             run_id, success, error = service_with_config.run_pipeline(
@@ -240,7 +240,7 @@ pipelines:
             # Mock checkpoint at 'download' step
             cursor.fetchone.return_value = ('download', 'completed')
 
-            run_id, success, error = service_with_config.run_pipeline(
+            _run_id, success, _error = service_with_config.run_pipeline(
                 'test_pipeline',
                 resume=True,
             )
@@ -250,7 +250,7 @@ pipelines:
 
     def test_execute_step_success(self, service_with_config, mock_db):
         """Test executing individual step."""
-        conn, cursor = mock_db
+        conn, _cursor = mock_db
 
         with patch('baseball.services.pipeline.get_db_connection', return_value=conn):
             success, error = service_with_config.execute_step(
@@ -265,11 +265,11 @@ pipelines:
 
     def test_execute_unknown_step(self, service_with_config, mock_db):
         """Test executing unknown step type."""
-        conn, cursor = mock_db
+        conn, _cursor = mock_db
 
         with patch('baseball.services.pipeline.get_db_connection', return_value=conn):
             # Unknown steps are skipped (return True)
-            success, error = service_with_config.execute_step(
+            success, _error = service_with_config.execute_step(
                 'test_pipeline',
                 1,
                 'unknown_step',
@@ -331,7 +331,7 @@ class TestSingleton:
 
     def test_get_pipeline_service_singleton(self):
         """Test that get_pipeline_service returns singleton."""
-        with patch('baseball.services.pipeline.PipelineService') as MockService:
+        with patch('baseball.services.pipeline.PipelineService'):
             instance1 = get_pipeline_service()
             instance2 = get_pipeline_service()
 

@@ -197,7 +197,7 @@ class TestFeaturePipelineE2E:
             }
 
             loaded = 0
-            for name, calc in calculators.items():
+            for calc in calculators.values():
                 try:
                     count = calc.load_from_db()
                     if count > 0:
@@ -218,7 +218,7 @@ class TestFeaturePipelineE2E:
             features_computed = 0
 
             for state in states:
-                for name, calc in calculators.items():
+                for calc in calculators.values():
                     try:
                         value = calc.compute(state)
                         if value is not None:
@@ -270,8 +270,8 @@ class TestMaterializedViewsE2E:
         cursor = db_connection.cursor()
 
         cursor.execute("""
-            SELECT COUNT(*) FROM pg_matviews 
-            WHERE schemaname = 'features_pitch' 
+            SELECT COUNT(*) FROM pg_matviews
+            WHERE schemaname = 'features_pitch'
             AND matviewname LIKE 'mv_%'
         """)
         count = cursor.fetchone()[0]
@@ -290,7 +290,7 @@ class TestMaterializedViewsE2E:
         try:
             with benchmark('refresh_game_context_mv') as result:
                 cursor.execute(
-                    'REFRESH MATERIALIZED VIEW CONCURRENTLY features_pitch.mv_game_context'
+                    'REFRESH MATERIALIZED VIEW CONCURRENTLY features_pitch.mv_game_context',
                 )
                 result.rows_processed = 1
         except Exception as e:
@@ -299,7 +299,7 @@ class TestMaterializedViewsE2E:
         try:
             with benchmark('refresh_park_context_mv') as result:
                 cursor.execute(
-                    'REFRESH MATERIALIZED VIEW CONCURRENTLY features_pitch.mv_park_context'
+                    'REFRESH MATERIALIZED VIEW CONCURRENTLY features_pitch.mv_park_context',
                 )
                 result.rows_processed = 1
         except Exception as e:
@@ -315,7 +315,7 @@ class TestMaterializedViewsE2E:
         try:
             cursor.execute("""
                 SELECT schemaname, matviewname, hasindexes, ispopulated
-                FROM pg_matviews 
+                FROM pg_matviews
                 WHERE schemaname = 'features_pitch'
             """)
             mvs = cursor.fetchall()

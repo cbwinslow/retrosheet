@@ -10,7 +10,7 @@ Date: 2026-04-27
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, date
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 import yaml
 
 from baseball.core.db import get_db_connection
+
 
 if TYPE_CHECKING:
     from baseball.sources.base import BaseSource
@@ -88,7 +89,7 @@ class PipelineRun:
 class PipelineService:
     """Service for executing and managing pipelines."""
 
-    def __init__(self, config_path: Path | None = None):
+    def __init__(self, config_path: Path | None = None) -> None:
         """Initialize pipeline service.
 
         Args:
@@ -239,7 +240,7 @@ class PipelineService:
                 logger.info(f'Created pipeline run: {run_id} for {pipeline_name}')
                 return run_id
         except Exception as e:
-            logger.error(f'Could not create pipeline run: {e}')
+            logger.exception(f'Could not create pipeline run: {e}')
             raise
 
     def update_run_status(
@@ -368,7 +369,7 @@ class PipelineService:
                             completed_at=row[4],
                             parameters=json.loads(row[5]) if row[5] else {},
                             error_message=row[6],
-                        )
+                        ),
                     )
         except Exception as e:
             logger.warning(f'Could not get recent runs: {e}')
@@ -443,11 +444,11 @@ class PipelineService:
         Returns:
             Source adapter instance or None
         """
+        from baseball.sources.espn import EspnSource
+        from baseball.sources.lahman import LahmanSource
         from baseball.sources.mlb import MlbSource
         from baseball.sources.retrosheet import RetrosheetSource
         from baseball.sources.statcast import StatcastSource
-        from baseball.sources.espn import EspnSource
-        from baseball.sources.lahman import LahmanSource
 
         adapter_map = {
             'mlb': MlbSource,
@@ -555,7 +556,7 @@ class PipelineService:
                 from baseball.core.types import SourceRequest
                 request = SourceRequest(
                     source_type='mlb',
-                    params=download_params
+                    params=download_params,
                 )
                 result = adapter.download(request)
             else:
@@ -663,7 +664,7 @@ class PipelineService:
         return True
 
     def _handle_feature_build(
-        self, pipeline: str, run_id: int, step: str, params: dict | None
+        self, pipeline: str, run_id: int, step: str, params: dict | None,
     ) -> bool:
         """Handle feature building step."""
         logger.info(f'Feature build step: {step} for pipeline {pipeline}')
@@ -716,7 +717,8 @@ class PipelineService:
         """
         config = self.get_pipeline(pipeline_name)
         if not config:
-            raise ValueError(f'Pipeline not found: {pipeline_name}')
+            msg = f'Pipeline not found: {pipeline_name}'
+            raise ValueError(msg)
 
         # Create run record
         run_id = self.create_run(pipeline_name, parameters)

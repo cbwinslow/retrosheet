@@ -47,7 +47,7 @@ class TestLeverageIndexCalculator:
 
     def test_load_from_db(self, mock_db):
         """Test loading LI matrix from database."""
-        conn, cursor = mock_db
+        conn, _cursor = mock_db
 
         rows = [
             (1, True, 0, '000', 0, 0.9, 1000),
@@ -129,8 +129,8 @@ class TestLeverageIndexCalculator:
         assert (
             calc.compute(
                 GameState(
-                    inning=9, is_top=False, outs=2, runner_1b=True, runner_2b=True, runner_3b=True
-                )
+                    inning=9, is_top=False, outs=2, runner_1b=True, runner_2b=True, runner_3b=True,
+                ),
             )
             == 3.5
         )

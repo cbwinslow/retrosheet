@@ -74,7 +74,7 @@ def load_feature_candidates(conn, top_n: int | None = None) -> list[str]:
 
 
 def load_training_data(
-    conn, features: list[str], sample_size: int = 50000
+    conn, features: list[str], sample_size: int = 50000,
 ) -> tuple[pd.DataFrame, pd.Series]:
     """Load training data with selected features."""
 
@@ -175,7 +175,7 @@ def forward_stepwise_selection(
             if i % 10 == 0:
                 print(f'  Testing feature {i + 1}/{len(remaining)}: {feature[:30]}...', end='\r')
 
-            test_features = selected + [feature]
+            test_features = [*selected, feature]
             X, y = load_training_data(conn, test_features, sample_size)
 
             if X.shape[1] == 0:
@@ -218,7 +218,7 @@ def forward_stepwise_selection(
                 'improvement': round(improvement, 6),
                 'n_features': len(selected),
                 'std': round(best_feature_std, 6),
-            }
+            },
         )
 
     print('\n' + '=' * 60)
@@ -254,7 +254,7 @@ def backward_stepwise_selection(
     # Initial score with all features
     print(f'\nStep 0: Initial model with {len(selected)} features')
     X, y = load_training_data(conn, selected, sample_size)
-    best_score, best_std = evaluate_feature_set(X, y)
+    best_score, _best_std = evaluate_feature_set(X, y)
     print(f'  Initial AUC: {best_score:.4f}')
 
     step = 0
@@ -301,7 +301,7 @@ def backward_stepwise_selection(
                 'feature': worst_feature,
                 'score': round(best_score, 6),
                 'n_features': len(selected),
-            }
+            },
         )
 
     print('\n' + '=' * 60)
@@ -343,7 +343,7 @@ def save_selection_log(history: list, method: str, experiment_id: int | None = N
         scores = [h['score'] for h in history]
         n_features = [h['n_features'] for h in history]
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+        _fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
         # Score vs step
         ax1.plot(steps, scores, 'b-o', markersize=4)
@@ -370,17 +370,17 @@ def save_selection_log(history: list, method: str, experiment_id: int | None = N
 def main():
     parser = argparse.ArgumentParser(description='Stepwise Feature Selection')
     parser.add_argument(
-        '--method', choices=['forward', 'backward'], default='forward', help='Selection method'
+        '--method', choices=['forward', 'backward'], default='forward', help='Selection method',
     )
     parser.add_argument(
-        '--max-features', type=int, default=50, help='Maximum features for forward selection'
+        '--max-features', type=int, default=50, help='Maximum features for forward selection',
     )
     parser.add_argument(
-        '--min-features', type=int, default=20, help='Minimum features for backward selection'
+        '--min-features', type=int, default=20, help='Minimum features for backward selection',
     )
     parser.add_argument('--sample-size', type=int, default=50000, help='Training sample size')
     parser.add_argument(
-        '--top-candidates', type=int, default=100, help='Start with top N candidate features'
+        '--top-candidates', type=int, default=100, help='Start with top N candidate features',
     )
     parser.add_argument(
         '--min-improvement',

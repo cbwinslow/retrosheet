@@ -162,7 +162,7 @@ def compute_next_run_features(db: connection, seasons: list[int]) -> int:
         # Get training IDs that need features
         cur.execute(
             """
-            SELECT training_id 
+            SELECT training_id
             FROM models.next_run_training_data
             WHERE season = ANY(%s)
               AND training_id NOT IN (
@@ -216,7 +216,7 @@ def compute_pa_outcome_features(db: connection, seasons: list[int]) -> int:
         # Get training IDs that need features
         cur.execute(
             """
-            SELECT training_id 
+            SELECT training_id
             FROM models.pa_outcome_training_data
             WHERE season = ANY(%s)
               AND training_id NOT IN (
@@ -433,7 +433,7 @@ def generate_test_predictions(
             # Get sample of games
             cur.execute(
                 """
-                SELECT DISTINCT game_pk 
+                SELECT DISTINCT game_pk
                 FROM models.next_run_training_data
                 WHERE season = %s
                 LIMIT 10
@@ -511,10 +511,7 @@ def main():
     args = parser.parse_args()
 
     # Generate version if not provided
-    if args.version:
-        model_version = args.version
-    else:
-        model_version = datetime.now().strftime('%Y%m%d_%H%M%S')
+    model_version = args.version or datetime.now().strftime('%Y%m%d_%H%M%S')
 
     logger.info('=' * 60)
     logger.info('Model Training Pipeline')
@@ -530,7 +527,7 @@ def main():
         db = get_db_connection()
         logger.info('Database connected')
     except Exception as e:
-        logger.error(f'Failed to connect to database: {e}')
+        logger.exception(f'Failed to connect to database: {e}')
         sys.exit(1)
 
     results = {}

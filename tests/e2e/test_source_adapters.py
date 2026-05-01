@@ -139,7 +139,7 @@ class TestWrapperCalls:
             with open(script_path) as f:
                 first_line = f.readline()
                 assert 'python' in first_line.lower() or first_line.startswith(
-                    '#!/usr/bin/env python'
+                    '#!/usr/bin/env python',
                 )
 
 
