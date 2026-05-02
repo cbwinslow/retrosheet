@@ -5,6 +5,7 @@ This module provides model training and inference for:
 - Plate Appearance Outcome Model (multi-class: out/walk/single/double/triple/HR)
 - Backtesting framework with walk-forward validation
 - Monte Carlo simulation with Markov chains and ML-based PA prediction
+- Model calibration tools (ECE, Brier score, temperature scaling)
 
 Uses Pydantic schemas for type-safe configuration and state management.
 
@@ -69,6 +70,24 @@ from .simulation import (
 )
 from .win_probability_model import WinProbabilityModel
 
+from .calibration import (
+    CalibrationMetrics,
+    calibrate_model,
+    calculate_ece,
+    calculate_brier_score,
+    temperature_scaling,
+    is_well_calibrated,
+)
+from .registry import ModelRegistry, ModelEntry
+from .serving import (
+    ModelServer,
+    ModelCache,
+    PredictionResult,
+    BatchPredictionResult,
+    ABTestConfig,
+    load_model,
+    predict,
+)
 
 __all__ = [
     # Pydantic schemas (type-safe configuration)
@@ -124,4 +143,22 @@ __all__ = [
     'run_game_simulation',
     'run_quick_backtest',
     'run_quick_simulation',
+    # Calibration
+    'CalibrationMetrics',
+    'calibrate_model',
+    'calculate_ece',
+    'calculate_brier_score',
+    'temperature_scaling',
+    'is_well_calibrated',
+    # Registry
+    'ModelRegistry',
+    'ModelEntry',
+    # Serving
+    'ModelServer',
+    'ModelCache',
+    'PredictionResult',
+    'BatchPredictionResult',
+    'ABTestConfig',
+    'load_model',
+    'predict',
 ]

@@ -147,6 +147,127 @@ class CacheManager:
 cache_manager = CacheManager()
 
 
+class ModelPredictionCache:
+    """
+    Specialized cache for model predictions.
+    
+    Caches prediction results with feature hash keys for fast replay.
+    Useful for expensive ensemble models or frequent repeated predictions.
+    
+    Usage:
+        cache = ModelPredictionCache()
+        
+        # Check cache first
+        result = cache.get_prediction(features, model_version='v1')
+        if result is None:
+            result = model.predict(features)
+            cache.set_prediction(features, result, model_version='v1')
+    """
+    
+    def __init__(self, ttl: int = 60):
+        self.ttl = ttl
+        self._local_cache: dict[str, Any] = {}
+    
+    def _make_key(self, features: np.ndarray, model_version: str) -> str:
+        """Create cache key from features and model version."""
+        feature_hash = hashlib.md5(features.tobytes()).hexdigest()[:16]
+        return f"pred:{model_version}:{feature_hash}"
+    
+    async def get_prediction(
+        self,
+        features: np.ndarray,
+        model_version: str
+    ) -> Optional[Any]:
+        """Get cached prediction if available."""
+        key = self._make_key(features, model_version)
+        
+        # Try local cache first (fastest)
+        if key in self._local_cache:
+            return self._local_cache[key]
+        
+        # Try Redis
+        result = await cache_manager.get(key)
+        if result:
+            self._local_cache[key] = result  # Promote to local cache
+        return result
+    
+    async def set_prediction(
+        self,
+        features: np.ndarray,
+        result: Any,
+        model_version: str
+    ) -> bool:
+        """Cache a prediction result."""
+        key = self._make_key(features, model_version)
+        self._local_cache[key] = result
+        return await cache_manager.set(key, result, ttl=self.ttl)
+    
+    def clear_local(self) -> None:
+        """Clear local in-memory cache."""
+        self._local_cache.clear()
+
+
+class FeatureCache:
+    """
+    Cache for expensive feature computations.
+    
+    Caches computed features by entity ID (player, game, etc.)
+    to avoid repeated database queries.
+    
+    Usage:
+        cache = FeatureCache()
+        
+        # Get player context (cached)
+        context = await cache.get_player_context(player_id)
+        if context is None:
+            context = compute_player_context(player_id)
+            await cache.set_player_context(player_id, context)
+    """
+    
+    def __init__(self, default_ttl: int = 300):
+        self.default_ttl = default_ttl
+    
+    async def get_player_context(self, player_id: str) -> Optional[dict]:
+        """Get cached player context features."""
+        key = f"player_ctx:{player_id}"
+        return await cache_manager.get(key)
+    
+    async def set_player_context(
+        self,
+        player_id: str,
+        context: dict,
+        ttl: Optional[int] = None
+    ) -> bool:
+        """Cache player context features."""
+        key = f"player_ctx:{player_id}"
+        return await cache_manager.set(key, context, ttl=ttl or self.default_ttl)
+    
+    async def get_live_game_state(self, game_pk: int) -> Optional[dict]:
+        """Get cached live game state."""
+        key = f"live_game:{game_pk}"
+        return await cache_manager.get(key)
+    
+    async def set_live_game_state(
+        self,
+        game_pk: int,
+        state: dict,
+        ttl: int = 30  # Short TTL for live data
+    ) -> bool:
+        """Cache live game state."""
+        key = f"live_game:{game_pk}"
+        return await cache_manager.set(key, state, ttl=ttl)
+    
+    async def invalidate_player(self, player_id: str) -> bool:
+        """Invalidate player context cache."""
+        key = f"player_ctx:{player_id}"
+        return await cache_manager.delete(key)
+    
+    async def invalidate_game(self, game_pk: int) -> bool:
+        """Invalidate game state cache."""
+        key = f"live_game:{game_pk}"
+        return await cache_manager.delete(key)
+
+
 def cached(
     ttl: int = 300,
     key_prefix: str = '',
