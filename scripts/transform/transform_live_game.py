@@ -382,6 +382,16 @@ def upsert_live_game(conn, game_row: dict[str, Any]) -> None:
         )
 
 
+def extract_live_pitch_events(conn, snapshot: Snapshot) -> int:
+    """Extract ALL pitch data from snapshot into core.live_pitch_events."""
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT staging.extract_all_pitch_events(%s, %s, %s)',
+            (snapshot.snapshot_id, snapshot.game_pk, Json(snapshot.payload)),
+        )
+        return cur.fetchone()[0]
+
+
 def upsert_live_events(conn, event_rows: list[dict[str, Any]]) -> None:
     if not event_rows:
         return
@@ -500,12 +510,13 @@ def delete_stale_live_rows(conn, *, mlb_game_pk: int, canonical_game_id: str) ->
         )
 
 
-def transform_live_game(game_pk: int) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def transform_live_game(game_pk: int) -> tuple[dict[str, Any], list[dict[str, Any]], int]:
     conn = psycopg2.connect(**database_kwargs())
     try:
         snapshot = fetch_latest_snapshot(conn, game_pk)
         game_row = transform_game(conn, snapshot)
         event_rows = transform_events(conn, snapshot, game_row)
+        pitch_count = extract_live_pitch_events(conn, snapshot)
         delete_stale_live_rows(
             conn,
             mlb_game_pk=snapshot.game_pk,
@@ -514,7 +525,7 @@ def transform_live_game(game_pk: int) -> tuple[dict[str, Any], list[dict[str, An
         upsert_live_game(conn, game_row)
         upsert_live_events(conn, event_rows)
         conn.commit()
-        return game_row, event_rows
+        return game_row, event_rows, pitch_count
     finally:
         conn.close()
 
@@ -527,14 +538,14 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
-        game_row, event_rows = transform_live_game(args.game_pk)
+        game_row, event_rows, pitch_count = transform_live_game(args.game_pk)
     except Exception as exc:
         print(f'Error: {exc}')
         raise SystemExit(1) from exc
 
     print(
         f'Transformed snapshot for game_pk {args.game_pk} into {game_row["game_id"]} '
-        f'with {len(event_rows)} live events.',
+        f'with {len(event_rows)} live events and {pitch_count} pitch records (ALL fields extracted).',
     )
 
 

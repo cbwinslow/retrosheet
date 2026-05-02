@@ -98,4 +98,33 @@ def chatbot_demo():
     console.print('[dim]Conversation summary:[/dim]')
     console.print(f'  Messages: {summary["session_info"]["message_count"]}')
     console.print(f'  Active team: {summary["context"]["team"] or "None"}')
-    console.print(f'  Active player: {summary["context"]["player"] or "None"}')
+
+
+@chatbot_app.command(name='route')
+def chatbot_route(
+    query: str = typer.Option(..., '--query', '-q', help='Natural language query to route')
+):
+    """Show how a query is routed to models."""
+    from baseball.nlp import QueryRouter
+    
+    router = QueryRouter()
+    result = router.execute(query)
+    
+    routed = result['routed_query']
+    
+    console.print('[bold]Query Routing Analysis[/bold]\n')
+    console.print(f'[cyan]Original:[/cyan] {query}')
+    console.print(f'[cyan]Intent:[/cyan] {routed.intent.value}')
+    console.print(f'[cyan]Model:[/cyan] {routed.model_type.value if routed.model_type else "None"}')
+    console.print(f'[cyan]Confidence:[/cyan] {routed.confidence:.0%}')
+    
+    if routed.entities:
+        console.print(f'\n[cyan]Entities:[/cyan]')
+        for key, value in routed.entities.items():
+            console.print(f'  {key}: {value}')
+    
+    if result['success']:
+        console.print(f'\n[green]Response:[/green]')
+        console.print(result['response'])
+    else:
+        console.print(f'\n[yellow]Note:[/yellow] {result["response"]}')

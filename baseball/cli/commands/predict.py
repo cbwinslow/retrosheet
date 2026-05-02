@@ -290,6 +290,46 @@ def predict_live(
         raise typer.Exit(code=1)
 
 
+@predict_app.command(name='pitch')
+def predict_pitch(
+    model_path: str = typer.Option(
+        'models/pitch_level/tier1_*.pkl',
+        '--model', '-m',
+        help='Path to trained pitch model'
+    ),
+):
+    """Run pitch-level prediction using Two-Tier XGBoost model."""
+    import glob
+    import pickle
+    from pathlib import Path
+
+    # Find latest model
+    model_files = glob.glob(model_path)
+    if not model_files:
+        console.print(f'[red]No model found at {model_path}[/red]')
+        raise typer.Exit(code=1)
+
+    latest_model = sorted(model_files)[-1]
+    console.print(f'[dim]Loading: {Path(latest_model).name}[/dim]')
+
+    try:
+        with open(latest_model, 'rb') as f:
+            artifact = pickle.load(f)
+
+        model = artifact['model']
+        metadata = artifact['metadata']
+
+        console.print(f"[green]✓ Model loaded[/green]")
+        console.print(f"  Type: {metadata.get('model_type', 'unknown')}")
+        console.print(f"  Classes: {', '.join(metadata.get('classes', []))}")
+        console.print(f"  Accuracy: {metadata.get('accuracy', 0):.1%}")
+        console.print(f"  Log Loss: {metadata.get('log_loss', 0):.4f}")
+
+    except Exception as e:
+        console.print(f'[red]Error loading model: {e}[/red]')
+        raise typer.Exit(code=1)
+
+
 @predict_app.command(name='batch')
 def predict_batch(
     season: int = typer.Option(..., '--season', '-s', help='Season to predict'),
@@ -427,6 +467,27 @@ def live_predict(
         console.print(f'  Confidence: {result.confidence:.1%}')
     else:
         console.print(f'[red]Prediction failed: {result.error_message}[/red]')
+        raise typer.Exit(code=1)
+
+
+@live_app.command(name='next-pitch')
+def live_next_pitch(
+    game_pk: int = typer.Option(..., '--game', '-g', help='Game PK to predict'),
+):
+    """Predict the next pitch type using Markov chain model."""
+    from baseball.predictions.live_predictor import (
+        get_prediction_engine,
+        display_prediction
+    )
+
+    engine = get_prediction_engine()
+    prediction = engine.predict_next_pitch(game_pk)
+
+    if prediction:
+        context = engine.get_live_context(game_pk)
+        display_prediction(prediction, context)
+    else:
+        console.print('[red]No prediction available - game may not be live[/red]')
         raise typer.Exit(code=1)
 
 

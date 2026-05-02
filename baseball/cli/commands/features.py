@@ -215,3 +215,227 @@ def features_build(
         else:
             console.print(f'\n[yellow]⚠ {success_count}/{total_count} features built successfully[/yellow]')
             raise typer.Exit(code=1)
+
+
+@features_app.command(name='refresh-live')
+def refresh_live_features(
+    watch: bool = typer.Option(
+        False,
+        '--watch', '-w',
+        help='Continuously refresh every 30 seconds'
+    ),
+    interval: int = typer.Option(
+        30,
+        '--interval', '-i',
+        help='Refresh interval in seconds (default: 30)'
+    )
+):
+    """Refresh live pitch feature cache for real-time inference."""
+    from baseball.features.live_inference import LiveFeatureMapper
+    from time import sleep
+    
+    mapper = LiveFeatureMapper()
+    
+    console.print('[dim]Refreshing live pitch features...[/dim]')
+    
+    while True:
+        try:
+            result = mapper.refresh_live_cache()
+            
+            console.print(
+                f'[green]✓[/green] Refreshed: {result["rows_after"]} pitches '
+                f'(+{result["new_rows"]} new) | '
+                f'Latest: {result["latest_timestamp"]}'
+            )
+            
+            # Show active games
+            games = mapper.get_active_games()
+            if games:
+                console.print(f'[dim]Active games: {len(games)}[/dim]')
+                for g in games[:3]:  # Show top 3
+                    console.print(
+                        f'  • Game {g["game_pk"]}: {g["pitch_count"]} pitches'
+                    )
+            
+            if not watch:
+                break
+                
+            sleep(interval)
+            
+        except KeyboardInterrupt:
+            console.print('\n[yellow]Stopped.[/yellow]')
+            break
+        except Exception as e:
+            console.print(f'[red]Error: {e}[/red]')
+            if not watch:
+                raise typer.Exit(code=1)
+            sleep(interval)
+
+
+@features_app.command(name='refresh-players')
+def refresh_player_context(
+    batter_id: Optional[str] = typer.Option(
+        None,
+        '--batter', '-b',
+        help='Show context for specific batter'
+    ),
+    pitcher_id: Optional[str] = typer.Option(
+        None,
+        '--pitcher', '-p',
+        help='Show context for specific pitcher'
+    ),
+    matchup: bool = typer.Option(
+        False,
+        '--matchup', '-m',
+        help='Show head-to-head matchup (requires both --batter and --pitcher)'
+    ),
+    refresh: bool = typer.Option(
+        False,
+        '--refresh', '-r',
+        help='Refresh materialized views'
+    )
+):
+    """Refresh and display player context features (30-day rolling stats)."""
+    from baseball.features.player_context import PlayerContextStore
+    
+    store = PlayerContextStore()
+    
+    if refresh:
+        console.print('[dim]Refreshing player context tables...[/dim]')
+        results = store.refresh_context_tables()
+        
+        for table, stats in results.items():
+            console.print(
+                f'[green]✓[/green] {table}: {stats["rows_after"]} rows '
+                f'(+{stats["new_rows"]} new)'
+            )
+        console.print()
+    
+    if batter_id:
+        context = store.get_batter_context(batter_id)
+        if context:
+            console.print(f'[bold]Batter {batter_id} (30-day)[/bold]')
+            console.print(f'  PA: {context.pa_30d} (7d: {context.pa_7d})')
+            console.print(f'  AVG: {context.avg_30d:.3f}')
+            console.print(f'  K%: {context.k_rate_30d:.1f}% (7d: {context.k_rate_7d:.1f}%)')
+            console.print(f'  BB%: {context.bb_rate_30d:.1f}% (7d: {context.bb_rate_7d:.1f}%)')
+            console.print(f'  HR%: {context.hr_rate_30d:.1f}%')
+            if context.avg_ev_30d:
+                console.print(f'  Avg EV: {context.avg_ev_30d:.1f} mph')
+        else:
+            console.print(f'[yellow]No context found for batter {batter_id}[/yellow]')
+        console.print()
+    
+    if pitcher_id:
+        context = store.get_pitcher_context(pitcher_id)
+        if context:
+            console.print(f'[bold]Pitcher {pitcher_id} (30-day)[/bold]')
+            console.print(f'  BF: {context.bf_30d}')
+            console.print(f'  K%: {context.k_rate_30d:.1f}%')
+            console.print(f'  BB%: {context.bb_rate_30d:.1f}%')
+            console.print(f'  HR%: {context.hr_rate_30d:.1f}%')
+            console.print(f'  Velo: {context.avg_velo_30d:.1f} mph')
+            console.print(f'  Arsenal: {context.arsenal_depth:.1f} pitch types')
+        else:
+            console.print(f'[yellow]No context found for pitcher {pitcher_id}[/yellow]')
+        console.print()
+    
+    if matchup and batter_id and pitcher_id:
+        history = store.get_matchup_history(pitcher_id, batter_id)
+        if history:
+            console.print(f'[bold]Matchup History (Last 3 years)[/bold]')
+            console.print(f'  PAs: {history.total_pas}')
+            console.print(f'  AVG: {history.matchup_avg:.3f} ({history.hits} hits)')
+            console.print(f'  K%: {history.matchup_k_rate:.1f}% ({history.strikeouts} Ks)')
+            if history.last_matchup_date:
+                console.print(f'  Last: {history.last_matchup_date}')
+        else:
+            console.print(f'[dim]No matchup history found[/dim]')
+
+
+@features_app.command(name='stars')
+def star_players(
+    refresh: bool = typer.Option(
+        False,
+        '--refresh', '-r',
+        help='Refresh star player materialized views'
+    ),
+    top: int = typer.Option(
+        10,
+        '--top', '-t',
+        help='Show top N players'
+    ),
+    team_id: Optional[str] = typer.Option(
+        None,
+        '--team',
+        help='Filter by team ID'
+    ),
+    active: bool = typer.Option(
+        False,
+        '--active', '-a',
+        help='Show only active players for today'
+    )
+):
+    """Display star player rankings and active roster."""
+    from baseball.features.star_players import StarPlayerStore
+    
+    store = StarPlayerStore()
+    
+    if refresh:
+        console.print('[dim]Refreshing star player views...[/dim]')
+        results = store.refresh_star_views()
+        for view, status in results.items():
+            console.print(f'[green]✓[/green] {view}: {status}')
+        console.print()
+    
+    if active:
+        # Show active roster
+        players = store.get_active_stars(team_id=team_id)
+        
+        if team_id:
+            console.print(f'[bold]Active Star Players (Team {team_id})[/bold]')
+        else:
+            console.print(f'[bold]Active Star Players - All Teams[/bold]')
+        
+        from rich.table import Table
+        table = Table()
+        table.add_column('Rank', style='cyan', justify='right')
+        table.add_column('Player', style='green')
+        table.add_column('Team', style='yellow')
+        table.add_column('Type', style='magenta')
+        table.add_column('Position', style='dim')
+        
+        for i, player in enumerate(players[:top], 1):
+            table.add_row(
+                str(player.star_rank or '-'),
+                player.player_name,
+                player.team_abbreviation,
+                player.player_type,
+                player.position
+            )
+        
+        console.print(table)
+        console.print(f'\n[dim]Showing {min(top, len(players))} of {len(players)} active stars[/dim]')
+    else:
+        # Show top batters and pitchers
+        console.print(f'[bold]Top {top} Star Batters[/bold]')
+        batters = store.list_top_batters(limit=top)
+        
+        for b in batters:
+            console.print(
+                f'  #{b.star_rank} [cyan]{b.player_id}[/cyan] '
+                f'WAR: {b.war_estimate:.1f} | '
+                f'AVG: {b.avg_30d:.3f} | '
+                f'K%: {b.k_rate_30d:.1f}'
+            )
+        
+        console.print(f'\n[bold]Top {top} Star Pitchers[/bold]')
+        pitchers = store.list_top_pitchers(limit=top)
+        
+        for p in pitchers:
+            console.print(
+                f'  #{p.star_rank} [cyan]{p.player_id}[/cyan] '
+                f'WAR: {p.war_estimate:.1f} | '
+                f'K%: {p.k_rate_30d:.1f} | '
+                f'Velo: {p.avg_velo_30d:.1f}'
+            )

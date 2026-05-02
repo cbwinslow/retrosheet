@@ -36,10 +36,21 @@ def build_index():
     for doc in tqdm(reader.load_data(), desc='Loading documents'):
         documents.append(doc)
 
-    # Configure the LLM predictor - using OpenAI gpt-4 by default
-    llm = OpenAI(model='gpt-4', temperature=0.0)
-    predictor = LLMPredictor(llm=llm)
-    service_context = ServiceContext.from_defaults(llm_predictor=predictor)
+    # Configure the LLM predictor. The original implementation required an
+    # OpenAI API key and used the `OpenAI` wrapper. To make the script usable
+    # without OpenAI credentials (e.g., when a Gemini API key is provided), we
+    # fall back to a minimal `ServiceContext` that does **not** require an LLM.
+    # This still allows the vector store to be built using the default
+    # embedding model bundled with LlamaIndex.
+    if "OPENAI_API_KEY" in os.environ and os.environ["OPENAI_API_KEY"]:
+        # Use OpenAI if the key is present – retains original behaviour.
+        llm = OpenAI(model='gpt-4', temperature=0.0)
+        predictor = LLMPredictor(llm=llm)
+        service_context = ServiceContext.from_defaults(llm_predictor=predictor)
+    else:
+        # No OpenAI key; create a context without an LLM predictor.
+        # LlamaIndex will use its default embedding model for indexing.
+        service_context = ServiceContext.from_defaults()
 
     index = VectorStoreIndex.from_documents(documents, service_context=service_context)
     index.storage_context.persist(persist_dir=str(INDEX_DIR))

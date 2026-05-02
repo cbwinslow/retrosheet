@@ -180,6 +180,38 @@ Next improvements:
 - Timestamp and liquidity-aware comparison.
 - Research-only UI panels.
 
+### Goal 7: Content Monetisation Studio
+
+**Question examples**:
+
+- How can we turn predictions into monetizable content?
+- What betting insights should be shared via newsletter?
+- How do we distribute real-time edge alerts?
+- Can we create subscription tiers for premium content?
+
+**Current assets**:
+
+- `baseball/betting/market_comparison.py` - Edge detection
+- `baseball/predictions/live_predictor.py` - Live predictions
+- `baseball/nlp/query_router.py` - NL query routing
+- GitHub issue #137
+
+**Next improvements**:
+
+- Content generation engine (`baseball/content/generator.py`)
+- Jinja2 templates for newsletters, Discord embeds, Twitter posts
+- Distribution APIs for Discord, Twitter/X, email
+- Stripe subscription integration
+- Content analytics and A/B testing
+- Subscription management portal
+
+**Deliverables**:
+
+- `baseball/content/` - Content generation and distribution
+- `subscriptions/` database schema
+- `baseball/cli/commands/content.py` - CLI commands
+- Content monetization dashboard
+
 ## Known Non-Goals For Now
 
 - No automated betting/trading.
@@ -188,7 +220,7 @@ Next improvements:
  - No model binaries in git or Git LFS.
  - No replacement of Retrosheet raw data with transformed-only tables.
 
- ## New Additions (April 2026)
+ ## New Additions (April‑May 2026)
 
  The following assets were added to support LLM‑driven retrieval‑augmented generation (RAG) and model management:
 
@@ -197,4 +229,17 @@ Next improvements:
  - **`scripts/langchain_baseball_agent.py`** – Minimal stub for the future LangChain‑based agent, including a no‑op Prometheus counter (`langchain_agent_queries_total`).
  - **`sql/150_model_registry.sql`** – Migration creating the `models.model_registry` table for tracking model artifacts, versions, and metrics.
 
- These files are referenced in the updated documentation and issue tracking to ensure traceability and compliance with the project’s AI‑programming standards.
+ **May 2026 Additions:**
+
+ - **`baseball/training/`** – Training Pipeline Framework with experiment tracking, configuration management, and CLI commands (`baseball train run`, `baseball train list`, `baseball train compare`).
+ - **`baseball/monitoring/`** – Real-time Query Progress Monitoring with FastAPI endpoints and CLI commands (`baseball monitor queries`, `baseball monitor server`).
+ - **`baseball/nlp/`** – Natural Language Query Router for routing chatbot queries to appropriate models and data sources.
+ - **`baseball/betting/market_comparison.py`** – Market comparison and edge detection for betting analysis.
+ - **`baseball/cli/commands/train.py`** – CLI commands for training orchestration.
+ - **`baseball/cli/commands/monitor.py`** – CLI commands for query and system monitoring.
+ - **`baseball/cli/commands/chatbot.py`** – CLI commands for natural language chatbot interaction.
+ - **`baseball/telemetry/`** – Enterprise Telemetry System for comprehensive observability with PostgreSQL persistence, decorators, and CLI commands (`baseball telemetry events`, `baseball telemetry dashboard`).
+ - **`sql/00_admin/003_telemetry_schema.sql`** – Partitioned telemetry tables (events, metrics, queries, jobs, errors, traces) with PL/pgSQL helper functions.
+ - **GitHub issue #137** – Content Monetisation Studio epic for automated content generation and distribution.
+
+ These files are referenced in the updated documentation and issue tracking to ensure traceability and compliance with the project's AI‑programming standards.

@@ -255,3 +255,71 @@ def bet_ingestion(
         console.print(f"[green]Added job: {job_type} from {source} every {schedule}[/green]")
 
     console.print("\n[dim]Use --action start/stop/add to modify jobs[/dim]")
+
+
+@betting_app.command(name='edges')
+def find_edges(
+    game_pk: int = typer.Option(..., '--game', '-g', help='MLB game ID'),
+    bankroll: float = typer.Option(10000, '--bankroll', '-b', help='Total bankroll'),
+    min_edge: float = typer.Option(0.02, '--min-edge', '-e', help='Minimum edge to flag (default 2%)'),
+    sportsbook: str = typer.Option('draftkings', '--book', '-s', help='Sportsbook to check')
+):
+    """Find betting edges for a specific game."""
+    from baseball.betting import MarketComparator, find_moneyline_edges
+    from baseball.models import MonteCarloSimulator
+    
+    console.print(f'[bold]Finding edges for game {game_pk}...[/bold]')
+    
+    # Run simulation to get model probabilities
+    console.print('[dim]Running Monte Carlo simulation...[/dim]')
+    sim = MonteCarloSimulator(n_simulations=10000)
+    probs = sim.simulate_game(game_pk)
+    
+    console.print(f'\n[bold]Model Probabilities:[/bold]')
+    console.print(f'  Home: [cyan]{probs["home_win"]:.1%}[/cyan]')
+    console.print(f'  Away: [cyan]{probs["away_win"]:.1%}[/cyan]')
+    
+    # For demo, use placeholder odds
+    # In production, fetch from sportsbook API
+    home_odds = -110 if probs["home_win"] > 0.5 else +130
+    away_odds = +130 if probs["home_win"] > 0.5 else -110
+    
+    console.print(f'\n[bold]{sportsbook.title()} Odds:[/bold]')
+    console.print(f'  Home: [yellow]{home_odds:+d}[/yellow]')
+    console.print(f'  Away: [yellow]{away_odds:+d}[/yellow]')
+    
+    # Find edges
+    edges = find_moneyline_edges(
+        home_prob=probs["home_win"],
+        away_prob=probs["away_win"],
+        home_odds=home_odds,
+        away_odds=away_odds,
+        min_edge=min_edge
+    )
+    
+    if edges:
+        console.print(f'\n[bold green]Found {len(edges)} Edges:[/bold green]')
+        
+        from rich.table import Table
+        table = Table()
+        table.add_column('Side', style='cyan')
+        table.add_column('Model %', justify='right')
+        table.add_column('Market %', justify='right')
+        table.add_column('Edge', justify='right', style='green')
+        table.add_column('EV', justify='right')
+        table.add_column('Kelly Stake', justify='right')
+        
+        for edge in edges:
+            stake = bankroll * edge.kelly_fraction
+            table.add_row(
+                edge.selection.upper(),
+                f'{edge.model_prob:.1%}',
+                f'{edge.market_prob:.1%}',
+                f'+{edge.edge:.1%}',
+                f'+{edge.ev_percent:.1%}',
+                f'${stake:.0f} ({edge.kelly_fraction:.1%})'
+            )
+        
+        console.print(table)
+    else:
+        console.print(f'\n[yellow]No edges found above {min_edge:.1%} threshold.[/yellow]')

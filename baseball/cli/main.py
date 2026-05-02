@@ -32,6 +32,11 @@ from baseball.cli.commands.models import models_app
 from baseball.cli.commands.features import features_app
 from baseball.cli.commands.chatbot import chatbot_app
 from baseball.cli.commands.bridge import bridge_app
+from baseball.cli.commands.serve import serve_app
+from baseball.cli.commands.cache import cache_app
+from baseball.cli.commands.train import train_app
+from baseball.cli.commands.monitor import monitor_app
+from baseball.cli.commands.telemetry import telemetry_app
 
 app = typer.Typer(
     help='Baseball data ingestion and prediction platform',
@@ -192,8 +197,12 @@ app.add_typer(live_app, name='live')
 app.add_typer(models_app, name='models')
 app.add_typer(features_app, name='features')
 app.add_typer(chatbot_app, name='chatbot')
-app.add_typer(bridge_app, name='bridge')
-
+app.add_typer(bridge_app, name='bridge', help='Bridge/Xref workflows')
+app.add_typer(serve_app, name='serve', help='Model serving and inference')
+app.add_typer(cache_app, name='cache', help='Redis cache management')
+app.add_typer(train_app, name='train', help='Model training and experiments')
+app.add_typer(monitor_app, name='monitor', help='Query and system monitoring')
+app.add_typer(telemetry_app, name='telemetry', help='Telemetry and observability')
 
 if __name__ == '__main__':
     app()

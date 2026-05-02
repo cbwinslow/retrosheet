@@ -2,9 +2,9 @@
 
 This file is the shortest durable handoff for another agent. Read this first when resuming work after context loss.
 
-**Last updated:** `2026-04-24`  
+**Last updated:** `2026-05-02`  
 **CRISP-DM Phase:** 3 → 4 Transition (Data Preparation → Modeling)  
-**Current Focus:** Pitch-Level Model Pipeline (Epic #78)
+**Current Focus:** Infrastructure & Tooling (Training Pipeline, NL Router, Query Monitoring)
 
 ## Current Objective
 
@@ -13,14 +13,20 @@ This file is the shortest durable handoff for another agent. Read this first whe
 
 The project has transitioned from PA-level to pitch-level modeling with a complete schema supporting 4 model families: Two-Tier XGBoost, LSTM Sequential, Multi-Task Network, and Swing Probability.
 
-**Key Achievement (April 24, 2026):** Flexible Feature Mart Schema (#79) implemented with 7 tables, enabling all 118 Statcast fields for research-backed model architectures from SMU, CMU, and Penn State.
+**Key Achievements:**
+- **May 2, 2026:** Query Progress Monitoring system with FastAPI endpoints (`baseball monitor queries/server`)
+- **May 2, 2026:** Training Pipeline Framework with experiment tracking (`baseball train run/list/compare`)
+- **May 1, 2026:** Natural Language Query Router (`baseball chatbot route`)
+- **May 1, 2026:** Market Comparison & Edge Detection (`baseball bet edges`)
+- **April 24, 2026:** Flexible Feature Mart Schema (#79) with 7 tables, 118 Statcast fields
 
-Priority order:
+**Priority Order:**
 
-1. historical PA outcome model quality
-2. calibration and reliability
-3. live feature parity and live scoring
-4. simulation and market-comparison layers
+1. First batch of pitch-level models (#133) - swing, contact, type
+2. Model serving layer (#134) - load from registry
+3. Content Monetisation Studio (#137) - automated content generation
+4. Historical PA outcome model quality & calibration
+5. Live feature parity and real-time scoring
 
 ## Canonical Architecture
 

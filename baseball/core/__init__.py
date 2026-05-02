@@ -14,6 +14,13 @@ from baseball.core.settings import (
     get_settings,
     settings,
 )
+from baseball.core.cache import (
+    CacheManager,
+    ModelPredictionCache,
+    FeatureCache,
+    cache_manager,
+    cached,
+)
 
 
 __all__ = [
@@ -25,4 +32,10 @@ __all__ = [
     'Settings',
     'get_settings',
     'settings',
+    # Cache
+    'CacheManager',
+    'ModelPredictionCache',
+    'FeatureCache',
+    'cache_manager',
+    'cached',
 ]
