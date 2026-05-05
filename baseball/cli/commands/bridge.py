@@ -48,11 +48,64 @@ def bridge_match(
     ),
     source_a: str = typer.Option(..., '--source-a', help='First source system'),
     source_b: str = typer.Option(..., '--source-b', help='Second source system'),
+    limit: int = typer.Option(50, '--limit', '-l', help='Maximum number of matches to return'),
+    min_confidence: float = typer.Option(0.5, '--min-confidence', '-c', help='Minimum confidence threshold'),
 ):
     """Find matches between two source systems."""
+    from baseball.services.bridge import BridgeService
+
     console.print(f'[dim]Finding {entity_type} matches between {source_a} and {source_b}...[/dim]')
-    # TODO: Run matching algorithm between sources
-    raise NotImplementedError('Bridge matching not yet implemented')
+
+    try:
+        bridge = BridgeService()
+        matches = bridge.find_matches(source_a, source_b, entity_type, limit, min_confidence)
+
+        if matches and matches.get('matches'):
+            console.print(f'[green]✓ Found {len(matches["matches"])} matches:[/green]')
+
+            table = Table(title=f'{entity_type.title()} Matches: {source_a} ↔ {source_b}')
+            table.add_column(f'{source_a.title()} ID')
+            table.add_column(f'{source_b.title()} ID')
+            table.add_column('Canonical ID')
+            table.add_column('Confidence')
+            table.add_column('Name/Info')
+
+            for match in matches['matches']:
+                # Format name based on entity type
+                name_info = ''
+                if entity_type == 'player' and 'name' in match:
+                    name_info = f"{match.get('first_name', '')} {match.get('last_name', '')}".strip()
+                elif entity_type == 'team' and 'name' in match:
+                    name_info = match['name']
+                elif entity_type == 'game' and 'date' in match:
+                    name_info = match['date']
+                
+                table.add_row(
+                    match.get(f'{source_a}_id', 'N/A'),
+                    match.get(f'{source_b}_id', 'N/A'),
+                    match.get('canonical_id', 'N/A'),
+                    f"{match.get('confidence', 0):.2f}",
+                    name_info
+                )
+            console.print(table)
+
+            # Show summary stats
+            stats = matches.get('stats', {})
+            if stats:
+                console.print(f'\n[dim]Summary:[/dim]')
+                console.print(f"  Total {source_a} records: {stats.get(f'{source_a}_total', 0)}")
+                console.print(f"  Total {source_b} records: {stats.get(f'{source_b}_total', 0)}")
+                console.print(f"  Matches found: {len(matches['matches'])}")
+                console.print(f"  Match rate: {stats.get('match_rate', 0):.1%}")
+        else:
+            console.print(f'[yellow]⚠ No matches found between {source_a} and {source_b}[/yellow]')
+            if matches and 'error' in matches:
+                console.print(f'[red]Error: {matches["error"]}[/red]')
+            raise typer.Exit(code=1)
+
+    except Exception as e:
+        console.print(f'[red]✗ Error: {e}[/red]')
+        raise typer.Exit(code=1)
 
 
 @bridge_app.command(name='lookup')

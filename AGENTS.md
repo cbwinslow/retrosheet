@@ -25,6 +25,8 @@ Refactor cbwinslow/retrosheet into a clean, extensible baseball data platform wi
 - Build for real-time prediction, but keep the architecture general and reusable.
 - When dealing with scripts, databases, or data sets, ALWAYS prefer transforming using the WHOLE SET instead of reducing to smaller subsets.
 - **ALWAYS create comprehensive tests for all generated code** - Tests must cover all aspects including edge cases, error handling, and integration scenarios. Tests should be complete and thorough, not just surface-level checks.
+- **ALWAYS create test scripts for validation** - Include test scripts that can be run independently to validate functionality, performance, and integration.
+- **ALWAYS make detailed commits with proper messages** - Every code change must be committed with detailed commit messages following the established format.
 
 ## Python Namespace Rules
 
@@ -124,55 +126,388 @@ if __name__ == '__main__':
 
 All reusable logic belongs in `baseball/` package. Scripts should be thin wrappers.
 
-## GitHub Issue Workflow
+## GitHub Issue & Task Management Workflow
 
-**CRITICAL: Always check for existing issues before creating new ones.**
+**CRITICAL: AI agents must use GitHub issues for ALL task management and progress tracking.**
+
+### Core Workflow Principles
+
+1. **ALWAYS check existing issues before creating new ones**
+2. **Use GitHub issues as the single source of truth for task management**
+3. **Document ALL progress in GitHub issues with detailed comments**
+4. **Link sub-issues to parent EPICs for hierarchical task management**
+5. **Update milestone tracking for phase-based organization**
 
 ### Issue Creation Guidelines
-1. **Search first:** Before creating any issue, search existing issues by:
-   - Title keywords (e.g., "maintenance schema", "Redis caching")
-   - Labels (e.g., "phase-4", "database", "infrastructure")
-   - Related components (e.g., "sql/00_admin", "baseball/core/cache")
-2. **Reuse existing issues:** If an issue exists for the work being done:
-   - Add a comment documenting progress
-   - Update the issue status/checklist
-   - Link related files and commits
-   - Do NOT create a duplicate issue
-3. **Create new issues only when:**
-   - No existing issue covers the work
-   - The work is substantially different from existing issues
-   - A new EPIC or major feature is being started
 
-### Sub-Issue Usage
-- Use sub-issues for component breakdown within an EPIC
+#### **Search First Protocol**
+Before creating any issue, search existing issues by:
+- **Title keywords** (e.g., "maintenance schema", "Redis caching", "multi-model ensemble")
+- **Labels** (e.g., "phase-4", "database", "infrastructure", "tests")
+- **Related components** (e.g., "sql/00_admin", "baseball/core/cache", "tests/models")
+
+#### **Reuse vs Create Decision**
+- **Reuse existing issues** when work overlaps:
+  - Add a comment documenting progress
+  - Update the issue status/checklist
+  - Link related files and commits
+  - **Do NOT create duplicate issues**
+- **Create new issues only when:**
+  - No existing issue covers the work
+  - The work is substantially different from existing issues
+  - A new EPIC or major feature is being started
+
+### Issue Structure Requirements
+
+Every issue MUST include:
+
+#### **1. Clear Title Format**
+- **EPICs**: `[EPIC] Phase X: Major Feature Name`
+- **Tasks**: `[Task] Specific Component Implementation`
+- **Tests**: `[TESTS] Test Suite for Component`
+- **Bugs**: `[BUG] Description of Issue`
+
+#### **2. Required Sections**
+```markdown
+## 🎯 Objective
+Clear statement of what needs to be accomplished
+
+## 📋 Task Breakdown
+Detailed checklist of deliverables
+
+## 🔧 Technical Requirements
+Implementation details and constraints
+
+## 🎯 Success Criteria
+Measurable outcomes and validation
+
+## 🔗 Dependencies
+Prerequisites and blockers
+
+## 📅 Timeline
+Target completion date
+
+## 🚀 Implementation Strategy
+Step-by-step approach
+```
+
+#### **3. Status Tracking**
+- **Status section**: Pending, In Progress, Completed, Blocked
+- **Delivered components**: List with file paths
+- **Sub-issues section**: Component breakdown with links
+- **Technical details**: Implementation specifications
+- **Testing strategy**: Validation approach
+- **Related files**: Direct file references
+- **Next steps**: Immediate action items
+
+### Sub-Issue & EPIC Management
+
+#### **EPIC Creation**
+- Use for major features spanning multiple components
+- Include comprehensive breakdown of all sub-tasks
+- Link to appropriate milestone for phase tracking
+- Set clear success criteria and timeline
+
+#### **Sub-Issue Usage**
+- Create sub-issues for component breakdown within EPICs
 - Link sub-issues to parent EPIC via issue dependencies
 - Document sub-issue completion in parent EPIC
 - Close sub-issues when components are complete
+- Use consistent naming convention
 
-### Issue Structure
-Every issue must include:
-- **Clear title** with component and phase (e.g., "[EPIC] Phase 4: Production Database Infrastructure")
-- **Parent EPIC reference** if applicable
-- **Status section** (Pending, In Progress, Completed, Blocked)
-- **Delivered components** list with file paths
-- **Sub-issues** section for component breakdown
-- **Technical details** section
-- **Testing strategy** section
-- **Related files** section
-- **Next steps** section
+#### **Milestone Organization**
+- **Phase 1**: Foundation (Data ingestion, core schema)
+- **Phase 2**: Features (Feature engineering pipeline)
+- **Phase 3**: Models (ML model training and validation)
+- **Phase 4**: Live (Real-time prediction system)
+- **Phase 5**: Betting (Odds integration, paper trading)
+- **Phase 6**: Testing (Comprehensive test suites)
+- **Phase 7**: Production (Deployment and monitoring)
 
-### Progress Documentation
-- Document all progress in the original issue
-- Use checklist format for deliverables
-- Add comments for significant milestones
-- Reference commits and pull requests
+### Progress Documentation Protocol
+
+#### **Session-Based Updates**
+After every work session, update the relevant GitHub issue:
+
+```markdown
+## Progress Update - YYYY-MM-DD
+
+### Completed
+- [x] Specific task 1 completed
+- [x] Specific task 2 completed
+- Files created/modified: path/to/file.py
+
+### In Progress
+- [ ] Task currently being worked on
+- Estimated completion: timeframe
+
+### Blockers
+- Any issues preventing progress
+
+### Next Steps
+- Immediate next actions
+- Files to be created/modified
+
+### Technical Notes
+- Important implementation details
+- Decisions made and rationale
+```
+
+#### **Milestone Tracking**
+- Update milestone progress in EPIC issues
+- Link completed sub-issues to parent EPIC
+- Document phase completion and transition
+- Update overall project timeline
+
+### Issue Lifecycle Management
+
+#### **Creation**
+- Search existing issues first
+- Use proper title format and structure
+- Link to appropriate milestone
+- Set relevant labels for categorization
+
+#### **Active Management**
+- Update progress after each session
+- Link commits and pull requests
 - Update status as work progresses
+- Add technical notes and decisions
 
-### Preventing Duplication
-- Never create multiple issues for the same work
-- If work spans multiple sessions, update the same issue
-- Use comments to document session-by-session progress
-- Close issues only when fully complete, not between sessions
+#### **Completion**
+- Mark as completed when all deliverables finished
+- Add final summary of accomplishments
+- Link to any related issues or documentation
+- Update parent EPIC with completion status
+
+#### **Closure**
+- Close issues only when fully complete
+- Ensure all sub-issues are closed first
+- Document final outcomes and lessons learned
+- Update milestone tracking
+
+### AI Agent Task Management Integration
+
+#### **Todo List Integration**
+- Use GitHub issues as primary task management
+- Update todo_list tool to reflect GitHub issue status
+- Cross-reference between todo items and GitHub issues
+- Ensure consistency between local tracking and GitHub
+
+#### **Work Session Protocol**
+1. **Start**: Check relevant GitHub issues for current tasks
+2. **During**: Document progress in real-time
+3. **End**: Update GitHub issues with session summary
+4. **Next**: Plan next session based on GitHub issue status
+
+#### **Quality Assurance**
+- Every code change must reference a GitHub issue
+- Pull requests must link to related issues
+- Test coverage must be documented in issues
+- Performance validation must be tracked in issues
+
+### Preventing Duplication & Confusion
+
+#### **Single Source of Truth**
+- GitHub issues are the authoritative task tracker
+- Avoid duplicate issues for same work
+- Use comments for session-by-session progress
+- Maintain clear issue hierarchy
+
+#### **Consistency Requirements**
+- Use consistent naming conventions
+- Follow standard issue structure
+- Maintain proper linking between related issues
+- Keep milestone assignments current
+
+#### **Communication Protocol**
+- All task communication happens in GitHub issues
+- Use @mentions for team coordination
+- Reference issue numbers in all communications
+- Maintain clear status indicators
+
+## Comprehensive Testing Requirements
+
+**CRITICAL: AI agents must create comprehensive tests and test scripts for ALL generated code.**
+
+### Testing Standards
+
+#### **1. Comprehensive Test Coverage**
+- **Unit Tests**: Test every function, class, and method with >95% coverage
+- **Integration Tests**: Test component interactions and data flows
+- **Performance Tests**: Validate latency, accuracy, and resource usage
+- **Edge Case Tests**: Test error conditions, boundary values, and failure scenarios
+- **Load Tests**: Test system behavior under production-level stress
+
+#### **2. Test Script Requirements**
+Every component must include:
+- **Validation Scripts**: Independent scripts to verify functionality
+- **Performance Benchmarks**: Scripts to measure and validate performance targets
+- **Integration Tests**: End-to-end workflow validation
+- **Smoke Tests**: Quick validation scripts for basic functionality
+
+#### **3. Test Structure**
+```
+tests/
+├── unit/                    # Unit tests for individual components
+│   ├── test_models.py
+│   ├── test_features.py
+│   └── test_ensemble.py
+├── integration/             # Cross-component tests
+│   ├── test_end_to_end.py
+│   └── test_data_pipeline.py
+├── performance/             # Performance and load tests
+│   ├── test_model_latency.py
+│   └── test_system_load.py
+├── scripts/                 # Validation scripts
+│   ├── validate_models.py
+│   ├── benchmark_performance.py
+│   └── smoke_tests.py
+└── fixtures/                # Test data and mocks
+    ├── sample_data.json
+    └── mock_responses.json
+```
+
+#### **4. Test Quality Standards**
+- **Async Testing**: All async functions must have corresponding async tests
+- **Mock Realism**: Mocks must simulate real behavior and performance characteristics
+- **Error Handling**: Test all error conditions and graceful degradation
+- **Documentation**: Tests must be self-documenting with clear purpose and expectations
+
+## GitHub Integration & Commit Workflow
+
+**CRITICAL: AI agents must fully utilize GitHub as an integral workflow component.**
+
+### Commit Standards
+
+#### **1. Commit Message Format**
+Every commit must follow this format:
+```
+[#issue-number] Brief description of change
+
+- Detailed change 1
+- Detailed change 2
+- Performance impact or validation
+- Files modified: path/to/file1.py, path/to/file2.py
+
+Relates to: issue-description or component
+```
+
+#### **2. Commit Frequency**
+- **Feature Commits**: Commit logical units of work (1-3 related files)
+- **Bug Fixes**: Commit each fix separately with validation
+- **Refactoring**: Commit refactoring changes in logical groups
+- **Documentation**: Commit documentation updates separately
+
+#### **3. Commit Quality**
+- **Atomic Commits**: Each commit represents a single logical change
+- **Testable**: Every commit must pass all existing tests
+- **Documented**: Clear explanation of what and why
+- **Traceable**: Reference to relevant GitHub issue
+
+### GitHub Workflow Integration
+
+#### **1. Branch Management**
+- **Feature Branches**: Create branches for major features: `feature/issue-123-component`
+- **Bugfix Branches**: Create branches for fixes: `fix/issue-456-bug-description`
+- **Hotfix Branches**: Create branches for urgent fixes: `hotfix/critical-issue`
+- **Cleanup**: Delete branches after merge to keep repository clean
+
+#### **2. Pull Request Requirements**
+Every PR must include:
+```markdown
+## Summary
+Brief description of changes
+
+## Related Issues
+- Closes #123
+- Relates to #456
+
+## Changes Made
+- [ ] Feature A implemented
+- [ ] Feature B implemented
+- [ ] Tests added for new functionality
+- [ ] Documentation updated
+
+## Testing
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+- [ ] Performance tests pass
+- [ ] Manual testing completed
+
+## Checklist
+- [ ] Code follows baseball namespace rules
+- [ ] No orphaned files created
+- [ ] AGENTS.md updated if needed
+- [ ] GitHub issue updated with progress
+- [ ] All tests pass
+- [ ] Performance targets met
+```
+
+#### **3. GitHub Features Utilization**
+- **Issues**: Single source of truth for task management
+- **Milestones**: Phase-based organization and tracking
+- **Labels**: Categorization and workflow management
+- **Projects**: Kanban boards for visual progress tracking
+- **Actions**: CI/CD automation and testing
+- **Releases**: Version management and deployment tracking
+- **Wiki**: Documentation and procedural guides
+
+#### **4. Code Review Process**
+- **Self-Review**: Review your own code before creating PR
+- **Automated Checks**: Ensure all CI/CD checks pass
+- **Documentation**: Update relevant documentation
+- **Testing**: Verify all tests pass and coverage is adequate
+- **Performance**: Confirm performance targets are met
+
+### Documentation Integration
+
+#### **1. README Updates**
+- Update project README for major features
+- Include installation and usage instructions
+- Add performance benchmarks and requirements
+- Document API changes and breaking changes
+
+#### **2. Inline Documentation**
+- **Docstrings**: All public functions must have comprehensive docstrings
+- **Comments**: Complex logic must be well-commented
+- **Examples**: Include usage examples in documentation
+- **Type Hints**: Use type hints for all function signatures
+
+#### **3. GitHub Documentation**
+- **Wiki Pages**: Detailed procedural guides and architecture docs
+- **Issue Templates**: Standardized issue creation templates
+- **PR Templates**: Standardized pull request templates
+- **Discussions**: Feature discussions and Q&A threads
+
+### Quality Assurance Integration
+
+#### **1. Automated Quality Gates**
+- **Linting**: Code style and formatting checks
+- **Type Checking**: Static type analysis with mypy
+- **Security**: Security vulnerability scanning
+- **Dependencies**: Dependency vulnerability checks
+
+#### **2. Performance Monitoring**
+- **Benchmarks**: Automated performance regression testing
+- **Profiling**: Code profiling for performance optimization
+- **Monitoring**: Runtime performance tracking
+- **Alerting**: Performance degradation alerts
+
+#### **3. Testing Integration**
+- **Unit Tests**: Fast feedback on code changes
+- **Integration Tests**: Component interaction validation
+- **End-to-End Tests**: Full workflow validation
+- **Performance Tests**: Load and stress testing
+
+#### **4. Commit and Push Workflow**
+- **ALWAYS commit significant progress** to GitHub with detailed commit messages
+- **Commit after major milestones**: Model implementations, feature completions, phase transitions
+- **Use structured commit format**: `[#issue-number] Brief description - detailed changes`
+- **Push changes immediately** after committing to ensure remote synchronization
+- **Reference related issues** in all commits for traceability
+- **Create pull requests** for major changes requiring review
+- **Update milestones** when completing phase objectives
+- **Document deployment** commits with version tags and release notes
 
 ## Agent Documentation
 

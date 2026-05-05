@@ -354,3 +354,32 @@ class FeatureStore(ABC):
                 'batch_size': self.config.batch_size,
             },
         }
+
+
+class BaseFeature(ABC):
+    """Base class for feature calculators.
+    
+    Provides a common interface for all feature calculators in the system.
+    Feature calculators can compute features for games, players, or other entities.
+    
+    Example:
+        class MyFeatureCalculator(BaseFeature):
+            def compute(self, game_pk: int, season: int) -> dict:
+                # Compute features
+                return {'feature_name': value}
+    """
+    
+    def compute(self, *args, **kwargs) -> dict:
+        """Compute features.
+        
+        Args:
+            *args: Positional arguments for feature computation
+            **kwargs: Keyword arguments for feature computation
+            
+        Returns:
+            Dictionary containing computed features
+            
+        Raises:
+            NotImplementedError: If not overridden by subclass
+        """
+        raise NotImplementedError("Subclasses must implement compute method")

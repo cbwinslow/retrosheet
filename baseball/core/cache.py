@@ -12,7 +12,8 @@ import hashlib
 import logging
 import pickle
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Optional
+import numpy as np
 
 import redis.asyncio as redis
 from redis.asyncio import Redis

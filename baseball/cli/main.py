@@ -27,7 +27,8 @@ from baseball.cli.commands.ingest import (
     park_app,
 )
 from baseball.cli.commands.bet import betting_app
-from baseball.cli.commands.predict import predict_app, live_app
+from baseball.cli.commands.predict import predict_app
+from baseball.cli.commands.live import live_app
 from baseball.cli.commands.models import models_app
 from baseball.cli.commands.features import features_app
 from baseball.cli.commands.chatbot import chatbot_app

@@ -125,9 +125,161 @@ def models_info(
     model_name: str = typer.Argument(..., help='Model name or ID'),
 ):
     """Show detailed info about a model."""
+    from baseball.models.registry import ModelRegistry
+
     console.print(f'[dim]Loading info for model: {model_name}...[/dim]')
-    # TODO: Load model metadata, show config, metrics, features
-    raise typer.Exit(code=0)
+
+    try:
+        registry = ModelRegistry()
+        
+        # Try to get model by ID first, then by name
+        model = None
+        try:
+            # Try treating model_name as an ID
+            model_id = int(model_name)
+            model = registry.get_model_by_id(model_id)
+        except ValueError:
+            # Not an ID, try by name (get production model)
+            model = registry.get_production_model(model_name)
+        
+        if model is None:
+            # Try to find any model with this name
+            models = registry.list_models(model_name=model_name, limit=1)
+            if models:
+                model = models[0]
+        
+        if model is None:
+            console.print(f'[yellow]⚠ No model found: {model_name}[/yellow]')
+            raise typer.Exit(code=1)
+
+        # Display model information
+        console.print(f'[green]✓ Model Information:[/green]')
+        
+        # Basic info table
+        basic_table = Table(title=f'{model.model_name} v{model.model_version}')
+        basic_table.add_column('Property', style='cyan')
+        basic_table.add_column('Value', style='white')
+        
+        basic_table.add_row('Model ID', str(model.model_id) if model.model_id else 'N/A')
+        basic_table.add_row('Name', model.model_name)
+        basic_table.add_row('Version', model.model_version)
+        basic_table.add_row('Type', model.model_type)
+        basic_table.add_row('Framework', f"{model.framework} {model.framework_version}")
+        basic_table.add_row('Status', _format_status(model.status))
+        basic_table.add_row('Training Date', _format_date(model.training_date))
+        
+        console.print(basic_table)
+        
+        # Performance metrics
+        if model.primary_metric or model.validation_metrics:
+            console.print(f'\n[bold]Performance Metrics:[/bold]')
+            metrics_table = Table()
+            metrics_table.add_column('Metric', style='cyan')
+            metrics_table.add_column('Value', style='white')
+            metrics_table.add_column('Type', style='dim')
+            
+            if model.primary_metric:
+                metrics_table.add_row(
+                    model.primary_metric,
+                    f'{model.primary_metric_value:.4f}',
+                    'Primary'
+                )
+            
+            if model.validation_metrics:
+                for metric, value in model.validation_metrics.items():
+                    if metric != model.primary_metric:
+                        metrics_table.add_row(metric, f'{value:.4f}', 'Validation')
+            
+            console.print(metrics_table)
+        
+        # Training configuration
+        if model.training_config or model.hyperparameters:
+            console.print(f'\n[bold]Training Configuration:[/bold]')
+            config_table = Table()
+            config_table.add_column('Setting', style='cyan')
+            config_table.add_column('Value', style='white')
+            
+            if model.training_dataset:
+                config_table.add_row('Dataset', model.training_dataset)
+            if model.training_start_date and model.training_end_date:
+                config_table.add_row('Training Period', f'{model.training_start_date} to {model.training_end_date}')
+            if model.cv_folds:
+                config_table.add_row('CV Folds', str(model.cv_folds))
+                config_table.add_row('CV Mean', f'{model.cv_mean:.4f}')
+                config_table.add_row('CV Std', f'{model.cv_std:.4f}')
+            
+            console.print(config_table)
+        
+        # Features
+        if model.feature_set:
+            console.print(f'\n[bold]Features ({len(model.feature_set)}):[/bold]')
+            # Show features in columns for better readability
+            features_per_col = 3
+            for i in range(0, len(model.feature_set), features_per_col):
+                features_row = model.feature_set[i:i+features_per_col]
+                console.print('  ' + ' | '.join(f'{feat:<25}' for feat in features_row))
+        
+        # Hyperparameters
+        if model.hyperparameters:
+            console.print(f'\n[bold]Hyperparameters:[/bold]')
+            hyper_table = Table()
+            hyper_table.add_column('Parameter', style='cyan')
+            hyper_table.add_column('Value', style='white')
+            
+            for param, value in model.hyperparameters.items():
+                hyper_table.add_row(param, str(value))
+            
+            console.print(hyper_table)
+        
+        # Artifact information
+        if model.artifact_path:
+            console.print(f'\n[bold]Artifact Information:[/bold]')
+            artifact_table = Table()
+            artifact_table.add_column('Property', style='cyan')
+            artifact_table.add_column('Value', style='white')
+            
+            artifact_table.add_row('Path', model.artifact_path)
+            if model.artifact_size_bytes:
+                size_mb = model.artifact_size_bytes / (1024 * 1024)
+                artifact_table.add_row('Size', f'{size_mb:.2f} MB')
+            if model.artifact_hash:
+                artifact_table.add_row('Hash', model.artifact_hash[:12] + '...')
+            
+            console.print(artifact_table)
+        
+        # Promotion info
+        if model.promoted_at:
+            console.print(f'\n[bold]Promotion Information:[/bold]')
+            promo_table = Table()
+            promo_table.add_column('Property', style='cyan')
+            promo_table.add_column('Value', style='white')
+            
+            promo_table.add_row('Promoted At', _format_date(model.promoted_at))
+            if model.promoted_by:
+                promo_table.add_row('Promoted By', model.promoted_by)
+            
+            console.print(promo_table)
+
+    except Exception as e:
+        console.print(f'[red]✗ Error: {e}[/red]')
+        raise typer.Exit(code=1)
+
+
+def _format_status(status: str) -> str:
+    """Format model status with color."""
+    status_colors = {
+        'production': '[bold green]production[/bold green]',
+        'staging': '[blue]staging[/blue]',
+        'archived': '[dim]archived[/dim]',
+    }
+    return status_colors.get(status, status)
+
+
+def _format_date(date: datetime | None) -> str:
+    """Format datetime for display."""
+    if date is None:
+        return 'N/A'
+    return date.strftime('%Y-%m-%d %H:%M:%S')
 
 
 @models_app.command(name='download')

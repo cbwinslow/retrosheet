@@ -1,0 +1,38 @@
+# SYSTEM DIAGNOSTIC REPORT
+# Generated: $(date)
+
+## Basic System Info
+- User: $(whoami)
+- Hostname: $(hostname)
+- Current Directory: $(pwd)
+- Shell: $SHELL
+
+## Python Environment
+- Python Version: $(python3 --version 2>&1 || echo "Not found")
+- Virtual Env: ${VIRTUAL_ENV:-"None active"}
+
+## File System Test
+- Current Directory Contents:
+$(ls -la | head -10)
+
+## Process Information
+- Python Processes:
+$(ps aux | grep python | grep -v grep || echo "None found")
+
+## Memory Usage
+$(free -h 2>/dev/null || echo "Memory info unavailable")
+
+## Disk Usage
+$(df -h 2>/dev/null | head -5 || echo "Disk info unavailable")
+
+## System Load
+$(uptime 2>/dev/null || echo "Uptime info unavailable")
+
+## Network Test
+- Localhost Ping:
+$(ping -c 1 localhost 2>/dev/null | head -2 || echo "Ping failed")
+
+## Environment Variables
+- PATH: $PATH
+
+## End Report

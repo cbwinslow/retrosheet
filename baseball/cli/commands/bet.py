@@ -107,6 +107,7 @@ def bet_analyze(
                 fallback_to_mock=not use_simulation
             )
 
+            opportunities = analysis_results.get('opportunities', [])
             sim_probs = analysis_results.get('simulation_probabilities', {})
             if sim_probs:
                 console.print(f"[green]Using simulation probabilities:[/green]")
@@ -114,10 +115,6 @@ def bet_analyze(
                 console.print(f"  Away win: {sim_probs.get('away_win', 0):.1%}")
                 if 'total_over' in sim_probs:
                     console.print(f"  Over 8.5: {sim_probs.get('total_over', 0):.1%}")
-            else:
-                console.print("[yellow]No simulation available, using mock probabilities[/yellow]")
-
-            opportunities = analysis_results.get('opportunities', [])
 
             # Place paper bets if enabled
             if paper_trade and paper_account and opportunities:
@@ -132,53 +129,53 @@ def bet_analyze(
                             placed += 1
                 console.print(f"[green]Placed {placed} paper bets[/green]")
 
-        if not opportunities:
-            console.print("\n[yellow]No betting opportunities found above threshold.[/yellow]")
-            return
+            if not opportunities:
+                console.print("\n[yellow]No betting opportunities found above threshold.[/yellow]")
+                return
 
-        # Sort by edge
-        opportunities.sort(key=lambda o: o.edge, reverse=True)
+            # Sort by edge
+            opportunities.sort(key=lambda o: o.edge, reverse=True)
 
         # Display opportunities
-        console.print(f"\n[green]Found {len(opportunities)} opportunities:[/green]")
+            console.print(f"\n[green]Found {len(opportunities)} opportunities:[/green]")
 
-        for opp in opportunities:
-            market = opp.market
+            for opp in opportunities:
+                market = opp.market
 
-            # Create display table
-            table = Table(title=f"{market.side} - {market.market_type.value.upper()}", show_header=True)
-            table.add_column("Metric", style="cyan")
-            table.add_column("Value", style="green")
+                # Create display table
+                table = Table(title=f"{market.side} - {market.market_type.value.upper()}", show_header=True)
+                table.add_column("Metric", style="cyan")
+                table.add_column("Value", style="green")
 
-            table.add_row("Book", market.book)
-            table.add_row("Odds", str(market.odds))
-            table.add_row("Model Prob", f"{opp.model_probability:.1%}")
-            table.add_row("Market Prob", f"{opp.market_probability:.1%}")
-            table.add_row("Edge", f"{opp.edge:.1%}")
+                table.add_row("Book", market.book)
+                table.add_row("Odds", str(market.odds))
+                table.add_row("Model Prob", f"{opp.model_probability:.1%}")
+                table.add_row("Market Prob", f"{opp.market_probability:.1%}")
+                table.add_row("Edge", f"{opp.edge:.1%}")
 
-            # Calculate stake
-            stake = analyzer.calculate_stake(
-                opp,
-                Decimal(str(bankroll)),
-                method=stake_method
-            )
-            table.add_row("Recommended Stake", f"${stake:.2f}")
-
-            console.print(table)
-
-            # AI explanation
-            if ai and ai_explain:
-                explanation = ai.explain_bet(
+                # Calculate stake
+                stake = analyzer.calculate_stake(
                     opp,
-                    sim_details={'home_prob': sim_probs.get('home_win', 0.5)},
-                    include_numbers=True
+                    Decimal(str(bankroll)),
+                    method=stake_method
                 )
-                console.print(f"[dim]AI: {explanation}[/dim]\n")
+                table.add_row("Recommended Stake", f"${stake:.2f}")
 
-        # Summary
-        if paper_account:
-            summary = paper_account.get_performance_summary()
-            console.print(f"\n[dim]Account bankroll: ${summary['current_bankroll']:.2f} (pending bets: {summary['bets_pending']})[/dim]")
+                console.print(table)
+
+                # AI explanation
+                if ai and ai_explain:
+                    explanation = ai.explain_bet(
+                        opp,
+                        sim_details={'home_prob': sim_probs.get('home_win', 0.5)},
+                        include_numbers=True
+                    )
+                    console.print(f"[dim]AI: {explanation}[/dim]\n")
+
+            # Summary
+            if paper_account:
+                summary = paper_account.get_performance_summary()
+                console.print(f"\n[dim]Account bankroll: ${summary['current_bankroll']:.2f} (pending bets: {summary['bets_pending']})[/dim]")
 
         except Exception as e:
             console.print(f"[red]Error during analysis: {e}[/red]")

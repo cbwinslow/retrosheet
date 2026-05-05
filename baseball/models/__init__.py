@@ -78,7 +78,7 @@ from .calibration import (
     temperature_scaling,
     is_well_calibrated,
 )
-from .registry import ModelRegistry, ModelEntry
+from .registry import ModelRegistry, ModelRegistryEntry as ModelEntry
 from .serving import (
     ModelServer,
     ModelCache,

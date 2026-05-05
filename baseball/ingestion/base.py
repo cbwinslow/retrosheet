@@ -12,11 +12,28 @@ Date: 2026-04-30
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Any, Protocol, Optional
 
 
 logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# Result Types
+# ============================================================================
+
+@dataclass
+class IngestionResult:
+    """Standard result type for ingestion operations."""
+    
+    status: str  # 'success', 'error', 'no_data'
+    records_processed: int = 0
+    records_loaded: int = 0
+    error_message: Optional[str] = None
+    duration_ms: float = 0.0
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 # ============================================================================

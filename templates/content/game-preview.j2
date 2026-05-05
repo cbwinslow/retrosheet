@@ -1,0 +1,22 @@
+# {{ title }}
+
+## {{ game.home_team }} vs {{ game.away_team }}
+
+**Game Time:** {{ game.game_time }}  
+**Venue:** {{ game.venue }}
+
+### Preview
+
+The {{ game.home_team }} host the {{ game.away_team }} today in what should be an exciting matchup. Our models give the {{ game.home_team if game.home_win_prob > 0.5 else game.away_team }} a {{ (game.home_win_prob if game.home_win_prob > 0.5 else (1 - game.home_win_prob)) | percentage }} chance to win.
+
+### Key Factors
+
+- **Home Field Advantage:** Playing at {{ game.venue }}
+- **Expected Runs:** {{ game.total_runs_expected }} total runs projected
+- **Win Probability:** {{ game.home_win_prob | percentage }} for home team
+
+### Prediction
+
+Our hierarchical prediction system favors the {{ game.home_team if game.home_win_prob > 0.5 else game.away_team }} in this contest. The model accounts for recent performance, pitching matchups, and historical trends.
+
+*This analysis was generated using advanced statistical models and real-time data.*
