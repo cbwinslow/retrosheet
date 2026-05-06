@@ -918,11 +918,11 @@ def live_test(
         if component == 'unified':
             asyncio.run(_test_unified_scheduler(test_type))
         elif component == 'service':
-            await _test_live_service(test_type)
+            asyncio.run(_test_live_service(test_type))
         elif component == 'processor':
-            await _test_data_processor(test_type)
+            asyncio.run(_test_data_processor(test_type))
         elif component == 'source':
-            await _test_mlb_source(test_type)
+            asyncio.run(_test_mlb_source(test_type))
         else:
             console.print(f'[red]Unknown component: {component}[/red]')
             raise typer.Exit(code=1)

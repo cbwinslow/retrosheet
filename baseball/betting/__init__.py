@@ -12,7 +12,7 @@ from .market_comparison import (
     find_moneyline_edges,
     calculate_stake,
 )
-from .paper_trading import PaperTrader
+from .paper_trading import PaperTradingAccount
 from .sources import BaseOddsSource, DraftKingsSource, PinnacleSource, TheOddsApiSource
 
 
@@ -20,7 +20,7 @@ __all__ = [
     'BaseOddsSource',
     'BettingAnalyzer',
     'DraftKingsSource',
-    'PaperTrader',
+    'PaperTradingAccount',
     'PinnacleSource',
     'SimulationBackedAnalyzer',
     'TheOddsApiSource',

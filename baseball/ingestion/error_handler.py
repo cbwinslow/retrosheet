@@ -12,7 +12,7 @@ import logging
 import time
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
 from dataclasses import dataclass, field
 
 from baseball.core.db import get_db_connection

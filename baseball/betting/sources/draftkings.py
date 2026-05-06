@@ -52,12 +52,10 @@ class DraftKingsSource(BaseOddsSource):
         ...         print(f"Value on {dk_line.side}")
     """
 
-    # DraftKings category IDs
+    # DraftKings category IDs - Baseball only
     CATEGORY_IDS = {
         Sport.MLB: 8426,      # MLB
-        Sport.NBA: 426548,    # NBA
-        Sport.NFL: 88808,     # NFL
-        Sport.NHL: 34956,     # NHL
+        Sport.BASEBALL: 8426,  # Baseball (same as MLB)
     }
 
     def __init__(

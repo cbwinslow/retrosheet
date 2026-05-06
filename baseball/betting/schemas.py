@@ -54,6 +54,28 @@ class RiskProfile(StrEnum):
     AGGRESSIVE = 'aggressive'
 
 
+class BookRegion(StrEnum):
+    """Betting book regions."""
+    US = 'us'
+    EU = 'eu'
+    UK = 'uk'
+    AU = 'au'
+
+
+class Sport(StrEnum):
+    """Baseball sports types."""
+    BASEBALL = 'baseball'
+    MLB = 'mlb'
+
+
+class MarketStatus(StrEnum):
+    """Market status."""
+    OPEN = 'open'
+    CLOSED = 'closed'
+    SUSPENDED = 'suspended'
+    CANCELLED = 'cancelled'
+
+
 # ============================================================================
 # Base Schemas
 # ============================================================================

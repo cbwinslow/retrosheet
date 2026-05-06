@@ -39,11 +39,7 @@ class TheOddsApiSource(BaseOddsSource):
 
     SPORT_MAP = {
         Sport.MLB: 'baseball_mlb',
-        Sport.NBA: 'basketball_nba',
-        Sport.NFL: 'americanfootball_nfl',
-        Sport.NHL: 'icehockey_nhl',
-        Sport.NCAAB: 'basketball_ncaab',
-        Sport.NCAAF: 'americanfootball_ncaaf',
+        Sport.BASEBALL: 'baseball_mlb',  # Baseball (same as MLB)
     }
 
     MARKET_MAP = {

@@ -44,14 +44,10 @@ class PinnacleSource(BaseOddsSource):
         >>> sharp_prob = source.calculate_implied_probability(markets[0].odds)
     """
 
-    # Pinnacle sport IDs
+    # Pinnacle sport IDs - Baseball only
     SPORT_IDS = {
         Sport.MLB: 246,      # Baseball - MLB
-        Sport.NBA: 487,      # Basketball - NBA
-        Sport.NFL: 879,      # Football - NFL
-        Sport.NHL: 1456,     # Hockey - NHL
-        Sport.NCAAB: 493,    # Basketball - NCAAB
-        Sport.NCAAF: 889,   # Football - NCAAF
+        Sport.BASEBALL: 246,  # Baseball (same as MLB)
     }
 
     def __init__(
