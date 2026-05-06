@@ -1,0 +1,66 @@
+name: Quality Gates Enforcement
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  quality-gates:
+    name: Enforce Quality Gates
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff radon
+          
+      - name: Run quality checks
+        run: |
+          echo "## Quality Gate Results" >> $GITHUB_STEP_SUMMARY
+          
+          # Run Ruff linting
+          echo "### Ruff Linting" >> $GITHUB_STEP_SUMMARY
+          ruff check baseball/ --output-format=text
+          LINT_EXIT_CODE=$?
+          
+          # Run complexity analysis
+          echo "### Complexity Analysis" >> $GITHUB_STEP_SUMMARY
+          radon cc baseball/ --json > radon.json || true
+          
+          # Check quality gates
+          QUALITY_PASSED=true
+          
+          if [ $LINT_EXIT_CODE -ne 0 ]; then
+            echo "❌ Linting failed" >> $GITHUB_STEP_SUMMARY
+            QUALITY_PASSED=false
+          else
+            echo "✅ Linting passed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f radon.json ]; then
+            echo "✅ Complexity analysis completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Complexity analysis failed" >> $GITHUB_STEP_SUMMARY
+            QUALITY_PASSED=false
+          fi
+          
+          # Final gate decision
+          if [ "$QUALITY_PASSED" = "true" ]; then
+            echo "## ✅ Quality Gates Passed" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          else
+            echo "## ❌ Quality Gates Failed" >> $GITHUB_STEP_SUMMARY
+            echo "Please address the issues above before merging." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

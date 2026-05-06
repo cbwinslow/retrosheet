@@ -1,0 +1,62 @@
+# Quality Gates Configuration for Retrosheet Project
+# Enforces quality standards before merging code
+
+quality_gates:
+  sonarqube:
+    # SonarQube quality thresholds
+    coverage_threshold: 80
+    reliability_rating: "A"
+    security_rating: "A"
+    maintainability_rating: "B"
+    duplicated_lines_density: 3.0
+    new_technical_debt_ratio: 5.0
+    
+    # Complexity thresholds
+    cyclomatic_max: 10
+    cognitive_max: 15
+    
+    # Size thresholds
+    max_file_lines: 500
+    max_function_lines: 50
+    
+  security:
+    # Trivy security thresholds
+    max_critical_vulnerabilities: 0
+    max_high_vulnerabilities: 5
+    max_medium_vulnerabilities: 20
+    
+  performance:
+    # Model performance thresholds
+    max_inference_time_ms: 2000
+    min_test_coverage: 85
+    max_memory_usage_mb: 1024
+    
+  code_quality:
+    # Ruff linting thresholds
+    max_lint_errors: 0
+    max_lint_warnings: 10
+    max_complexity_violations: 5
+    
+  testing:
+    # Test quality thresholds
+    min_test_coverage: 80
+    max_test_failures: 0
+    min_pass_rate: 95
+
+enforcement:
+  # Gate enforcement rules
+  block_merge_on_failure: true
+  require_pr_approval: true
+  auto_create_issues: true
+  
+  notifications:
+    slack:
+      enabled: true
+      channel: "#quality-alerts"
+      on_failure: true
+      on_warning: true
+    
+    github:
+      enabled: true
+      create_issues: true
+      comment_on_pr: true
