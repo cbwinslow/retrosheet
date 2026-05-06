@@ -72,8 +72,8 @@ class HealthChecker:
     Comprehensive health checking system for baseball model ensemble
     """
     
-    def __init__(self, model_registry: ModelRegistry, check_interval_seconds: int = 30):
-        self.model_registry = model_registry
+    def __init__(self, model_registry: ModelRegistry = None, check_interval_seconds: int = 30):
+        self.model_registry = model_registry or ModelRegistry()
         self.check_interval = check_interval_seconds
         self.component_health: Dict[str, ComponentHealth] = {}
         self.health_checks: Dict[str, Callable] = {}

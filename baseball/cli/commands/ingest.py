@@ -20,7 +20,7 @@ def retrosheet_download(
     """Download Retrosheet event files."""
     from datetime import date as dt_date
 
-    from mlb_predict.sources import RetrosheetSource
+    from baseball.sources.retrosheet import RetrosheetSource
 
     source = RetrosheetSource()
 
@@ -46,7 +46,7 @@ def retrosheet_ingest(
     validate: bool = typer.Option(True, '--validate', help='Validate after ingest'),
 ):
     """Ingest Retrosheet data using Chadwick tools."""
-    from mlb_predict.sources import RetrosheetSource
+    from baseball.sources.retrosheet import RetrosheetSource
 
     source = RetrosheetSource()
     result = source.ingest(validate=validate)
@@ -61,7 +61,7 @@ def retrosheet_ingest(
 @retrosheet_app.command(name='validate')
 def retrosheet_validate():
     """Validate Retrosheet data quality."""
-    from mlb_predict.sources import RetrosheetSource
+    from baseball.sources.retrosheet import RetrosheetSource
 
     source = RetrosheetSource()
     result = source.validate()
@@ -76,7 +76,7 @@ def retrosheet_validate():
 @retrosheet_app.command(name='seasons')
 def retrosheet_seasons():
     """List available seasons in Retrosheet."""
-    from mlb_predict.sources import RetrosheetSource
+    from baseball.sources.retrosheet import RetrosheetSource
 
     source = RetrosheetSource()
     seasons = source.get_seasons_available()
@@ -102,7 +102,7 @@ def mlb_download(
     """Download MLB data from Stats API."""
     from datetime import date as dt_date
 
-    from mlb_predict.sources import MlbSource
+    from baseball.sources.mlb import MlbSource
 
     source = MlbSource()
 
@@ -126,7 +126,7 @@ def mlb_ingest(
     validate: bool = typer.Option(True, '--validate', help='Validate after ingest'),
 ):
     """Ingest downloaded MLB data into database."""
-    from mlb_predict.sources import MlbSource
+    from baseball.sources.mlb import MlbSource
 
     source = MlbSource()
     result = source.ingest(validate=validate)
@@ -158,7 +158,7 @@ def mlb_transform(
 @mlb_app.command(name='validate')
 def mlb_validate():
     """Validate MLB data quality."""
-    from mlb_predict.sources import MlbSource
+    from baseball.sources.mlb import MlbSource
 
     source = MlbSource()
     result = source.validate()
@@ -176,7 +176,7 @@ def mlb_today(
     predict: bool = typer.Option(False, '--predict', '-p', help='Run predictions after download'),
 ):
     """Fetch and process today's MLB data."""
-    from mlb_predict.sources import MlbSource
+    from baseball.sources.mlb import MlbSource
 
     source = MlbSource()
 
@@ -367,7 +367,7 @@ def statcast_download(
 ):
     """Download Statcast data for a season."""
     from datetime import date
-    from mlb_predict.sources import StatcastSource
+    from baseball.sources.statcast import StatcastSource
 
     source = StatcastSource()
     result = source.download(
@@ -386,7 +386,7 @@ def statcast_ingest(
     validate: bool = typer.Option(True, '--validate', help='Validate after ingest'),
 ):
     """Ingest downloaded Statcast data."""
-    from mlb_predict.sources import StatcastSource
+    from baseball.sources.statcast import StatcastSource
 
     source = StatcastSource()
     result = source.ingest(validate=validate)
@@ -401,7 +401,7 @@ def statcast_ingest(
 @statcast_app.command(name='validate')
 def statcast_validate():
     """Validate Statcast data quality."""
-    from mlb_predict.sources import StatcastSource
+    from baseball.sources.statcast import StatcastSource
 
     source = StatcastSource()
     result = source.validate()
@@ -416,7 +416,7 @@ def statcast_validate():
 @statcast_app.command(name='seasons')
 def statcast_seasons():
     """List seasons with Statcast data (2015+)."""
-    from mlb_predict.sources import StatcastSource
+    from baseball.sources.statcast import StatcastSource
 
     source = StatcastSource()
     seasons = source.get_available_seasons()

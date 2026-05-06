@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: baseball-production
+  labels:
+    name: baseball-production
+    environment: production
+    managed-by: retrosheet-team
+    purpose: multi-model-ensemble-prediction
+  annotations:
+    description: "Production namespace for baseball multi-model ensemble prediction system"
+    contact: "team@retrosheet.ai"
+
+spec:
+  finalizers:
+  - foreground-finalizer

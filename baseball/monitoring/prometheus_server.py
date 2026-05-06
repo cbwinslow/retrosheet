@@ -50,8 +50,8 @@ class PrometheusMetricsCollector:
     Prometheus collector for baseball model metrics
     """
     
-    def __init__(self, model_registry: ModelRegistry):
-        self.model_registry = model_registry
+    def __init__(self, model_registry: ModelRegistry = None):
+        self.model_registry = model_registry or ModelRegistry()
         self.model_metrics: Dict[str, ModelMetrics] = {}
         self.system_metrics = SystemMetrics()
         self.start_time = time.time()

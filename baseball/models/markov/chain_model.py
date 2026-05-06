@@ -14,7 +14,7 @@ from datetime import datetime
 import pickle
 import json
 
-from baseball.models.base import BaseModel, ModelPrediction, ModelInfo, PerformanceMetrics
+from baseball.models.base import BaseModel, ModelResult
 from baseball.models.markov.transition_matrix import TransitionMatrix
 from baseball.models.markov.state_analyzer import StateAnalyzer
 
@@ -45,7 +45,7 @@ class MarkovChainModel(BaseModel):
         self.transition_matrix = TransitionMatrix()
         self.state_analyzer = StateAnalyzer()
         self.is_trained = False
-        self._performance_metrics = PerformanceMetrics()
+        self._performance_metrics = {}
         
         # Model statistics
         self.total_transitions = 0
@@ -438,7 +438,7 @@ class MarkovChainModel(BaseModel):
             updated_at=datetime.now()
         )
     
-    def get_performance_metrics(self) -> PerformanceMetrics:
+    def get_performance_metrics(self) -> dict:
         """Get current performance metrics"""
         return self._performance_metrics
     

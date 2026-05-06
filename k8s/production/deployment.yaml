@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: baseball-ensemble-api
+  namespace: baseball-production
+  labels:
+    app: baseball-ensemble-api
+    version: v1
+    environment: production
+    component: api-gateway
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: baseball-ensemble-api
+  template:
+    metadata:
+      labels:
+        app: baseball-ensemble-api
+        version: v1
+        environment: production
+    spec:
+      containers:
+      - name: api-gateway
+        image: ghcr.io/cbwinslow/retrosheet:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: MODEL_REGISTRY_PATH
+          value: "/app/data/models"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: baseball-db-credentials
+              key: url
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 3
+      imagePullSecrets:
+        - name: ghcr-login-secret
