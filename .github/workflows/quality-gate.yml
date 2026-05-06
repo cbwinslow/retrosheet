@@ -1,0 +1,46 @@
+name: Code Quality Gate
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  quality-check:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff radon
+          
+      - name: Run Ruff linter
+        run: ruff check baseball/ --output-format=github
+        
+      - name: Check code complexity
+        run: |
+          radon cc baseball/ --json > radon.json || true
+          echo "## Complexity Results" >> $GITHUB_STEP_SUMMARY
+          if [ -f radon.json ]; then
+            python3 -c "
+import json
+with open('radon.json') as f:
+    data = json.load(f)
+    for module, metrics in data.items():
+        complexity = metrics.get('complexity', 'N/A')
+        print(f'- {module}: {complexity}')
+" >> $GITHUB_STEP_SUMMARY
+          fi
