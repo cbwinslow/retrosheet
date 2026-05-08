@@ -12,6 +12,7 @@ import concurrent.futures
 import json
 import logging
 import sys
+import os
 import time
 from datetime import datetime
 from pathlib import Path
@@ -44,11 +45,11 @@ class WorkingEnsembleTrainer:
     def load_pitch_data(self, seasons: list, sample_rate: float = 1.0):
         """Load pitch-level data from database."""
         conn = psycopg2.connect(
-            host='localhost',
-            port='5432',
-            database='retrosheet',
-            user='cbwinslow',
-            password='123qweasd'
+                            host=os.getenv('DB_HOST', 'localhost'),
+                            port=os.getenv('DB_PORT', '5432'),
+                            database=os.getenv('DB_NAME', 'retrosheet'),
+                            user=os.getenv('DB_USER', 'cbwinslow'),
+                            password=os.getenv('DB_PASSWORD')
         )
         
         try:
