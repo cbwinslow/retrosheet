@@ -601,7 +601,7 @@ class EnterpriseErrorHandler:
             return RuntimeMetrics(
                 memory_usage_mb=psutil.virtual_memory().used / 1024 / 1024,
                 cpu_usage_percent=psutil.cpu_percent(),
-                disk_io_mb=psutil.disk_io().read_bytes / 1024 / 1024,
+                disk_io_mb=psutil.disk_io_counters().read_bytes / 1024 / 1024,
                 network_io_mb=psutil.net_io_counters().bytes_sent / 1024 / 1024
             )
         except Exception as e:
