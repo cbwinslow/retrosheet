@@ -35,6 +35,7 @@ from sklearn.model_selection import train_test_split
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+import os
 import psycopg2
 
 logger = logging.getLogger(__name__)
@@ -53,11 +54,11 @@ class ModelTrainer:
     def load_data(self, seasons: List[int], sample_rate: float = 1.0) -> Tuple[pd.DataFrame, pd.Series]:
         """Load training data for specific target level."""
         conn = psycopg2.connect(
-            host='localhost',
-            port='5432',
-            database='retrosheet',
-            user='cbwinslow',
-            password='123qweasd'
+            host=os.getenv('PGHOST', 'localhost'),
+            port=os.getenv('PGPORT', '5432'),
+            database=os.getenv('PGDATABASE', 'retrosheet'),
+            user=os.getenv('PGUSER', 'retrosheet'),
+            password=os.getenv('PGPASSWORD', '')
         )
         
         try:
