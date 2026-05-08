@@ -411,12 +411,13 @@ class EnterpriseErrorHandler:
                 """
                 INSERT INTO admin.pipeline_runs (
                     command_name, subcommand, parameters, status, started_at, user_id
-                ) VALUES (%s, %s, %s, %s, %s) RETURNING run_id
+                                ) VALUES (%s, %s, %s, %s, %s, %s) RETURNING run_id
                 """,
                 (
                     kwargs.get('command_name'),
                     kwargs.get('subcommand'),
                     kwargs.get('parameters'),
+                                        kwargs.get('status'),
                     kwargs.get('started_at'),
                     kwargs.get('user_id')
                 )
@@ -505,7 +506,7 @@ class EnterpriseErrorHandler:
                     throughput_per_second, latency_p50_ms, latency_p95_ms, latency_p99_ms,
                     error_rate_percent, memory_usage_mb, cpu_usage_percent,
                     disk_usage_mb, network_io_mb, custom_tags
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     kwargs.get('metric_type'), kwargs.get('metric_name'),
@@ -546,7 +547,7 @@ class EnterpriseErrorHandler:
                     disk_usage_percent, network_latency_ms, database_connections,
                     active_models, queue_depth, error_rate, uptime_seconds,
                     health_score, alerts
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     kwargs.get('component_name'), kwargs.get('status'),
