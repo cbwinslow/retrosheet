@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 import hashlib
 
 from baseball.core.error_architecture import (
-    ErrorEvent, RecoveryAction, ErrorSeverity, ErrorContext
+    ErrorEvent, RecoveryAction, ErrorSeverity, ErrorContext, ErrorHandler
 )
 
 
@@ -624,3 +624,67 @@ class IntelligentRecoveryEngine:
 
 # Global intelligent recovery engine
 intelligent_recovery = IntelligentRecoveryEngine()
+
+
+# Concrete error handler implementations for use by integration_layer.py
+class DatabaseErrorHandler(ErrorHandler):
+    """Handles database connection and query errors with retry logic."""
+
+    async def can_handle(self, event: ErrorEvent) -> bool:
+        """Check if this is a database error."""
+        error_msg = str(event.error).lower()
+        db_keywords = ['connection', 'sql', 'database', 'psycopg2', 'mysql', 'postgresql',
+                       'operationalerror', 'programmingerror', 'integrityerror']
+        return any(kw in error_msg for kw in db_keywords)
+
+    async def handle(self, event: ErrorEvent) -> RecoveryAction:
+        """Attempt database error recovery."""
+        if event.recovery_attempts < event.max_retries:
+            return RecoveryAction.RETRY
+        return RecoveryAction.ESCALATE
+
+    def get_priority(self) -> int:
+        """Database errors get high priority."""
+        return 80
+
+
+class NetworkErrorHandler(ErrorHandler):
+    """Handles network timeout and connection refused errors."""
+
+    async def can_handle(self, event: ErrorEvent) -> bool:
+        """Check if this is a network error."""
+        error_msg = str(event.error).lower()
+        net_keywords = ['timeout', 'network', 'connection refused', 'unreachable',
+                        'read timeout', 'connectionerror', 'urlerror']
+        return any(kw in error_msg for kw in net_keywords)
+
+    async def handle(self, event: ErrorEvent) -> RecoveryAction:
+        """Attempt network error recovery."""
+        if event.recovery_attempts < event.max_retries:
+            return RecoveryAction.RETRY
+        return RecoveryAction.FALLBACK
+
+    def get_priority(self) -> int:
+        """Network errors get medium-high priority."""
+        return 70
+
+
+class ModelErrorHandler(ErrorHandler):
+    """Handles ML model inference and training errors."""
+
+    async def can_handle(self, event: ErrorEvent) -> bool:
+        """Check if this is a model error."""
+        error_msg = str(event.error).lower()
+        model_keywords = ['model', 'predict', 'inference', 'feature', 'shape',
+                          'valueerror', 'nan', 'converge', 'overflow']
+        return any(kw in error_msg for kw in model_keywords)
+
+    async def handle(self, event: ErrorEvent) -> RecoveryAction:
+        """Attempt model error recovery."""
+        if event.recovery_attempts < event.max_retries:
+            return RecoveryAction.FALLBACK
+        return RecoveryAction.ESCALATE
+
+    def get_priority(self) -> int:
+        """Model errors get medium priority."""
+        return 60
