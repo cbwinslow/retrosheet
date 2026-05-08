@@ -22,6 +22,7 @@ from sklearn.preprocessing import LabelEncoder
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+import os
 import psycopg2
 
 logging.basicConfig(level=logging.INFO)
@@ -38,11 +39,11 @@ class SimpleEnsembleTrainer:
     def load_pitch_data(self, seasons: list, sample_rate: float = 1.0):
         """Load pitch-level data from database."""
         conn = psycopg2.connect(
-            host='localhost',
-            port='5432',
-            database='retrosheet',
-            user='cbwinslow',
-            password='123qweasd'
+            host=os.getenv('PGHOST', 'localhost'),
+            port=os.getenv('PGPORT', '5432'),
+            database=os.getenv('PGDATABASE', 'retrosheet'),
+            user=os.getenv('PGUSER', 'retrosheet'),
+            password=os.getenv('PGPASSWORD', '')
         )
         
         try:
