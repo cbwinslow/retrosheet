@@ -32,6 +32,7 @@ from sklearn.preprocessing import LabelEncoder
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+import os
 import psycopg2
 import logging
 
@@ -123,11 +124,11 @@ class PitchTier1XGBoostModel:
             Tuple of (features_df, target_series)
         """
         conn = psycopg2.connect(
-            host='localhost',
-            port='5432',
-            database='retrosheet',
-            user='cbwinslow',
-            password='123qweasd'
+            host=os.getenv('PGHOST', 'localhost'),
+            port=os.getenv('PGPORT', '5432'),
+            database=os.getenv('PGDATABASE', 'retrosheet'),
+            user=os.getenv('PGUSER', 'retrosheet'),
+            password=os.getenv('PGPASSWORD', '')
         )
         
         # Build season filter
