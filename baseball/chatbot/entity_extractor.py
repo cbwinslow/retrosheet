@@ -53,7 +53,7 @@ class EntityExtractor:
     TEAM_NAMES = {
         'angels': 'LAA', 'los angeles angels': 'LAA', 'laa': 'LAA',
         'astros': 'HOU', 'houston': 'HOU',
-        'athletics': 'OAK', 'a's': 'OAK', 'oakland': 'OAK',
+        'athletics': 'OAK', "a's": 'OAK', 'oakland': 'OAK',
         'blue jays': 'TOR', 'jays': 'TOR', 'toronto': 'TOR',
         'braves': 'ATL', 'atlanta': 'ATL',
         'brewers': 'MIL', 'milwaukee': 'MIL',
