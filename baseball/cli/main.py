@@ -7,39 +7,13 @@ Date: 2026-04-26
 Usage: baseball [command]
 """
 
+import importlib
 import sys
 from pathlib import Path
 
 import typer
 from rich.console import Console
 from rich.table import Table
-
-# Import command modules
-from baseball.cli.commands.ingest import (
-    retrosheet_app,
-    mlb_app,
-    statcast_app,
-    espn_app,
-    lahman_app,
-    fangraphs_app,
-    bref_app,
-    weather_app,
-    park_app,
-)
-from baseball.cli.commands.bet import betting_app
-from baseball.cli.commands.predict import predict_app
-from baseball.cli.commands.live import live_app
-from baseball.cli.commands.models import models_app
-from baseball.cli.commands.features import features_app
-from baseball.cli.commands.chatbot import chatbot_app
-from baseball.cli.commands.bridge import bridge_app
-from baseball.cli.commands.serve import serve_app
-from baseball.cli.commands.cache import cache_app
-from baseball.cli.commands.train import train_app
-from baseball.cli.commands.monitor import monitor_app
-from baseball.cli.commands.telemetry import telemetry_app
-from baseball.cli.commands.ensemble import ensemble_app
-from baseball.cli.commands.pitch_models import pitch_app
 
 app = typer.Typer(
     help='Baseball data ingestion and prediction platform',
@@ -185,29 +159,39 @@ def experiment(
 
 
 # Register sub-apps
-app.add_typer(retrosheet_app, name='retrosheet')
-app.add_typer(mlb_app, name='mlb')
-app.add_typer(statcast_app, name='statcast')
-app.add_typer(espn_app, name='espn')
-app.add_typer(lahman_app, name='lahman')
-app.add_typer(fangraphs_app, name='fangraphs')
-app.add_typer(bref_app, name='bref')
-app.add_typer(weather_app, name='weather')
-app.add_typer(park_app, name='park')
-app.add_typer(betting_app, name='bet')
-app.add_typer(predict_app, name='predict')
-app.add_typer(live_app, name='live')
-app.add_typer(models_app, name='models')
-app.add_typer(features_app, name='features')
-app.add_typer(chatbot_app, name='chatbot')
-app.add_typer(bridge_app, name='bridge', help='Bridge/Xref workflows')
-app.add_typer(serve_app, name='serve', help='Model serving and inference')
-app.add_typer(cache_app, name='cache', help='Redis cache management')
-app.add_typer(train_app, name='train', help='Model training and experiments')
-app.add_typer(pitch_app, name='pitch-models', help='Pitch-level model training and evaluation')
-app.add_typer(monitor_app, name='monitor', help='Query and system monitoring')
-app.add_typer(telemetry_app, name='telemetry', help='Telemetry and observability')
-app.add_typer(ensemble_app, name='ensemble', help='Ensemble model training and management')
+def _safe_add_typer(module_name: str, attr_name: str, cli_name: str, help_text: str | None = None) -> None:
+    """Register a Typer sub-app while tolerating optional dependency failures."""
+    try:
+        module = importlib.import_module(module_name)
+        sub_app = getattr(module, attr_name)
+        app.add_typer(sub_app, name=cli_name, help=help_text)
+    except Exception as exc:  # noqa: BLE001
+        console.print(f'[yellow]Skipping "{cli_name}" commands: {exc}[/yellow]')
+
+
+_safe_add_typer('baseball.cli.commands.ingest', 'retrosheet_app', 'retrosheet')
+_safe_add_typer('baseball.cli.commands.ingest', 'mlb_app', 'mlb')
+_safe_add_typer('baseball.cli.commands.ingest', 'statcast_app', 'statcast')
+_safe_add_typer('baseball.cli.commands.ingest', 'espn_app', 'espn')
+_safe_add_typer('baseball.cli.commands.ingest', 'lahman_app', 'lahman')
+_safe_add_typer('baseball.cli.commands.ingest', 'fangraphs_app', 'fangraphs')
+_safe_add_typer('baseball.cli.commands.ingest', 'bref_app', 'bref')
+_safe_add_typer('baseball.cli.commands.ingest', 'weather_app', 'weather')
+_safe_add_typer('baseball.cli.commands.ingest', 'park_app', 'park')
+_safe_add_typer('baseball.cli.commands.bet', 'betting_app', 'bet')
+_safe_add_typer('baseball.cli.commands.predict', 'predict_app', 'predict')
+_safe_add_typer('baseball.cli.commands.live', 'live_app', 'live')
+_safe_add_typer('baseball.cli.commands.models', 'models_app', 'models')
+_safe_add_typer('baseball.cli.commands.features', 'features_app', 'features')
+_safe_add_typer('baseball.cli.commands.bridge', 'bridge_app', 'bridge', 'Bridge/Xref workflows')
+_safe_add_typer('baseball.cli.commands.bootstrap', 'bootstrap_app', 'bootstrap', 'Database bootstrap and SQL migration workflows')
+_safe_add_typer('baseball.cli.commands.serve', 'serve_app', 'serve', 'Model serving and inference')
+_safe_add_typer('baseball.cli.commands.cache', 'cache_app', 'cache', 'Redis cache management')
+_safe_add_typer('baseball.cli.commands.train', 'train_app', 'train', 'Model training and experiments')
+_safe_add_typer('baseball.cli.commands.pitch_models', 'pitch_app', 'pitch-models', 'Pitch-level model training and evaluation')
+_safe_add_typer('baseball.cli.commands.monitor', 'monitor_app', 'monitor', 'Query and system monitoring')
+_safe_add_typer('baseball.cli.commands.telemetry', 'telemetry_app', 'telemetry', 'Telemetry and observability')
+_safe_add_typer('baseball.cli.commands.ensemble', 'ensemble_app', 'ensemble', 'Ensemble model training and management')
 
 if __name__ == '__main__':
     app()

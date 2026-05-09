@@ -44,7 +44,7 @@ class ResponseGenerator:
         • Team standings
         • Player comparisons
         
-        Try asking: "What's the Yankees win probability?" or "How is Judge doing?"""",
+        Try asking: "What's the Yankees win probability?" or "How is Judge doing?""",
         
         """Here are some things you can ask me:
         - "Will the Dodgers win today?"
