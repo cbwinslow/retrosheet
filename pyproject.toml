@@ -56,6 +56,7 @@ dependencies = [
   "redis>=5.0.0",
   "llama-index-vector-stores-qdrant>=0.10.0",
   "sentence-transformers>=5.4.1",
+  "codeflash>=0.7.0",
 ]
 
 [project.urls]
